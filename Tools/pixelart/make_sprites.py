@@ -212,6 +212,60 @@ def make_slime():
     return add_outline(c, outline)
 
 
+KING_CROWN = [
+    '........yy........',
+    '.......yYYy.......',
+    '..y....yYRy....y..',
+    '.yYy...yYYy...yYy.',
+    '.yYYy.yYYYYy.yYYy.',
+    '.yYYYyYYYYYYyYYYy.',
+    '.yYYYYYYYYYYYYYYy.',
+    '.yYRYYYYRYYYYRYYy.',
+    '.yYYYYYYYYYYYYYYy.',
+    '.yyyyyyyyyyyyyyyy.',
+]
+
+
+def make_king_slime():
+    """48x48 boss: a royal purple slime with a gold crown, angry brows and fangs."""
+    base, light, dark, deep = rgb('#9b5de5'), rgb('#c9a2f5'), rgb('#6a3cb0'), rgb('#472580')
+    shine, ink, white = rgb('#f6ecff'), rgb('#1e0c30'), rgb('#ffffff')
+    size = 48
+    c = Canvas(size, size)
+    cx, cy, rx, ry, bottom = 24.0, 32.0, 17.5, 14.5, 45
+    for y in range(size):
+        for x in range(size):
+            nx, ny = (x + 0.5 - cx) / rx, (y + 0.5 - cy) / ry
+            d = nx * nx + ny * ny
+            if d > 1.0 or y > bottom:
+                continue
+            nz = math.sqrt(max(0.0, 1.0 - d))
+            light_amount = -0.45 * nx - 0.55 * ny + 0.70 * nz
+            color = light if light_amount > 0.8 else base if light_amount > 0.44 else dark if light_amount > 0.14 else deep
+            if y >= bottom - 1:
+                color = deep
+            c.set(x, y, color)
+    for x, y in ((12, 25), (13, 24), (14, 23), (15, 23), (13, 25)):
+        c.set(x, y, shine)
+    # Angry brows slanting toward the middle, eyes, a grin with two fangs.
+    for x, y in ((15, 25), (16, 25), (17, 26), (18, 26), (19, 27), (32, 25), (31, 25), (30, 26), (29, 26), (28, 27)):
+        c.set(x, y, ink)
+    for ex in (17, 28):
+        for y in range(28, 33):
+            for dx in range(3):
+                c.set(ex + dx, y, ink)
+        c.set(ex, 28, white)
+    for x in range(19, 30):
+        c.set(x, 36, ink)
+    c.set(18, 35, ink)
+    c.set(30, 35, ink)
+    for x in (21, 27):
+        c.set(x, 37, white)
+    crown = from_grid(KING_CROWN, {'y': rgb('#b8901e'), 'Y': rgb('#f2c94c'), 'R': rgb('#e0443c')})
+    c.paste(crown, 15, 11)
+    return add_outline(c, rgb('#2a1240'))
+
+
 def make_shadow():
     c = Canvas()
     for y in range(T):
@@ -383,6 +437,7 @@ def make_slash(frame):
 SPRITES = {
     'Characters/uzuki': make_uzuki,
     'Characters/slime': make_slime,
+    'Characters/king_slime': make_king_slime,
     'Effects/shadow': make_shadow,
     'Effects/slash_0': lambda: make_slash(0),
     'Effects/slash_1': lambda: make_slash(1),
@@ -436,9 +491,11 @@ def make_preview(sprites, scale):
     scene.paste(sprites['Effects/slash_1'], 10 * T, 5 * T)
     # Large single-sprite close-ups along the bottom.
     strip = Canvas(w * T, 2 * T, rgb('#1d1a26'))
-    for i, name in enumerate(('Characters/uzuki', 'Characters/slime', 'Items/berry', 'Effects/slash_0', 'Effects/slash_1', 'Effects/slash_2')):
-        big = sprites[name].scaled(2)
-        strip.paste(big, i * 2 * T + 8, 0)
+    x = 8
+    for name in ('Characters/uzuki', 'Characters/slime', 'Characters/king_slime', 'Items/berry', 'Effects/slash_1'):
+        big = sprites[name].scaled(2 if sprites[name].h <= T else 1)
+        strip.paste(big, x, 2 * T - big.h)
+        x += big.w + 16
     full = Canvas(w * T, (h + 2) * T)
     full.paste(scene, 0, 0)
     full.paste(strip, 0, h * T)

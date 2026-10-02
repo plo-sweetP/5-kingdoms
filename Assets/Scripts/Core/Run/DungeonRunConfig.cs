@@ -25,15 +25,18 @@ namespace FiveKingdoms.Core
         public int ExtraEnemiesPerFloor = 1;
         public int MaxEnemies = 10;
 
-        /// <summary>Turns between reinforcement spawns. 0 turns them off.</summary>
-        public int ReinforcementInterval = 40;
+        /// <summary>AV between reinforcement spawns on a floor (40 turns at Speed 100). 0 turns them off.</summary>
+        public int ReinforcementIntervalAv = 4000;
 
         public int ItemsPerFloor = 3;
         public int MaxBerries = 9;
         public int BerryHeal = 30;
 
-        /// <summary>Hero turns per 1 HP of natural regeneration. 0 turns it off.</summary>
-        public int RegenInterval = 6;
+        /// <summary>AV per 1 HP of natural regeneration (6 turns at Speed 100). 0 turns it off.</summary>
+        public int RegenIntervalAv = 600;
+
+        /// <summary>What each kind of action costs on the timeline, in percent of a normal turn.</summary>
+        public ActionCosts Costs = new ActionCosts();
 
         /// <summary>Enemies notice the hero within this many tiles, or anywhere in the same room.</summary>
         public int SightRange = 5;

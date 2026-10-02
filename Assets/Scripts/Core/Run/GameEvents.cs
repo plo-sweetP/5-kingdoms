@@ -158,6 +158,12 @@ namespace FiveKingdoms.Core
         }
     }
 
+    /// <summary>An enemy noticed the hero: turns now follow the action-value timeline until no enemy is alerted.</summary>
+    public sealed class CombatStartedEvent : GameEvent { }
+
+    /// <summary>No enemy is chasing the hero any more: back to exploring.</summary>
+    public sealed class CombatEndedEvent : GameEvent { }
+
     public sealed class RunEndedEvent : GameEvent
     {
         public readonly bool Won;

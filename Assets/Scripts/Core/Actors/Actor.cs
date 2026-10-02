@@ -15,6 +15,7 @@ namespace FiveKingdoms.Core
             Attack = definition.Attack;
             Defense = definition.Defense;
             ExpReward = definition.ExpReward;
+            Speed = definition.Speed;
             for (int i = 1; i < level; i++) CombatRules.ApplyLevelUp(this); // Same growth as leveling up in a run.
             Hp = MaxHp;
         }
@@ -33,6 +34,12 @@ namespace FiveKingdoms.Core
         public int Attack { get; set; }
         public int Defense { get; set; }
         public int ExpReward { get; set; }
+
+        /// <summary>
+        /// Combat speed: one turn every 10000 / Speed AV. Change it mid-fight through DungeonRun.SetSpeed so the
+        /// timeline keeps the actor's progress toward its next turn.
+        /// </summary>
+        public int Speed { get; set; }
 
         /// <summary>Enemy AI state: has noticed the hero and is giving chase.</summary>
         public bool Alerted { get; set; }

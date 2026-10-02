@@ -7,18 +7,22 @@ namespace FiveKingdoms.Core
 
     /// <summary>
     /// One dungeon expedition: the turn-based rules for exploring floors and fighting.
-    /// Each hero action resolves the hero's turn and then every enemy's, recording what happened in
-    /// <see cref="Events"/> for the presentation layer to animate. The hero starts from a <see cref="HeroProgress"/>
-    /// and EXP earned is recorded back into it as it happens. No Unity dependency, so it can be unit tested and
-    /// simulated headlessly.
+    /// While exploring, every other actor takes one turn per hero action. Once an enemy notices the hero, combat
+    /// starts and turns follow the action-value <see cref="Timeline"/> (faster actors act more often) until no enemy
+    /// is alerted. Time is kept in exact AV either way: regeneration and reinforcements run on it, so a faster hero
+    /// gets more done before the floor reacts. Each hero action records what happened in <see cref="Events"/> for the
+    /// presentation layer to animate. The hero starts from a <see cref="HeroProgress"/> and EXP earned is recorded
+    /// back into it as it happens. No Unity dependency, so it can be unit tested and simulated headlessly.
     /// </summary>
     public sealed class DungeonRun
     {
         readonly List<Actor> actors = new List<Actor>();
         readonly List<FloorItem> items = new List<FloorItem>();
         readonly List<GameEvent> events = new List<GameEvent>();
+        readonly Timeline timeline = new Timeline();
         int nextId = 1;
-        int turnsOnFloor;
+        AvTime runTime;
+        AvTime floorTime;
 
         public DungeonRun(int seed, DungeonRunConfig config = null, HeroProgress hero = null)
         {
@@ -43,6 +47,18 @@ namespace FiveKingdoms.Core
 
         /// <summary>Hero turns taken this run.</summary>
         public int Turn { get; private set; }
+
+        /// <summary>AV elapsed this run, exploring and fighting alike.</summary>
+        public AvTime RunTime => runTime;
+
+        /// <summary>True while an enemy is alerted and turns follow the timeline.</summary>
+        public bool InCombat { get; private set; }
+
+        /// <summary>AV since the current fight began (0 when not fighting).</summary>
+        public AvTime CombatTime => timeline.Now;
+
+        /// <summary>The fight's current cycle: 0 for the first 150 AV, then one per 100 AV.</summary>
+        public int CombatCycle => Timeline.CycleOf(timeline.Now);
 
         /// <summary>Everything that happened during the most recent action, in order.</summary>
         public IReadOnlyList<GameEvent> Events => events;
@@ -88,6 +104,16 @@ namespace FiveKingdoms.Core
             return null;
         }
 
+        /// <summary>
+        /// The next <paramref name="count"/> turns in combat, starting with the hero's current one, assuming each action
+        /// costs a normal turn. Empty while exploring.
+        /// </summary>
+        public IReadOnlyList<TimelineTurn> Forecast(int count) =>
+            InCombat ? timeline.Forecast(Hero, count) : (IReadOnlyList<TimelineTurn>)Array.Empty<TimelineTurn>();
+
+        /// <summary>Changes an actor's speed (buffs later). Mid-fight it keeps the actor's progress toward its next turn.</summary>
+        public void SetSpeed(Actor actor, int speed) => timeline.ChangeSpeed(actor, speed);
+
         // ---- Hero actions. Each returns true when it used up the hero's turn. ----
 
         public bool Execute(HeroCommand command)
@@ -113,7 +139,7 @@ namespace FiveKingdoms.Core
             if (occupant != null && occupant.Team != Hero.Team && Map.IsCornerClear(Hero.Pos, dir))
             {
                 ResolveAttack(Hero, dir);
-                EndHeroTurn();
+                FinishHeroTurn(ActionKind.Attack);
                 return true;
             }
             if (occupant != null || !Map.CanStep(Hero.Pos, dir))
@@ -124,7 +150,7 @@ namespace FiveKingdoms.Core
 
             Step(Hero, dir);
             PickUpItemUnderHero();
-            EndHeroTurn();
+            FinishHeroTurn(ActionKind.Move);
             return true;
         }
 
@@ -133,14 +159,14 @@ namespace FiveKingdoms.Core
         {
             if (!BeginAction()) return false;
             ResolveAttack(Hero, Hero.Facing);
-            EndHeroTurn();
+            FinishHeroTurn(ActionKind.Attack);
             return true;
         }
 
         public bool Wait()
         {
             if (!BeginAction()) return false;
-            EndHeroTurn();
+            FinishHeroTurn(ActionKind.Wait);
             return true;
         }
 
@@ -150,7 +176,7 @@ namespace FiveKingdoms.Core
             if (!BeginAction() || Berries <= 0 || Hero.Hp >= Hero.MaxHp) return false;
             Berries--;
             Heal(Hero, Config.BerryHeal);
-            EndHeroTurn();
+            FinishHeroTurn(ActionKind.Item);
             return true;
         }
 
@@ -169,8 +195,12 @@ namespace FiveKingdoms.Core
 
         // ---- Setup helpers, also used by tests. ----
 
-        /// <summary>Adds a monster. Regular monsters get tougher on deeper floors; bosses keep their own stats.</summary>
-        public Actor SpawnEnemy(GridPos pos, ActorDefinition definition = null)
+        /// <summary>
+        /// Adds a monster. Regular monsters get tougher on deeper floors; bosses keep their own stats. Mid-fight a new
+        /// monster's first turn is one full turn away, unless <paramref name="readyNow"/> (reinforcements arriving
+        /// between rounds act in the coming round).
+        /// </summary>
+        public Actor SpawnEnemy(GridPos pos, ActorDefinition definition = null, bool readyNow = false)
         {
             var enemy = new Actor(nextId++, definition ?? Config.Enemy, Team.Enemy, pos);
             if (enemy.Definition.IsBoss)
@@ -186,6 +216,7 @@ namespace FiveKingdoms.Core
                 enemy.ExpReward += floorBonus * 2;
             }
             actors.Add(enemy);
+            if (InCombat) timeline.Add(enemy, readyNow);
             return enemy;
         }
 
@@ -205,12 +236,25 @@ namespace FiveKingdoms.Core
             return State == RunState.InProgress;
         }
 
-        void EndHeroTurn()
+        /// <summary>
+        /// Ends the hero's action and plays out everything until the hero is up again. In combat that means running
+        /// the timeline. Exploring, everyone else takes one turn (the original alternating rhythm); if that leaves an
+        /// enemy alerted, a fight starts and the timeline takes over from a fresh start.
+        /// </summary>
+        void FinishHeroTurn(ActionKind kind)
         {
             Turn++;
-            turnsOnFloor++;
+            int cost = Config.Costs.PercentFor(kind);
 
-            // Snapshot: actors can die (or the hero can) partway through the enemy phase.
+            if (InCombat && AnyEnemyAlerted())
+            {
+                timeline.EndTurn(Hero, cost);
+                RunTimelineUntilHero();
+                return;
+            }
+            if (InCombat) EndCombat(); // The hero's own action ended the fight.
+
+            // Snapshot: actors can die (or the hero can) partway through.
             foreach (var enemy in actors.ToArray())
             {
                 if (State != RunState.InProgress) return;
@@ -219,11 +263,71 @@ namespace FiveKingdoms.Core
             }
             if (State != RunState.InProgress) return;
 
-            Regenerate();
-            Reinforce();
+            if (AnyEnemyAlerted())
+            {
+                StartCombat();
+                RunTimelineUntilHero();
+            }
+            else
+            {
+                AdvanceClock(Timeline.TurnLength(Hero.Speed, cost));
+            }
         }
 
-        void TakeEnemyTurn(Actor enemy)
+        /// <summary>Plays turns in timeline order until it is the hero's turn again (or the run ends).</summary>
+        void RunTimelineUntilHero()
+        {
+            while (State == RunState.InProgress)
+            {
+                var next = timeline.PeekNext(Hero);
+                var elapsed = timeline.NextTurnOf(next.Id) - timeline.Now;
+                timeline.AdvanceTo(next);
+                AdvanceClock(elapsed);
+                if (State != RunState.InProgress) return;
+                if (next == Hero) break;
+
+                var kind = TakeEnemyTurn(next);
+                if (timeline.Contains(next.Id)) timeline.EndTurn(next, Config.Costs.PercentFor(kind));
+            }
+            if (State == RunState.InProgress && !AnyEnemyAlerted()) EndCombat();
+        }
+
+        void StartCombat()
+        {
+            InCombat = true;
+            timeline.Start(actors);
+            events.Add(new CombatStartedEvent());
+        }
+
+        void EndCombat()
+        {
+            InCombat = false;
+            timeline.Clear();
+            events.Add(new CombatEndedEvent());
+        }
+
+        bool AnyEnemyAlerted()
+        {
+            foreach (var actor in actors)
+                if (actor.Team != Team.Hero && actor.Alerted) return true;
+            return false;
+        }
+
+        /// <summary>Moves the run's AV clocks forward; regeneration and reinforcements happen as their intervals pass.</summary>
+        void AdvanceClock(AvTime elapsed)
+        {
+            var runBefore = runTime;
+            var floorBefore = floorTime;
+            runTime += elapsed;
+            floorTime += elapsed;
+            for (int i = IntervalsPassed(runBefore, runTime, Config.RegenIntervalAv); i > 0; i--) Regenerate();
+            for (int i = IntervalsPassed(floorBefore, floorTime, Config.ReinforcementIntervalAv); i > 0 && State == RunState.InProgress; i--) Reinforce();
+        }
+
+        static int IntervalsPassed(AvTime from, AvTime to, int interval) =>
+            interval <= 0 ? 0 : (int)(to.Scale(1, interval).Floor() - from.Scale(1, interval).Floor());
+
+        ActionKind TakeEnemyTurn(Actor enemy)
         {
             if (enemy.SpecialCooldown > 0) enemy.SpecialCooldown--;
             var intent = EnemyBrain.Decide(this, enemy);
@@ -231,21 +335,23 @@ namespace FiveKingdoms.Core
             {
                 case IntentKind.Attack:
                     ResolveAttack(enemy, intent.Direction);
-                    break;
+                    return ActionKind.Attack;
                 case IntentKind.Move:
                     if (Map.CanStep(enemy.Pos, intent.Direction) && ActorAt(enemy.Pos + intent.Direction.ToOffset()) == null)
                         Step(enemy, intent.Direction);
-                    break;
+                    return ActionKind.Move;
                 case IntentKind.Charge:
                     enemy.Charging = true;
                     events.Add(new BossActionEvent(enemy.Id, BossAction.Charge));
-                    break;
+                    return ActionKind.Special;
                 case IntentKind.Slam:
                     ResolveSlam(enemy);
-                    break;
+                    return ActionKind.Special;
                 case IntentKind.Summon:
                     SummonHelp(enemy);
-                    break;
+                    return ActionKind.Special;
+                default:
+                    return ActionKind.Wait;
             }
         }
 
@@ -312,6 +418,7 @@ namespace FiveKingdoms.Core
         void Kill(Actor victim, Actor killer)
         {
             actors.Remove(victim);
+            timeline.Remove(victim.Id);
             events.Add(new DiedEvent(victim.Id));
             if (victim == Hero)
             {
@@ -354,17 +461,16 @@ namespace FiveKingdoms.Core
 
         void Regenerate()
         {
-            if (Config.RegenInterval > 0 && Turn % Config.RegenInterval == 0 && Hero.Hp < Hero.MaxHp)
-                Hero.Hp++;
+            if (Hero.IsAlive && Hero.Hp < Hero.MaxHp) Hero.Hp++;
         }
 
         /// <summary>Every so often a new enemy wanders in out of the hero's sight, so camping on a floor isn't free.</summary>
         void Reinforce()
         {
-            if (!Config.Populate || IsBossFloor || Config.ReinforcementInterval <= 0 || turnsOnFloor % Config.ReinforcementInterval != 0) return;
+            if (!Config.Populate || IsBossFloor) return;
             if (actors.Count - 1 >= Config.MaxEnemies) return;
             if (TryFindSpawnTile(Random, room => room != Map.RoomIndexAt(Hero.Pos), Config.SightRange + 3, out var pos))
-                events.Add(new ActorSpawnedEvent(SpawnEnemy(pos).Id));
+                events.Add(new ActorSpawnedEvent(SpawnEnemy(pos, readyNow: true).Id));
         }
 
         void EndRun(bool won)
@@ -378,7 +484,9 @@ namespace FiveKingdoms.Core
         void EnterFloor(int floor)
         {
             Floor = floor;
-            turnsOnFloor = 0;
+            floorTime = AvTime.Zero;
+            InCombat = false;
+            timeline.Clear();
             int floorSeed = Rng.DeriveSeed(Seed, floor);
             Map = Config.MapFactory != null ? Config.MapFactory(floor, floorSeed)
                 : IsBossFloor ? DungeonGenerator.GenerateBossFloor(floorSeed, Config.Generation)

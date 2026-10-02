@@ -15,7 +15,7 @@ namespace FiveKingdoms.Tests
                 FloorCount = floorCount,
                 MapFactory = (floor, seed) => DungeonMap.FromAscii(rows),
                 Populate = false,
-                RegenInterval = 0,
+                RegenIntervalAv = 0,
                 Boss = boss,
             };
             return new DungeonRun(7, config, hero);

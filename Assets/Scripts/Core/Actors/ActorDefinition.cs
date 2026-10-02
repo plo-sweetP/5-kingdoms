@@ -9,7 +9,7 @@ namespace FiveKingdoms.Core
     public sealed class ActorDefinition
     {
         public ActorDefinition(string id, string name, int maxHp, int attack, int defense, int expReward,
-            ActorBrain brain = ActorBrain.Chaser)
+            ActorBrain brain = ActorBrain.Chaser, int speed = DefaultSpeed)
         {
             Id = id;
             Name = name;
@@ -18,7 +18,11 @@ namespace FiveKingdoms.Core
             Defense = defense;
             ExpReward = expReward;
             Brain = brain;
+            Speed = speed;
         }
+
+        /// <summary>The hero's baseline. Keep species within roughly 80-130 so turn order stays readable.</summary>
+        public const int DefaultSpeed = 100;
 
         /// <summary>Stable key, used for saves and to find the actor's sprite.</summary>
         public string Id { get; }
@@ -28,6 +32,10 @@ namespace FiveKingdoms.Core
         public int Defense { get; }
         public int ExpReward { get; }
         public ActorBrain Brain { get; }
+
+        /// <summary>Combat speed: one turn every 10000 / Speed AV. Never randomized.</summary>
+        public int Speed { get; }
+
         public bool IsBoss => Brain != ActorBrain.Chaser;
     }
 

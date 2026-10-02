@@ -20,6 +20,19 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
+        public void ReportsTheLengthOfThePath()
+        {
+            var map = DungeonMap.FromAscii(
+                "#######",
+                "#.....#",
+                "#@#...#",
+                "#.#...#",
+                "#######");
+            Assert.IsTrue(Pathfinder.TryFirstStep(map, map.Start, new GridPos(3, 2), null, 50, out _, out int length));
+            Assert.AreEqual(4, length, "N, E, E, S: the corner rule rules out the two-step diagonal routes");
+        }
+
+        [Test]
         public void TakesTheDiagonalWhenItIsOpen()
         {
             var map = DungeonMap.FromAscii(

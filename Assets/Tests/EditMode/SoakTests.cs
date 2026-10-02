@@ -23,6 +23,8 @@ namespace FiveKingdoms.Tests
                     run.Execute(AutoPilot.Decide(run));
                     AssertConsistent(run, $"seed {seed}, action {step}");
                 }
+                Assert.AreNotEqual(RunState.InProgress, run.State,
+                    $"seed {seed}: the autopilot stalled on B{run.Floor}F at {run.Hero.Pos} (stairs {run.Map.Stairs})");
                 if (run.Floor > deepestFloor) deepestFloor = run.Floor;
             }
             Assert.GreaterOrEqual(deepestFloor, 3, "the autopilot should get a few floors deep on some seed");

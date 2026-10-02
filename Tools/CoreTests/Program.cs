@@ -89,15 +89,17 @@ namespace FiveKingdoms.CoreTests
         static int TraceAutopilot(int seed, int fromAction)
         {
             var run = new DungeonRun(seed);
-            for (int i = 0; i < fromAction + 20 && run.State == RunState.InProgress; i++)
+            int actions = 0;
+            for (; actions < fromAction + 20 && run.State == RunState.InProgress; actions++)
             {
                 var command = AutoPilot.Decide(run);
                 var before = run.Hero.Pos;
                 bool used = run.Execute(command);
-                if (i >= fromAction)
-                    Console.WriteLine($"{i,5} B{run.Floor}F {command,-10} {before} -> {run.Hero.Pos} used={used} " +
+                if (actions >= fromAction)
+                    Console.WriteLine($"{actions,5} B{run.Floor}F {command,-10} {before} -> {run.Hero.Pos} used={used} " +
                                       $"berries={run.Berries} items=[{string.Join(" ", run.Items.Select(it => it.Pos))}]");
             }
+            Console.WriteLine($"After {actions} actions: {run.State} on B{run.Floor}F, Lv {run.Hero.Level}, HP {run.Hero.Hp}/{run.Hero.MaxHp}, turn {run.Turn}");
             return 0;
         }
 

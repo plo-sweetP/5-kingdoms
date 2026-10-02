@@ -15,9 +15,15 @@ namespace FiveKingdoms.Core
         /// entered, such as ones holding another actor; the goal tile itself is always allowed.
         /// </summary>
         public static bool TryFirstStep(DungeonMap map, GridPos start, GridPos goal, Func<GridPos, bool> isBlocked,
-            int maxSteps, out Direction8 firstStep)
+            int maxSteps, out Direction8 firstStep) =>
+            TryFirstStep(map, start, goal, isBlocked, maxSteps, out firstStep, out _);
+
+        /// <summary>Same as the overload above, also giving the length of the path found, in steps.</summary>
+        public static bool TryFirstStep(DungeonMap map, GridPos start, GridPos goal, Func<GridPos, bool> isBlocked,
+            int maxSteps, out Direction8 firstStep, out int pathLength)
         {
             firstStep = Direction8.S;
+            pathLength = 0;
             if (start == goal || !map.InBounds(start) || !map.InBounds(goal)) return false;
 
             int width = map.Width;
@@ -49,6 +55,7 @@ namespace FiveKingdoms.Core
                     if (isGoal)
                     {
                         firstStep = (Direction8)firstDirection[nextIndex];
+                        pathLength = depth[currentIndex] + 1;
                         return true;
                     }
                     depth[nextIndex] = depth[currentIndex] + 1;

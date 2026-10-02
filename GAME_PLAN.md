@@ -1,27 +1,29 @@
-# 5 Kingdoms: Game Plan (v0.1)
+# 5 Kingdoms: Game Plan (v0.2)
 
 ## Decisions locked in
 | Topic | Decision |
 |---|---|
-| Engine | Unity (2D, URP, current LTS), C# |
-| Platforms | iOS + Android, one codebase. Developed on Windows |
-| Monetization | Phase 1: free-to-play where **breeding is the gacha** (earned eggs and ingredients, optional timer and slot shortcuts). Later: possibly rare paid pulls |
-| Art | **Pixel art**, in the spirit of Final Fantasy Tactics Advance and Pokemon Mystery Dungeon: simple sprites, flashier attack and defense animations. Placeholder pixel sprites first, AI-assisted art later |
+| Engine | Unity 6.3 LTS (6000.3.25f1), 2D with URP, C# |
+| Platforms | iOS + Android, one codebase. Developed on Windows; Android is the test platform until there's a Mac or build service |
+| Orientation | **Landscape only**, on phones and tablets (test devices: Samsung S22 Ultra, Galaxy Tab S8+) |
+| Monetization | Phase 1: free-to-play where **breeding is the gacha** for monsters. Later: a paid gacha for **characters and weapons** |
+| Art | **Pixel art** in the spirit of Final Fantasy Tactics Advance and Pokemon Mystery Dungeon: simple chibi sprites, flashier attack and defense animations. 32 px = 1 tile. Placeholders generated in code for now, AI-assisted art later |
+| Controls | 8-way grid movement. On-screen D-pad + buttons first, tap-to-move later |
 | Team | Peter (CS degree, C++/C#/Java/Python) directs, reviews and playtests. Claude writes most code |
 
 ## Pitch
-Farm by day, delve by night. You run a farm in a world of five kingdoms, raising and breeding monsters. You send them into turn-based procedural dungeons for the materials, eggs and seeds that make the farm and breeding better.
+Farm by day, delve by night. You run a farm in a world of five kingdoms, raising and breeding monsters. You send them into turn-based procedural dungeons for the materials, eggs, seeds and gear that make the farm and your party stronger.
 
 ## Core loop
 ```
-FARM: plant / harvest / care for monsters / breed -> eggs
-  | party + food + gear                    ^ materials, rare seeds, eggs
+FARM: plant / harvest / care for monsters / breed -> eggs / craft gear
+  | party + food + gear                    ^ materials, rare seeds, eggs, gear
   v                                        |
 DUNGEON: grid-based, turn-based roguelike floors
 ```
 The two halves feed each other:
-- **Farm to dungeon:** crops become food and buffs, and monsters are your party.
-- **Dungeon to farm:** loot gives rare seeds, breeding ingredients and upgrade materials.
+- **Farm to dungeon:** crops become food and buffs, monsters join the party, the farm crafts gear.
+- **Dungeon to farm:** loot gives rare seeds, breeding ingredients, crafting materials and equipment.
 
 ## The 5 Kingdoms (five cultures)
 Each kingdom has its own monster family, crops, dungeon biome, magic flavor and cross-breeding rules. Cross-kingdom breeding is the main collecting hook. Unlocking kingdoms is the progression spine. (Working names; final names TBD.)
@@ -46,60 +48,76 @@ Design notes:
 - Breeding hook: advanced elements are unlocked by specific parent pairs and ingredients, so they act as the "rare" tier.
 - Open: Is there a Light element? Darkness is in the base set without an opposite. Decide before building the type chart.
 
+## Heroes, skills and equipment (planned)
+- **Main character:** Uzuki (concept sketch: spiky blue hair, cyan eyes, sleeveless top with strap, one pauldron, baggy cuffed pants, boots). Placeholder sprite exists.
+- **Skills:** each character gets **3 class/job/race skills + 1 ultimate**. Skills can cost mana, cost nothing (with more unique effects), or build mana. Ultimates (buffs, debuffs, damage, summons, ...) are designed later. Basic attacks only for now; the HUD already shows the four locked slots.
+- **Equipment slots:** a **4-piece armor set + 2 rings + weapon slot(s)**. Set bonuses for wearing a full armor set are a natural fit.
+- **Equipment sources:** looted in dungeons or crafted on the farm. **Weapons can also come from the gacha.**
+- Data rule: gear, sets and drop tables live in data assets, like everything else.
+
+## Gacha
+- **Monsters come from breeding** (the free, earned "gacha").
+- **Paid gacha pools: characters + weapons** (later). Needs server-side rolls, pity, and published odds (app store and regional rules) before it ships.
+
+## Autopilot (planned)
+- Auto-play for **smaller daily runs/missions**, and eventually for the **main quest**.
+- Foundation exists: the Core `AutoPilot` already plays whole dungeon runs (used today for automated tests and balance reports). The in-game feature will need smarter tactics, player-set rules (e.g. "heal below 40%"), and rewards/limits so it doesn't replace playing.
+
 ## Part 1: Farm and breeding
 - Tile-based farm (Unity Tilemap), crops with growth stages, seasons, energy or stamina.
 - Real-time timers for crops and eggs, with offline progress calculated on return.
 - Monsters on the farm: hunger, mood and affinity. They can do jobs (water, harvest).
 - **Breeding:** 2 parents + ingredient -> egg (timer) -> hatch. Inputs: parents' kingdom, traits and rarity. Outputs: species, rarity tier, mutation chance, inherited traits, and a pity counter for rare results.
+- **Crafting:** farm workshops turn dungeon materials into equipment.
 - Design rule: all odds live in data tables, not code, so we can tune without rewriting.
 
 ## Part 2: Dungeon crawl (Mystery Dungeon style)
-- Grid movement. Every action is a turn, then all enemies act.
-- Procedural floors: rooms and corridors, stairs down, items, traps, monster houses.
-- Party of 1-3 monsters. Skills with cooldowns or PP. Hunger and item management.
-- Run ends by reaching the bottom, fleeing or being defeated. Defeat has a soft penalty, with no permadeath of monsters in v1.
+- Grid movement in 8 directions. Every action is a turn, then all enemies act. Diagonal moves and attacks can't cut wall corners.
+- Procedural floors: rooms and corridors, stairs down, items; later traps and monster houses.
+- Party of 1-3 (hero + monsters later). Skills, items, gear.
+- Run ends by reaching the bottom or being defeated. Defeat has a soft penalty, with no permadeath of monsters in v1.
 - The generator is seeded so runs are reproducible, which helps testing.
+- **Built in Milestone 1:** see "Progress" below.
 
 ## Technical architecture
-- **Data-driven:** monsters, skills, items, crops and dungeons are ScriptableObjects or JSON, not hard-coded.
-- **Separate logic from presentation:** game rules (breeding, turn resolution, dungeon generation) are plain C# classes with no Unity dependencies, so they can be unit tested fast.
+- **Separate rules from presentation:** game rules are plain C# in `Assets/Scripts/Core` (no Unity references) and emit events; Unity code in `Assets/Scripts` only draws and animates those events. Rules are unit tested in seconds.
+- **Data-driven:** monsters, skills, items, gear, crops and dungeons move to data assets as they grow past a handful.
 - **Save system:** versioned JSON, local first. Plan for a migration path from day 1.
-- **Offline-first.** A backend (accounts, cloud save, server-side gacha rolls) is added only when paid pulls are introduced. Server-authoritative rolls will be required then.
-- **Testing:** Unity Test Framework edit-mode tests for breeding odds, dungeon generation (connectivity, seeds) and turn order. Playtest builds on a real Android device early.
-- **Build constraint:** Android builds work on Windows. **iOS builds need a Mac** (or a cloud build service such as Unity Build Automation, or a rented Mac) plus an Apple Developer account ($99/yr). Android is the dev and test platform until then.
+- **Offline-first.** A backend (accounts, cloud save, server-side gacha rolls) is added only when paid pulls are introduced.
+- **Testing:** NUnit tests for the rules (run in Unity, or in seconds with `dotnet`), an autopilot soak test over many seeds, a balance report, and an unattended autoplay build that takes screenshots.
+- **Build constraint:** Android builds work on Windows. **iOS builds need a Mac** (or a cloud build service such as Unity Build Automation, or a rented Mac) plus an Apple Developer account ($99/yr).
 
 ## Roadmap (each milestone is playable)
-| # | Milestone | Done when |
+| # | Milestone | Status |
 |---|---|---|
-| 0 | Project setup | Unity project, folder structure, git repo, runs on PC and Android phone |
-| 1 | Dungeon prototype | Move one monster on a generated floor, enemies, combat, stairs, items (**riskiest, so first**) |
-| 2 | Farm prototype | Plant, grow, harvest, inventory, day/season clock |
-| 3 | Monster and breeding core | Stats, traits, egg, hatch, rarity and pity, with unit tests on the odds |
-| 4 | Connect the loops | Farm monsters enter dungeons, loot flows back, saves work |
-| 5 | Vertical slice | One full kingdom: farm, breed, dungeon, tutorial, basic UI |
-| 6 | Content expansion | Kingdoms 2-5, monster roster, balancing |
-| 7 | Art and audio pass | AI-assisted art replaces placeholders |
-| 8 | Monetization and live ops | Ads and IAP for shortcuts, analytics, beta test |
-| 9 | Release | TestFlight and Play closed testing, store listings, launch |
+| 0 | Project setup: Unity project, folders, git repo | **Done** |
+| 1 | Dungeon prototype: hero on generated floors, enemies, combat, stairs, items | **Built, in playtest** |
+| 2 | Farm prototype: plant, grow, harvest, inventory, day/season clock | |
+| 3 | Monster and breeding core: stats, traits, egg, hatch, rarity and pity, with tests on the odds | |
+| 4 | Connect the loops: farm monsters enter dungeons, loot flows back, saves work | |
+| 5 | Vertical slice: one full kingdom with tutorial and basic UI | |
+| 6 | Content expansion: kingdoms 2-5, monster roster, skills, equipment, balancing | |
+| 7 | Art and audio pass: AI-assisted art replaces placeholders | |
+| 8 | Monetization and live ops: shortcuts, gacha (characters + weapons), analytics, beta | |
+| 9 | Release: TestFlight and Play closed testing, store listings, launch | |
+
+## Progress
+**Milestone 1 (dungeon prototype)** contains:
+- Seeded rooms-and-corridors floors (56x32), 5 floors in the "Slime Cave", stairs to descend, clear on the last floor.
+- Uzuki vs. slimes: bump-to-attack and an attack button, damage spread, critical hits, EXP and level-ups, slimes that notice, chase and bite, reinforcements over time.
+- Berries to pick up and eat (heal), slow HP regeneration.
+- Landscape touch HUD: 8-way D-pad, attack button, locked skill/ultimate slots, Wait and Berry buttons, Descend button on stairs, message log, floating damage numbers, floor banner, end-of-run panel. Keyboard controls in the editor.
+- Juice: step hops, wind-up and lunge, slash swipe, white hit flash, knockback, hit-stop, screen shake on crits, death bursts, sparkles.
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.
-2. Pixel art specs: sprite size (16x16 / 32x32 / 48x48), palette limits, and animation frame counts for attack/defend. Decide before any art is made or generated. AI art for pixel art needs a strict spec to stay consistent.
-3. Dungeon combat: pure bump-to-attack, or skill menu per monster? (Suggest: both.)
+2. Pixel art spec (to go in ART_BIBLE.md): placeholders use 32 px tiles and 32x32 chibi sprites; confirm, and set palette limits and animation frame counts.
+3. Exact armor pieces (e.g. head/body/hands/feet) and how many weapon slots.
 4. Stamina and timers: how aggressive? Must stay friendly for short phone sessions.
 5. Store policy and legal check before any paid gacha (odds disclosure is required in app stores and some regions).
-6. Do we want a Mac for iOS, or a build service?
+6. A Mac for iOS, or a build service?
 
-## Code storage and backup
-- **Source control: git, with a private GitHub repository** (free). It is the source of truth for code. Gives history, rollback, and branches for experiments. Create a GitHub account if you don't have one.
-- **Unity specifics:** use a Unity `.gitignore` (excludes Library/, Temp/, Builds/). Use **Git LFS** for large binary art and audio files. Commit the `.meta` files.
-- **Keep the project on your local drive**, not inside a Google Drive sync folder. Unity creates many small files and Drive sync can corrupt or slow a project.
-- **Google Drive** is for the non-code side: weekly progress reports, design docs, art references, and occasional zipped backups of the repo or builds.
-- Backups: GitHub is the code backup. Add a periodic zip to Drive for safety.
-
-## Next steps
-1. **You:** answer the open questions you can (especially pixel size and the Light element; the rest can wait).
-2. **You:** create a GitHub account and an empty private repo named `5-kingdoms`.
-3. **You:** install Unity Hub + current Unity LTS with Android Build Support (and Android SDK/NDK modules).
-4. **Me:** Milestone 0: create the Unity project in this folder, `.gitignore`, folder layout, and a first commit.
-5. **Me:** Milestone 1: dungeon prototype.
+## Workflow
+- Code lives in the private GitHub repo `plo-sweetP/5-kingdoms`; pushes happen at milestones.
+- The project stays on the local drive, not in a Google Drive sync folder.
+- Nightly update docs go to the shared Google Drive folder: summary, what was added, current progress, PR/commit updates with explanations, and anything else important.

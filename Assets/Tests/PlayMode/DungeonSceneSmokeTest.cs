@@ -78,23 +78,32 @@ namespace FiveKingdoms.Tests
                 yield return null;
             Assert.IsTrue(controller.Run.Turn >= 20 || controller.Run.State != RunState.InProgress, "auto-pilot plays on its own");
 
-            // The player's own action runs, and the auto-pilot keeps going afterwards.
-            while (controller.IsAnimating) yield return null;
-            if (controller.Run.State == RunState.InProgress)
-            {
-                int before = controller.Run.Turn;
-                controller.Submit(HeroCommand.Wait);
-                for (int i = 0; i < 3; i++) yield return null;
-                while (controller.IsAnimating) yield return null;
-                Assert.Greater(controller.Run.Turn, before);
-            }
-            Assert.IsTrue(controller.AutoPilotEnabled, "only the player turns the auto-pilot off");
+            // A move or action from the player is ignored while auto plays, and doesn't switch it off.
+            controller.Submit(HeroCommand.Wait);
+            for (int i = 0; i < 10; i++) yield return null;
+            Assert.IsTrue(controller.AutoPilotEnabled, "only the player turns the auto-pilot off, with the Auto button");
 
             controller.AutoPilotEnabled = false;
             while (controller.IsAnimating) yield return null;
             int turn = controller.Run.Turn;
             for (int i = 0; i < 30; i++) yield return null;
             Assert.AreEqual(turn, controller.Run.Turn, "with auto-pilot off, nothing happens without input");
+        }
+
+        [Test]
+        public void WhileAutoPlaysThePlayersMovesAndActionsAreIgnored()
+        {
+            var run = new DungeonRun(3);
+            var autoChoice = AutoPilot.Decide(run);
+            foreach (var playerCommand in new[] { HeroCommand.Move(Direction8.N), HeroCommand.Attack, HeroCommand.Wait, HeroCommand.UseBerry, HeroCommand.Descend })
+            {
+                var chosen = DungeonController.ChooseCommand(playerCommand, autoPilot: true, run);
+                Assert.AreEqual(autoChoice.Kind, chosen.Value.Kind, $"{playerCommand} is ignored during auto");
+                Assert.AreEqual(autoChoice.Direction, chosen.Value.Direction);
+                Assert.AreEqual(playerCommand.Kind, DungeonController.ChooseCommand(playerCommand, autoPilot: false, run).Value.Kind,
+                    "without auto, the player's command is used");
+            }
+            Assert.IsNull(DungeonController.ChooseCommand(null, autoPilot: false, run), "no input, no auto: nothing happens");
         }
 
         static IEnumerator LoadDungeon()

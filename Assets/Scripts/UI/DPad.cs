@@ -17,10 +17,31 @@ namespace FiveKingdoms.UI
 
         readonly Image[] arrows = new Image[8];
         RectTransform rect;
+        CanvasGroup group;
         bool tracking;
         int pointerId;
+        bool interactable = true;
 
         public Direction8? Direction { get; private set; }
+
+        /// <summary>Pressed while disabled (e.g. during auto-pilot), so the HUD can explain why nothing happens.</summary>
+        public event System.Action DisabledPressed;
+
+        /// <summary>Disabled, the pad is dimmed and reports no direction.</summary>
+        public bool Interactable
+        {
+            get => interactable;
+            set
+            {
+                interactable = value;
+                group.alpha = value ? 1f : 0.35f;
+                if (!value)
+                {
+                    tracking = false;
+                    SetDirection(null);
+                }
+            }
+        }
 
         public static DPad Create(Transform parent, Vector2 anchor, Vector2 position, float size)
         {
@@ -28,6 +49,7 @@ namespace FiveKingdoms.UI
             UiFactory.Place(background.rectTransform, anchor, position, new Vector2(size, size));
             var pad = background.gameObject.AddComponent<DPad>();
             pad.rect = background.rectTransform;
+            pad.group = background.gameObject.AddComponent<CanvasGroup>();
 
             var hub = UiFactory.CreateImage("Hub", background.transform, UiFactory.Circle, new Color(1f, 1f, 1f, 0.08f));
             UiFactory.Place(hub.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size * 0.36f, size * 0.36f));
@@ -49,6 +71,11 @@ namespace FiveKingdoms.UI
 
         public void OnPointerDown(PointerEventData eventData)
         {
+            if (!interactable)
+            {
+                DisabledPressed?.Invoke();
+                return;
+            }
             if (tracking) return;
             tracking = true;
             pointerId = eventData.pointerId;

@@ -121,21 +121,25 @@ namespace FiveKingdoms.Dungeon
             var command = buffered;
             buffered = null;
             if (command == null && held.HasValue) command = HeroCommand.Move(held.Value);
-            // The player's own input always goes first; the auto-pilot fills in every turn they don't take.
-            if (command == null && autoPilot) command = AutoPilot.Decide(run);
+            if (autoPilot && command.HasValue) hud.ShowAutoPilotBlocked();
+            command = ChooseCommand(command, autoPilot, run);
             if (command.HasValue) StartCoroutine(Execute(command.Value));
         }
 
         /// <summary>
-        /// The hero plays itself (the same AutoPilot the tests use). Only the player turns it off, with the Auto button,
-        /// T or View; their own actions still work while it runs.
+        /// Picks this turn's command. While the auto-pilot is on it plays every turn: the player's moves and actions are
+        /// ignored. Skills and ultimates will be the exception, usable by hand during auto, once they exist (milestone 1d).
         /// </summary>
+        public static HeroCommand? ChooseCommand(HeroCommand? playerCommand, bool autoPilot, DungeonRun run) =>
+            autoPilot ? AutoPilot.Decide(run) : playerCommand;
+
+        /// <summary>The hero plays itself (the same AutoPilot the tests use). Only the player turns it off: Auto, T or View.</summary>
         void SetAutoPilot(bool on)
         {
             if (autoPilot == on) return;
             autoPilot = on;
             hud.SetAutoPilot(on);
-            hud.AddMessage(on ? "Auto-pilot on. Your own moves still work; press Auto to stop." : "Auto-pilot off.", DungeonHud.HintColor);
+            hud.AddMessage(on ? "Auto-pilot on. Press Auto again to take over." : "Auto-pilot off.", DungeonHud.HintColor);
         }
 
         IEnumerator Execute(HeroCommand command)

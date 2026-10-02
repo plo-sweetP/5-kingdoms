@@ -63,7 +63,7 @@ namespace FiveKingdoms.Dungeon
                 var boss = controller.Run.Boss;
                 if (boss != null && boss.Charging && chargeShots < 2)
                 {
-                    yield return new WaitForSeconds(0.3f); // The wind-up pose and warning tiles.
+                    while (controller.IsAnimating) yield return null; // Wind-up pose, warning tiles and the refreshed turn order.
                     yield return Capture($"boss_charge{++chargeShots}_action{actions}");
                 }
                 else if (boss != null && boss.CalledForHelp && !bossWasHelped)

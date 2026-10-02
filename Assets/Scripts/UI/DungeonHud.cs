@@ -31,6 +31,14 @@ namespace FiveKingdoms.UI
         static readonly Color DescendColor = new Color(0.86f, 0.64f, 0.14f, 0.95f);
         static readonly Color ExpColor = new Color(0.45f, 0.75f, 1f);
         static readonly Color BossBarColor = new Color(0.72f, 0.38f, 0.95f);
+        static readonly Color HeroTurnColor = new Color(0.2f, 0.42f, 0.8f, 0.9f);
+        static readonly Color EnemyTurnColor = new Color(0.55f, 0.18f, 0.18f, 0.9f);
+        static readonly Color BossTurnColor = new Color(0.45f, 0.22f, 0.7f, 0.95f);
+        static readonly Color SlamColor = new Color(1f, 0.35f, 0.3f);
+
+        const int TimelineTurnsShown = 6;
+        const float TimelineIcon = 50f;
+        const float TimelineGap = 6f;
 
         const string KeyboardHint = "Move: WASD / arrows + QEZC or numpad   Attack: Space   Wait: X   Berry: B   Stairs: Enter   Auto: T";
         const string GamepadHint = "Move: left stick / D-pad   Attack: A   Wait: Y   Berry: X   Stairs: RB   Auto: View";
@@ -47,6 +55,9 @@ namespace FiveKingdoms.UI
 
         readonly List<LogLine> log = new List<LogLine>();
         readonly List<FloatingText> floating = new List<FloatingText>();
+        readonly List<GameObject> timelineRows = new List<GameObject>();
+        RectTransform timelineRoot;
+        Text timelineHeader;
         Camera worldCamera;
         RectTransform canvasRect, safeArea, floatingLayer, logRoot, touchControls;
         Text heroText, hpText, expText, floorText, bossName, keysText, bannerTitle, bannerSubtitle, endTitle, endDetail;
@@ -107,6 +118,63 @@ namespace FiveKingdoms.UI
             berryButton.SetLabel($"Berry x{run.Berries}");
             berryButton.Interactable = run.Berries > 0;
             descendButton.gameObject.SetActive(run.State == RunState.InProgress && run.HeroOnStairs);
+            RefreshTimeline(run);
+        }
+
+        /// <summary>
+        /// The turn-order strip, shown only in combat: the next few turns top to bottom, how soon each comes (AV from
+        /// now), dividers where a new cycle starts, and a SLAM tag on a winding-up boss's next turn.
+        /// </summary>
+        void RefreshTimeline(DungeonRun run)
+        {
+            foreach (var row in timelineRows) Destroy(row);
+            timelineRows.Clear();
+            bool show = run.InCombat && run.State == RunState.InProgress;
+            timelineRoot.gameObject.SetActive(show);
+            if (!show) return;
+
+            int cycle = run.CombatCycle;
+            timelineHeader.text = $"Turn order (Cycle {cycle + 1})";
+            float y = -30f;
+            // Only the fight itself: the party and the enemies chasing it. Monsters wandering elsewhere still take turns.
+            var turns = new List<TimelineTurn>();
+            foreach (var upcoming in run.Forecast(TimelineTurnsShown * 6))
+                if (upcoming.Actor.Team == Team.Hero || upcoming.Actor.Alerted)
+                    if (turns.Count < TimelineTurnsShown) turns.Add(upcoming);
+            var listed = new HashSet<int>();
+            for (int i = 0; i < turns.Count; i++)
+            {
+                var turn = turns[i];
+                bool slam = turn.Actor.Charging && listed.Add(turn.Actor.Id); // Only its next turn is the slam.
+                listed.Add(turn.Actor.Id);
+                if (turn.Cycle != cycle)
+                {
+                    cycle = turn.Cycle;
+                    var divider = UiFactory.CreateText("Cycle", timelineRoot, $"- Cycle {cycle + 1} -", 18, TextAnchor.MiddleLeft, HintColor);
+                    UiFactory.Place(divider.rectTransform, new Vector2(0f, 1f), new Vector2(4f, y), new Vector2(170f, 18f), new Vector2(0f, 1f));
+                    timelineRows.Add(divider.gameObject);
+                    y -= 20f;
+                }
+                timelineRows.Add(CreateTimelineRow(turn, run, isCurrent: i == 0, slam, y));
+                y -= TimelineIcon + TimelineGap;
+            }
+        }
+
+        GameObject CreateTimelineRow(TimelineTurn turn, DungeonRun run, bool isCurrent, bool slam, float y)
+        {
+            var actor = turn.Actor;
+            var color = actor.Team == Team.Hero ? HeroTurnColor : actor.Definition.IsBoss ? BossTurnColor : EnemyTurnColor;
+            var frame = UiFactory.CreateImage("Turn", timelineRoot, UiFactory.RoundedRect, slam ? SlamColor : color);
+            UiFactory.Place(frame.rectTransform, new Vector2(0f, 1f), new Vector2(isCurrent ? 0f : 8f, y), new Vector2(TimelineIcon, TimelineIcon), new Vector2(0f, 1f));
+            var icon = UiFactory.CreateImage("Icon", frame.transform, SpriteLibrary.Get("Characters/" + actor.Definition.Id, Color.gray), Color.white);
+            icon.preserveAspect = true;
+            UiFactory.Place(icon.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(TimelineIcon - 6f, TimelineIcon - 6f));
+
+            int avFromNow = Mathf.RoundToInt((float)(turn.Time - run.CombatTime).ToDouble());
+            string label = slam ? "SLAM!" : isCurrent ? "Now" : $"+{avFromNow}";
+            var text = UiFactory.CreateText("When", frame.transform, label, 22, TextAnchor.MiddleLeft, slam ? SlamColor : isCurrent ? TextColor : HintColor);
+            UiFactory.Place(text.rectTransform, new Vector2(1f, 0.5f), new Vector2(8f, 0f), new Vector2(90f, 30f), new Vector2(0f, 0.5f));
+            return frame.gameObject;
         }
 
         public void SetHeroHp(int hp, int maxHp)
@@ -297,6 +365,7 @@ namespace FiveKingdoms.UI
 
             BuildStatus();
             BuildBossBar();
+            BuildTimeline();
             BuildLog();
             BuildControls();
             BuildOverlays();
@@ -337,6 +406,16 @@ namespace FiveKingdoms.UI
             bossName = UiFactory.CreateText("Name", panel.transform, "", 30, TextAnchor.UpperCenter, new Color(0.9f, 0.75f, 1f));
             UiFactory.Place(bossName.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -6f), new Vector2(680f, 36f), new Vector2(0.5f, 1f));
             bossFill = CreateBar(panel.transform, "BossHp", new Vector2(20f, -46f), new Vector2(680f, 26f), BossBarColor);
+        }
+
+        /// <summary>Vertical turn-order strip under the status panel, clear of the D-pad; filled by RefreshTimeline.</summary>
+        void BuildTimeline()
+        {
+            timelineRoot = UiFactory.CreateRect("Timeline", safeArea);
+            UiFactory.Place(timelineRoot, new Vector2(0f, 1f), new Vector2(32f, -212f), new Vector2(170f, 400f), new Vector2(0f, 1f));
+            timelineHeader = UiFactory.CreateText("Header", timelineRoot, "Turn order", 22, TextAnchor.UpperLeft, HintColor);
+            UiFactory.Place(timelineHeader.rectTransform, new Vector2(0f, 1f), Vector2.zero, new Vector2(170f, 26f), new Vector2(0f, 1f));
+            timelineRoot.gameObject.SetActive(false);
         }
 
         /// <summary>A rounded bar (dark back, colored fill) whose fill width is set through its anchorMax.x.</summary>

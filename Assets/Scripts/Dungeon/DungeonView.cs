@@ -114,9 +114,15 @@ namespace FiveKingdoms.Dungeon
                             i++;
                         }
                         i--;
-                        yield return AnimateMoves(moves);
+                        yield return AnimateMoves(run, moves);
                         break;
                     }
+                    case CombatStartedEvent _:
+                        hud.AddMessage("A fight begins! Faster fighters act more often.", WarningColor);
+                        break;
+                    case CombatEndedEvent _:
+                        if (run.State == RunState.InProgress) hud.AddMessage("The fight is over.", DungeonHud.HintColor);
+                        break;
                     case FacingChangedEvent facing:
                         if (actors.TryGetValue(facing.ActorId, out var turner)) turner.SetFacing(facing.Direction);
                         break;
@@ -197,31 +203,38 @@ namespace FiveKingdoms.Dungeon
 
         // ---- Animations ----
 
-        IEnumerator AnimateMoves(List<MovedEvent> moves)
+        IEnumerator AnimateMoves(DungeonRun run, List<MovedEvent> moves)
         {
-            var movers = new List<(ActorView view, Vector3 from, Vector3 to)>();
+            var movers = new List<(ActorView view, Vector3 from, Vector3 to, float duration)>();
+            float longest = 0f;
             foreach (var move in moves)
             {
                 if (!actors.TryGetValue(move.ActorId, out var view)) continue;
                 view.SetFacing(move.Direction);
-                movers.Add((view, TileCenter(move.From), TileCenter(move.To)));
+                float duration = StepDuration(run.FindActor(move.ActorId)?.Speed ?? ActorDefinition.DefaultSpeed);
+                longest = Mathf.Max(longest, duration);
+                movers.Add((view, TileCenter(move.From), TileCenter(move.To), duration));
             }
-            for (float t = 0f; t < StepTime; t += Time.deltaTime)
+            for (float t = 0f; t < longest; t += Time.deltaTime)
             {
-                float k = t / StepTime;
-                foreach (var (view, from, to) in movers)
+                foreach (var (view, from, to, duration) in movers)
                 {
+                    float k = Mathf.Clamp01(t / duration);
                     view.Place(Vector3.Lerp(from, to, k));
                     view.SetHop(k);
                 }
                 yield return null;
             }
-            foreach (var (view, _, to) in movers)
+            foreach (var (view, _, to, _) in movers)
             {
                 view.Place(to);
                 view.SetHop(0f);
             }
         }
+
+        /// <summary>Walk time for one tile: a little quicker for fast actors, a little slower for slow ones.</summary>
+        static float StepDuration(int speed) =>
+            StepTime * Mathf.Clamp(Mathf.Sqrt(ActorDefinition.DefaultSpeed / (float)Mathf.Max(1, speed)), 0.8f, 1.25f);
 
         IEnumerator AnimateAttack(DungeonRun run, AttackEvent attack, DamageEvent hit)
         {

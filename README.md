@@ -6,6 +6,10 @@ then take them into turn-based, Mystery Dungeon-style dungeons across five kingd
 **Status:** Milestone 1, the dungeon prototype, is playable: Uzuki explores 5 generated floors of the Slime Cave.
 See [GAME_PLAN.md](GAME_PLAN.md) for the design and roadmap.
 
+![Uzuki fighting a slime on B1F (phone layout, placeholder art)](docs/screenshots/2026-10-01/02-combat-critical-hit.png)
+
+More screenshots: [docs/screenshots](docs/screenshots).
+
 ## Play it
 1. Open the project in Unity Hub with **Unity 6.3 LTS (6000.3.25f1)**.
 2. Open `Assets/Scenes/Dungeon.unity` and press Play.

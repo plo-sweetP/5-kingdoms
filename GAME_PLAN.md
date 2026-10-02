@@ -50,6 +50,7 @@ Design notes:
 
 ## Heroes, skills and equipment (planned)
 - **Main character:** Uzuki (concept sketch: spiky blue hair, cyan eyes, sleeveless top with strap, one pauldron, baggy cuffed pants, boots). Placeholder sprite exists.
+- **Persistent progression:** characters keep their level and gear between dungeon runs (unlike Mystery Dungeon's resets). They level up and gear up outside, at the farm, then enter dungeons to clear the stages and the boss. Defeating monsters and bosses inside a dungeon also gives EXP that carries back out.
 - **Skills:** each character gets **3 class/job/race skills + 1 ultimate**. Skills can cost mana, cost nothing (with more unique effects), or build mana. Ultimates (buffs, debuffs, damage, summons, ...) are designed later. Basic attacks only for now; the HUD already shows the four locked slots.
 - **Equipment slots:** a **4-piece armor set + 2 rings + weapon slot(s)**. Set bonuses for wearing a full armor set are a natural fit.
 - **Equipment sources:** looted in dungeons or crafted on the farm. **Weapons can also come from the gacha.**
@@ -74,6 +75,9 @@ Design notes:
 ## Part 2: Dungeon crawl (Mystery Dungeon style)
 - Grid movement in 8 directions. Every action is a turn, then all enemies act. Diagonal moves and attacks can't cut wall corners.
 - Procedural floors: rooms and corridors, stairs down, items; later traps and monster houses.
+- **Stages and a boss:** each dungeon is a set of floors (stages) ending in a boss fight.
+- **Levels carry in and out:** the party enters at its farm-earned level and gear; EXP earned inside is kept.
+- **Berries** will restore mana once skills exist; healing comes from skills and other items later. (In the prototype, berries heal HP.)
 - Party of 1-3 (hero + monsters later). Skills, items, gear.
 - Run ends by reaching the bottom or being defeated. Defeat has a soft penalty, with no permadeath of monsters in v1.
 - The generator is seeded so runs are reproducible, which helps testing.
@@ -91,7 +95,8 @@ Design notes:
 | # | Milestone | Status |
 |---|---|---|
 | 0 | Project setup: Unity project, folders, git repo | **Done** |
-| 1 | Dungeon prototype: hero on generated floors, enemies, combat, stairs, items | **Built, in playtest** |
+| 1 | Dungeon prototype: hero on generated floors, enemies, combat, stairs, items | **Done** (first playtest: "looks great") |
+| 1b | Dungeon follow-ups: persistent hero level/EXP between runs, a boss on the last floor, mana with berries restoring it, first skills | Next |
 | 2 | Farm prototype: plant, grow, harvest, inventory, day/season clock | |
 | 3 | Monster and breeding core: stats, traits, egg, hatch, rarity and pity, with tests on the odds | |
 | 4 | Connect the loops: farm monsters enter dungeons, loot flows back, saves work | |

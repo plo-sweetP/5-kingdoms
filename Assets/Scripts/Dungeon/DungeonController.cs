@@ -46,7 +46,7 @@ namespace FiveKingdoms.Dungeon
         /// <summary>True while an action's animations are playing.</summary>
         public bool IsAnimating => busy;
 
-        /// <summary>The Auto button: the hero plays itself until this is turned off or the player acts.</summary>
+        /// <summary>The Auto button: the hero plays itself until the player turns this off.</summary>
         public bool AutoPilotEnabled
         {
             get => autoPilot;
@@ -121,21 +121,21 @@ namespace FiveKingdoms.Dungeon
             var command = buffered;
             buffered = null;
             if (command == null && held.HasValue) command = HeroCommand.Move(held.Value);
-            if (autoPilot)
-            {
-                if (command.HasValue) SetAutoPilot(false); // Any input from the player takes back control.
-                else command = AutoPilot.Decide(run);
-            }
+            // The player's own input always goes first; the auto-pilot fills in every turn they don't take.
+            if (command == null && autoPilot) command = AutoPilot.Decide(run);
             if (command.HasValue) StartCoroutine(Execute(command.Value));
         }
 
-        /// <summary>The hero plays itself (the same AutoPilot the tests use) until toggled off or the player acts.</summary>
+        /// <summary>
+        /// The hero plays itself (the same AutoPilot the tests use). Only the player turns it off, with the Auto button,
+        /// T or View; their own actions still work while it runs.
+        /// </summary>
         void SetAutoPilot(bool on)
         {
             if (autoPilot == on) return;
             autoPilot = on;
             hud.SetAutoPilot(on);
-            hud.AddMessage(on ? "Auto-pilot on. Press any action to take over." : "Auto-pilot off.", DungeonHud.HintColor);
+            hud.AddMessage(on ? "Auto-pilot on. Your own moves still work; press Auto to stop." : "Auto-pilot off.", DungeonHud.HintColor);
         }
 
         IEnumerator Execute(HeroCommand command)

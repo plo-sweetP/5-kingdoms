@@ -22,6 +22,7 @@ More screenshots: [docs/screenshots](docs/screenshots).
 | Eat a berry (heal) | Berry | B | X |
 | Take the stairs | Descend (shown on the stairs) | Enter | RB |
 | Restart after a run | Try Again | R | A or Start |
+| Auto-pilot on/off | Auto | T | View |
 
 Touch controls hide while you use a keyboard or controller; tap or click to bring them back.
 Progress is saved automatically. To start over at Lv 1 use **5 Kingdoms > Debug > Reset Save** in the editor.

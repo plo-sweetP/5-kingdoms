@@ -78,6 +78,18 @@ namespace FiveKingdoms.Tests
                 yield return null;
             Assert.IsTrue(controller.Run.Turn >= 20 || controller.Run.State != RunState.InProgress, "auto-pilot plays on its own");
 
+            // The player's own action runs, and the auto-pilot keeps going afterwards.
+            while (controller.IsAnimating) yield return null;
+            if (controller.Run.State == RunState.InProgress)
+            {
+                int before = controller.Run.Turn;
+                controller.Submit(HeroCommand.Wait);
+                for (int i = 0; i < 3; i++) yield return null;
+                while (controller.IsAnimating) yield return null;
+                Assert.Greater(controller.Run.Turn, before);
+            }
+            Assert.IsTrue(controller.AutoPilotEnabled, "only the player turns the auto-pilot off");
+
             controller.AutoPilotEnabled = false;
             while (controller.IsAnimating) yield return null;
             int turn = controller.Run.Turn;

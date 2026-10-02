@@ -167,7 +167,8 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 - Balance with progression: a fresh level-1 hero almost never beats the King Slime (3/200 autopilot runs), but with levels kept, every simulated player beats it, on average on the 2nd-3rd attempt at about Lv 9.
 - Controller support (left stick/D-pad, A attack, Y wait, X berry, RB stairs); touch controls hide while a keyboard or controller is used and button hints appear instead.
 - Debug launch flags for testing (`-fk-floors`, `-fk-level`, `-fk-save`), and a 5 Kingdoms > Debug menu to reset or show the save.
-- Auto button (also T / View): the hero plays itself with the AutoPilot until toggled off or the player acts.
+- Auto button (also T / View): the hero plays itself with the AutoPilot. It never switches itself off: only the player
+  turns it off. The player's own actions still work while it runs (they take that turn, then auto continues).
 
 **Milestone 1c (combat timeline)**: see "Combat timeline (action value)" above. Balance with the slower King Slime:
 7/200 fresh level-1 autopilot runs win (was 3); with levels kept, players beat the boss on attempt 2.5 at Lv 9.3 (was 2.6 at 9.4).

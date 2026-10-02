@@ -53,6 +53,12 @@ namespace FiveKingdoms.UI
 
         public void SetLabel(string text) => label.text = text;
 
+        public void SetColor(Color color)
+        {
+            baseColor = color;
+            Refresh();
+        }
+
         public void OnPointerDown(PointerEventData eventData)
         {
             pointers.Add(eventData.pointerId);

@@ -32,8 +32,8 @@ namespace FiveKingdoms.UI
         static readonly Color ExpColor = new Color(0.45f, 0.75f, 1f);
         static readonly Color BossBarColor = new Color(0.72f, 0.38f, 0.95f);
 
-        const string KeyboardHint = "Move: WASD / arrows + QEZC or numpad   Attack: Space   Wait: X   Berry: B   Stairs: Enter";
-        const string GamepadHint = "Move: left stick / D-pad   Attack: A   Wait: Y   Berry: X   Stairs: RB";
+        const string KeyboardHint = "Move: WASD / arrows + QEZC or numpad   Attack: Space   Wait: X   Berry: B   Stairs: Enter   Auto: T";
+        const string GamepadHint = "Move: left stick / D-pad   Attack: A   Wait: Y   Berry: X   Stairs: RB   Auto: View";
 
         const int LogLines = 4;
         const float LogLifetime = 6f;
@@ -41,6 +41,7 @@ namespace FiveKingdoms.UI
 
         public event Action<HeroCommand> CommandRequested;
         public event Action RestartRequested;
+        public event Action AutoPilotToggled;
 
         public DPad DPad { get; private set; }
 
@@ -52,7 +53,7 @@ namespace FiveKingdoms.UI
         Image hpFill, expFill, bossFill;
         GameObject bossPanel;
         int bossMaxHp;
-        HoldButton berryButton, descendButton, againButton;
+        HoldButton berryButton, descendButton, againButton, autoButton;
         CanvasGroup banner, endPanel;
         Image fader;
         Coroutine bannerRoutine;
@@ -127,6 +128,13 @@ namespace FiveKingdoms.UI
         public void SetBossHp(int hp) => bossFill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(hp / (float)bossMaxHp), 1f);
 
         public void HideBoss() => bossPanel.SetActive(false);
+
+        /// <summary>Shows whether the auto-pilot is playing; gold while it is on.</summary>
+        public void SetAutoPilot(bool on)
+        {
+            autoButton.SetLabel(on ? "Auto: On" : "Auto: Off");
+            autoButton.SetColor(on ? UltimateColor : ActionColor);
+        }
 
         /// <summary>Touch controls show only for touch (or mouse); keyboard and controller get button hints instead.</summary>
         public void SetInputMode(InputMode mode)
@@ -384,6 +392,9 @@ namespace FiveKingdoms.UI
 
             var wait = HoldButton.Create(safeArea, "Wait", "Wait", topRight, new Vector2(-390f, -64f), new Vector2(230f, 84f), ActionColor, 32, round: false);
             wait.Pressed += () => CommandRequested?.Invoke(HeroCommand.Wait);
+
+            autoButton = HoldButton.Create(safeArea, "Auto", "Auto: Off", topRight, new Vector2(-140f, -158f), new Vector2(230f, 76f), ActionColor, 30, round: false);
+            autoButton.Pressed += () => AutoPilotToggled?.Invoke();
 
             descendButton = HoldButton.Create(safeArea, "Descend", "Descend", new Vector2(0.5f, 0f), new Vector2(0f, 260f), new Vector2(330f, 96f), DescendColor, 36, round: false);
             descendButton.Pressed += () => CommandRequested?.Invoke(HeroCommand.Descend);

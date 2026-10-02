@@ -64,6 +64,27 @@ namespace FiveKingdoms.Tests
             Assert.IsNull(controller.Run.Boss);
         }
 
+        [UnityTest]
+        public IEnumerator TheAutoButtonPlaysUntilTurnedOff()
+        {
+            DungeonController.Overrides = new LaunchOptions { SavePath = savePath, FreshSave = true };
+            yield return LoadDungeon();
+            var controller = Object.FindFirstObjectByType<DungeonController>();
+            Time.timeScale = 4f;
+
+            controller.AutoPilotEnabled = true;
+            float deadline = Time.realtimeSinceStartup + 60f;
+            while (controller.Run.Turn < 20 && controller.Run.State == RunState.InProgress && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(controller.Run.Turn >= 20 || controller.Run.State != RunState.InProgress, "auto-pilot plays on its own");
+
+            controller.AutoPilotEnabled = false;
+            while (controller.IsAnimating) yield return null;
+            int turn = controller.Run.Turn;
+            for (int i = 0; i < 30; i++) yield return null;
+            Assert.AreEqual(turn, controller.Run.Turn, "with auto-pilot off, nothing happens without input");
+        }
+
         static IEnumerator LoadDungeon()
         {
             yield return SceneManager.LoadSceneAsync("Dungeon");

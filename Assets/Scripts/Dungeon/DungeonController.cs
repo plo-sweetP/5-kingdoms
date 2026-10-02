@@ -37,6 +37,7 @@ namespace FiveKingdoms.Dungeon
         HeroCommand? buffered;
         float directionHeldFor;
         int levelAtStart;
+        bool autoPilot;
         InputMode inputMode = InputMode.Touch;
 
         public DungeonRun Run => run;
@@ -44,6 +45,13 @@ namespace FiveKingdoms.Dungeon
 
         /// <summary>True while an action's animations are playing.</summary>
         public bool IsAnimating => busy;
+
+        /// <summary>The Auto button: the hero plays itself until this is turned off or the player acts.</summary>
+        public bool AutoPilotEnabled
+        {
+            get => autoPilot;
+            set => SetAutoPilot(value);
+        }
 
         void Awake()
         {
@@ -60,6 +68,7 @@ namespace FiveKingdoms.Dungeon
             hud = DungeonHud.Create(pixelCamera.GetComponent<Camera>());
             hud.CommandRequested += command => buffered = command;
             hud.RestartRequested += StartNewRun;
+            hud.AutoPilotToggled += () => SetAutoPilot(!autoPilot);
             view = new GameObject("Dungeon").AddComponent<DungeonView>();
             view.Init(hud, pixelCamera);
             AutoplayDriver.AttachIfRequested(this);
@@ -112,7 +121,21 @@ namespace FiveKingdoms.Dungeon
             var command = buffered;
             buffered = null;
             if (command == null && held.HasValue) command = HeroCommand.Move(held.Value);
+            if (autoPilot)
+            {
+                if (command.HasValue) SetAutoPilot(false); // Any input from the player takes back control.
+                else command = AutoPilot.Decide(run);
+            }
             if (command.HasValue) StartCoroutine(Execute(command.Value));
+        }
+
+        /// <summary>The hero plays itself (the same AutoPilot the tests use) until toggled off or the player acts.</summary>
+        void SetAutoPilot(bool on)
+        {
+            if (autoPilot == on) return;
+            autoPilot = on;
+            hud.SetAutoPilot(on);
+            hud.AddMessage(on ? "Auto-pilot on. Press any action to take over." : "Auto-pilot off.", DungeonHud.HintColor);
         }
 
         IEnumerator Execute(HeroCommand command)
@@ -170,7 +193,8 @@ namespace FiveKingdoms.Dungeon
             gamepad.leftStick.ReadValue().magnitude > StickDeadZone || gamepad.dpad.ReadValue().sqrMagnitude > 0.25f ||
             gamepad.buttonSouth.wasPressedThisFrame || gamepad.buttonNorth.wasPressedThisFrame ||
             gamepad.buttonWest.wasPressedThisFrame || gamepad.buttonEast.wasPressedThisFrame ||
-            gamepad.rightShoulder.wasPressedThisFrame || gamepad.startButton.wasPressedThisFrame;
+            gamepad.rightShoulder.wasPressedThisFrame || gamepad.startButton.wasPressedThisFrame ||
+            gamepad.selectButton.wasPressedThisFrame;
 
         static bool PointerPressed() =>
             Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame ||
@@ -178,6 +202,9 @@ namespace FiveKingdoms.Dungeon
 
         void ReadButtons(Keyboard keyboard, Gamepad gamepad)
         {
+            if (keyboard != null && keyboard.tKey.wasPressedThisFrame || gamepad != null && gamepad.selectButton.wasPressedThisFrame)
+                SetAutoPilot(!autoPilot);
+
             if (keyboard != null)
             {
                 if (keyboard.spaceKey.wasPressedThisFrame) buffered = HeroCommand.Attack;

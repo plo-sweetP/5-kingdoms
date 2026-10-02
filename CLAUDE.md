@@ -37,5 +37,9 @@ the project open; copy Assets/Packages/ProjectSettings to a scratch folder and r
 - Balance numbers live in `DungeonRunConfig`, `ActorCatalog`, `CombatRules` and `EnemyBrain` (boss moves); check
   `-balance` after changing them (it reports fresh runs and a campaign with levels kept between runs).
 - "Enter Play Mode" has domain reload off: statics survive between Play sessions, so reset them on scene load.
+- Combat turn order lives in `Core/Run/Timeline.cs` (Honkai Star Rail-style action value). Game time is exact `AvTime`
+  (BigInteger fractions): never use floats for time or turn decisions; ties go to the leader, then the lower actor id.
+- `GoldenReplayTests` pins equal-speed behavior to the pre-timeline engine. If a rules change is meant to alter
+  replays, re-record its fingerprint and say why in the commit.
 - Planned: party of up to 4 (`MaxPartySize`), PC/Steam with controller support. Write AI and combat so any
   hero-team member can be targeted, and keep platform services behind interfaces.

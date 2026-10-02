@@ -60,6 +60,31 @@ Design notes:
 - **Monsters come from breeding** (the free, earned "gacha").
 - **Paid gacha pools: characters + weapons** (later). Needs server-side rolls, pity, and published odds (app store and regional rules) before it ships.
 
+## Combat timeline (action value)
+Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
+(reference: https://game8.co/games/Honkai-Star-Rail/archives/438178).
+- **Speed** (integer, never randomized; hero 100, species roughly 80-130). One turn lasts 10000 / Speed AV. Whoever's next
+  turn comes soonest acts; ties go to the leader, then the lower actor id.
+- **Cycles:** the first cycle is 150 AV, every later one 100 AV; a turn exactly on a boundary counts in the cycle ending
+  there. Breakpoints are exact (Speed 134 gets 2 turns in the first cycle, 133 doesn't; Speed 120's third turn is exactly 250).
+- **Exact math:** time is a reduced fraction (`AvTime`), never a float, so seeded runs replay identically.
+- **Exploring vs. fighting:** exploring keeps the simple rhythm (everyone else takes one turn per hero action; the party moves
+  at the leader's pace). When an enemy notices the hero, combat starts and the timeline resets (cycle 0 = 150 AV);
+  it ends when no enemy is alerted. Every step still costs 10000 / Speed AV on the run's clock.
+- **AV clock:** natural regeneration (every 600 AV) and reinforcements (every 4000 AV on a floor) run on AV time, so a
+  faster hero gets more done before the floor reacts.
+- **Action costs:** every action costs one full turn for now; each action kind has a cost multiplier ready for skills.
+- **Joining mid-fight:** summoned helpers first wait a full turn; reinforcements that walk in between rounds act in the
+  coming round.
+- **Speed changes** (buffs, later) keep the distance an actor has left and recompute when it acts; the gauge isn't reset.
+- **HUD:** a turn-order strip (next 6 turns of the fight, cycle dividers, "+AV" until each, SLAM on a winding-up boss's
+  next turn), shown only in combat. Walk animations are slightly faster or slower with Speed.
+- **Content:** slimes 100 (same as the hero), King Slime 85 (slow and heavy: about every 6th turn the hero gets two in a row).
+- **Regression anchor:** with all speeds equal, the timeline reproduces the original alternating turns exactly (golden
+  replay test; balance report identical before and after).
+- **Later:** skill AV costs and mana (1d), Break/toughness with elements (1e), the party of 4 (the scheduler already handles
+  any number of actors per team).
+
 ## Party (planned)
 - **Up to 4 characters on screen**: a leader plus 3 partners, as in Mystery Dungeon. The size is one constant (`MaxPartySize`), so trying 3 is a one-line change if 4 feels crowded on a phone.
 - The player controls the leader; partners act by AI with simple tactics (follow me / go after enemies / hold back), and the player can switch which character they control. Each character keeps their own 3 skills + ultimate.
@@ -114,8 +139,10 @@ Design notes:
 |---|---|---|
 | 0 | Project setup: Unity project, folders, git repo | **Done** |
 | 1 | Dungeon prototype: hero on generated floors, enemies, combat, stairs, items | **Done** (first playtest: "looks great") |
-| 1b | Dungeon follow-ups: hero level/EXP kept between runs (saved), a boss on the last floor, controller support | **Done** |
-| 1c | Mana (berries restore it), first skills and healing | Later |
+| 1b | Dungeon follow-ups: hero level/EXP kept between runs (saved), a boss on the last floor, controller support, Auto button | **Done** |
+| 1c | Combat timeline: Honkai Star Rail-style action value (AV) turn order on the grid, Speed stat, turn-order strip | **Done** |
+| 1d | Mana (berries restore it), first skills with AV costs, healing | Next |
+| 1e | Elements and Break/toughness (needs the element chart) | Later |
 | 2 | Farm prototype: plant, grow, harvest, inventory, day/season clock | |
 | 3 | Monster and breeding core: stats, traits, egg, hatch, rarity and pity, with tests on the odds | |
 | 4 | Connect the loops: farm monsters enter dungeons, loot flows back, saves work | |
@@ -140,6 +167,10 @@ Design notes:
 - Balance with progression: a fresh level-1 hero almost never beats the King Slime (3/200 autopilot runs), but with levels kept, every simulated player beats it, on average on the 2nd-3rd attempt at about Lv 9.
 - Controller support (left stick/D-pad, A attack, Y wait, X berry, RB stairs); touch controls hide while a keyboard or controller is used and button hints appear instead.
 - Debug launch flags for testing (`-fk-floors`, `-fk-level`, `-fk-save`), and a 5 Kingdoms > Debug menu to reset or show the save.
+- Auto button (also T / View): the hero plays itself with the AutoPilot until toggled off or the player acts.
+
+**Milestone 1c (combat timeline)**: see "Combat timeline (action value)" above. Balance with the slower King Slime:
+7/200 fresh level-1 autopilot runs win (was 3); with levels kept, players beat the boss on attempt 2.5 at Lv 9.3 (was 2.6 at 9.4).
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

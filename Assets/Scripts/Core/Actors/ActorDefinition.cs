@@ -43,8 +43,9 @@ namespace FiveKingdoms.Core
     {
         public static readonly ActorDefinition Uzuki = new ActorDefinition("uzuki", "Uzuki", maxHp: 40, attack: 6, defense: 3, expReward: 0);
         public static readonly ActorDefinition Slime = new ActorDefinition("slime", "Slime", maxHp: 14, attack: 5, defense: 1, expReward: 6);
+        /// <summary>Slow and heavy (Speed 85): the hero sometimes gets two turns before it acts, e.g. to escape a slam.</summary>
         public static readonly ActorDefinition KingSlime = new ActorDefinition("king_slime", "King Slime", maxHp: 110, attack: 11, defense: 5,
-            expReward: 80, brain: ActorBrain.SlimeKing);
+            expReward: 80, brain: ActorBrain.SlimeKing, speed: 85);
 
         static readonly ActorDefinition[] All = { Uzuki, Slime, KingSlime };
 

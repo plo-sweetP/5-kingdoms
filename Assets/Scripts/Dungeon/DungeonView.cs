@@ -19,7 +19,8 @@ namespace FiveKingdoms.Dungeon
         const int StairsOrder = 10;
         const int ItemOrder = 20;
 
-        static readonly Color EnemySlashTint = new Color(1f, 0.6f, 0.55f);
+        static readonly Color HeroSlashTint = new Color(1f, 0.88f, 0.45f); // Warm, so it reads against the white hit flash.
+        static readonly Color EnemySlashTint = new Color(1f, 0.5f, 0.45f);
         static readonly Color CritColor = new Color(1f, 0.85f, 0.2f);
         static readonly Color HeroHurtColor = new Color(1f, 0.5f, 0.45f);
         static readonly Color HealColor = new Color(0.45f, 1f, 0.5f);
@@ -204,7 +205,7 @@ namespace FiveKingdoms.Dungeon
 
             yield return attacker.Lunge(direction, LungeDistance);
             var targetTile = attacker.transform.position + new Vector3(offset.X, offset.Y, 0f);
-            Effects.Slash(effectRoot, targetTile, attack.Direction, attacker.IsHero ? Color.white : EnemySlashTint);
+            Effects.Slash(effectRoot, targetTile, attack.Direction, attacker.IsHero ? HeroSlashTint : EnemySlashTint);
 
             if (hit != null)
             {
@@ -221,7 +222,9 @@ namespace FiveKingdoms.Dungeon
             if (!actors.TryGetValue(hit.TargetId, out var target)) return;
             target.Hurt(knockDirection, hit.HpAfter);
             var color = hit.Critical ? CritColor : target.IsHero ? HeroHurtColor : Color.white;
-            hud.ShowFloatingText(target.transform.position + Vector3.up * 0.55f, hit.Amount.ToString(), color, hit.Critical ? 1.5f : 1f);
+            // Numbers pop above the target, unless the attacker stands above it: then beside it, so they don't cover the attacker.
+            var numberOffset = knockDirection.y < -0.1f ? new Vector3(0.6f, 0.1f, 0f) : Vector3.up * 0.55f;
+            hud.ShowFloatingText(target.transform.position + numberOffset, hit.Amount.ToString(), color, hit.Critical ? 1.5f : 1f);
             if (target.IsHero) hud.SetHeroHp(hit.HpAfter, run.Hero.MaxHp);
             Effects.Burst(effectRoot, target.transform.position, hit.Critical ? CritColor : Color.white, hit.Critical ? 12 : 5, 2.5f);
             pixelCamera.Shake(hit.Critical ? 0.14f : 0.05f, hit.Critical ? 0.22f : 0.1f);

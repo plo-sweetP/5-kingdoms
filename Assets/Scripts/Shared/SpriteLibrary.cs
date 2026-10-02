@@ -14,6 +14,7 @@ namespace FiveKingdoms
 
         static readonly Dictionary<string, Sprite> Cache = new Dictionary<string, Sprite>();
         static readonly Dictionary<Sprite, Sprite> Silhouettes = new Dictionary<Sprite, Sprite>();
+        static readonly Dictionary<Sprite, float> VisibleTops = new Dictionary<Sprite, float>();
         static Sprite white;
 
         public static Sprite Get(string path, Color fallback)
@@ -62,6 +63,30 @@ namespace FiveKingdoms
             }
             Silhouettes[source] = result;
             return result;
+        }
+
+        /// <summary>
+        /// Height of the sprite's highest opaque pixel above its pivot, in world units: where a head ends, for
+        /// placing HP bars. Uses the full sprite height when the texture isn't readable.
+        /// </summary>
+        public static float VisibleTop(Sprite sprite)
+        {
+            if (VisibleTops.TryGetValue(sprite, out var top)) return top;
+            var rect = sprite.rect;
+            int width = (int)rect.width, height = (int)rect.height;
+            top = (height - sprite.pivot.y) / sprite.pixelsPerUnit;
+            if (sprite.texture.isReadable)
+            {
+                var colors = sprite.texture.GetPixels((int)rect.x, (int)rect.y, width, height); // Bottom row first.
+                for (int i = colors.Length - 1; i >= 0; i--)
+                {
+                    if (colors[i].a <= 0f) continue;
+                    top = (i / width + 1 - sprite.pivot.y) / sprite.pixelsPerUnit;
+                    break;
+                }
+            }
+            VisibleTops[sprite] = top;
+            return top;
         }
 
         static Sprite CreateSolid(Color color, int size)

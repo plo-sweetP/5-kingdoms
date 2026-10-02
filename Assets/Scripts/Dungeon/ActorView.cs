@@ -57,7 +57,7 @@ namespace FiveKingdoms.Dungeon
                 view.flash = NewRenderer("Flash", view.visual, silhouette, 0);
                 view.flash.color = new Color(1f, 1f, 1f, 0f);
             }
-            if (!view.IsHero) view.CreateHpBar();
+            if (!view.IsHero) view.CreateHpBar(SpriteLibrary.VisibleTop(sprite) + 3f * SpriteLibrary.Pixel);
             view.SetHp(actor.Hp);
             return view;
         }
@@ -208,11 +208,12 @@ namespace FiveKingdoms.Dungeon
             shadow.color = new Color(1f, 1f, 1f, alpha);
         }
 
-        void CreateHpBar()
+        /// <summary>A thin bar just above the head, so stacked enemies each keep their bar inside their own tile.</summary>
+        void CreateHpBar(float height)
         {
             hpBar = new GameObject("HpBar").transform;
             hpBar.SetParent(transform, false);
-            hpBar.localPosition = new Vector3(0f, 0.44f, 0f);
+            hpBar.localPosition = new Vector3(0f, height, 0f);
             var back = NewRenderer("Back", hpBar, SpriteLibrary.White, HpBarOrder);
             back.color = new Color(0f, 0f, 0f, 0.8f);
             back.transform.localScale = new Vector3(HpBarWidth + 2f * SpriteLibrary.Pixel, 4f * SpriteLibrary.Pixel, 1f);

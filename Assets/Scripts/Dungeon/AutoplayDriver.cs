@@ -41,7 +41,7 @@ namespace FiveKingdoms.Dungeon
             yield return new WaitForSeconds(1.8f);
             yield return Capture("01_start");
 
-            int actions = 0, shot = 0, attackShots = 0;
+            int actions = 0, shot = 0, attackShots = 0, chargeShots = 0;
             float started = Time.realtimeSinceStartup;
             while (actions < MaxActions && Time.realtimeSinceStartup - started < TimeLimit)
             {
@@ -56,11 +56,24 @@ namespace FiveKingdoms.Dungeon
                 var command = AutoPilot.Decide(run);
                 bool attacks = command.Kind == HeroCommandKind.Attack || command.Kind == HeroCommandKind.Move &&
                     run.ActorAt(run.Hero.Pos + command.Direction.ToOffset()) is Actor target && target.Team != Team.Hero;
+                bool bossWasHelped = run.Boss?.CalledForHelp ?? true;
                 controller.Submit(command);
                 actions++;
-                if (attacks && attackShots < 2)
+                yield return null; // Let the controller resolve the turn.
+                var boss = controller.Run.Boss;
+                if (boss != null && boss.Charging && chargeShots < 2)
                 {
-                    yield return new WaitForSeconds(0.13f); // Just after the lunge connects: slash and hit flash.
+                    yield return new WaitForSeconds(0.3f); // The wind-up pose and warning tiles.
+                    yield return Capture($"boss_charge{++chargeShots}_action{actions}");
+                }
+                else if (boss != null && boss.CalledForHelp && !bossWasHelped)
+                {
+                    yield return new WaitForSeconds(0.45f); // The reinforcements fading in.
+                    yield return Capture($"boss_summon_action{actions}");
+                }
+                else if (attacks && attackShots < 2)
+                {
+                    yield return new WaitForSeconds(0.12f); // Just after the lunge connects: slash and hit flash.
                     yield return Capture($"attack{++attackShots}_action{actions}");
                 }
                 else if (shot < ShotAfterAction.Length && actions >= ShotAfterAction[shot])

@@ -9,10 +9,14 @@ using UnityEngine.UI;
 
 namespace FiveKingdoms.UI
 {
+    /// <summary>What the player last used: decides whether touch controls show and which button hints to give.</summary>
+    public enum InputMode { Touch, Keyboard, Gamepad }
+
     /// <summary>
-    /// Landscape HUD for the dungeon, built in code. HP, level and floor across the top; D-pad bottom-left;
-    /// attack plus three skill slots and an ultimate bottom-right (locked until the skill system lands);
-    /// Wait and Berry top-right; a message log; floating numbers; fades, floor banner and end-of-run panel.
+    /// Landscape HUD for the dungeon, built in code. HP, EXP, level and floor across the top, plus a boss bar on
+    /// boss floors; D-pad bottom-left; attack plus three skill slots and an ultimate bottom-right (locked until the
+    /// skill system lands); Wait and Berry top-right; a message log; floating numbers; fades, floor banner and
+    /// end-of-run panel. Touch controls hide while a keyboard or controller is in use (PC, Steam Deck).
     /// Layout is in 1920x1080 reference pixels, scaled to the screen height and kept inside the safe area.
     /// </summary>
     public sealed class DungeonHud : MonoBehaviour
@@ -25,6 +29,11 @@ namespace FiveKingdoms.UI
         static readonly Color SkillColor = new Color(0.24f, 0.4f, 0.78f, 0.92f);
         static readonly Color UltimateColor = new Color(0.86f, 0.64f, 0.14f, 0.92f);
         static readonly Color DescendColor = new Color(0.86f, 0.64f, 0.14f, 0.95f);
+        static readonly Color ExpColor = new Color(0.45f, 0.75f, 1f);
+        static readonly Color BossBarColor = new Color(0.72f, 0.38f, 0.95f);
+
+        const string KeyboardHint = "Move: WASD / arrows + QEZC or numpad   Attack: Space   Wait: X   Berry: B   Stairs: Enter";
+        const string GamepadHint = "Move: left stick / D-pad   Attack: A   Wait: Y   Berry: X   Stairs: RB";
 
         const int LogLines = 4;
         const float LogLifetime = 6f;
@@ -38,13 +47,16 @@ namespace FiveKingdoms.UI
         readonly List<LogLine> log = new List<LogLine>();
         readonly List<FloatingText> floating = new List<FloatingText>();
         Camera worldCamera;
-        RectTransform canvasRect, safeArea, floatingLayer, logRoot;
-        Text heroText, hpText, floorText, bannerTitle, bannerSubtitle, endTitle, endDetail;
-        Image hpFill;
-        HoldButton berryButton, descendButton;
+        RectTransform canvasRect, safeArea, floatingLayer, logRoot, touchControls;
+        Text heroText, hpText, expText, floorText, bossName, keysText, bannerTitle, bannerSubtitle, endTitle, endDetail;
+        Image hpFill, expFill, bossFill;
+        GameObject bossPanel;
+        int bossMaxHp;
+        HoldButton berryButton, descendButton, againButton;
         CanvasGroup banner, endPanel;
         Image fader;
         Coroutine bannerRoutine;
+        InputMode inputMode = InputMode.Touch;
 
         sealed class LogLine
         {
@@ -87,6 +99,9 @@ namespace FiveKingdoms.UI
             var hero = run.Hero;
             heroText.text = $"{hero.Name}   Lv {hero.Level}";
             SetHeroHp(hero.Hp, hero.MaxHp);
+            int toNext = CombatRules.ExpToNextLevel(hero.Level);
+            expFill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(hero.Exp / (float)toNext), 1f);
+            expText.text = $"{hero.Exp}/{toNext} EXP";
             floorText.text = $"B{run.Floor}F";
             berryButton.SetLabel($"Berry x{run.Berries}");
             berryButton.Interactable = run.Berries > 0;
@@ -99,6 +114,29 @@ namespace FiveKingdoms.UI
             hpFill.rectTransform.anchorMax = new Vector2(ratio, 1f);
             hpFill.color = ratio > 0.5f ? new Color(0.36f, 0.86f, 0.42f) : ratio > 0.25f ? new Color(0.95f, 0.78f, 0.25f) : new Color(0.92f, 0.3f, 0.26f);
             hpText.text = $"{hp}/{maxHp}";
+        }
+
+        public void ShowBoss(string name, int hp, int maxHp)
+        {
+            bossName.text = name;
+            bossMaxHp = Mathf.Max(1, maxHp);
+            bossPanel.SetActive(true);
+            SetBossHp(hp);
+        }
+
+        public void SetBossHp(int hp) => bossFill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(hp / (float)bossMaxHp), 1f);
+
+        public void HideBoss() => bossPanel.SetActive(false);
+
+        /// <summary>Touch controls show only for touch (or mouse); keyboard and controller get button hints instead.</summary>
+        public void SetInputMode(InputMode mode)
+        {
+            inputMode = mode;
+            touchControls.gameObject.SetActive(mode == InputMode.Touch);
+            bool desktop = !Application.isMobilePlatform;
+            keysText.text = mode == InputMode.Gamepad ? GamepadHint : desktop || mode == InputMode.Keyboard ? KeyboardHint : "";
+            descendButton.SetLabel(mode == InputMode.Gamepad ? "Descend (RB)" : mode == InputMode.Keyboard ? "Descend (Enter)" : "Descend");
+            againButton.SetLabel(mode == InputMode.Gamepad ? "Try Again (A)" : mode == InputMode.Keyboard ? "Try Again (R)" : "Try Again");
         }
 
         public void AddMessage(string message, Color? color = null)
@@ -150,13 +188,21 @@ namespace FiveKingdoms.UI
             fader.color = new Color(0f, 0f, 0f, targetAlpha);
         }
 
-        public void ShowRunEnd(bool won, DungeonRun run)
+        /// <summary>End-of-run panel: the result, and what the hero takes home (levels are kept win or lose).</summary>
+        public void ShowRunEnd(DungeonRun run, int levelAtStart)
         {
-            endTitle.text = won ? "Dungeon Cleared!" : $"{run.Hero.Name} fainted...";
+            bool won = run.State == RunState.Won;
+            var hero = run.Hero;
+            endTitle.text = won ? "Dungeon Cleared!" : $"{hero.Name} fainted...";
             endTitle.color = won ? new Color(1f, 0.85f, 0.3f) : new Color(1f, 0.55f, 0.5f);
-            endDetail.text = won
-                ? $"Cleared all {run.Config.FloorCount} floors of {run.Config.Name} at Lv {run.Hero.Level} in {run.Turn} turns."
-                : $"Reached B{run.Floor}F of {run.Config.Name} at Lv {run.Hero.Level}.";
+            string result = !won ? $"Reached B{run.Floor}F of {run.Config.Name}."
+                : run.Config.Boss != null ? $"Defeated the {run.Config.Boss.Name} and cleared {run.Config.Name} in {run.Turn} turns."
+                : $"Cleared all {run.Config.FloorCount} floors of {run.Config.Name} in {run.Turn} turns.";
+            int gained = hero.Level - levelAtStart;
+            string progress = gained > 0
+                ? $"{hero.Name} grew from Lv {levelAtStart} to Lv {hero.Level}. Progress saved."
+                : $"{hero.Name} is Lv {hero.Level} with {hero.Exp} EXP. Progress saved.";
+            endDetail.text = result + "\n" + progress;
             endPanel.alpha = 1f;
             endPanel.blocksRaycasts = true;
             endPanel.interactable = true;
@@ -239,44 +285,65 @@ namespace FiveKingdoms.UI
             floatingLayer = UiFactory.Stretch(UiFactory.CreateRect("FloatingText", canvasRect));
             safeArea = UiFactory.Stretch(UiFactory.CreateRect("SafeArea", canvasRect));
             safeArea.gameObject.AddComponent<SafeAreaFitter>();
+            touchControls = UiFactory.Stretch(UiFactory.CreateRect("TouchControls", safeArea));
 
             BuildStatus();
+            BuildBossBar();
             BuildLog();
             BuildControls();
             BuildOverlays();
             HideRunEnd();
+            HideBoss();
+            SetInputMode(InputMode.Touch);
         }
 
         void BuildStatus()
         {
             var panel = UiFactory.CreateImage("Status", safeArea, UiFactory.RoundedRect, PanelColor);
-            UiFactory.Place(panel.rectTransform, new Vector2(0f, 1f), new Vector2(28f, -24f), new Vector2(540f, 122f), new Vector2(0f, 1f));
+            UiFactory.Place(panel.rectTransform, new Vector2(0f, 1f), new Vector2(28f, -24f), new Vector2(540f, 140f), new Vector2(0f, 1f));
             heroText = UiFactory.CreateText("Hero", panel.transform, "", 36, TextAnchor.UpperLeft, TextColor);
             UiFactory.Place(heroText.rectTransform, new Vector2(0f, 1f), new Vector2(24f, -12f), new Vector2(490f, 44f), new Vector2(0f, 1f));
 
-            var barBack = UiFactory.CreateImage("HpBack", panel.transform, UiFactory.RoundedRect, new Color(0f, 0f, 0f, 0.65f));
-            UiFactory.Place(barBack.rectTransform, new Vector2(0f, 1f), new Vector2(24f, -66f), new Vector2(330f, 36f), new Vector2(0f, 1f));
-            hpFill = UiFactory.CreateImage("HpFill", barBack.transform, UiFactory.RoundedRect, Color.green);
-            var fillRect = hpFill.rectTransform;
-            fillRect.anchorMin = Vector2.zero;
-            fillRect.anchorMax = Vector2.one;
-            fillRect.offsetMin = new Vector2(4f, 4f);
-            fillRect.offsetMax = new Vector2(-4f, -4f);
-            hpText = UiFactory.CreateText("Hp", panel.transform, "", 30, TextAnchor.MiddleLeft, TextColor);
-            UiFactory.Place(hpText.rectTransform, new Vector2(0f, 1f), new Vector2(370f, -84f), new Vector2(160f, 40f), new Vector2(0f, 0.5f));
+            hpFill = CreateBar(panel.transform, "Hp", new Vector2(24f, -62f), new Vector2(330f, 36f), Color.green);
+            hpText = UiFactory.CreateText("HpText", panel.transform, "", 30, TextAnchor.MiddleLeft, TextColor);
+            UiFactory.Place(hpText.rectTransform, new Vector2(0f, 1f), new Vector2(370f, -80f), new Vector2(160f, 40f), new Vector2(0f, 0.5f));
+
+            expFill = CreateBar(panel.transform, "Exp", new Vector2(24f, -108f), new Vector2(330f, 16f), ExpColor);
+            expText = UiFactory.CreateText("ExpText", panel.transform, "", 22, TextAnchor.MiddleLeft, HintColor);
+            UiFactory.Place(expText.rectTransform, new Vector2(0f, 1f), new Vector2(370f, -116f), new Vector2(170f, 30f), new Vector2(0f, 0.5f));
 
             var floorPanel = UiFactory.CreateImage("Floor", safeArea, UiFactory.RoundedRect, PanelColor);
             UiFactory.Place(floorPanel.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(200f, 72f), new Vector2(0.5f, 1f));
             floorText = UiFactory.CreateText("FloorText", floorPanel.transform, "", 40, TextAnchor.MiddleCenter, TextColor);
             UiFactory.Stretch(floorText.rectTransform);
 
-            if (!Application.isMobilePlatform)
-            {
-                var keys = UiFactory.CreateText("Keys", safeArea,
-                    "Move: WASD / arrows + QEZC or numpad   Attack: Space   Wait: X   Berry: B   Stairs: Enter",
-                    22, TextAnchor.UpperLeft, HintColor);
-                UiFactory.Place(keys.rectTransform, new Vector2(0f, 1f), new Vector2(32f, -156f), new Vector2(1000f, 30f), new Vector2(0f, 1f));
-            }
+            keysText = UiFactory.CreateText("Keys", safeArea, "", 22, TextAnchor.UpperLeft, HintColor);
+            UiFactory.Place(keysText.rectTransform, new Vector2(0f, 1f), new Vector2(32f, -176f), new Vector2(1000f, 30f), new Vector2(0f, 1f));
+        }
+
+        void BuildBossBar()
+        {
+            var panel = UiFactory.CreateImage("Boss", safeArea, UiFactory.RoundedRect, PanelColor);
+            UiFactory.Place(panel.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -106f), new Vector2(720f, 84f), new Vector2(0.5f, 1f));
+            bossPanel = panel.gameObject;
+            bossName = UiFactory.CreateText("Name", panel.transform, "", 30, TextAnchor.UpperCenter, new Color(0.9f, 0.75f, 1f));
+            UiFactory.Place(bossName.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -6f), new Vector2(680f, 36f), new Vector2(0.5f, 1f));
+            bossFill = CreateBar(panel.transform, "BossHp", new Vector2(20f, -46f), new Vector2(680f, 26f), BossBarColor);
+        }
+
+        /// <summary>A rounded bar (dark back, colored fill) whose fill width is set through its anchorMax.x.</summary>
+        static Image CreateBar(Transform parent, string name, Vector2 position, Vector2 size, Color color)
+        {
+            var back = UiFactory.CreateImage(name + "Back", parent, UiFactory.RoundedRect, new Color(0f, 0f, 0f, 0.65f));
+            UiFactory.Place(back.rectTransform, new Vector2(0f, 1f), position, size, new Vector2(0f, 1f));
+            var fill = UiFactory.CreateImage(name + "Fill", back.transform, UiFactory.RoundedRect, color);
+            var rect = fill.rectTransform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            float inset = Mathf.Min(4f, size.y / 4f);
+            rect.offsetMin = new Vector2(inset, inset);
+            rect.offsetMax = new Vector2(-inset, -inset);
+            return fill;
         }
 
         void BuildLog()
@@ -291,9 +358,9 @@ namespace FiveKingdoms.UI
             var bottomRight = new Vector2(1f, 0f);
             var topRight = new Vector2(1f, 1f);
 
-            DPad = DPad.Create(safeArea, bottomLeft, new Vector2(270f, 270f), 420f);
+            DPad = DPad.Create(touchControls, bottomLeft, new Vector2(270f, 270f), 420f);
 
-            var attack = HoldButton.Create(safeArea, "Attack", "ATK", bottomRight, new Vector2(-230f, 230f), new Vector2(230f, 230f), AttackColor, 48, round: true);
+            var attack = HoldButton.Create(touchControls, "Attack", "ATK", bottomRight, new Vector2(-230f, 230f), new Vector2(230f, 230f), AttackColor, 48, round: true);
             attack.Pressed += () => CommandRequested?.Invoke(HeroCommand.Attack);
 
             // Three job/race skills and an ultimate are planned; they're visible now to judge the layout, but locked.
@@ -306,7 +373,7 @@ namespace FiveKingdoms.UI
             };
             foreach (var (name, label, position, size, color) in lockedSlots)
             {
-                var slot = HoldButton.Create(safeArea, name, label, bottomRight, position, new Vector2(size, size), color, 34, round: true);
+                var slot = HoldButton.Create(touchControls, name, label, bottomRight, position, new Vector2(size, size), color, 34, round: true);
                 slot.Interactable = false;
                 slot.DisabledPressed += () => AddMessage("Skills unlock in a later milestone.", HintColor);
             }
@@ -318,7 +385,7 @@ namespace FiveKingdoms.UI
             var wait = HoldButton.Create(safeArea, "Wait", "Wait", topRight, new Vector2(-390f, -64f), new Vector2(230f, 84f), ActionColor, 32, round: false);
             wait.Pressed += () => CommandRequested?.Invoke(HeroCommand.Wait);
 
-            descendButton = HoldButton.Create(safeArea, "Descend", "Descend", new Vector2(0.5f, 0f), new Vector2(0f, 260f), new Vector2(300f, 96f), DescendColor, 38, round: false);
+            descendButton = HoldButton.Create(safeArea, "Descend", "Descend", new Vector2(0.5f, 0f), new Vector2(0f, 260f), new Vector2(330f, 96f), DescendColor, 36, round: false);
             descendButton.Pressed += () => CommandRequested?.Invoke(HeroCommand.Descend);
             descendButton.gameObject.SetActive(false);
         }
@@ -339,14 +406,14 @@ namespace FiveKingdoms.UI
             UiFactory.Place(bannerSubtitle.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -45f), new Vector2(900f, 70f));
 
             var end = UiFactory.CreateImage("RunEnd", canvasRect, UiFactory.RoundedRect, new Color(0.05f, 0.04f, 0.09f, 0.94f), raycast: true);
-            UiFactory.Place(end.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(820f, 420f));
+            UiFactory.Place(end.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(860f, 460f));
             endPanel = end.gameObject.AddComponent<CanvasGroup>();
             endTitle = UiFactory.CreateText("Title", end.transform, "", 64, TextAnchor.MiddleCenter, TextColor);
-            UiFactory.Place(endTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -90f), new Vector2(780f, 90f));
-            endDetail = UiFactory.CreateText("Detail", end.transform, "", 32, TextAnchor.MiddleCenter, HintColor);
-            UiFactory.Place(endDetail.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -180f), new Vector2(780f, 60f));
-            var again = HoldButton.Create(end.transform, "TryAgain", "Try Again", new Vector2(0.5f, 0f), new Vector2(0f, 90f), new Vector2(320f, 100f), AttackColor, 40, round: false);
-            again.Pressed += () => RestartRequested?.Invoke();
+            UiFactory.Place(endTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -80f), new Vector2(820f, 90f));
+            endDetail = UiFactory.CreateText("Detail", end.transform, "", 30, TextAnchor.MiddleCenter, HintColor);
+            UiFactory.Place(endDetail.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -190f), new Vector2(820f, 100f));
+            againButton = HoldButton.Create(end.transform, "TryAgain", "Try Again", new Vector2(0.5f, 0f), new Vector2(0f, 85f), new Vector2(360f, 100f), AttackColor, 38, round: false);
+            againButton.Pressed += () => RestartRequested?.Invoke();
         }
     }
 }

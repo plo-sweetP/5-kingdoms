@@ -26,8 +26,12 @@ namespace FiveKingdoms.Dungeon
         static readonly Color HealColor = new Color(0.45f, 1f, 0.5f);
         static readonly Color GoldColor = new Color(1f, 0.85f, 0.3f);
 
+        static readonly Color WarningColor = new Color(1f, 0.62f, 0.3f);
+        static readonly Color BossBurstColor = new Color(0.75f, 0.5f, 1f);
+
         readonly Dictionary<int, ActorView> actors = new Dictionary<int, ActorView>();
         readonly Dictionary<int, SpriteRenderer> items = new Dictionary<int, SpriteRenderer>();
+        readonly List<GameObject> warnings = new List<GameObject>();
         DungeonHud hud;
         PixelCamera pixelCamera;
         Tilemap terrain;
@@ -72,6 +76,7 @@ namespace FiveKingdoms.Dungeon
             actors.Clear();
             foreach (var item in items.Values) Destroy(item.gameObject);
             items.Clear();
+            ClearWarnings();
 
             DrawTerrain(run.Map);
             stairs.gameObject.SetActive(run.Map.InBounds(run.Map.Stairs));
@@ -79,12 +84,19 @@ namespace FiveKingdoms.Dungeon
             foreach (var actor in run.Actors) AddActor(actor);
             foreach (var item in run.Items) AddItem(item);
 
+            var boss = run.Boss;
+            if (boss != null) hud.ShowBoss(boss.Name, boss.Hp, boss.MaxHp);
+            else hud.HideBoss();
+
             if (actors.TryGetValue(run.Hero.Id, out var hero))
             {
                 pixelCamera.Target = hero.transform;
                 pixelCamera.SnapToTarget();
             }
         }
+
+        /// <summary>Banner subtitle for the current floor, e.g. "B3F" or "B5F: Boss".</summary>
+        public static string FloorTitle(DungeonRun run) => run.IsBossFloor ? $"B{run.Floor}F: Boss" : $"B{run.Floor}F";
 
         /// <summary>Animates one action's events in order. Everyone who walked this turn moves together, like Mystery Dungeon.</summary>
         public IEnumerator Play(DungeonRun run, IReadOnlyList<GameEvent> events)
@@ -156,12 +168,27 @@ namespace FiveKingdoms.Dungeon
                         var newcomer = run.FindActor(spawned.ActorId);
                         if (newcomer != null) AddActor(newcomer).FadeIn();
                         break;
+                    case BossActionEvent bossAction when bossAction.Action == BossAction.Slam:
+                    {
+                        var hits = new List<DamageEvent>();
+                        while (i + 1 < events.Count && events[i + 1] is DamageEvent hit)
+                        {
+                            hits.Add(hit);
+                            i++;
+                        }
+                        yield return AnimateSlam(run, bossAction.ActorId, hits);
+                        break;
+                    }
+                    case BossActionEvent bossAction:
+                        yield return bossAction.Action == BossAction.Charge
+                            ? AnimateCharge(run, bossAction.ActorId)
+                            : AnimateSummon(bossAction.ActorId);
+                        break;
                     case FloorStartedEvent _:
                         yield return AnimateFloorChange(run);
                         break;
-                    case RunEndedEvent ended:
-                        yield return new WaitForSeconds(0.4f);
-                        hud.ShowRunEnd(ended.Won, run);
+                    case RunEndedEvent _:
+                        yield return new WaitForSeconds(0.4f); // A beat before the controller shows the end panel.
                         break;
                 }
             }
@@ -223,9 +250,10 @@ namespace FiveKingdoms.Dungeon
             target.Hurt(knockDirection, hit.HpAfter);
             var color = hit.Critical ? CritColor : target.IsHero ? HeroHurtColor : Color.white;
             // Numbers pop above the target, unless the attacker stands above it: then beside it, so they don't cover the attacker.
-            var numberOffset = knockDirection.y < -0.1f ? new Vector3(0.6f, 0.1f, 0f) : Vector3.up * 0.55f;
+            var numberOffset = knockDirection.y < -0.1f ? new Vector3(0.6f, 0.1f, 0f) : Vector3.up * (target.IsBoss ? 1f : 0.55f);
             hud.ShowFloatingText(target.transform.position + numberOffset, hit.Amount.ToString(), color, hit.Critical ? 1.5f : 1f);
             if (target.IsHero) hud.SetHeroHp(hit.HpAfter, run.Hero.MaxHp);
+            if (target.IsBoss) hud.SetBossHp(hit.HpAfter);
             Effects.Burst(effectRoot, target.transform.position, hit.Critical ? CritColor : Color.white, hit.Critical ? 12 : 5, 2.5f);
             pixelCamera.Shake(hit.Critical ? 0.14f : 0.05f, hit.Critical ? 0.22f : 0.1f);
         }
@@ -244,10 +272,77 @@ namespace FiveKingdoms.Dungeon
             if (!actors.TryGetValue(died.ActorId, out var view)) yield break;
             actors.Remove(died.ActorId);
             hud.AddMessage(view.IsHero ? $"{view.DisplayName} fainted..." : $"{Subject(view)} was defeated!",
-                view.IsHero ? HeroHurtColor : DungeonHud.TextColor);
-            Effects.Burst(effectRoot, view.transform.position, view.BurstColor, 16, 3.5f);
+                view.IsHero ? HeroHurtColor : view.IsBoss ? GoldColor : DungeonHud.TextColor);
+            if (view.IsBoss)
+            {
+                ClearWarnings();
+                hud.HideBoss();
+                pixelCamera.Shake(0.2f, 0.6f);
+                Effects.Burst(effectRoot, view.transform.position + Vector3.up * 0.3f, view.BurstColor, 40, 5f);
+                Effects.Sparkle(effectRoot, view.transform.position, GoldColor);
+            }
+            else
+            {
+                Effects.Burst(effectRoot, view.transform.position, view.BurstColor, 16, 3.5f);
+            }
             yield return view.Die();
             Destroy(view.gameObject);
+        }
+
+        /// <summary>The boss winds up: it crouches and trembles, and the tiles it will hit pulse red.</summary>
+        IEnumerator AnimateCharge(DungeonRun run, int bossId)
+        {
+            if (!actors.TryGetValue(bossId, out var boss)) yield break;
+            boss.SetCharging(true);
+            ClearWarnings();
+            var center = run.FindActor(bossId)?.Pos;
+            if (center.HasValue)
+            {
+                for (int dy = -EnemyBrain.SlamRadius; dy <= EnemyBrain.SlamRadius; dy++)
+                    for (int dx = -EnemyBrain.SlamRadius; dx <= EnemyBrain.SlamRadius; dx++)
+                    {
+                        var tile = new GridPos(center.Value.X + dx, center.Value.Y + dy);
+                        if ((dx != 0 || dy != 0) && run.Map.IsWalkable(tile)) warnings.Add(Effects.WarningTile(effectRoot, TileCenter(tile)));
+                    }
+            }
+            hud.AddMessage($"{Subject(boss)} is gathering its strength! Get away!", WarningColor);
+            yield return new WaitForSeconds(0.35f);
+        }
+
+        /// <summary>The boss leaps and lands: shockwave, screen shake, then damage to everyone caught.</summary>
+        IEnumerator AnimateSlam(DungeonRun run, int bossId, List<DamageEvent> hits)
+        {
+            if (!actors.TryGetValue(bossId, out var boss)) yield break;
+            yield return boss.Leap(0.7f, 0.16f, 0.1f);
+            ClearWarnings();
+            pixelCamera.Shake(0.22f, 0.3f);
+            Effects.Shockwave(effectRoot, boss.transform.position, BossBurstColor, 24, 3.5f);
+            if (hits.Count == 0) hud.AddMessage($"{Subject(boss)}'s slam hit nothing!", DungeonHud.TextColor);
+            foreach (var hit in hits)
+            {
+                if (!actors.TryGetValue(hit.TargetId, out var target)) continue;
+                var away = (target.transform.position - boss.transform.position).normalized;
+                ShowDamage(run, hit, away);
+                hud.AddMessage($"{Subject(boss)}'s slam hit {Object(target)} for {hit.Amount}!", target.IsHero ? HeroHurtColor : DungeonHud.TextColor);
+            }
+            yield return new WaitForSeconds(0.25f);
+        }
+
+        IEnumerator AnimateSummon(int bossId)
+        {
+            if (!actors.TryGetValue(bossId, out var boss)) yield break;
+            hud.AddMessage($"{Subject(boss)} called for help!", WarningColor);
+            Effects.Sparkle(effectRoot, boss.transform.position, BossBurstColor);
+            pixelCamera.Shake(0.06f, 0.2f);
+            yield return new WaitForSeconds(0.3f);
+        }
+
+        void ClearWarnings()
+        {
+            foreach (var warning in warnings)
+                if (warning != null) Destroy(warning);
+            warnings.Clear();
+            foreach (var view in actors.Values) view.SetCharging(false);
         }
 
         IEnumerator AnimateFloorChange(DungeonRun run)
@@ -256,7 +351,8 @@ namespace FiveKingdoms.Dungeon
             Rebuild(run);
             hud.Refresh(run);
             yield return new WaitForSeconds(0.15f);
-            hud.ShowBanner(run.Config.Name, $"B{run.Floor}F");
+            hud.ShowBanner(run.Config.Name, FloorTitle(run));
+            if (run.IsBossFloor) hud.AddMessage("A powerful presence fills the air...", WarningColor);
             yield return hud.Fade(0f, 0.35f);
         }
 
@@ -290,8 +386,9 @@ namespace FiveKingdoms.Dungeon
         {
             bool isHero = actor.Team == Team.Hero;
             var sprite = SpriteLibrary.Get("Characters/" + actor.Definition.Id, isHero ? new Color(0.3f, 0.5f, 1f) : new Color(0.4f, 0.8f, 0.4f));
+            var burstColor = isHero ? new Color(0.5f, 0.75f, 1f) : actor.Definition.IsBoss ? BossBurstColor : new Color(0.45f, 0.85f, 0.4f);
             var view = ActorView.Create(actorRoot, actor, sprite, SpriteLibrary.Get("Effects/shadow", new Color(0f, 0f, 0f, 0.3f)),
-                squishy: !isHero, burstColor: isHero ? new Color(0.5f, 0.75f, 1f) : new Color(0.45f, 0.85f, 0.4f));
+                squishy: !isHero, burstColor: burstColor);
             view.Place(TileCenter(actor.Pos));
             view.SetFacing(actor.Facing);
             actors[actor.Id] = view;

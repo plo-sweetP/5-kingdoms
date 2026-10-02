@@ -12,8 +12,8 @@ namespace FiveKingdoms.Dungeon
     /// hero's saved progress, and turns input into hero commands. Input is read only while nothing is animating,
     /// which keeps the game strictly turn-based; a button pressed during an animation is buffered and runs next.
     /// Touch: on-screen D-pad and buttons. Keyboard: WASD/arrows plus Q/E/Z/C or the numpad for 8 directions,
-    /// Space attack, X wait, B berry, Enter stairs, R restart. Controller: left stick or D-pad, A attack, Y wait,
-    /// X berry, RB stairs, A or Start to restart.
+    /// Space attack, 1/2/3 skills, X wait, B berry, Enter stairs, T auto, R restart. Controller: left stick or D-pad,
+    /// A attack, LB/LT/RT skills, Y wait, X berry, RB stairs, View auto, A or Start to restart.
     /// </summary>
     public sealed class DungeonController : MonoBehaviour
     {
@@ -69,6 +69,11 @@ namespace FiveKingdoms.Dungeon
             hud.CommandRequested += command => buffered = command;
             hud.RestartRequested += StartNewRun;
             hud.AutoPilotToggled += () => SetAutoPilot(!autoPilot);
+            if (options.StartInputMode.HasValue)
+            {
+                inputMode = options.StartInputMode.Value;
+                hud.SetInputMode(inputMode);
+            }
             view = new GameObject("Dungeon").AddComponent<DungeonView>();
             view.Init(hud, pixelCamera);
             AutoplayDriver.AttachIfRequested(this);
@@ -121,17 +126,22 @@ namespace FiveKingdoms.Dungeon
             var command = buffered;
             buffered = null;
             if (command == null && held.HasValue) command = HeroCommand.Move(held.Value);
-            if (autoPilot && command.HasValue) hud.ShowAutoPilotBlocked();
+            else if (command?.Kind == HeroCommandKind.Skill && !command.Value.Aimed && held.HasValue)
+                command = HeroCommand.Skill(command.Value.Slot, held.Value); // Hold a direction while pressing a skill to aim it.
+            if (autoPilot && command.HasValue && command.Value.Kind != HeroCommandKind.Skill) hud.ShowAutoPilotBlocked();
             command = ChooseCommand(command, autoPilot, run);
             if (command.HasValue) StartCoroutine(Execute(command.Value));
         }
 
         /// <summary>
-        /// Picks this turn's command. While the auto-pilot is on it plays every turn: the player's moves and actions are
-        /// ignored. Skills and ultimates will be the exception, usable by hand during auto, once they exist (milestone 1d).
+        /// Picks this turn's command. While the auto-pilot is on it plays every turn and the player's moves and actions
+        /// are ignored, except skills (and the ultimate, later): those the player can still fire by hand, and the
+        /// auto-pilot carries on afterwards.
         /// </summary>
         public static HeroCommand? ChooseCommand(HeroCommand? playerCommand, bool autoPilot, DungeonRun run) =>
-            autoPilot ? AutoPilot.Decide(run) : playerCommand;
+            !autoPilot ? playerCommand
+            : playerCommand?.Kind == HeroCommandKind.Skill ? playerCommand
+            : AutoPilot.Decide(run);
 
         /// <summary>The hero plays itself (the same AutoPilot the tests use). Only the player turns it off: Auto, T or View.</summary>
         void SetAutoPilot(bool on)
@@ -171,11 +181,39 @@ namespace FiveKingdoms.Dungeon
             switch (command.Kind)
             {
                 case HeroCommandKind.UseBerry:
-                    hud.AddMessage(run.Berries == 0 ? "You have no berries." : "HP is already full.", DungeonHud.HintColor);
+                    hud.AddMessage(run.Berries == 0 ? "You have no berries." : BerryFullMessage(run.Config), DungeonHud.HintColor);
                     break;
                 case HeroCommandKind.Descend:
                     hud.AddMessage(run.IsBossFloor ? "No stairs here. Defeat the boss!" : "There are no stairs here.", DungeonHud.HintColor);
                     break;
+                case HeroCommandKind.Skill:
+                    hud.AddMessage(SkillRefusalMessage(run, command), DungeonHud.HintColor);
+                    break;
+            }
+        }
+
+        static string BerryFullMessage(DungeonRunConfig config) =>
+            config.BerryHealHp > 0 && config.BerryRestoreMp > 0 ? "HP and MP are already full."
+            : config.BerryHealHp > 0 ? "HP is already full."
+            : "MP is already full.";
+
+        /// <summary>Why a skill command can't be carried out right now, for the message log.</summary>
+        public static string SkillRefusalMessage(DungeonRun run, HeroCommand command)
+        {
+            int slot = command.Slot;
+            var skills = run.Hero.Definition.Skills;
+            if (slot < 0 || slot >= skills.Count) return "No skill in that slot yet.";
+            var skill = skills[slot];
+            switch (command.Aimed ? run.CheckSkill(slot, command.Direction) : run.CheckSkill(slot))
+            {
+                case SkillCheck.OnCooldown:
+                    int turns = run.Hero.SkillCooldowns[slot];
+                    return $"{skill.Name} is recharging: {turns} more turn{(turns == 1 ? "" : "s")}.";
+                case SkillCheck.NotEnoughMana: return $"Not enough MP for {skill.Name} ({skill.ManaCost} MP).";
+                case SkillCheck.NoTarget: return $"No enemy next to you for {skill.Name}.";
+                case SkillCheck.NotNeeded: return "HP is already full.";
+                case SkillCheck.Blocked: return "No room to dash there. Hold a direction to aim.";
+                default: return $"{skill.Name} can't be used right now.";
             }
         }
 
@@ -197,8 +235,9 @@ namespace FiveKingdoms.Dungeon
             gamepad.leftStick.ReadValue().magnitude > StickDeadZone || gamepad.dpad.ReadValue().sqrMagnitude > 0.25f ||
             gamepad.buttonSouth.wasPressedThisFrame || gamepad.buttonNorth.wasPressedThisFrame ||
             gamepad.buttonWest.wasPressedThisFrame || gamepad.buttonEast.wasPressedThisFrame ||
-            gamepad.rightShoulder.wasPressedThisFrame || gamepad.startButton.wasPressedThisFrame ||
-            gamepad.selectButton.wasPressedThisFrame;
+            gamepad.rightShoulder.wasPressedThisFrame || gamepad.leftShoulder.wasPressedThisFrame ||
+            gamepad.leftTrigger.wasPressedThisFrame || gamepad.rightTrigger.wasPressedThisFrame ||
+            gamepad.startButton.wasPressedThisFrame || gamepad.selectButton.wasPressedThisFrame;
 
         static bool PointerPressed() =>
             Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame ||
@@ -212,6 +251,10 @@ namespace FiveKingdoms.Dungeon
             if (keyboard != null)
             {
                 if (keyboard.spaceKey.wasPressedThisFrame) buffered = HeroCommand.Attack;
+                else if (keyboard.digit1Key.wasPressedThisFrame) buffered = HeroCommand.Skill(0);
+                else if (keyboard.digit2Key.wasPressedThisFrame) buffered = HeroCommand.Skill(1);
+                else if (keyboard.digit3Key.wasPressedThisFrame) buffered = HeroCommand.Skill(2);
+                else if (keyboard.digit4Key.wasPressedThisFrame) hud.ShowUltimateLocked();
                 else if (keyboard.xKey.wasPressedThisFrame || keyboard.periodKey.wasPressedThisFrame) buffered = HeroCommand.Wait;
                 else if (keyboard.bKey.wasPressedThisFrame) buffered = HeroCommand.UseBerry;
                 else if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame) buffered = HeroCommand.Descend;
@@ -219,6 +262,9 @@ namespace FiveKingdoms.Dungeon
             if (gamepad != null)
             {
                 if (gamepad.buttonSouth.wasPressedThisFrame) buffered = HeroCommand.Attack;
+                else if (gamepad.leftShoulder.wasPressedThisFrame) buffered = HeroCommand.Skill(0);
+                else if (gamepad.leftTrigger.wasPressedThisFrame) buffered = HeroCommand.Skill(1);
+                else if (gamepad.rightTrigger.wasPressedThisFrame) buffered = HeroCommand.Skill(2);
                 else if (gamepad.buttonNorth.wasPressedThisFrame) buffered = HeroCommand.Wait;
                 else if (gamepad.buttonWest.wasPressedThisFrame) buffered = HeroCommand.UseBerry;
                 else if (gamepad.rightShoulder.wasPressedThisFrame) buffered = HeroCommand.Descend;

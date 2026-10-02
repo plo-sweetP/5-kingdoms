@@ -185,6 +185,9 @@ namespace FiveKingdoms.Dungeon
 
         public void FadeIn() => StartCoroutine(FadeInRoutine());
 
+        /// <summary>Leaves a fading, tinted copy of the current pose behind (fast moves like a dash).</summary>
+        public void LeaveAfterimage(Transform parent, Color tint) => Effects.Afterimage(parent, body, tint);
+
         void LateUpdate()
         {
             idleClock += Time.deltaTime;

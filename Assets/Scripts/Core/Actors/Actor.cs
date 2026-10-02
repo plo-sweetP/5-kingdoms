@@ -16,8 +16,11 @@ namespace FiveKingdoms.Core
             Defense = definition.Defense;
             ExpReward = definition.ExpReward;
             Speed = definition.Speed;
+            MaxMp = definition.MaxMp;
+            SkillCooldowns = new int[definition.Skills.Count];
             for (int i = 1; i < level; i++) CombatRules.ApplyLevelUp(this); // Same growth as leveling up in a run.
             Hp = MaxHp;
+            Mp = MaxMp;
         }
 
         public int Id { get; }
@@ -40,6 +43,13 @@ namespace FiveKingdoms.Core
         /// timeline keeps the actor's progress toward its next turn.
         /// </summary>
         public int Speed { get; set; }
+
+        /// <summary>Mana for skills. Refilled at the start of each run; berries and mana-building skills restore it.</summary>
+        public int Mp { get; set; }
+        public int MaxMp { get; set; }
+
+        /// <summary>Own turns left before each skill (by slot) can be used again.</summary>
+        public int[] SkillCooldowns { get; }
 
         /// <summary>Enemy AI state: has noticed the hero and is giving chase.</summary>
         public bool Alerted { get; set; }

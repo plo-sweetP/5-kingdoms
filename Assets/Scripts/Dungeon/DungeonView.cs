@@ -8,12 +8,14 @@ using UnityEngine.Tilemaps;
 namespace FiveKingdoms.Dungeon
 {
     /// <summary>
-    /// Draws a DungeonRun (terrain, actors, items) and animates the GameEvents each action produces.
+    /// Draws a DungeonRun (terrain, actors, items) and animates the GameEvents each action produces: steps, attacks,
+    /// skills (name pop-up, spirit-strike slash, dash afterimages), mana, heals, boss moves and floor changes.
     /// Holds no rules of its own: everything it shows comes from the run's state and events.
     /// </summary>
     public sealed class DungeonView : MonoBehaviour
     {
         const float StepTime = 0.11f;
+        const float DashTimePerTile = 0.05f;
         const float LungeDistance = 0.35f;
         const int WallPadding = 14; // Extra wall drawn past the map edge so the camera never shows the void.
         const int StairsOrder = 10;
@@ -29,7 +31,14 @@ namespace FiveKingdoms.Dungeon
         static readonly Color WarningColor = new Color(1f, 0.62f, 0.3f);
         static readonly Color BossBurstColor = new Color(0.75f, 0.5f, 1f);
 
+        static readonly Color SpiritColor = new Color(0.55f, 0.85f, 1f);
+        static readonly Color SkillTextColor = new Color(0.7f, 0.9f, 1f);
+        static readonly Color ManaTextColor = new Color(0.55f, 0.75f, 1f);
+        static readonly Color DashGhostColor = new Color(0.6f, 0.85f, 1f, 0.55f);
+        static readonly Color DustColor = new Color(0.78f, 0.7f, 0.58f);
+
         readonly Dictionary<int, ActorView> actors = new Dictionary<int, ActorView>();
+        SkillDefinition activeSkill; // The skill whose effects are playing, if any.
         readonly Dictionary<int, SpriteRenderer> items = new Dictionary<int, SpriteRenderer>();
         readonly List<GameObject> warnings = new List<GameObject>();
         DungeonHud hud;
@@ -101,10 +110,24 @@ namespace FiveKingdoms.Dungeon
         /// <summary>Animates one action's events in order. Everyone who walked this turn moves together, like Mystery Dungeon.</summary>
         public IEnumerator Play(DungeonRun run, IReadOnlyList<GameEvent> events)
         {
+            activeSkill = null;
             for (int i = 0; i < events.Count; i++)
             {
                 switch (events[i])
                 {
+                    case SkillUsedEvent used:
+                        activeSkill = used.Skill;
+                        yield return AnimateSkillUse(used);
+                        break;
+                    case ManaChangedEvent mana:
+                        ShowMana(run, mana);
+                        break;
+                    case DashedEvent dash:
+                        yield return AnimateDash(dash);
+                        break;
+                    case ItemUsedEvent used:
+                        if (actors.TryGetValue(used.ActorId, out var eater)) hud.AddMessage($"{eater.DisplayName} ate a {ItemName(used.Kind)}.");
+                        break;
                     case MovedEvent _:
                     {
                         var moves = new List<MovedEvent>();
@@ -168,7 +191,7 @@ namespace FiveKingdoms.Dungeon
                             items.Remove(pickup.ItemId);
                             StartCoroutine(PopAndDestroy(itemRenderer));
                         }
-                        hud.AddMessage($"Picked up a {pickup.Kind}.");
+                        hud.AddMessage($"Picked up a {ItemName(pickup.Kind)}.");
                         break;
                     case ActorSpawnedEvent spawned:
                         var newcomer = run.FindActor(spawned.ActorId);
@@ -198,8 +221,11 @@ namespace FiveKingdoms.Dungeon
                         break;
                 }
             }
+            activeSkill = null;
             SyncToState(run);
         }
+
+        static string ItemName(ItemKind kind) => kind.ToString().ToLowerInvariant();
 
         // ---- Animations ----
 
@@ -236,16 +262,64 @@ namespace FiveKingdoms.Dungeon
         static float StepDuration(int speed) =>
             StepTime * Mathf.Clamp(Mathf.Sqrt(ActorDefinition.DefaultSpeed / (float)Mathf.Max(1, speed)), 0.8f, 1.25f);
 
+        /// <summary>The skill's name pops up over its user (and goes in the log), with a flash of spirit light.</summary>
+        IEnumerator AnimateSkillUse(SkillUsedEvent used)
+        {
+            if (!actors.TryGetValue(used.ActorId, out var user)) yield break;
+            hud.AddMessage($"{user.DisplayName} used {used.Skill.Name}!", SkillTextColor);
+            hud.ShowFloatingText(user.transform.position + Vector3.up * 0.95f, used.Skill.Name, SkillTextColor, 0.7f);
+            if (used.Skill.Effect == SkillEffect.Dash) yield break; // The dash itself is the show.
+            Effects.Sparkle(effectRoot, user.transform.position, SpiritColor);
+            yield return new WaitForSeconds(0.12f);
+        }
+
+        /// <summary>Keeps the MP bar in step with the animation; gains pop up beside the hero.</summary>
+        void ShowMana(DungeonRun run, ManaChangedEvent mana)
+        {
+            if (mana.ActorId != run.Hero.Id) return;
+            hud.SetHeroMp(mana.MpAfter, run.Hero.MaxMp);
+            if (mana.Amount > 0 && actors.TryGetValue(mana.ActorId, out var hero))
+                hud.ShowFloatingText(hero.transform.position + new Vector3(-0.55f, 0.45f, 0f), $"+{mana.Amount} MP", ManaTextColor, 0.7f);
+        }
+
+        /// <summary>A quick slide over several tiles, leaving fading afterimages and a puff of dust at each end.</summary>
+        IEnumerator AnimateDash(DashedEvent dash)
+        {
+            if (!actors.TryGetValue(dash.ActorId, out var view)) yield break;
+            view.SetFacing(dash.Direction);
+            var from = TileCenter(dash.From);
+            var to = TileCenter(dash.To);
+            Effects.Burst(effectRoot, from + Vector3.down * 0.3f, DustColor, 6, 1.5f);
+            float duration = DashTimePerTile * Mathf.Max(1, GridPos.ChebyshevDistance(dash.From, dash.To));
+            float nextGhost = 0f;
+            for (float t = 0f; t < duration; t += Time.deltaTime)
+            {
+                float k = t / duration;
+                view.Place(Vector3.Lerp(from, to, 1f - (1f - k) * (1f - k))); // Fast start, soft stop.
+                if (t >= nextGhost)
+                {
+                    view.LeaveAfterimage(effectRoot, DashGhostColor);
+                    nextGhost += 0.025f;
+                }
+                yield return null;
+            }
+            view.Place(to);
+            Effects.Burst(effectRoot, to + Vector3.down * 0.3f, DustColor, 4, 1.2f);
+        }
+
         IEnumerator AnimateAttack(DungeonRun run, AttackEvent attack, DamageEvent hit)
         {
             if (!actors.TryGetValue(attack.AttackerId, out var attacker)) yield break;
             attacker.SetFacing(attack.Direction);
             var offset = attack.Direction.ToOffset();
             var direction = new Vector3(offset.X, offset.Y, 0f).normalized;
+            // A skill strike lunges further and cuts with spirit light.
+            bool skillStrike = attacker.IsHero && activeSkill != null && activeSkill.Effect == SkillEffect.Strike;
 
-            yield return attacker.Lunge(direction, LungeDistance);
+            yield return attacker.Lunge(direction, skillStrike ? LungeDistance * 1.3f : LungeDistance);
             var targetTile = attacker.transform.position + new Vector3(offset.X, offset.Y, 0f);
-            Effects.Slash(effectRoot, targetTile, attack.Direction, attacker.IsHero ? HeroSlashTint : EnemySlashTint);
+            Effects.Slash(effectRoot, targetTile, attack.Direction, skillStrike ? SpiritColor : attacker.IsHero ? HeroSlashTint : EnemySlashTint);
+            if (skillStrike) Effects.Burst(effectRoot, targetTile, SpiritColor, 10, 3f);
 
             if (hit != null)
             {

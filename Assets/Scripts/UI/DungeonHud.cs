@@ -13,10 +13,11 @@ namespace FiveKingdoms.UI
     public enum InputMode { Touch, Keyboard, Gamepad }
 
     /// <summary>
-    /// Landscape HUD for the dungeon, built in code. HP, EXP, level and floor across the top, plus a boss bar on
-    /// boss floors; D-pad bottom-left; attack plus three skill slots and an ultimate bottom-right (locked until the
-    /// skill system lands); Wait and Berry top-right; a message log; floating numbers; fades, floor banner and
-    /// end-of-run panel. Touch controls hide while a keyboard or controller is in use (PC, Steam Deck).
+    /// Landscape HUD for the dungeon, built in code. HP, MP, EXP, level and floor across the top, plus a boss bar on
+    /// boss floors; D-pad bottom-left; attack plus the three skills and the ultimate (locked for now) bottom-right;
+    /// Wait and Berry top-right; a message log; floating numbers; fades, floor banner and end-of-run panel. The D-pad
+    /// and attack button hide while a keyboard or controller is in use (PC, Steam Deck); the skill buttons stay, in a
+    /// row with their keys, since they also show mana costs and cooldowns.
     /// Layout is in 1920x1080 reference pixels, scaled to the screen height and kept inside the safe area.
     /// </summary>
     public sealed class DungeonHud : MonoBehaviour
@@ -29,19 +30,28 @@ namespace FiveKingdoms.UI
         static readonly Color SkillColor = new Color(0.24f, 0.4f, 0.78f, 0.92f);
         static readonly Color UltimateColor = new Color(0.86f, 0.64f, 0.14f, 0.92f);
         static readonly Color DescendColor = new Color(0.86f, 0.64f, 0.14f, 0.95f);
-        static readonly Color ExpColor = new Color(0.45f, 0.75f, 1f);
+        static readonly Color MpColor = new Color(0.32f, 0.6f, 1f);
+        static readonly Color ExpColor = new Color(0.78f, 0.62f, 1f);
         static readonly Color BossBarColor = new Color(0.72f, 0.38f, 0.95f);
         static readonly Color HeroTurnColor = new Color(0.2f, 0.42f, 0.8f, 0.9f);
         static readonly Color EnemyTurnColor = new Color(0.55f, 0.18f, 0.18f, 0.9f);
         static readonly Color BossTurnColor = new Color(0.45f, 0.22f, 0.7f, 0.95f);
         static readonly Color SlamColor = new Color(1f, 0.35f, 0.3f);
 
-        const int TimelineTurnsShown = 6;
+        const int TimelineTurnsShown = 5;
         const float TimelineIcon = 50f;
         const float TimelineGap = 6f;
 
-        const string KeyboardHint = "Move: WASD / arrows + QEZC or numpad   Attack: Space   Wait: X   Berry: B   Stairs: Enter   Auto: T";
-        const string GamepadHint = "Move: left stick / D-pad   Attack: A   Wait: Y   Berry: X   Stairs: RB   Auto: View";
+        const string KeyboardHint = "Move: WASD/arrows + QEZC   Attack: Space   Skills: 1 2 3 (hold a direction to aim)   Wait: X   Berry: B   Stairs: Enter   Auto: T";
+        const string GamepadHint = "Move: stick/D-pad   Attack: A   Skills: LB LT RT (hold a direction to aim)   Wait: Y   Berry: X   Stairs: RB   Auto: View";
+        static readonly string[] KeyboardSkillKeys = { "1", "2", "3", "4" };
+        static readonly string[] GamepadSkillKeys = { "LB", "LT", "RT", "" };
+
+        // Skill buttons (three skills, then the ultimate): around the attack button for thumbs, or in a row for keys.
+        static readonly Vector2[] TouchSkillPositions = { new Vector2(-470f, 120f), new Vector2(-455f, 335f), new Vector2(-330f, 485f), new Vector2(-135f, 460f) };
+        static readonly float[] TouchSkillSizes = { 140f, 140f, 140f, 150f };
+        static readonly Vector2[] RowSkillPositions = { new Vector2(-560f, 100f), new Vector2(-420f, 100f), new Vector2(-280f, 100f), new Vector2(-125f, 108f) };
+        static readonly float[] RowSkillSizes = { 124f, 124f, 124f, 140f };
 
         const int LogLines = 4;
         const float LogLifetime = 6f;
@@ -60,11 +70,13 @@ namespace FiveKingdoms.UI
         Text timelineHeader;
         Camera worldCamera;
         RectTransform canvasRect, safeArea, floatingLayer, logRoot, touchControls;
-        Text heroText, hpText, expText, floorText, bossName, keysText, bannerTitle, bannerSubtitle, endTitle, endDetail;
-        Image hpFill, expFill, bossFill;
+        Text heroText, hpText, mpText, expText, floorText, bossName, keysText, bannerTitle, bannerSubtitle, endTitle, endDetail;
+        Image hpFill, mpFill, expFill, bossFill;
         GameObject bossPanel;
         int bossMaxHp;
         HoldButton berryButton, descendButton, againButton, autoButton, attackButton, waitButton;
+        readonly HoldButton[] skillButtons = new HoldButton[4]; // Three skills, then the ultimate.
+        readonly Text[] skillKeys = new Text[4];
         bool autoPilotOn;
         bool hasBerries;
         float lastBlockedNotice = -10f;
@@ -114,6 +126,8 @@ namespace FiveKingdoms.UI
             var hero = run.Hero;
             heroText.text = $"{hero.Name}   Lv {hero.Level}";
             SetHeroHp(hero.Hp, hero.MaxHp);
+            SetHeroMp(hero.Mp, hero.MaxMp);
+            RefreshSkills(run);
             int toNext = CombatRules.ExpToNextLevel(hero.Level);
             expFill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(hero.Exp / (float)toNext), 1f);
             expText.text = $"{hero.Exp}/{toNext} EXP";
@@ -189,6 +203,44 @@ namespace FiveKingdoms.UI
             hpText.text = $"{hp}/{maxHp}";
         }
 
+        public void SetHeroMp(int mp, int maxMp)
+        {
+            mpFill.rectTransform.anchorMax = new Vector2(maxMp > 0 ? Mathf.Clamp01(mp / (float)maxMp) : 0f, 1f);
+            mpText.text = $"{mp}/{maxMp} MP";
+        }
+
+        /// <summary>
+        /// Each skill button shows its name and what it costs (MP), builds (+MP) or how many turns it still needs to
+        /// recharge. A skill that can't be used right now is dimmed but still answers a press, so the log can say why.
+        /// </summary>
+        void RefreshSkills(DungeonRun run)
+        {
+            var hero = run.Hero;
+            var skills = hero.Definition.Skills;
+            for (int i = 0; i < 3; i++)
+            {
+                var button = skillButtons[i];
+                if (i >= skills.Count)
+                {
+                    button.SetLabel("-");
+                    button.Interactable = false;
+                    continue;
+                }
+                var skill = skills[i];
+                int cooldown = hero.SkillCooldowns[i];
+                string detail = cooldown > 0 ? $"{cooldown} turn{(cooldown == 1 ? "" : "s")}"
+                    : skill.ManaCost > 0 ? $"{skill.ManaCost} MP"
+                    : skill.ManaGain > 0 ? $"+{skill.ManaGain} MP"
+                    : "Free";
+                button.SetLabel($"{skill.ShortName}\n<size=22>{detail}</size>");
+                var check = run.CheckSkill(i);
+                // Blocked only means "not the way the hero faces": aiming (hold a direction) can still find room.
+                button.Interactable = run.State == RunState.InProgress && (check == SkillCheck.Ready || check == SkillCheck.Blocked);
+            }
+        }
+
+        public void ShowUltimateLocked() => AddMessage("Ultimates unlock in a later milestone.", HintColor);
+
         public void ShowBoss(string name, int hp, int maxHp)
         {
             bossName.text = name;
@@ -225,11 +277,25 @@ namespace FiveKingdoms.UI
             AddMessage("Auto-pilot is playing. Press Auto to take over.", HintColor);
         }
 
-        /// <summary>Touch controls show only for touch (or mouse); keyboard and controller get button hints instead.</summary>
+        /// <summary>
+        /// The D-pad and attack button show only for touch (or mouse); keyboard and controller get button hints instead,
+        /// and the skill buttons move into a row labeled with their keys.
+        /// </summary>
         public void SetInputMode(InputMode mode)
         {
             inputMode = mode;
-            touchControls.gameObject.SetActive(mode == InputMode.Touch);
+            bool touch = mode == InputMode.Touch;
+            touchControls.gameObject.SetActive(touch);
+            // Between the D-pad and the buttons for touch; without the D-pad, bottom-left, clear of the skill row.
+            UiFactory.Place(logRoot, touch ? new Vector2(0.5f, 0f) : Vector2.zero, touch ? new Vector2(-330f, 40f) : new Vector2(32f, 40f),
+                new Vector2(660f, 160f), Vector2.zero);
+            for (int i = 0; i < skillButtons.Length; i++)
+            {
+                float size = touch ? TouchSkillSizes[i] : RowSkillSizes[i];
+                UiFactory.Place((RectTransform)skillButtons[i].transform, new Vector2(1f, 0f),
+                    touch ? TouchSkillPositions[i] : RowSkillPositions[i], new Vector2(size, size));
+                skillKeys[i].text = mode == InputMode.Gamepad ? GamepadSkillKeys[i] : mode == InputMode.Keyboard ? KeyboardSkillKeys[i] : "";
+            }
             bool desktop = !Application.isMobilePlatform;
             keysText.text = mode == InputMode.Gamepad ? GamepadHint : desktop || mode == InputMode.Keyboard ? KeyboardHint : "";
             descendButton.SetLabel(mode == InputMode.Gamepad ? "Descend (RB)" : mode == InputMode.Keyboard ? "Descend (Enter)" : "Descend");
@@ -398,17 +464,21 @@ namespace FiveKingdoms.UI
         void BuildStatus()
         {
             var panel = UiFactory.CreateImage("Status", safeArea, UiFactory.RoundedRect, PanelColor);
-            UiFactory.Place(panel.rectTransform, new Vector2(0f, 1f), new Vector2(28f, -24f), new Vector2(540f, 140f), new Vector2(0f, 1f));
+            UiFactory.Place(panel.rectTransform, new Vector2(0f, 1f), new Vector2(28f, -24f), new Vector2(540f, 164f), new Vector2(0f, 1f));
             heroText = UiFactory.CreateText("Hero", panel.transform, "", 36, TextAnchor.UpperLeft, TextColor);
-            UiFactory.Place(heroText.rectTransform, new Vector2(0f, 1f), new Vector2(24f, -12f), new Vector2(490f, 44f), new Vector2(0f, 1f));
+            UiFactory.Place(heroText.rectTransform, new Vector2(0f, 1f), new Vector2(24f, -10f), new Vector2(490f, 44f), new Vector2(0f, 1f));
 
-            hpFill = CreateBar(panel.transform, "Hp", new Vector2(24f, -62f), new Vector2(330f, 36f), Color.green);
+            hpFill = CreateBar(panel.transform, "Hp", new Vector2(24f, -58f), new Vector2(330f, 32f), Color.green);
             hpText = UiFactory.CreateText("HpText", panel.transform, "", 30, TextAnchor.MiddleLeft, TextColor);
-            UiFactory.Place(hpText.rectTransform, new Vector2(0f, 1f), new Vector2(370f, -80f), new Vector2(160f, 40f), new Vector2(0f, 0.5f));
+            UiFactory.Place(hpText.rectTransform, new Vector2(0f, 1f), new Vector2(370f, -74f), new Vector2(160f, 40f), new Vector2(0f, 0.5f));
 
-            expFill = CreateBar(panel.transform, "Exp", new Vector2(24f, -108f), new Vector2(330f, 16f), ExpColor);
+            mpFill = CreateBar(panel.transform, "Mp", new Vector2(24f, -98f), new Vector2(330f, 22f), MpColor);
+            mpText = UiFactory.CreateText("MpText", panel.transform, "", 24, TextAnchor.MiddleLeft, new Color(0.7f, 0.82f, 1f));
+            UiFactory.Place(mpText.rectTransform, new Vector2(0f, 1f), new Vector2(370f, -109f), new Vector2(170f, 32f), new Vector2(0f, 0.5f));
+
+            expFill = CreateBar(panel.transform, "Exp", new Vector2(24f, -130f), new Vector2(330f, 14f), ExpColor);
             expText = UiFactory.CreateText("ExpText", panel.transform, "", 22, TextAnchor.MiddleLeft, HintColor);
-            UiFactory.Place(expText.rectTransform, new Vector2(0f, 1f), new Vector2(370f, -116f), new Vector2(170f, 30f), new Vector2(0f, 0.5f));
+            UiFactory.Place(expText.rectTransform, new Vector2(0f, 1f), new Vector2(370f, -137f), new Vector2(170f, 30f), new Vector2(0f, 0.5f));
 
             var floorPanel = UiFactory.CreateImage("Floor", safeArea, UiFactory.RoundedRect, PanelColor);
             UiFactory.Place(floorPanel.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(200f, 72f), new Vector2(0.5f, 1f));
@@ -416,7 +486,7 @@ namespace FiveKingdoms.UI
             UiFactory.Stretch(floorText.rectTransform);
 
             keysText = UiFactory.CreateText("Keys", safeArea, "", 22, TextAnchor.UpperLeft, HintColor);
-            UiFactory.Place(keysText.rectTransform, new Vector2(0f, 1f), new Vector2(32f, -176f), new Vector2(1000f, 30f), new Vector2(0f, 1f));
+            UiFactory.Place(keysText.rectTransform, new Vector2(0f, 1f), new Vector2(32f, -200f), new Vector2(1000f, 30f), new Vector2(0f, 1f));
         }
 
         void BuildBossBar()
@@ -433,7 +503,7 @@ namespace FiveKingdoms.UI
         void BuildTimeline()
         {
             timelineRoot = UiFactory.CreateRect("Timeline", safeArea);
-            UiFactory.Place(timelineRoot, new Vector2(0f, 1f), new Vector2(32f, -212f), new Vector2(170f, 400f), new Vector2(0f, 1f));
+            UiFactory.Place(timelineRoot, new Vector2(0f, 1f), new Vector2(32f, -238f), new Vector2(170f, 360f), new Vector2(0f, 1f));
             timelineHeader = UiFactory.CreateText("Header", timelineRoot, "Turn order", 22, TextAnchor.UpperLeft, HintColor);
             UiFactory.Place(timelineHeader.rectTransform, new Vector2(0f, 1f), Vector2.zero, new Vector2(170f, 26f), new Vector2(0f, 1f));
             timelineRoot.gameObject.SetActive(false);
@@ -456,8 +526,7 @@ namespace FiveKingdoms.UI
 
         void BuildLog()
         {
-            logRoot = UiFactory.CreateRect("Log", safeArea);
-            UiFactory.Place(logRoot, new Vector2(0.5f, 0f), new Vector2(-330f, 40f), new Vector2(660f, 160f), new Vector2(0f, 0f));
+            logRoot = UiFactory.CreateRect("Log", safeArea); // Placed by SetInputMode.
         }
 
         void BuildControls()
@@ -473,19 +542,27 @@ namespace FiveKingdoms.UI
             attackButton.Pressed += () => CommandRequested?.Invoke(HeroCommand.Attack);
             attackButton.DisabledPressed += ShowAutoPilotBlocked;
 
-            // Three job/race skills and an ultimate are planned; they're visible now to judge the layout, but locked.
-            var lockedSlots = new[]
+            // The three skills and the ultimate (locked until ultimates are designed). Outside the touch-only group:
+            // with keys or a controller they stay, in a row, because they show costs and cooldowns.
+            for (int i = 0; i < skillButtons.Length; i++)
             {
-                ("Skill 1", "S1", new Vector2(-470f, 120f), 140f, SkillColor),
-                ("Skill 2", "S2", new Vector2(-455f, 335f), 140f, SkillColor),
-                ("Skill 3", "S3", new Vector2(-330f, 485f), 140f, SkillColor),
-                ("Ultimate", "ULT", new Vector2(-135f, 460f), 150f, UltimateColor),
-            };
-            foreach (var (name, label, position, size, color) in lockedSlots)
-            {
-                var slot = HoldButton.Create(touchControls, name, label, bottomRight, position, new Vector2(size, size), color, 34, round: true);
-                slot.Interactable = false;
-                slot.DisabledPressed += () => AddMessage("Skills unlock in a later milestone.", HintColor);
+                bool ultimate = i == 3;
+                float size = TouchSkillSizes[i];
+                var button = HoldButton.Create(safeArea, ultimate ? "Ultimate" : $"Skill {i + 1}", ultimate ? "ULT" : "-", bottomRight,
+                    TouchSkillPositions[i], new Vector2(size, size), ultimate ? UltimateColor : SkillColor, ultimate ? 34 : 30, round: true);
+                var key = UiFactory.CreateText("Key", button.transform, "", 24, TextAnchor.LowerCenter, TextColor);
+                UiFactory.Place(key.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, 4f), new Vector2(90f, 30f), new Vector2(0.5f, 0f));
+                skillButtons[i] = button;
+                skillKeys[i] = key;
+                if (ultimate)
+                {
+                    button.Interactable = false;
+                    button.DisabledPressed += ShowUltimateLocked;
+                    continue;
+                }
+                int slot = i;
+                button.Pressed += () => CommandRequested?.Invoke(HeroCommand.Skill(slot));
+                button.DisabledPressed += () => CommandRequested?.Invoke(HeroCommand.Skill(slot)); // The controller explains why not.
             }
 
             berryButton = HoldButton.Create(safeArea, "Berry", "Berry x0", topRight, new Vector2(-140f, -64f), new Vector2(230f, 84f), ActionColor, 32, round: false);

@@ -42,6 +42,7 @@ namespace FiveKingdoms.Dungeon
             yield return Capture("01_start");
 
             int actions = 0, shot = 0, attackShots = 0, chargeShots = 0;
+            var skillsShown = new System.Collections.Generic.HashSet<SkillEffect>();
             float started = Time.realtimeSinceStartup;
             while (actions < MaxActions && Time.realtimeSinceStartup - started < TimeLimit)
             {
@@ -57,11 +58,18 @@ namespace FiveKingdoms.Dungeon
                 bool attacks = command.Kind == HeroCommandKind.Attack || command.Kind == HeroCommandKind.Move &&
                     run.ActorAt(run.Hero.Pos + command.Direction.ToOffset()) is Actor target && target.Team != Team.Hero;
                 bool bossWasHelped = run.Boss?.CalledForHelp ?? true;
+                var skill = command.Kind == HeroCommandKind.Skill ? run.Hero.Definition.Skills[command.Slot] : null;
                 controller.Submit(command);
                 actions++;
                 yield return null; // Let the controller resolve the turn.
                 var boss = controller.Run.Boss;
-                if (boss != null && boss.Charging && chargeShots < 2)
+                if (skill != null && skillsShown.Add(skill.Effect))
+                {
+                    // The first of each kind of skill, at its showiest moment: the slash, the heal sparkles, the afterimages.
+                    yield return new WaitForSeconds(skill.Effect == SkillEffect.Strike ? 0.24f : skill.Effect == SkillEffect.Heal ? 0.2f : 0.08f);
+                    yield return Capture($"skill_{skill.Id}_action{actions}");
+                }
+                else if (boss != null && boss.Charging && chargeShots < 2)
                 {
                     while (controller.IsAnimating) yield return null; // Wind-up pose, warning tiles and the refreshed turn order.
                     yield return Capture($"boss_charge{++chargeShots}_action{actions}");

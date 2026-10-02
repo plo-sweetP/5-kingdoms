@@ -62,11 +62,13 @@ namespace FiveKingdoms.Tests
         }
 
         /// <summary>
-        /// The original stats with every speed pinned to 100, independent of later tuning in the catalog, so this stays
-        /// a test of the turn order alone.
+        /// The original rules and stats, independent of later tuning in the catalog, so this stays a test of the turn
+        /// order alone: every speed pinned to 100, no skills or mana, berries that heal 30 HP.
         /// </summary>
         static DungeonRunConfig EqualSpeedConfig() => new DungeonRunConfig
         {
+            BerryHealHp = 30,
+            BerryRestoreMp = 0,
             Hero = new ActorDefinition("uzuki", "Uzuki", maxHp: 40, attack: 6, defense: 3, expReward: 0, speed: 100),
             Enemy = new ActorDefinition("slime", "Slime", maxHp: 14, attack: 5, defense: 1, expReward: 6, speed: 100),
             Boss = new ActorDefinition("king_slime", "King Slime", maxHp: 110, attack: 11, defense: 5, expReward: 80,

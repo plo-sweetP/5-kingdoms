@@ -5,6 +5,9 @@ namespace FiveKingdoms.Core
 {
     public enum RunState { InProgress, Won, Lost }
 
+    /// <summary>Whether a skill can be used right now, and if not, why (for button states and messages).</summary>
+    public enum SkillCheck { Ready, NoSkill, OnCooldown, NotEnoughMana, NoTarget, NotNeeded, Blocked }
+
     /// <summary>
     /// One dungeon expedition: the turn-based rules for exploring floors and fighting.
     /// While exploring, every other actor takes one turn per hero action. Once an enemy notices the hero, combat
@@ -125,6 +128,7 @@ namespace FiveKingdoms.Core
                 case HeroCommandKind.Wait: return Wait();
                 case HeroCommandKind.UseBerry: return UseBerry();
                 case HeroCommandKind.Descend: return Descend();
+                case HeroCommandKind.Skill: return command.Aimed ? UseSkill(command.Slot, command.Direction) : UseSkill(command.Slot);
                 default: throw new ArgumentOutOfRangeException(nameof(command), command.Kind, null);
             }
         }
@@ -139,7 +143,7 @@ namespace FiveKingdoms.Core
             if (occupant != null && occupant.Team != Hero.Team && Map.IsCornerClear(Hero.Pos, dir))
             {
                 ResolveAttack(Hero, dir);
-                FinishHeroTurn(ActionKind.Attack);
+                FinishHeroTurn(Config.Costs.PercentFor(ActionKind.Attack));
                 return true;
             }
             if (occupant != null || !Map.CanStep(Hero.Pos, dir))
@@ -150,7 +154,7 @@ namespace FiveKingdoms.Core
 
             Step(Hero, dir);
             PickUpItemUnderHero();
-            FinishHeroTurn(ActionKind.Move);
+            FinishHeroTurn(Config.Costs.PercentFor(ActionKind.Move));
             return true;
         }
 
@@ -159,25 +163,129 @@ namespace FiveKingdoms.Core
         {
             if (!BeginAction()) return false;
             ResolveAttack(Hero, Hero.Facing);
-            FinishHeroTurn(ActionKind.Attack);
+            FinishHeroTurn(Config.Costs.PercentFor(ActionKind.Attack));
             return true;
         }
 
         public bool Wait()
         {
             if (!BeginAction()) return false;
-            FinishHeroTurn(ActionKind.Wait);
+            FinishHeroTurn(Config.Costs.PercentFor(ActionKind.Wait));
             return true;
         }
 
-        /// <summary>Eat a berry to heal. Refused (no turn used) when out of berries or already at full HP.</summary>
+        /// <summary>
+        /// Eat a berry: restores mana (and HP, if the dungeon's berries heal). Refused (no turn used) when out of
+        /// berries or when it would do nothing.
+        /// </summary>
         public bool UseBerry()
         {
-            if (!BeginAction() || Berries <= 0 || Hero.Hp >= Hero.MaxHp) return false;
+            if (!BeginAction() || Berries <= 0) return false;
+            bool heals = Config.BerryHealHp > 0 && Hero.Hp < Hero.MaxHp;
+            bool restores = Config.BerryRestoreMp > 0 && Hero.Mp < Hero.MaxMp;
+            if (!heals && !restores) return false;
             Berries--;
-            Heal(Hero, Config.BerryHeal);
-            FinishHeroTurn(ActionKind.Item);
+            events.Add(new ItemUsedEvent(Hero.Id, ItemKind.Berry));
+            if (heals) Heal(Hero, Config.BerryHealHp);
+            if (restores) ChangeMana(Hero, Config.BerryRestoreMp);
+            FinishHeroTurn(Config.Costs.PercentFor(ActionKind.Item));
             return true;
+        }
+
+        /// <summary>Whether the hero's skill in <paramref name="slot"/> can be used right now, and if not, why.</summary>
+        public SkillCheck CheckSkill(int slot) => CheckSkill(slot, Hero.Facing);
+
+        /// <summary>The same, for the skill aimed at <paramref name="aim"/> (strikes and dashes go that way).</summary>
+        public SkillCheck CheckSkill(int slot, Direction8 aim)
+        {
+            var skills = Hero.Definition.Skills;
+            if (slot < 0 || slot >= skills.Count) return SkillCheck.NoSkill;
+            var skill = skills[slot];
+            if (Hero.SkillCooldowns[slot] > 0) return SkillCheck.OnCooldown;
+            if (Hero.Mp < skill.ManaCost) return SkillCheck.NotEnoughMana;
+            switch (skill.Effect)
+            {
+                case SkillEffect.Strike: return FindStrikeTarget(aim, out _) != null ? SkillCheck.Ready : SkillCheck.NoTarget;
+                case SkillEffect.Heal: return Hero.Hp < Hero.MaxHp ? SkillCheck.Ready : SkillCheck.NotNeeded;
+                case SkillEffect.Dash: return DashDestination(skill.Power, aim) != Hero.Pos ? SkillCheck.Ready : SkillCheck.Blocked;
+                default: return SkillCheck.Ready;
+            }
+        }
+
+        /// <summary>
+        /// Uses one of the hero's skills the way the hero faces: pays its mana, applies its effect, gains any mana it
+        /// builds, then ends the turn with the skill's own AV cost and starts its cooldown. Refused (no turn used)
+        /// unless <see cref="CheckSkill(int)"/> is Ready.
+        /// </summary>
+        public bool UseSkill(int slot) => UseSkill(slot, Hero.Facing);
+
+        /// <summary>The same, aimed: strikes and dashes go toward <paramref name="aim"/>, turning the hero for free.</summary>
+        public bool UseSkill(int slot, Direction8 aim)
+        {
+            if (!BeginAction() || CheckSkill(slot, aim) != SkillCheck.Ready) return false;
+            var skill = Hero.Definition.Skills[slot];
+            events.Add(new SkillUsedEvent(Hero.Id, skill));
+            if (skill.ManaCost > 0) ChangeMana(Hero, -skill.ManaCost);
+
+            switch (skill.Effect)
+            {
+                case SkillEffect.Strike:
+                {
+                    var target = FindStrikeTarget(aim, out var dir);
+                    Hero.Facing = dir;
+                    events.Add(new AttackEvent(Hero.Id, target.Id, dir));
+                    ApplyDamage(Hero, target, CombatRules.RollHeavyAttack(Hero, target, Random, skill.Power));
+                    break;
+                }
+                case SkillEffect.Heal:
+                    Heal(Hero, Math.Max(1, Hero.MaxHp * skill.Power / 100));
+                    break;
+                case SkillEffect.Dash:
+                {
+                    var from = Hero.Pos;
+                    Hero.Facing = aim;
+                    Hero.Pos = DashDestination(skill.Power, aim);
+                    events.Add(new DashedEvent(Hero.Id, from, Hero.Pos, aim));
+                    PickUpItemUnderHero();
+                    break;
+                }
+            }
+            if (skill.ManaGain > 0 && State == RunState.InProgress) ChangeMana(Hero, skill.ManaGain);
+
+            FinishHeroTurn(skill.CostPercent);
+            Hero.SkillCooldowns[slot] = skill.Cooldown;
+            return true;
+        }
+
+        /// <summary>The enemy in the <paramref name="preferred"/> direction (if the corner allows), otherwise the first adjacent one; null if none.</summary>
+        Actor FindStrikeTarget(Direction8 preferred, out Direction8 direction)
+        {
+            direction = preferred;
+            var faced = Map.IsCornerClear(Hero.Pos, direction) ? ActorAt(Hero.Pos + direction.ToOffset()) : null;
+            if (faced != null && faced.Team != Hero.Team) return faced;
+            foreach (var dir in Directions.All)
+            {
+                var other = ActorAt(Hero.Pos + dir.ToOffset());
+                if (other == null || other.Team == Hero.Team || !Map.IsCornerClear(Hero.Pos, dir)) continue;
+                direction = dir;
+                return other;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Where a dash of up to <paramref name="tiles"/> toward <paramref name="direction"/> would end: before the first
+        /// wall, blocked corner or actor. The hero's own tile if it can't move at all.
+        /// </summary>
+        public GridPos DashDestination(int tiles, Direction8 direction)
+        {
+            var pos = Hero.Pos;
+            for (int i = 0; i < tiles; i++)
+            {
+                if (!Map.CanStep(pos, direction) || ActorAt(pos + direction.ToOffset()) != null) break;
+                pos += direction.ToOffset();
+            }
+            return pos;
         }
 
         /// <summary>Take the stairs. Without a boss, the last floor's stairs clear the dungeon.</summary>
@@ -241,10 +349,11 @@ namespace FiveKingdoms.Core
         /// the timeline. Exploring, everyone else takes one turn (the original alternating rhythm); if that leaves an
         /// enemy alerted, a fight starts and the timeline takes over from a fresh start.
         /// </summary>
-        void FinishHeroTurn(ActionKind kind)
+        void FinishHeroTurn(int cost)
         {
             Turn++;
-            int cost = Config.Costs.PercentFor(kind);
+            for (int i = 0; i < Hero.SkillCooldowns.Length; i++)
+                if (Hero.SkillCooldowns[i] > 0) Hero.SkillCooldowns[i]--;
 
             if (InCombat && AnyEnemyAlerted())
             {
@@ -374,6 +483,17 @@ namespace FiveKingdoms.Core
 
             var roll = CombatRules.RollBasicAttack(attacker, target, Random);
             ApplyDamage(attacker, target, roll);
+            if (attacker == Hero && State == RunState.InProgress) ChangeMana(Hero, CombatRules.BasicAttackManaGain);
+        }
+
+        /// <summary>Adds (or with a negative amount, spends) mana within 0..MaxMp; records the change if there was one.</summary>
+        void ChangeMana(Actor actor, int amount)
+        {
+            int after = Math.Max(0, Math.Min(actor.MaxMp, actor.Mp + amount));
+            int change = after - actor.Mp;
+            if (change == 0) return;
+            actor.Mp = after;
+            events.Add(new ManaChangedEvent(actor.Id, change, after));
         }
 
         /// <summary>The boss's wound-up slam: heavy damage to every foe next to it. Stepping away during the wind-up dodges it.</summary>

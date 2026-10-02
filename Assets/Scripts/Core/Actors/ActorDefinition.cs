@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace FiveKingdoms.Core
 {
@@ -8,8 +9,10 @@ namespace FiveKingdoms.Core
     /// <summary>Base stats for a character or monster species. Will move to data assets once there are more than a handful.</summary>
     public sealed class ActorDefinition
     {
+        static readonly SkillDefinition[] NoSkills = Array.Empty<SkillDefinition>();
+
         public ActorDefinition(string id, string name, int maxHp, int attack, int defense, int expReward,
-            ActorBrain brain = ActorBrain.Chaser, int speed = DefaultSpeed)
+            ActorBrain brain = ActorBrain.Chaser, int speed = DefaultSpeed, int maxMp = 0, IReadOnlyList<SkillDefinition> skills = null)
         {
             Id = id;
             Name = name;
@@ -19,6 +22,8 @@ namespace FiveKingdoms.Core
             ExpReward = expReward;
             Brain = brain;
             Speed = speed;
+            MaxMp = maxMp;
+            Skills = skills ?? NoSkills;
         }
 
         /// <summary>The hero's baseline. Keep species within roughly 80-130 so turn order stays readable.</summary>
@@ -36,13 +41,22 @@ namespace FiveKingdoms.Core
         /// <summary>Combat speed: one turn every 10000 / Speed AV. Never randomized.</summary>
         public int Speed { get; }
 
+        /// <summary>Mana at level 1; 0 for actors without mana.</summary>
+        public int MaxMp { get; }
+
+        /// <summary>Up to three skills, in button order (the ultimate comes later).</summary>
+        public IReadOnlyList<SkillDefinition> Skills { get; }
+
         public bool IsBoss => Brain != ActorBrain.Chaser;
     }
 
     public static class ActorCatalog
     {
-        public static readonly ActorDefinition Uzuki = new ActorDefinition("uzuki", "Uzuki", maxHp: 40, attack: 6, defense: 3, expReward: 0);
+        public static readonly ActorDefinition Uzuki = new ActorDefinition("uzuki", "Uzuki", maxHp: 40, attack: 6, defense: 3, expReward: 0,
+            maxMp: 30, skills: new[] { SkillCatalog.SpiritStrike, SkillCatalog.SecondWind, SkillCatalog.Dash });
+
         public static readonly ActorDefinition Slime = new ActorDefinition("slime", "Slime", maxHp: 14, attack: 5, defense: 1, expReward: 6);
+
         /// <summary>Slow and heavy (Speed 85): the hero sometimes gets two turns before it acts, e.g. to escape a slam.</summary>
         public static readonly ActorDefinition KingSlime = new ActorDefinition("king_slime", "King Slime", maxHp: 110, attack: 11, defense: 5,
             expReward: 80, brain: ActorBrain.SlimeKing, speed: 85);

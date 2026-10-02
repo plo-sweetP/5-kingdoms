@@ -21,6 +21,10 @@ namespace FiveKingdoms.Core
         public const int LevelUpHp = 5;
         public const int LevelUpAttack = 1;
         public const int LevelUpDefense = 1;
+        public const int LevelUpMp = 2;
+
+        /// <summary>Mana a hero's basic attack restores when it connects.</summary>
+        public const int BasicAttackManaGain = 2;
 
         /// <summary>
         /// Basic attack: 2 x ATK - DEF, times a random 85-100% spread (Pokemon-style), 1.5x on a critical hit.
@@ -51,6 +55,11 @@ namespace FiveKingdoms.Core
             actor.Hp += LevelUpHp;
             actor.Attack += LevelUpAttack;
             actor.Defense += LevelUpDefense;
+            if (actor.Definition.MaxMp > 0)
+            {
+                actor.MaxMp += LevelUpMp;
+                actor.Mp += LevelUpMp;
+            }
         }
     }
 }

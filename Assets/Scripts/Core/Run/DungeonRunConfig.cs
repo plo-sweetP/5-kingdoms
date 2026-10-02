@@ -30,7 +30,12 @@ namespace FiveKingdoms.Core
 
         public int ItemsPerFloor = 3;
         public int MaxBerries = 9;
-        public int BerryHeal = 30;
+
+        /// <summary>Mana a berry restores. Healing comes from skills (Second Wind) and slow regeneration.</summary>
+        public int BerryRestoreMp = 15;
+
+        /// <summary>HP a berry heals. 0 in the game (berries restore mana); the prototype used 30.</summary>
+        public int BerryHealHp;
 
         /// <summary>AV per 1 HP of natural regeneration (6 turns at Speed 100). 0 turns it off.</summary>
         public int RegenIntervalAv = 600;

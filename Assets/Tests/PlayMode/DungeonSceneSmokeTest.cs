@@ -106,6 +106,30 @@ namespace FiveKingdoms.Tests
             Assert.IsNull(DungeonController.ChooseCommand(null, autoPilot: false, run), "no input, no auto: nothing happens");
         }
 
+        [Test]
+        public void WhileAutoPlaysThePlayerCanStillUseSkills()
+        {
+            var run = new DungeonRun(3);
+            foreach (var skill in new[] { HeroCommand.Skill(1), HeroCommand.Skill(2, Direction8.E) })
+            {
+                var chosen = DungeonController.ChooseCommand(skill, autoPilot: true, run).Value;
+                Assert.AreEqual(HeroCommandKind.Skill, chosen.Kind);
+                Assert.AreEqual(skill.Slot, chosen.Slot);
+                Assert.AreEqual(skill.Aimed, chosen.Aimed);
+            }
+        }
+
+        [Test]
+        public void ARefusedSkillSaysWhy()
+        {
+            var run = new DungeonRun(3); // Fresh run: full HP and MP, nobody adjacent.
+            StringAssert.Contains("already full", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(1)));
+            StringAssert.Contains("No enemy", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(0)));
+            run.Hero.Hp = 1;
+            run.Hero.Mp = 0;
+            StringAssert.Contains("Not enough MP", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(1)));
+        }
+
         static IEnumerator LoadDungeon()
         {
             yield return SceneManager.LoadSceneAsync("Dungeon");

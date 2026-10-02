@@ -128,6 +128,19 @@ namespace FiveKingdoms.Core
         }
     }
 
+    /// <summary>An item from the bag was used; its effects (heal, mana) follow as their own events.</summary>
+    public sealed class ItemUsedEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly ItemKind Kind;
+
+        public ItemUsedEvent(int actorId, ItemKind kind)
+        {
+            ActorId = actorId;
+            Kind = kind;
+        }
+    }
+
     public sealed class ActorSpawnedEvent : GameEvent
     {
         public readonly int ActorId;
@@ -155,6 +168,51 @@ namespace FiveKingdoms.Core
         {
             ActorId = actorId;
             Action = action;
+        }
+    }
+
+    /// <summary>A skill was used; its effects (attack, heal, dash, mana) follow as their own events.</summary>
+    public sealed class SkillUsedEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly SkillDefinition Skill;
+
+        public SkillUsedEvent(int actorId, SkillDefinition skill)
+        {
+            ActorId = actorId;
+            Skill = skill;
+        }
+    }
+
+    /// <summary>Mana went up (positive) or was spent (negative).</summary>
+    public sealed class ManaChangedEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly int Amount;
+        public readonly int MpAfter;
+
+        public ManaChangedEvent(int actorId, int amount, int mpAfter)
+        {
+            ActorId = actorId;
+            Amount = amount;
+            MpAfter = mpAfter;
+        }
+    }
+
+    /// <summary>A multi-tile dash in one motion.</summary>
+    public sealed class DashedEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly GridPos From;
+        public readonly GridPos To;
+        public readonly Direction8 Direction;
+
+        public DashedEvent(int actorId, GridPos from, GridPos to, Direction8 direction)
+        {
+            ActorId = actorId;
+            From = from;
+            To = to;
+            Direction = direction;
         }
     }
 

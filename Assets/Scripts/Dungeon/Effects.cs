@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FiveKingdoms.Dungeon
 {
-    /// <summary>Short-lived visual effects (slash swipes, hit bursts, sparkles). Each one cleans itself up.</summary>
+    /// <summary>Short-lived visual effects (slash swipes, hit bursts, sparkles, afterimages). Each one cleans itself up.</summary>
     public static class Effects
     {
         const int EffectOrder = 9500;
@@ -76,6 +76,21 @@ namespace FiveKingdoms.Dungeon
                 var velocity = new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(0.8f, 1.6f), 0f);
                 Spawn(parent, start, color, velocity, UnityEngine.Random.Range(0.5f, 0.8f), gravity: 0f);
             }
+        }
+
+        /// <summary>A still, tinted copy of a sprite that fades out where it stands, just behind the original.</summary>
+        public static void Afterimage(Transform parent, SpriteRenderer source, Color tint)
+        {
+            var go = new GameObject("Afterimage");
+            go.transform.SetParent(parent, false);
+            go.transform.SetPositionAndRotation(source.transform.position, source.transform.rotation);
+            go.transform.localScale = source.transform.lossyScale;
+            var renderer = go.AddComponent<SpriteRenderer>();
+            renderer.sprite = source.sprite;
+            renderer.flipX = source.flipX;
+            renderer.color = tint;
+            renderer.sortingOrder = source.sortingOrder - 1;
+            go.AddComponent<Particle>().Init(Vector3.zero, 0.22f, 0f);
         }
 
         static void Spawn(Transform parent, Vector3 position, Color color, Vector3 velocity, float life, float gravity)
@@ -154,6 +169,7 @@ namespace FiveKingdoms.Dungeon
         float gravity;
         SpriteRenderer spriteRenderer;
         Color color;
+        float startAlpha;
 
         public void Init(Vector3 startVelocity, float lifetime, float fall)
         {
@@ -162,6 +178,7 @@ namespace FiveKingdoms.Dungeon
             gravity = fall;
             spriteRenderer = GetComponent<SpriteRenderer>();
             color = spriteRenderer.color;
+            startAlpha = color.a;
         }
 
         void Update()
@@ -174,7 +191,7 @@ namespace FiveKingdoms.Dungeon
             }
             velocity.y -= gravity * Time.deltaTime;
             transform.position += velocity * Time.deltaTime;
-            color.a = 1f - age / life;
+            color.a = startAlpha * (1f - age / life);
             spriteRenderer.color = color;
         }
     }

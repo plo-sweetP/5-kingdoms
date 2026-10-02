@@ -51,7 +51,7 @@ Design notes:
 ## Heroes, skills and equipment (planned)
 - **Main character:** Uzuki (concept sketch: spiky blue hair, cyan eyes, sleeveless top with strap, one pauldron, baggy cuffed pants, boots). Placeholder sprite exists.
 - **Persistent progression:** characters keep their level and gear between dungeon runs (unlike Mystery Dungeon's resets). They level up and gear up outside, at the farm, then enter dungeons to clear the stages and the boss. Defeating monsters and bosses inside a dungeon also gives EXP that carries back out.
-- **Skills:** each character gets **3 class/job/race skills + 1 ultimate**. Skills can cost mana, cost nothing (with more unique effects), or build mana. Ultimates (buffs, debuffs, damage, summons, ...) are designed later. Basic attacks only for now; the HUD already shows the four locked slots.
+- **Skills:** each character gets **3 class/job/race skills + 1 ultimate**. Skills can cost mana, cost nothing (with more unique effects), or build mana. Ultimates (buffs, debuffs, damage, summons, ...) are designed later. Uzuki's first three skills exist since 1d (see Progress); the ultimate slot is still locked.
 - **Equipment slots:** a **4-piece armor set + 2 rings + weapon slot(s)**. Set bonuses for wearing a full armor set are a natural fit.
 - **Equipment sources:** looted in dungeons or crafted on the farm. **Weapons can also come from the gacha.**
 - Data rule: gear, sets and drop tables live in data assets, like everything else.
@@ -73,17 +73,18 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
   it ends when no enemy is alerted. Every step still costs 10000 / Speed AV on the run's clock.
 - **AV clock:** natural regeneration (every 600 AV) and reinforcements (every 4000 AV on a floor) run on AV time, so a
   faster hero gets more done before the floor reacts.
-- **Action costs:** every action costs one full turn for now; each action kind has a cost multiplier ready for skills.
+- **Action costs:** basic actions cost one full turn; each skill has its own cost (Spirit Strike 125%, Dash 50%), so a heavy
+  skill pushes the user's next turn back and a quick one brings it closer.
 - **Joining mid-fight:** summoned helpers first wait a full turn; reinforcements that walk in between rounds act in the
   coming round.
 - **Speed changes** (buffs, later) keep the distance an actor has left and recompute when it acts; the gauge isn't reset.
-- **HUD:** a turn-order strip (next 6 turns of the fight, cycle dividers, "+AV" until each, SLAM on a winding-up boss's
+- **HUD:** a turn-order strip (next 5 turns of the fight, cycle dividers, "+AV" until each, SLAM on a winding-up boss's
   next turn), shown only in combat. Walk animations are slightly faster or slower with Speed.
 - **Content:** slimes 100 (same as the hero), King Slime 85 (slow and heavy: about every 6th turn the hero gets two in a row).
 - **Regression anchor:** with all speeds equal, the timeline reproduces the original alternating turns exactly (golden
   replay test; balance report identical before and after).
-- **Later:** skill AV costs and mana (1d), Break/toughness with elements (1e), the party of 4 (the scheduler already handles
-  any number of actors per team).
+- **Later:** Break/toughness with elements (1e), speed buffs and debuffs through skills, the party of 4 (the scheduler
+  already handles any number of actors per team).
 
 ## Party (planned)
 - **Up to 4 characters on screen**: a leader plus 3 partners, as in Mystery Dungeon. The size is one constant (`MaxPartySize`), so trying 3 is a one-line change if 4 feels crowded on a phone.
@@ -120,7 +121,8 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 - Procedural floors: rooms and corridors, stairs down, items; later traps and monster houses.
 - **Stages and a boss:** each dungeon is a set of floors (stages) ending in a boss fight.
 - **Levels carry in and out:** the party enters at its farm-earned level and gear; EXP earned inside is kept.
-- **Berries** will restore mana once skills exist; healing comes from skills and other items later. (In the prototype, berries heal HP.)
+- **Berries** restore mana (15 MP); healing comes from skills (Second Wind) and, later, other items. A dungeon can also
+  make its berries heal HP (`BerryHealHp` in its config).
 - Party of 1-3 (hero + monsters later). Skills, items, gear.
 - Run ends by reaching the bottom or being defeated. Defeat has a soft penalty, with no permadeath of monsters in v1.
 - The generator is seeded so runs are reproducible, which helps testing.
@@ -141,8 +143,8 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 | 1 | Dungeon prototype: hero on generated floors, enemies, combat, stairs, items | **Done** (first playtest: "looks great") |
 | 1b | Dungeon follow-ups: hero level/EXP kept between runs (saved), a boss on the last floor, controller support, Auto button | **Done** |
 | 1c | Combat timeline: Honkai Star Rail-style action value (AV) turn order on the grid, Speed stat, turn-order strip | **Done** |
-| 1d | Mana (berries restore it), first skills with AV costs, healing | Next |
-| 1e | Elements and Break/toughness (needs the element chart) | Later |
+| 1d | Mana (berries restore it), first skills with AV costs, healing | **Done** |
+| 1e | Elements and Break/toughness (needs the element chart) | Next |
 | 2 | Farm prototype: plant, grow, harvest, inventory, day/season clock | |
 | 3 | Monster and breeding core: stats, traits, egg, hatch, rarity and pity, with tests on the odds | |
 | 4 | Connect the loops: farm monsters enter dungeons, loot flows back, saves work | |
@@ -169,10 +171,31 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 - Debug launch flags for testing (`-fk-floors`, `-fk-level`, `-fk-save`), and a 5 Kingdoms > Debug menu to reset or show the save.
 - Auto button (also T / View): the hero plays itself with the AutoPilot. It never switches itself off: only the player
   turns it off. While it plays, the player can't move or take normal actions (the D-pad and action buttons dim); only
-  skills and the ultimate will stay usable by hand once they exist (1d).
+  skills (and later the ultimate) stay usable by hand.
 
 **Milestone 1c (combat timeline)**: see "Combat timeline (action value)" above. Balance with the slower King Slime:
 7/200 fresh level-1 autopilot runs win (was 3); with levels kept, players beat the boss on attempt 2.5 at Lv 9.3 (was 2.6 at 9.4).
+
+**Milestone 1d (mana and skills)**:
+- **Mana:** Uzuki has 30 MP (+2 per level), full at the start of each run. Berries restore 15 MP; a basic hit that
+  connects gives +2 MP. No natural MP regeneration.
+- **Uzuki's skills**, one of each kind:
+  - *Spirit Strike* (builds mana): 120% damage on an adjacent enemy, +8 MP, takes 125% of a turn.
+  - *Second Wind* (spends mana): heals 50% of max HP for 15 MP (one berry's worth).
+  - *Dash* (no mana, unique effect): up to 3 tiles in a straight line in half a turn, then 4 turns to recharge.
+- **Aiming:** strikes and dashes go the way Uzuki faces; hold a direction while pressing the skill to aim it.
+- **HUD:** an MP bar; the three skill buttons show what they cost or build, count down while recharging, and dim when
+  they can't be used (pressing one says why). With a keyboard or controller they line up in a row with their keys
+  (1/2/3, LB/LT/RT). The ultimate stays locked.
+- **Juice:** the skill's name pops up over Uzuki, Spirit Strike cuts with blue light, Dash leaves afterimages, and
+  mana gains float up as "+8 MP".
+- **Auto-pilot:** heals with Second Wind below 40% HP, eats a berry between fights if a heal isn't affordable, uses
+  Spirit Strike when short of mana for a heal, and dashes down long straight stretches toward the stairs. The player
+  can fire skills by hand while it plays.
+- **Balance:** with levels kept, players beat the King Slime on attempt 2.5 at Lv 9.3, the same as 1c. More fresh runs
+  now reach the boss floor (120/200, was 62); the boss is the wall (4/200 fresh wins, was 7).
+- **Layouts checked** on phone (19.5:9) and tablet/Steam Deck (16:10) shapes, for touch, keyboard and controller
+  (new `-fk-input keyboard|gamepad` launch flag); with keys or a controller the message log moves to the bottom-left.
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

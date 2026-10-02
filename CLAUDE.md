@@ -24,7 +24,8 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
 - Autoplay smoke test: `Builds/Windows/5Kingdoms.exe -screen-fullscreen 0 -fk-autoplay <screenshot folder>`
   (add `-fk-floors 1 -fk-level 9` to go straight to the boss; autoplay always uses its own throwaway save)
 
-Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway save), `-fk-save PATH`. PlayMode tests set
+Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway save), `-fk-save PATH`,
+`-fk-input keyboard|gamepad` (start with that HUD layout, e.g. to screenshot the skill row). PlayMode tests set
 `DungeonController.Overrides` instead. The real save is `save.json` in `Application.persistentDataPath`
 (`SaveSystem`); never let tests or tools write to it.
 
@@ -34,8 +35,9 @@ the project open; copy Assets/Packages/ProjectSettings to a scratch folder and r
 ## Conventions
 - Landscape only; Android builds use IL2CPP + ARM64 (`Assets/Editor/ProjectSettingsApplier.cs`).
 - Unity's C# is 9.0: no file-scoped namespaces, global usings or records.
-- Balance numbers live in `DungeonRunConfig`, `ActorCatalog`, `CombatRules` and `EnemyBrain` (boss moves); check
-  `-balance` after changing them (it reports fresh runs and a campaign with levels kept between runs).
+- Balance numbers live in `DungeonRunConfig`, `ActorCatalog`, `SkillCatalog`, `CombatRules` and `EnemyBrain` (boss
+  moves); check `-balance` after changing them (it reports fresh runs and a campaign with levels kept between runs).
+  The autopilot is the balance report's player, so a new skill or item needs autopilot rules too.
 - "Enter Play Mode" has domain reload off: statics survive between Play sessions, so reset them on scene load.
 - Combat turn order lives in `Core/Run/Timeline.cs` (Honkai Star Rail-style action value). Game time is exact `AvTime`
   (BigInteger fractions): never use floats for time or turn decisions; ties go to the leader, then the lower actor id.

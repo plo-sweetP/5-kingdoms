@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using FiveKingdoms.UI;
 using UnityEngine;
 
 namespace FiveKingdoms.Dungeon
@@ -21,9 +22,12 @@ namespace FiveKingdoms.Dungeon
         /// <summary>Delete the save at <see cref="SavePath"/> first, so the launch starts from scratch.</summary>
         public bool FreshSave;
 
+        /// <summary>Start the HUD in this input mode instead of touch (to check the keyboard or controller layout).</summary>
+        public InputMode? StartInputMode;
+
         /// <summary>
-        /// Flags: -fk-floors N, -fk-level N, -fk-save PATH, and -fk-autoplay FOLDER (which also uses a fresh save
-        /// inside FOLDER, so smoke tests never touch the player's save).
+        /// Flags: -fk-floors N, -fk-level N, -fk-save PATH, -fk-input touch|keyboard|gamepad, and -fk-autoplay FOLDER
+        /// (which also uses a fresh save inside FOLDER, so smoke tests never touch the player's save).
         /// </summary>
         public static LaunchOptions FromCommandLine()
         {
@@ -33,6 +37,7 @@ namespace FiveKingdoms.Dungeon
                 FloorCount = IntArg(args, "-fk-floors"),
                 StartLevel = IntArg(args, "-fk-level"),
                 SavePath = StringArg(args, "-fk-save"),
+                StartInputMode = Enum.TryParse(StringArg(args, "-fk-input"), ignoreCase: true, out InputMode mode) ? mode : (InputMode?)null,
             };
             string autoplayFolder = StringArg(args, "-fk-autoplay");
             if (autoplayFolder != null && options.SavePath == null)

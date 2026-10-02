@@ -30,6 +30,10 @@ static class BuildTools
         var summary = report.summary;
         Debug.Log($"Build {target}: {summary.result}, {summary.totalSize / (1024 * 1024)} MB, {summary.totalTime}, " +
                   $"{summary.totalErrors} errors -> {path}");
+        var errors = report.steps.SelectMany(step => step.messages.Select(message => (step.name, message)))
+            .Where(entry => entry.message.type == LogType.Error || entry.message.type == LogType.Exception);
+        foreach (var (step, message) in errors.Take(10))
+            Debug.Log($"Build error in '{step}': {message.content}");
         if (Application.isBatchMode) EditorApplication.Exit(summary.result == BuildResult.Succeeded ? 0 : 1);
     }
 }

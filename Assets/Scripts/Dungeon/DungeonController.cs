@@ -33,6 +33,9 @@ namespace FiveKingdoms.Dungeon
         public DungeonRun Run => run;
         public bool IsIdle => !busy && run != null && run.State == RunState.InProgress;
 
+        /// <summary>True while an action's animations are playing.</summary>
+        public bool IsAnimating => busy;
+
         void Awake()
         {
             Application.targetFrameRate = 60;

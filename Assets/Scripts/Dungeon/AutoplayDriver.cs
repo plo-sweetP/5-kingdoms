@@ -41,7 +41,7 @@ namespace FiveKingdoms.Dungeon
             yield return new WaitForSeconds(1.8f);
             yield return Capture("01_start");
 
-            int actions = 0, shot = 0;
+            int actions = 0, shot = 0, attackShots = 0;
             float started = Time.realtimeSinceStartup;
             while (actions < MaxActions && Time.realtimeSinceStartup - started < TimeLimit)
             {
@@ -54,9 +54,16 @@ namespace FiveKingdoms.Dungeon
                 }
 
                 var command = AutoPilot.Decide(run);
+                bool attacks = command.Kind == HeroCommandKind.Attack || command.Kind == HeroCommandKind.Move &&
+                    run.ActorAt(run.Hero.Pos + command.Direction.ToOffset()) is Actor target && target.Team != Team.Hero;
                 controller.Submit(command);
                 actions++;
-                if (shot < ShotAfterAction.Length && actions >= ShotAfterAction[shot])
+                if (attacks && attackShots < 2)
+                {
+                    yield return new WaitForSeconds(0.13f); // Just after the lunge connects: slash and hit flash.
+                    yield return Capture($"attack{++attackShots}_action{actions}");
+                }
+                else if (shot < ShotAfterAction.Length && actions >= ShotAfterAction[shot])
                 {
                     yield return new WaitForSeconds(0.09f); // Mid-animation, to see steps, swings and hits.
                     yield return Capture($"{shot + 2:00}_action{actions}_{command.Kind}");
@@ -65,7 +72,8 @@ namespace FiveKingdoms.Dungeon
                 yield return null;
             }
 
-            yield return new WaitForSeconds(1.5f);
+            while (controller.IsAnimating) yield return null; // Let the last turn finish so the end panel shows.
+            yield return new WaitForSeconds(0.8f);
             yield return Capture("99_end");
             var final = controller.Run;
             Debug.Log($"[Autoplay] Finished after {actions} actions: {final.State} on B{final.Floor}F, " +

@@ -35,6 +35,13 @@ namespace FiveKingdoms.Core
             return new DamageRoll(Math.Max(1, amount), critical);
         }
 
+        /// <summary>A basic attack scaled up, for bosses' special moves.</summary>
+        public static DamageRoll RollHeavyAttack(Actor attacker, Actor defender, Rng rng, int percent)
+        {
+            var roll = RollBasicAttack(attacker, defender, rng);
+            return new DamageRoll(Math.Max(1, roll.Amount * percent / 100), roll.Critical);
+        }
+
         public static int ExpToNextLevel(int level) => 8 + level * 6;
 
         public static void ApplyLevelUp(Actor actor)

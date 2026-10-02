@@ -38,6 +38,38 @@ namespace FiveKingdoms.Core
             throw new InvalidOperationException($"Could not generate a floor for seed {seed}. Check the DungeonGenConfig sizes.");
         }
 
+        /// <summary>
+        /// The boss floor: a small antechamber where the hero arrives, a corridor, and a wide arena with two pillars to
+        /// dodge around. There are no stairs; defeating the boss clears the dungeon. Rooms[0] is the antechamber and
+        /// Rooms[1] the arena.
+        /// </summary>
+        public static DungeonMap GenerateBossFloor(int seed, DungeonGenConfig config)
+        {
+            var rng = new Rng(seed);
+            var map = new DungeonMap(config.Width, config.Height);
+            int middle = config.Height / 2;
+
+            var antechamber = new RectI(4 + rng.Range(0, 3), middle - 2, 6, 5);
+            int arenaWidth = 15 + 2 * rng.Range(0, 2), arenaHeight = 9 + 2 * rng.Range(0, 2); // Odd sizes keep a center tile.
+            var arena = new RectI(antechamber.XMax + 8 + rng.Range(0, 4), middle - arenaHeight / 2, arenaWidth, arenaHeight);
+            if (arena.XMax > config.Width - 1 - RoomGap || arena.Y < RoomGap || arena.YMax > config.Height - 1 - RoomGap)
+                throw new InvalidOperationException($"Map {config.Width}x{config.Height} is too small for the boss floor.");
+
+            map.Rooms.Add(antechamber);
+            map.Rooms.Add(arena);
+            Carve(map, antechamber);
+            Carve(map, arena);
+            CarveLine(map, new GridPos(antechamber.XMax, middle), new GridPos(arena.X, middle));
+
+            // Two pillars, off the center line so the entrance and the boss's spot stay open.
+            map[arena.X + arena.Width / 4, middle + 2] = TileType.Wall;
+            map[arena.XMax - arena.Width / 4, middle - 2] = TileType.Wall;
+
+            map.Start = antechamber.Center;
+            map.Stairs = new GridPos(-1, -1);
+            return map;
+        }
+
         static DungeonMap TryGenerate(Rng rng, DungeonGenConfig c)
         {
             var map = new DungeonMap(c.Width, c.Height);

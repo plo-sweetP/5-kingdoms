@@ -9,8 +9,18 @@ namespace FiveKingdoms.Core
         public int FloorCount = 5;
         public DungeonGenConfig Generation = new DungeonGenConfig();
 
+        /// <summary>Hero used when a run starts without a <see cref="HeroProgress"/>.</summary>
         public ActorDefinition Hero = ActorCatalog.Uzuki;
         public ActorDefinition Enemy = ActorCatalog.Slime;
+
+        /// <summary>
+        /// Boss waiting in an arena on the last floor; defeating it clears the dungeon.
+        /// Null: the last floor is an ordinary floor whose stairs clear the dungeon.
+        /// </summary>
+        public ActorDefinition Boss = ActorCatalog.KingSlime;
+
+        /// <summary>Berries waiting in the boss floor's antechamber, to prepare with.</summary>
+        public int BossFloorBerries = 2;
         public int EnemiesOnFirstFloor = 5;
         public int ExtraEnemiesPerFloor = 1;
         public int MaxEnemies = 10;

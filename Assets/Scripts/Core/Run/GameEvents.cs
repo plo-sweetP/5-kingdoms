@@ -134,6 +134,30 @@ namespace FiveKingdoms.Core
         public ActorSpawnedEvent(int actorId) { ActorId = actorId; }
     }
 
+    public enum BossAction
+    {
+        /// <summary>Winding up: the special attack lands on the boss's next turn.</summary>
+        Charge,
+
+        /// <summary>The area attack; DamageEvents for everyone caught follow.</summary>
+        Slam,
+
+        /// <summary>Called for help; ActorSpawnedEvents for the arrivals follow.</summary>
+        Summon,
+    }
+
+    public sealed class BossActionEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly BossAction Action;
+
+        public BossActionEvent(int actorId, BossAction action)
+        {
+            ActorId = actorId;
+            Action = action;
+        }
+    }
+
     public sealed class RunEndedEvent : GameEvent
     {
         public readonly bool Won;

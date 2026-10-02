@@ -1,6 +1,6 @@
 namespace FiveKingdoms.Core
 {
-    public enum IntentKind { Wait, Move, Attack }
+    public enum IntentKind { Wait, Move, Attack, Charge, Slam, Summon }
 
     public readonly struct Intent
     {
@@ -14,47 +14,98 @@ namespace FiveKingdoms.Core
         }
 
         public static readonly Intent Wait = new Intent(IntentKind.Wait, Direction8.S);
+        public static readonly Intent Charge = new Intent(IntentKind.Charge, Direction8.S);
+        public static readonly Intent Slam = new Intent(IntentKind.Slam, Direction8.S);
+        public static readonly Intent Summon = new Intent(IntentKind.Summon, Direction8.S);
         public static Intent Move(Direction8 direction) => new Intent(IntentKind.Move, direction);
         public static Intent Attack(Direction8 direction) => new Intent(IntentKind.Attack, direction);
     }
 
     /// <summary>
-    /// Wild monster AI: notice the hero when close or in the same room, chase along the shortest path,
-    /// bite when adjacent, otherwise wander. Decides only; <see cref="DungeonRun"/> carries the intent out.
+    /// Monster AI. Decides only; <see cref="DungeonRun"/> carries the intent out.
+    /// Chasers notice the nearest party member when close or in the same room, chase along the shortest path,
+    /// bite when adjacent, and otherwise wander. The King Slime adds a telegraphed slam and a call for help.
     /// </summary>
     public static class EnemyBrain
     {
         const int MaxChaseSteps = 30;
 
-        public static Intent Decide(DungeonRun run, Actor self)
+        /// <summary>The slam hits every tile within this many steps of the boss.</summary>
+        public const int SlamRadius = 1;
+
+        /// <summary>The boss starts winding up when a target is this close.</summary>
+        public const int SlamTriggerRange = 2;
+
+        /// <summary>Boss turns between slams.</summary>
+        public const int SlamCooldown = 3;
+
+        public const int SlamDamagePercent = 160;
+        public const int HelpersSummoned = 2;
+
+        public static Intent Decide(DungeonRun run, Actor self) =>
+            self.Definition.Brain == ActorBrain.SlimeKing ? DecideSlimeKing(run, self) : DecideChaser(run, self);
+
+        /// <summary>The closest member of the opposing team: any party member, not just the leader.</summary>
+        public static Actor NearestFoe(DungeonRun run, Actor self)
         {
-            var hero = run.Hero;
+            Actor nearest = null;
+            int best = int.MaxValue;
+            foreach (var actor in run.Actors)
+            {
+                if (actor.Team == self.Team || !actor.IsAlive) continue;
+                int distance = GridPos.ChebyshevDistance(self.Pos, actor.Pos);
+                if (distance < best)
+                {
+                    best = distance;
+                    nearest = actor;
+                }
+            }
+            return nearest;
+        }
+
+        static Intent DecideSlimeKing(DungeonRun run, Actor self)
+        {
+            if (self.Charging) return Intent.Slam;
+            if (!self.CalledForHelp && self.Hp * 2 <= self.MaxHp) return Intent.Summon;
+
+            var target = NearestFoe(run, self);
+            if (target != null && self.Alerted && self.SpecialCooldown == 0 &&
+                GridPos.ChebyshevDistance(self.Pos, target.Pos) <= SlamTriggerRange)
+                return Intent.Charge;
+            return DecideChaser(run, self);
+        }
+
+        static Intent DecideChaser(DungeonRun run, Actor self)
+        {
+            var target = NearestFoe(run, self);
+            if (target == null) return Wander(run, self);
+
             var map = run.Map;
-            int distance = GridPos.ChebyshevDistance(self.Pos, hero.Pos);
-            UpdateAlert(run, self, distance);
+            int distance = GridPos.ChebyshevDistance(self.Pos, target.Pos);
+            UpdateAlert(run, self, target, distance);
 
             if (distance == 1)
             {
-                var toward = Directions.Toward(self.Pos, hero.Pos);
+                var toward = Directions.Toward(self.Pos, target.Pos);
                 if (map.IsCornerClear(self.Pos, toward)) return Intent.Attack(toward);
             }
 
             if (self.Alerted &&
-                Pathfinder.TryFirstStep(map, self.Pos, hero.Pos, p => run.ActorAt(p) != null, MaxChaseSteps, out var step))
+                Pathfinder.TryFirstStep(map, self.Pos, target.Pos, p => run.ActorAt(p) != null, MaxChaseSteps, out var step))
                 return Intent.Move(step);
 
             return Wander(run, self);
         }
 
-        static void UpdateAlert(DungeonRun run, Actor self, int distance)
+        static void UpdateAlert(DungeonRun run, Actor self, Actor target, int distance)
         {
             if (distance <= run.Config.SightRange)
             {
                 self.Alerted = true;
                 return;
             }
-            int heroRoom = run.Map.RoomIndexAt(run.Hero.Pos);
-            if (heroRoom >= 0 && heroRoom == run.Map.RoomIndexAt(self.Pos))
+            int targetRoom = run.Map.RoomIndexAt(target.Pos);
+            if (targetRoom >= 0 && targetRoom == run.Map.RoomIndexAt(self.Pos))
                 self.Alerted = true;
             else if (distance > run.Config.SightRange * 3)
                 self.Alerted = false;

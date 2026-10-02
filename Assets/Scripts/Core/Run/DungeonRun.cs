@@ -8,8 +8,9 @@ namespace FiveKingdoms.Core
     /// <summary>
     /// One dungeon expedition: the turn-based rules for exploring floors and fighting.
     /// Each hero action resolves the hero's turn and then every enemy's, recording what happened in
-    /// <see cref="Events"/> for the presentation layer to animate. No Unity dependency, so it can be
-    /// unit tested and simulated headlessly.
+    /// <see cref="Events"/> for the presentation layer to animate. The hero starts from a <see cref="HeroProgress"/>
+    /// and EXP earned is recorded back into it as it happens. No Unity dependency, so it can be unit tested and
+    /// simulated headlessly.
     /// </summary>
     public sealed class DungeonRun
     {
@@ -19,17 +20,19 @@ namespace FiveKingdoms.Core
         int nextId = 1;
         int turnsOnFloor;
 
-        public DungeonRun(int seed, DungeonRunConfig config = null)
+        public DungeonRun(int seed, DungeonRunConfig config = null, HeroProgress hero = null)
         {
             Seed = seed;
             Config = config ?? new DungeonRunConfig();
             Random = new Rng(Rng.DeriveSeed(seed, int.MaxValue));
-            Hero = new Actor(nextId++, Config.Hero, Team.Hero, default);
+            Progress = hero ?? new HeroProgress(Config.Hero);
+            Hero = new Actor(nextId++, Progress.Definition, Team.Hero, default, Progress.Level) { Exp = Progress.Exp };
             EnterFloor(1);
         }
 
         public int Seed { get; }
         public DungeonRunConfig Config { get; }
+        public HeroProgress Progress { get; }
         public int Floor { get; private set; }
         public DungeonMap Map { get; private set; }
         public Actor Hero { get; }
@@ -46,6 +49,20 @@ namespace FiveKingdoms.Core
 
         public bool HeroOnStairs => Hero.Pos == Map.Stairs;
         public bool IsLastFloor => Floor >= Config.FloorCount;
+
+        /// <summary>The last floor holds the boss's arena instead of stairs, when the dungeon has a boss.</summary>
+        public bool IsBossFloor => Config.Boss != null && IsLastFloor;
+
+        /// <summary>The boss on this floor, or null.</summary>
+        public Actor Boss
+        {
+            get
+            {
+                foreach (var actor in actors)
+                    if (actor.Definition.IsBoss) return actor;
+                return null;
+            }
+        }
 
         /// <summary>Randomness for combat and AI. Floors use their own seeds, so layouts don't depend on how fights went.</summary>
         internal Rng Random { get; }
@@ -137,7 +154,7 @@ namespace FiveKingdoms.Core
             return true;
         }
 
-        /// <summary>Take the stairs. On the last floor this clears the dungeon.</summary>
+        /// <summary>Take the stairs. Without a boss, the last floor's stairs clear the dungeon.</summary>
         public bool Descend()
         {
             if (!BeginAction() || !HeroOnStairs) return false;
@@ -152,14 +169,22 @@ namespace FiveKingdoms.Core
 
         // ---- Setup helpers, also used by tests. ----
 
+        /// <summary>Adds a monster. Regular monsters get tougher on deeper floors; bosses keep their own stats.</summary>
         public Actor SpawnEnemy(GridPos pos, ActorDefinition definition = null)
         {
             var enemy = new Actor(nextId++, definition ?? Config.Enemy, Team.Enemy, pos);
-            int floorBonus = Floor - 1;
-            enemy.MaxHp = enemy.Hp = enemy.MaxHp + floorBonus * 3;
-            enemy.Attack += floorBonus;
-            enemy.Defense += floorBonus / 2;
-            enemy.ExpReward += floorBonus * 2;
+            if (enemy.Definition.IsBoss)
+            {
+                enemy.SpecialCooldown = 2; // A moment's grace before the first slam.
+            }
+            else
+            {
+                int floorBonus = Floor - 1;
+                enemy.MaxHp = enemy.Hp = enemy.MaxHp + floorBonus * 3;
+                enemy.Attack += floorBonus;
+                enemy.Defense += floorBonus / 2;
+                enemy.ExpReward += floorBonus * 2;
+            }
             actors.Add(enemy);
             return enemy;
         }
@@ -200,6 +225,7 @@ namespace FiveKingdoms.Core
 
         void TakeEnemyTurn(Actor enemy)
         {
+            if (enemy.SpecialCooldown > 0) enemy.SpecialCooldown--;
             var intent = EnemyBrain.Decide(this, enemy);
             switch (intent.Kind)
             {
@@ -209,6 +235,16 @@ namespace FiveKingdoms.Core
                 case IntentKind.Move:
                     if (Map.CanStep(enemy.Pos, intent.Direction) && ActorAt(enemy.Pos + intent.Direction.ToOffset()) == null)
                         Step(enemy, intent.Direction);
+                    break;
+                case IntentKind.Charge:
+                    enemy.Charging = true;
+                    events.Add(new BossActionEvent(enemy.Id, BossAction.Charge));
+                    break;
+                case IntentKind.Slam:
+                    ResolveSlam(enemy);
+                    break;
+                case IntentKind.Summon:
+                    SummonHelp(enemy);
                     break;
             }
         }
@@ -231,6 +267,43 @@ namespace FiveKingdoms.Core
             if (target == null) return;
 
             var roll = CombatRules.RollBasicAttack(attacker, target, Random);
+            ApplyDamage(attacker, target, roll);
+        }
+
+        /// <summary>The boss's wound-up slam: heavy damage to every foe next to it. Stepping away during the wind-up dodges it.</summary>
+        void ResolveSlam(Actor boss)
+        {
+            boss.Charging = false;
+            boss.SpecialCooldown = EnemyBrain.SlamCooldown;
+            events.Add(new BossActionEvent(boss.Id, BossAction.Slam));
+            foreach (var target in actors.ToArray())
+            {
+                if (target.Team == boss.Team || !target.IsAlive) continue;
+                if (GridPos.ChebyshevDistance(boss.Pos, target.Pos) > EnemyBrain.SlamRadius) continue;
+                ApplyDamage(boss, target, CombatRules.RollHeavyAttack(boss, target, Random, EnemyBrain.SlamDamagePercent));
+                if (State != RunState.InProgress) return;
+            }
+        }
+
+        void SummonHelp(Actor boss)
+        {
+            boss.CalledForHelp = true;
+            events.Add(new BossActionEvent(boss.Id, BossAction.Summon));
+            int summoned = 0;
+            int first = Random.Range(0, 8);
+            for (int i = 0; i < 8 && summoned < EnemyBrain.HelpersSummoned; i++)
+            {
+                var pos = boss.Pos + ((Direction8)((first + i) % 8)).ToOffset();
+                if (!Map.IsWalkable(pos) || ActorAt(pos) != null) continue;
+                var helper = SpawnEnemy(pos, Config.Enemy);
+                helper.Alerted = true;
+                events.Add(new ActorSpawnedEvent(helper.Id));
+                summoned++;
+            }
+        }
+
+        void ApplyDamage(Actor attacker, Actor target, DamageRoll roll)
+        {
             target.Hp = Math.Max(0, target.Hp - roll.Amount);
             events.Add(new DamageEvent(target.Id, roll.Amount, roll.Critical, target.Hp));
             if (target.Hp == 0) Kill(target, attacker);
@@ -245,7 +318,8 @@ namespace FiveKingdoms.Core
                 EndRun(won: false);
                 return;
             }
-            if (killer == Hero) GainExp(victim.ExpReward);
+            if (killer.Team == Team.Hero) GainExp(victim.ExpReward);
+            if (victim.Definition.IsBoss && IsBossFloor) EndRun(won: true);
         }
 
         void GainExp(int amount)
@@ -259,6 +333,7 @@ namespace FiveKingdoms.Core
                 CombatRules.ApplyLevelUp(Hero);
                 events.Add(new LevelUpEvent(Hero.Id, Hero.Level));
             }
+            Progress.Record(Hero.Level, Hero.Exp);
         }
 
         void Heal(Actor actor, int amount)
@@ -286,9 +361,9 @@ namespace FiveKingdoms.Core
         /// <summary>Every so often a new enemy wanders in out of the hero's sight, so camping on a floor isn't free.</summary>
         void Reinforce()
         {
-            if (!Config.Populate || Config.ReinforcementInterval <= 0 || turnsOnFloor % Config.ReinforcementInterval != 0) return;
+            if (!Config.Populate || IsBossFloor || Config.ReinforcementInterval <= 0 || turnsOnFloor % Config.ReinforcementInterval != 0) return;
             if (actors.Count - 1 >= Config.MaxEnemies) return;
-            if (TryFindSpawnTile(Random, Map.RoomIndexAt(Hero.Pos), Config.SightRange + 3, out var pos))
+            if (TryFindSpawnTile(Random, room => room != Map.RoomIndexAt(Hero.Pos), Config.SightRange + 3, out var pos))
                 events.Add(new ActorSpawnedEvent(SpawnEnemy(pos).Id));
         }
 
@@ -305,8 +380,8 @@ namespace FiveKingdoms.Core
             Floor = floor;
             turnsOnFloor = 0;
             int floorSeed = Rng.DeriveSeed(Seed, floor);
-            Map = Config.MapFactory != null
-                ? Config.MapFactory(floor, floorSeed)
+            Map = Config.MapFactory != null ? Config.MapFactory(floor, floorSeed)
+                : IsBossFloor ? DungeonGenerator.GenerateBossFloor(floorSeed, Config.Generation)
                 : DungeonGenerator.Generate(floorSeed, Config.Generation);
 
             actors.Clear();
@@ -315,7 +390,12 @@ namespace FiveKingdoms.Core
             Hero.Facing = Direction8.S;
             actors.Add(Hero);
 
-            if (Config.Populate) Populate(new Rng(Rng.DeriveSeed(floorSeed, 1)));
+            if (Config.Populate)
+            {
+                var floorRng = new Rng(Rng.DeriveSeed(floorSeed, 1));
+                if (IsBossFloor) PopulateBossFloor(floorRng);
+                else Populate(floorRng);
+            }
             events.Add(new FloorStartedEvent(floor));
         }
 
@@ -324,24 +404,56 @@ namespace FiveKingdoms.Core
             int startRoom = Map.RoomIndexAt(Map.Start);
             int enemyCount = Math.Min(Config.MaxEnemies, Config.EnemiesOnFirstFloor + (Floor - 1) * Config.ExtraEnemiesPerFloor);
             for (int i = 0; i < enemyCount; i++)
-                if (TryFindSpawnTile(floorRng, startRoom, 4, out var pos)) SpawnEnemy(pos);
+                if (TryFindSpawnTile(floorRng, room => room != startRoom, 4, out var pos)) SpawnEnemy(pos);
 
             for (int i = 0; i < Config.ItemsPerFloor; i++)
-                if (TryFindSpawnTile(floorRng, -1, 0, out var pos) && ItemAt(pos) == null) PlaceItem(pos, ItemKind.Berry);
+                if (TryFindSpawnTile(floorRng, room => true, 0, out var pos)) PlaceItem(pos, ItemKind.Berry);
         }
 
-        /// <summary>A random free room tile, not in <paramref name="avoidRoom"/> and at least <paramref name="minDistance"/> from the hero.</summary>
-        bool TryFindSpawnTile(Rng rng, int avoidRoom, int minDistance, out GridPos pos)
+        /// <summary>The boss waits in the middle of the arena (the last room); berries wait in the antechamber.</summary>
+        void PopulateBossFloor(Rng floorRng)
+        {
+            int arena = Map.Rooms.Count - 1;
+            if (TryFindFreeTileNear(Map.Rooms[arena].Center, out var bossPos)) SpawnEnemy(bossPos, Config.Boss);
+
+            for (int i = 0; i < Config.BossFloorBerries; i++)
+                if (TryFindSpawnTile(floorRng, room => room == 0, 0, out var pos)) PlaceItem(pos, ItemKind.Berry);
+        }
+
+        /// <summary>
+        /// A random free room tile (no actor, item or stairs), in a room accepted by <paramref name="roomFilter"/>,
+        /// at least <paramref name="minDistance"/> from the hero.
+        /// </summary>
+        bool TryFindSpawnTile(Rng rng, Func<int, bool> roomFilter, int minDistance, out GridPos pos)
         {
             for (int attempt = 0; attempt < 50; attempt++)
             {
                 int roomIndex = rng.Range(0, Map.Rooms.Count);
-                if (roomIndex == avoidRoom && Map.Rooms.Count > 1) continue;
+                if (!roomFilter(roomIndex) && Map.Rooms.Count > 1) continue;
                 var room = Map.Rooms[roomIndex];
                 pos = new GridPos(rng.Range(room.X, room.XMax + 1), rng.Range(room.Y, room.YMax + 1));
-                if (!Map.IsWalkable(pos) || pos == Map.Stairs || ActorAt(pos) != null) continue;
+                if (!Map.IsWalkable(pos) || pos == Map.Stairs || ActorAt(pos) != null || ItemAt(pos) != null) continue;
                 if (GridPos.ChebyshevDistance(pos, Hero.Pos) < minDistance) continue;
                 return true;
+            }
+            pos = default;
+            return false;
+        }
+
+        /// <summary>The free walkable tile closest to <paramref name="center"/>, searching outward ring by ring.</summary>
+        bool TryFindFreeTileNear(GridPos center, out GridPos pos)
+        {
+            for (int radius = 0; radius <= 4; radius++)
+            {
+                for (int dy = -radius; dy <= radius; dy++)
+                {
+                    for (int dx = -radius; dx <= radius; dx++)
+                    {
+                        if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != radius) continue;
+                        pos = new GridPos(center.X + dx, center.Y + dy);
+                        if (Map.IsWalkable(pos) && ActorAt(pos) == null) return true;
+                    }
+                }
             }
             pos = default;
             return false;

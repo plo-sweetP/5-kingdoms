@@ -125,10 +125,37 @@ namespace FiveKingdoms.CoreTests
                 turnSum += run.Turn;
                 floorsReached[run.Floor]++;
             }
-            Console.WriteLine($"Autopilot over {seeds} seeds: won {won}, lost {lost}, stalled {stalled}");
+            Console.WriteLine($"Fresh level-1 runs, autopilot over {seeds} seeds: won {won}, lost {lost}, stalled {stalled}");
             Console.WriteLine($"Average: floor {floorSum / (float)seeds:0.0}, level {levelSum / (float)seeds:0.0}, turns {turnSum / (float)seeds:0}");
             for (int f = 1; f < floorsReached.Length; f++) Console.WriteLine($"  ended on B{f}F: {floorsReached[f]}");
+            CampaignReport(players: 100, maxAttempts: 10);
             return 0;
+        }
+
+        /// <summary>Levels carried between runs, as in the real game: how many attempts until the first clear.</summary>
+        static void CampaignReport(int players, int maxAttempts)
+        {
+            int cleared = 0, attemptsSum = 0, levelSum = 0;
+            var clearedOnAttempt = new int[maxAttempts + 1];
+            for (int player = 1; player <= players; player++)
+            {
+                var progress = new HeroProgress(ActorCatalog.Uzuki);
+                for (int attempt = 1; attempt <= maxAttempts; attempt++)
+                {
+                    var run = new DungeonRun(player * 1000 + attempt, null, progress);
+                    for (int i = 0; i < 5000 && run.State == RunState.InProgress; i++) run.Execute(AutoPilot.Decide(run));
+                    if (run.State != RunState.Won) continue;
+                    cleared++;
+                    attemptsSum += attempt;
+                    levelSum += progress.Level;
+                    clearedOnAttempt[attempt]++;
+                    break;
+                }
+            }
+            Console.WriteLine($"\nLevels kept between runs, {players} autopilot players, up to {maxAttempts} attempts each:");
+            Console.WriteLine($"  {cleared} beat the King Slime; on average on attempt {attemptsSum / (float)Math.Max(1, cleared):0.0}, at Lv {levelSum / (float)Math.Max(1, cleared):0.0}");
+            for (int a = 1; a <= maxAttempts; a++)
+                if (clearedOnAttempt[a] > 0) Console.WriteLine($"  first clear on attempt {a}: {clearedOnAttempt[a]}");
         }
     }
 }

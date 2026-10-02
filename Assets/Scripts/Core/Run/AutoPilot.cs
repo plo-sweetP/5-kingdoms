@@ -4,22 +4,30 @@ using System.Collections.Generic;
 namespace FiveKingdoms.Core
 {
     /// <summary>
-    /// Plays the hero automatically: eat a berry when low, fight adjacent enemies, chase nearby ones,
-    /// pick up nearby berries, otherwise head for the stairs. Drives the soak tests, the balance report
-    /// and the unattended autoplay smoke test. Not meant to play well, just plausibly.
-    /// Targets are chosen by walking distance, which only shrinks while the hero follows the path; choosing
-    /// by straight-line distance made it flip between two goals at doorways.
+    /// Plays the hero automatically: step out of a boss's wind-up, eat a berry when low, fight adjacent enemies,
+    /// chase nearby ones, pick up nearby berries, otherwise head for the stairs (or the boss, on the boss floor).
+    /// Drives the soak tests, the balance report and the unattended autoplay smoke test. Not meant to play well,
+    /// just plausibly. Targets are chosen by walking distance, which only shrinks while the hero follows the path;
+    /// choosing by straight-line distance made it flip between two goals at doorways.
     /// </summary>
     public static class AutoPilot
     {
         const int ChaseRange = 6;
         const int BerryDetourRange = 6;
-        const int StairsSearchLimit = 200;
+        const int FarSearchLimit = 200;
 
         public static HeroCommand Decide(DungeonRun run)
         {
             var hero = run.Hero;
             var map = run.Map;
+            Func<GridPos, bool> blocked = p => run.ActorAt(p) != null;
+
+            foreach (var actor in run.Actors)
+            {
+                if (actor.Team == hero.Team || !actor.Charging) continue;
+                if (GridPos.ChebyshevDistance(hero.Pos, actor.Pos) <= EnemyBrain.SlamRadius && TryStepAway(run, actor.Pos, out var away))
+                    return HeroCommand.Move(away);
+            }
 
             if (run.Berries > 0 && hero.Hp * 100 < hero.MaxHp * 40) return HeroCommand.UseBerry;
 
@@ -37,8 +45,15 @@ namespace FiveKingdoms.Core
 
             if (run.HeroOnStairs) return HeroCommand.Descend;
 
-            Func<GridPos, bool> blocked = p => run.ActorAt(p) != null;
-            if (TryStepTowardNearest(run, enemies, ChaseRange, blocked, out var step)) return HeroCommand.Move(step);
+            Direction8 step;
+            if (!map.InBounds(map.Stairs))
+            {
+                // Boss floor: no stairs, so the only way forward is through the enemies.
+                if (TryStepTowardNearest(run, enemies, FarSearchLimit, blocked, out step)) return HeroCommand.Move(step);
+                return HeroCommand.Wait;
+            }
+
+            if (TryStepTowardNearest(run, enemies, ChaseRange, blocked, out step)) return HeroCommand.Move(step);
 
             if (run.Berries < run.Config.MaxBerries)
             {
@@ -47,7 +62,7 @@ namespace FiveKingdoms.Core
                 if (TryStepTowardNearest(run, berries, BerryDetourRange, blocked, out step)) return HeroCommand.Move(step);
             }
 
-            return Pathfinder.TryFirstStep(map, hero.Pos, map.Stairs, blocked, StairsSearchLimit, out step)
+            return Pathfinder.TryFirstStep(map, hero.Pos, map.Stairs, blocked, FarSearchLimit, out step)
                 ? HeroCommand.Move(step)
                 : HeroCommand.Wait;
         }
@@ -67,6 +82,25 @@ namespace FiveKingdoms.Core
                 }
             }
             return best != int.MaxValue;
+        }
+
+        /// <summary>A step that takes the hero out of reach of an attack centered on <paramref name="threat"/>.</summary>
+        static bool TryStepAway(DungeonRun run, GridPos threat, out Direction8 away)
+        {
+            away = Direction8.S;
+            int best = -1;
+            foreach (var dir in Directions.All)
+            {
+                var next = run.Hero.Pos + dir.ToOffset();
+                if (!run.Map.CanStep(run.Hero.Pos, dir) || run.ActorAt(next) != null) continue;
+                int distance = GridPos.ChebyshevDistance(next, threat);
+                if (distance > EnemyBrain.SlamRadius && distance > best)
+                {
+                    best = distance;
+                    away = dir;
+                }
+            }
+            return best >= 0;
         }
     }
 }

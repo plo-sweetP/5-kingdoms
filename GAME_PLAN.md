@@ -4,7 +4,7 @@
 | Topic | Decision |
 |---|---|
 | Engine | Unity 6.3 LTS (6000.3.25f1), 2D with URP, C# |
-| Platforms | iOS + Android, one codebase. Developed on Windows; Android is the test platform until there's a Mac or build service |
+| Platforms | iOS + Android first, one codebase. Developed on Windows; Android is the test platform until there's a Mac or build service. **PC on Steam (incl. Steam Deck) planned later** |
 | Orientation | **Landscape only**, on phones and tablets (test devices: Samsung S22 Ultra, Galaxy Tab S8+) |
 | Monetization | Phase 1: free-to-play where **breeding is the gacha** for monsters. Later: a paid gacha for **characters and weapons** |
 | Art | **Pixel art** in the spirit of Final Fantasy Tactics Advance and Pokemon Mystery Dungeon: simple chibi sprites, flashier attack and defense animations. 32 px = 1 tile. Placeholders generated in code for now, AI-assisted art later |
@@ -60,6 +60,24 @@ Design notes:
 - **Monsters come from breeding** (the free, earned "gacha").
 - **Paid gacha pools: characters + weapons** (later). Needs server-side rolls, pity, and published odds (app store and regional rules) before it ships.
 
+## Party (planned)
+- **Up to 4 characters on screen**: a leader plus 3 partners, as in Mystery Dungeon. The size is one constant (`MaxPartySize`), so trying 3 is a one-line change if 4 feels crowded on a phone.
+- The player controls the leader; partners act by AI with simple tactics (follow me / go after enemies / hold back), and the player can switch which character they control. Each character keeps their own 3 skills + ultimate.
+- Turn order: leader, then partners, then enemies. In corridors partners follow in a line and swap places with the leader when bumped.
+- Enemies and bosses can target any party member; area attacks hit everyone in range.
+- Each character has their own saved progress (level, EXP, gear).
+- Open: are partners only gacha characters, or can bred monsters fill party slots too? (Earlier plan: farm monsters join the party.)
+
+## PC and Steam (planned)
+- Same Unity project, built for Windows (Mac/Linux optional). The game already runs as a Windows build.
+- **Controller support** (needed for Steam Deck): every input becomes a `HeroCommand`, so gamepads map onto the same commands as touch and keyboard. On PC the touch D-pad and buttons hide when a controller or keyboard is in use, with button prompts instead.
+- Steam Deck's 1280x800 screen is 16:10, the same shape as the tablet layout; the pixel camera's whole-number zoom keeps it sharp.
+- **Steamworks:** achievements, cloud saves, overlay (e.g. Steamworks.NET).
+- **Purchases:** the Steam version's paid gacha must use Steam's payment system, separate from Google Play / App Store IAP. Same odds-disclosure and regional loot-box rules.
+- **Cross-save** between phone and PC needs accounts and a server (also needed for the paid gacha).
+- Business: Steamworks account, $100 Steam Direct fee per game, Valve's 30% share, store page with capsule art and trailer. Steam Playtest can double as a beta channel.
+- Code rule from now on: platform services (payments, achievements, cloud saves) sit behind interfaces, so each store plugs in its own.
+
 ## Autopilot (planned)
 - Auto-play for **smaller daily runs/missions**, and eventually for the **main quest**.
 - Foundation exists: the Core `AutoPilot` already plays whole dungeon runs (used today for automated tests and balance reports). The in-game feature will need smarter tactics, player-set rules (e.g. "heal below 40%"), and rewards/limits so it doesn't replace playing.
@@ -96,7 +114,8 @@ Design notes:
 |---|---|---|
 | 0 | Project setup: Unity project, folders, git repo | **Done** |
 | 1 | Dungeon prototype: hero on generated floors, enemies, combat, stairs, items | **Done** (first playtest: "looks great") |
-| 1b | Dungeon follow-ups: persistent hero level/EXP between runs, a boss on the last floor, mana with berries restoring it, first skills | Next |
+| 1b | Dungeon follow-ups: hero level/EXP kept between runs (saved), a boss on the last floor, controller support | **Done** |
+| 1c | Mana (berries restore it), first skills and healing | Later |
 | 2 | Farm prototype: plant, grow, harvest, inventory, day/season clock | |
 | 3 | Monster and breeding core: stats, traits, egg, hatch, rarity and pity, with tests on the odds | |
 | 4 | Connect the loops: farm monsters enter dungeons, loot flows back, saves work | |
@@ -105,6 +124,7 @@ Design notes:
 | 7 | Art and audio pass: AI-assisted art replaces placeholders | |
 | 8 | Monetization and live ops: shortcuts, gacha (characters + weapons), analytics, beta | |
 | 9 | Release: TestFlight and Play closed testing, store listings, launch | |
+| 10 | PC and Steam: controller polish, Steamworks, Steam payments, store page, Steam Deck check | Later |
 
 ## Progress
 **Milestone 1 (dungeon prototype)** contains:
@@ -113,6 +133,13 @@ Design notes:
 - Berries to pick up and eat (heal), slow HP regeneration.
 - Landscape touch HUD: 8-way D-pad, attack button, locked skill/ultimate slots, Wait and Berry buttons, Descend button on stairs, message log, floating damage numbers, floor banner, end-of-run panel. Keyboard controls in the editor.
 - Juice: step hops, wind-up and lunge, slash swipe, white hit flash, knockback, hit-stop, screen shake on crits, death bursts, sparkles.
+
+**Milestone 1b** adds:
+- Persistent progression: Uzuki's level and EXP are saved (local JSON, versioned, crash-safe writes) and carried into every run; EXP earned inside is kept win or lose. EXP bar in the HUD; the end panel shows levels gained.
+- Boss floor: B5F is an antechamber plus an arena with two pillars. The King Slime (110 HP) winds up a slam that hits every adjacent tile next turn (red warning tiles; step away to dodge), calls two slimes at half HP, and clearing the dungeon means defeating it. Boss HP bar in the HUD.
+- Balance with progression: a fresh level-1 hero almost never beats the King Slime (3/200 autopilot runs), but with levels kept, every simulated player beats it, on average on the 2nd-3rd attempt at about Lv 9.
+- Controller support (left stick/D-pad, A attack, Y wait, X berry, RB stairs); touch controls hide while a keyboard or controller is used and button hints appear instead.
+- Debug launch flags for testing (`-fk-floors`, `-fk-level`, `-fk-save`), and a 5 Kingdoms > Debug menu to reset or show the save.
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

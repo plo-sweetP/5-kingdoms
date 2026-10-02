@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Runs the Core rules tests without Unity (commands are in CLAUDE.md).
+    Compiles Assets/Scripts/Core and Assets/Tests/EditMode directly, against the NUnit that Unity's
+    test framework ships, so Library/ must exist (the project has been opened in Unity once).
+    Passing "-balance" to the program prints a balance report from autopilot runs instead.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>$(NoWarn);MSB3270</NoWarn>
+    <ProjectRoot>$(MSBuildThisFileDirectory)..\..\</ProjectRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(ProjectRoot)Assets\Scripts\Core\**\*.cs" />
+    <Compile Include="$(ProjectRoot)Assets\Tests\EditMode\**\*.cs" />
+    <Compile Include="*.cs" />
+    <Reference Include="$(ProjectRoot)Library\PackageCache\com.unity.ext.nunit*\net40\unity-custom\nunit.framework.dll" />
+  </ItemGroup>
+
+</Project>

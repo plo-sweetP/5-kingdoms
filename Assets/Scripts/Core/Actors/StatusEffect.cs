@@ -2,7 +2,8 @@ namespace FiveKingdoms.Core
 {
     /// <summary>
     /// Status effects on an actor, kept few and short (they show as icons). These come from the starting party's kits
-    /// (PROGRESSION.md); poison, paralysis, sleep, bleed and slow come later.
+    /// (PROGRESSION.md); poison, paralysis, sleep, bleed and slow come later. A stun isn't one of them: it pushes the
+    /// target's next turn back on the timeline (<see cref="Actor.IsDelayed"/>) instead of skipping it.
     /// </summary>
     public enum StatusKind
     {
@@ -17,9 +18,6 @@ namespace FiveKingdoms.Core
 
         /// <summary>Can't move, though it can still attack what's next to it (a snare trap).</summary>
         Rooted,
-
-        /// <summary>Skips its next turn (Stun Strike).</summary>
-        Stunned,
 
         /// <summary>
         /// On the aura's holder: allies next to it take <see cref="StatusEffect.Power"/>% less damage, and it heals them at

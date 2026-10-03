@@ -42,7 +42,7 @@ namespace FiveKingdoms.Core
         /// <summary>For party members the leader isn't controlling.</summary>
         public PartyTactic Tactic { get; set; }
 
-        /// <summary>Active status effects (guard, taunt, mark, root, stun, aura).</summary>
+        /// <summary>Active status effects (guard, taunt, mark, root, aura).</summary>
         public List<StatusEffect> Statuses { get; } = new List<StatusEffect>();
 
         public StatusEffect FindStatus(StatusKind kind)
@@ -104,6 +104,18 @@ namespace FiveKingdoms.Core
 
         /// <summary>Party AI: steps a ranged hero took in a row to get out of melee (it stops retreating after one).</summary>
         public int RetreatSteps { get; set; }
+
+        /// <summary>Own turns it has started so far (heroes: this run).</summary>
+        public int TurnsTaken { get; set; }
+
+        /// <summary>
+        /// <see cref="TurnsTaken"/> as it was when its coming turn was last pushed back on the timeline, or -1. An actor
+        /// can be delayed at most once per its own turn (PROGRESSION.md, "Delays / stuns"), so no stun-lock.
+        /// </summary>
+        public int DelayedOnTurn { get; set; } = -1;
+
+        /// <summary>Its coming turn has already been pushed back (a stun, a slow): it can't be delayed again until it acts.</summary>
+        public bool IsDelayed => DelayedOnTurn == TurnsTaken;
 
         /// <summary>Enemy AI state: has noticed the hero and is giving chase.</summary>
         public bool Alerted { get; set; }

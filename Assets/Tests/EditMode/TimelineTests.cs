@@ -118,6 +118,46 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
+        public void ADelayPushesTheNextTurnBack()
+        {
+            var hero = Make(1, 100, Team.Hero);
+            var slime = Make(2, 100);
+            var timeline = new Timeline();
+            timeline.Start(new[] { hero, slime }); // Both at 100 AV; the hero goes first.
+
+            timeline.AdvanceTo(timeline.PeekNext(hero));
+            timeline.Delay(slime, 50); // Half of one of its turns.
+            Assert.AreEqual(AvTime.FromWhole(150), timeline.NextTurnOf(slime.Id));
+            Assert.AreEqual(AvTime.FromWhole(100), timeline.NextTurnOf(hero.Id), "nobody else moves");
+        }
+
+        [Test]
+        public void ADelayDuringAnActorsOwnTurnLandsOnTheTurnAfter()
+        {
+            var hero = Make(1, 100, Team.Hero);
+            var boss = Make(2, 80);
+            var timeline = new Timeline();
+            timeline.Start(new[] { hero, boss }); // The hero at 100 AV, the boss at 125.
+
+            timeline.AdvanceTo(hero);
+            timeline.EndTurn(hero, 100);
+            timeline.AdvanceTo(timeline.PeekNext(hero));
+            Assert.AreEqual(AvTime.FromWhole(125), timeline.Now, "the boss's turn");
+            timeline.Delay(boss, 20); // It walks onto a snare: 20% of its 125 AV turn is 25 AV.
+            Assert.AreEqual(AvTime.FromWhole(125), timeline.NextTurnOf(boss.Id), "this turn goes on");
+            Assert.AreEqual(AvTime.FromWhole(275), timeline.Forecast(hero, 4).First(turn => turn.Actor == boss && turn.Time > timeline.Now).Time,
+                "the forecast already shows the turn after it later");
+            timeline.EndTurn(boss, 100);
+            Assert.AreEqual(AvTime.FromWhole(275), timeline.NextTurnOf(boss.Id), "125 + a full turn + the delay, not lost when the turn ends");
+
+            timeline.AdvanceTo(hero);
+            timeline.EndTurn(hero, 100);
+            timeline.AdvanceTo(boss);
+            timeline.EndTurn(boss, 100);
+            Assert.AreEqual(AvTime.FromWhole(400), timeline.NextTurnOf(boss.Id), "paid once");
+        }
+
+        [Test]
         public void ActionCostsScaleTheWait()
         {
             Assert.AreEqual(AvTime.FromWhole(100), Timeline.TurnLength(100));

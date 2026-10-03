@@ -7,14 +7,17 @@ namespace FiveKingdoms.Tests
     /// Regression anchor for equal-speed play: 25 seeded autopilot runs, fingerprinted action by action. Any change to
     /// turn order, damage rolls or AI decisions shows up as a different value. History: first recorded from the
     /// alternating-turn engine before the action-value timeline existed, and the timeline matched it exactly (1c).
-    /// Re-recorded at 1e, when the multiplicative damage formula and the 10x stat rescale changed every hit on purpose,
-    /// and at 1f, when the autopilot stopped waiting behind a monster that blocks the only way to the stairs and fights
-    /// through it instead. (The party rewrite itself left these solo replays unchanged.)
+    /// Re-recorded at 1e, when the multiplicative damage formula and the 10x stat rescale changed every hit on purpose;
+    /// at 1f, when the autopilot stopped waiting behind a monster that blocks the only way to the stairs and fights
+    /// through it instead (the party rewrite itself left these solo replays unchanged); and at 1f part 2, when attacks
+    /// became deliberate: the autopilot no longer attacks by walking into a foe but with a command naming its target's
+    /// tile (now part of the fingerprint), and of several foes in reach it picks the lowest HP instead of the first in
+    /// turn order.
     /// </summary>
     public class GoldenReplayTests
     {
-        /// <summary>Recorded on 2026-10-03 at milestone 1f (fight through a blocked corridor).</summary>
-        const ulong RecordedFingerprint = 11891184135794920419UL;
+        /// <summary>Recorded on 2026-10-03 at milestone 1f part 2 (explicit, targeted attacks; lowest HP first).</summary>
+        const ulong RecordedFingerprint = 16507842954104813772UL;
 
         [Test]
         public void EqualSpeedsReplayTheOriginalTurnOrder()
@@ -43,6 +46,9 @@ namespace FiveKingdoms.Tests
                     var command = AutoPilot.Decide(run);
                     Add((int)command.Kind);
                     Add((int)command.Direction);
+                    Add(command.Targeted ? 1 : 0);
+                    Add(command.Target.X);
+                    Add(command.Target.Y);
                     Add(run.Execute(command) ? 1 : 0);
                     Add(run.Floor);
                     Add(run.Turn);

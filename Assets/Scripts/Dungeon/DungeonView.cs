@@ -9,10 +9,10 @@ namespace FiveKingdoms.Dungeon
 {
     /// <summary>
     /// Draws a DungeonRun (terrain, actors, items, traps) and animates the GameEvents each action produces: steps,
-    /// attacks (slashes, punches, arrows), skills and ultimates (name pop-ups, Volley's arrow rain), statuses (icons, an
-    /// aura's glow), traps, the ultimate's charge, heals, boss moves and floor changes. Also shows the aiming highlight
-    /// while the player picks a target. Holds no rules of its own: everything it shows comes from the run's state and
-    /// events.
+    /// attacks (slashes, punches, arrows flying at any angle), skills and ultimates (name pop-ups, Volley's arrow rain),
+    /// statuses (icons, an aura's glow), stuns and slows (a turn pushed back), traps, the ultimate's charge, heals, boss
+    /// moves and floor changes. Also shows the aiming highlight while the player picks a target. Holds no rules of its
+    /// own: everything it shows comes from the run's state and events.
     /// </summary>
     public sealed class DungeonView : MonoBehaviour
     {
@@ -58,7 +58,9 @@ namespace FiveKingdoms.Dungeon
         readonly Dictionary<int, SpriteRenderer> items = new Dictionary<int, SpriteRenderer>();
         readonly Dictionary<int, SpriteRenderer> traps = new Dictionary<int, SpriteRenderer>();
         readonly List<GameObject> warnings = new List<GameObject>();
+        readonly List<GameObject> aimReach = new List<GameObject>();
         readonly List<GameObject> aimMarks = new List<GameObject>();
+        AimInfo shownAim; // The aim whose reach is lit, so picking another target only redraws the marks.
         DungeonHud hud;
         PixelCamera pixelCamera;
         Tilemap terrain;
@@ -167,19 +169,14 @@ namespace FiveKingdoms.Dungeon
                         if (actors.TryGetValue(pushed.ActorId, out var pinned))
                             hud.ShowFloatingText(pinned.transform.position + Vector3.up * 0.95f, pinned.IsBoss ? "Won't budge!" : "Pinned!", WarningColor, 0.8f);
                         break;
-                    case TurnSkippedEvent skipped:
-                        if (actors.TryGetValue(skipped.ActorId, out var stunned))
-                        {
-                            hud.ShowFloatingText(stunned.transform.position + Vector3.up * 0.95f, "Stunned", StunColor, 0.8f);
-                            hud.AddMessage($"{Subject(stunned)} is stunned and loses its turn.", StunColor);
-                            yield return new WaitForSeconds(0.2f);
-                        }
-                        break;
                     case TurnDelayedEvent delayed:
                         if (actors.TryGetValue(delayed.ActorId, out var slowed))
                         {
-                            hud.ShowFloatingText(slowed.transform.position + Vector3.up * 0.95f, "Slowed", SlowColor, 0.8f);
-                            hud.AddMessage($"{Subject(slowed)} is slowed: its next turn comes {delayed.Percent}% later.", SlowColor);
+                            var color = delayed.Stun ? StunColor : SlowColor;
+                            hud.ShowFloatingText(slowed.transform.position + Vector3.up * 0.95f, delayed.Stun ? "Stunned!" : "Slowed", color, 0.8f);
+                            hud.AddMessage($"{Subject(slowed)} is {(delayed.Stun ? "stunned" : "slowed")}: its next turn comes {delayed.Percent}% of a turn later.", color);
+                            // The icon stays until its delayed turn comes: until then nothing can push it back again.
+                            slowed.SetStatuses(run.FindActor(delayed.ActorId)?.Statuses, delayed: true);
                         }
                         break;
                     case SkillUsedEvent used:
@@ -328,16 +325,19 @@ namespace FiveKingdoms.Dungeon
         static float StepDuration(int speed) =>
             StepTime * Mathf.Clamp(Mathf.Sqrt(ActorDefinition.DefaultSpeed / (float)Mathf.Max(1, speed)), 0.8f, 1.25f);
 
-        /// <summary>A shot: a short draw, an arrow flying along the line, then the hit where it lands.</summary>
-        IEnumerator AnimateShot(DungeonRun run, ActorView shooter, AttackEvent attack, DamageEvent hit, Vector3 direction)
+        /// <summary>
+        /// A shot: a short draw, an arrow flying straight to the tile it lands on (at any angle, not only along the 8
+        /// directions), then the hit there.
+        /// </summary>
+        IEnumerator AnimateShot(DungeonRun run, ActorView shooter, AttackEvent attack, DamageEvent hit)
         {
+            var to = TileCenter(attack.To);
+            var direction = (to - shooter.transform.position).normalized;
             yield return shooter.Lunge(-direction, 0.1f);
-            var offset = attack.Direction.ToOffset();
             var from = shooter.transform.position + direction * 0.3f;
-            var to = shooter.transform.position + new Vector3(offset.X, offset.Y, 0f) * attack.Distance;
             bool skillShot = activeSkill != null && activeSkill.Effect == SkillEffect.Shot;
-            yield return Effects.Arrow(effectRoot, from, to, attack.Direction, skillShot ? SpiritColor : Color.white,
-                ArrowTimePerTile * Mathf.Max(1, attack.Distance));
+            yield return Effects.Arrow(effectRoot, from, to, skillShot ? SpiritColor : Color.white,
+                ArrowTimePerTile * Mathf.Max(1f, (to - from).magnitude));
             StartCoroutine(shooter.Recover(0.08f));
             if (hit == null)
             {
@@ -377,10 +377,6 @@ namespace FiveKingdoms.Dungeon
                 case StatusKind.Rooted:
                     hud.ShowFloatingText(view.transform.position + Vector3.up * 0.95f, "Snared", SnareColor, 0.75f);
                     break;
-                case StatusKind.Stunned:
-                    hud.ShowFloatingText(view.transform.position + Vector3.up * 0.95f, "Stunned!", StunColor, 0.8f);
-                    hud.AddMessage($"{Subject(view)} is stunned!", StunColor);
-                    break;
                 case StatusKind.Aura:
                     hud.ShowFloatingText(view.transform.position + Vector3.up * 1.05f, "Aura of Protection", UltimateTextColor, 0.75f);
                     hud.AddMessage($"{sourceName}'s aura shields and heals the allies next to him.", UltimateTextColor);
@@ -389,11 +385,14 @@ namespace FiveKingdoms.Dungeon
             ShowStatuses(view, run.FindActor(status.ActorId));
         }
 
-        /// <summary>Brings an actor's status icons, tint and aura glow in line with its statuses.</summary>
+        /// <summary>
+        /// Brings an actor's status icons, tint and aura glow in line with its statuses. A stun icon shows while its
+        /// coming turn is pushed back (it can't be delayed again until it acts).
+        /// </summary>
         static void ShowStatuses(ActorView view, Actor actor)
         {
             view.SetStatusTint(StatusTint(actor));
-            view.SetStatuses(actor?.Statuses);
+            view.SetStatuses(actor?.Statuses, delayed: actor != null && actor.IsDelayed);
             view.SetAura(actor?.FindStatus(StatusKind.Aura) != null);
         }
 
@@ -407,16 +406,24 @@ namespace FiveKingdoms.Dungeon
             if (ultimate != null) hud.AddMessage($"{hero.DisplayName}'s {ultimate.Name} is ready!", UltimateTextColor);
         }
 
-        // ---- Aiming (PROGRESSION.md, "Attack range highlight") ----
+        // ---- Aiming (PROGRESSION.md, "Targeting and input") ----
 
         /// <summary>
         /// Highlights where the action reaches, marks every valid target (the chosen one pulses) and, for an area skill,
-        /// the area around the chosen target. Stays until <see cref="ClearAim"/>.
+        /// the area around the chosen target. Stays until <see cref="ClearAim"/>. Called again for the same aim when the
+        /// player picks another target: then only the marks are redrawn, not the (up to 120) reach tiles.
         /// </summary>
         public void ShowAim(DungeonRun run, AimInfo aim, int chosen)
         {
-            ClearAim();
-            foreach (var tile in aim.Reach) aimMarks.Add(Effects.TileHighlight(effectRoot, TileCenter(tile), ReachColor));
+            if (shownAim != aim)
+            {
+                ClearAim();
+                shownAim = aim;
+                foreach (var tile in aim.Reach) aimReach.Add(Effects.TileHighlight(effectRoot, TileCenter(tile), ReachColor));
+            }
+            foreach (var mark in aimMarks)
+                if (mark != null) Destroy(mark);
+            aimMarks.Clear();
             for (int i = 0; i < aim.Options.Count; i++)
             {
                 var option = aim.Options[i];
@@ -433,9 +440,13 @@ namespace FiveKingdoms.Dungeon
 
         public void ClearAim()
         {
+            foreach (var mark in aimReach)
+                if (mark != null) Destroy(mark);
+            aimReach.Clear();
             foreach (var mark in aimMarks)
                 if (mark != null) Destroy(mark);
             aimMarks.Clear();
+            shownAim = null;
         }
 
         /// <summary>The body tint for an actor's statuses: blue while guarded, red while marked.</summary>
@@ -547,7 +558,7 @@ namespace FiveKingdoms.Dungeon
             var direction = new Vector3(offset.X, offset.Y, 0f).normalized;
             if (attack.Ranged)
             {
-                yield return AnimateShot(run, attacker, attack, hit, direction);
+                yield return AnimateShot(run, attacker, attack, hit);
                 yield break;
             }
             // A skill strike lunges further and cuts with spirit light.

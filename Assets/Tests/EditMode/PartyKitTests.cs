@@ -43,6 +43,13 @@ namespace FiveKingdoms.Tests
         static IEnumerable<AttackEvent> AttacksBy(DungeonRun run, Actor attacker) =>
             run.Events.OfType<AttackEvent>().Where(attack => attack.AttackerId == attacker.Id);
 
+        /// <summary>Keeps a dummy where it stands (it can still bite what's next to it).</summary>
+        static Actor Still(Actor actor)
+        {
+            actor.Statuses.Add(new StatusEffect(StatusKind.Rooted, actor.Id, 0, 999, endsOnSourceTurn: false));
+            return actor;
+        }
+
         [Test]
         public void TheKitsAreTheApprovedOnes()
         {
@@ -111,6 +118,7 @@ namespace FiveKingdoms.Tests
             Assert.IsTrue(shot.Ranged);
             Assert.AreEqual(near.Id, shot.TargetId);
             Assert.AreEqual(5, shot.Distance);
+            Assert.AreEqual(new GridPos(6, 1), shot.To);
             Assert.Less(near.Hp, near.MaxHp);
         }
 
@@ -119,9 +127,42 @@ namespace FiveKingdoms.Tests
         {
             var run = Run(Only(ActorCatalog.Uzuki), Corridor);
             var far = Dummy(run, 7, 1);
+            Assert.IsFalse(run.AttackAt(far.Pos), "six tiles away: not a target");
             run.Attack(Direction8.E);
-            Assert.AreEqual(-1, AttacksBy(run, run.Hero).Single().TargetId);
+            var miss = AttacksBy(run, run.Hero).Single();
+            Assert.AreEqual(-1, miss.TargetId);
+            Assert.AreEqual(new GridPos(6, 1), miss.To, "the arrow flies its five tiles");
             Assert.AreEqual(far.MaxHp, far.Hp);
+        }
+
+        [Test]
+        public void ShotsReachAnyFoeInSightNotOnlyAlongTheEightLines()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Room); // Uzuki at (1, 3).
+            var offLine = Still(Dummy(run, 4, 5)); // Three over, two up: on none of the 8 lines.
+            var onLine = Still(Dummy(run, 1, 1));
+
+            Assert.AreSame(offLine, run.AttackTargetAt(run.Hero, offLine.Pos));
+            Assert.IsTrue(run.Execute(HeroCommand.AttackAt(offLine.Pos)));
+            var shot = AttacksBy(run, run.Hero).Single();
+            Assert.AreEqual(offLine.Id, shot.TargetId, "the tapped one, not the one on a line");
+            Assert.AreEqual(offLine.Pos, shot.To, "the arrow flies straight at it, at any angle");
+            Assert.AreEqual(3, shot.Distance);
+            Assert.AreEqual(Direction8.NE, shot.Direction, "and she turns the nearest of the 8 ways");
+            Assert.Less(offLine.Hp, offLine.MaxHp);
+            Assert.AreEqual(onLine.MaxHp, onLine.Hp);
+        }
+
+        [Test]
+        public void ADirectionAimedShotTakesTheNearestFoeThatWayElseTheNearestAnywhere()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Room); // Uzuki at (1, 3).
+            var east = Still(Dummy(run, 5, 4)); // Four over, one up: nearest to east.
+            var north = Still(Dummy(run, 1, 5));
+            run.Attack(Direction8.E);
+            Assert.AreEqual(east.Id, AttacksBy(run, run.Hero).Single().TargetId);
+            run.Attack(Direction8.SW); // Nobody that way: the nearest in sight.
+            Assert.AreEqual(north.Id, AttacksBy(run, run.Hero).Single().TargetId);
         }
 
         [Test]
@@ -317,29 +358,105 @@ namespace FiveKingdoms.Tests
             Assert.AreEqual(AvTime.FromWhole(150), run.Forecast(1)[0].Time, "Quick: half a turn");
         }
 
-        [Test]
-        public void StunStrikeMakesAFoeSkipItsTurn()
+        /// <summary>Kristela alone next to a foe, the fight already on and her stun a sure thing (her 60% isn't under test).</summary>
+        static DungeonRun StunDuel(out Actor foe, ActorDefinition foeDefinition = null, int foeSpeed = 0)
         {
             var run = Run(Only(ActorCatalog.Kristela), Corridor);
-            var slime = Dummy(run, 2, 1);
-            run.Hero.Affinity = 100000; // Make the 60% a sure thing.
-            Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.StunStrike), Direction8.E));
-            Assert.IsTrue(run.Events.OfType<TurnSkippedEvent>().Any(e => e.ActorId == slime.Id), "its turn right after is lost");
-            Assert.IsFalse(AttacksBy(run, slime).Any());
+            run.Hero.MaxHp = run.Hero.Hp = 100000;
+            foe = run.SpawnEnemy(new GridPos(2, 1), foeDefinition);
+            foe.MaxHp = foe.Hp = 100000;
+            if (foeSpeed > 0) run.SetSpeed(foe, foeSpeed);
+            run.Wait(); // It bites: the fight starts, and Kristela (100) is up at 100 AV.
+            Assert.IsTrue(run.InCombat);
+            run.Hero.Affinity = 100000;
+            return run;
         }
 
         [Test]
-        public void ABossIsPushedBackInsteadOfStunned()
+        public void StunStrikePushesTheFoesNextTurnBackInsteadOfSkippingIt()
+        {
+            var run = StunDuel(out var slime); // The slime (100) was due at 100 AV too, right after her.
+            Assert.IsTrue(run.Execute(HeroCommand.SkillAt(Slot(run.Hero, SkillCatalog.StunStrike), slime.Pos)));
+
+            var delay = run.Events.OfType<TurnDelayedEvent>().Single();
+            Assert.AreEqual(slime.Id, delay.ActorId);
+            Assert.AreEqual(50, delay.Percent, "half a turn");
+            Assert.IsTrue(delay.Stun);
+            Assert.IsTrue(AttacksBy(run, slime).Any(), "delayed to 150 AV, not skipped: it still bit her before her next turn at 200");
+            Assert.AreEqual(AvTime.FromWhole(250), run.Forecast(5).First(turn => turn.Actor == slime).Time, "and stays half a turn late");
+        }
+
+        [Test]
+        public void AStunOutsideAFightDoesNothing()
         {
             var run = Run(Only(ActorCatalog.Kristela), Corridor);
-            var boss = run.SpawnEnemy(new GridPos(2, 1), ActorCatalog.KingSlime);
+            var slime = Dummy(run, 2, 1);
+            run.Hero.Affinity = 100000;
+            Assert.IsTrue(run.UseSkillAt(Slot(run.Hero, SkillCatalog.StunStrike), slime.Pos)); // Exploring: everyone acts once anyway.
+            Assert.IsFalse(run.Events.OfType<TurnDelayedEvent>().Any());
+            Assert.IsTrue(AttacksBy(run, slime).Any());
+        }
+
+        [Test]
+        public void AFoeIsDelayedAtMostOncePerItsOwnTurn()
+        {
+            // A slow slime (50): due at 200 AV, while Kristela acts at 100, 200, 300.
+            var run = StunDuel(out var slime, foeSpeed: 50);
+            int stun = Slot(run.Hero, SkillCatalog.StunStrike);
+
+            Assert.IsTrue(run.UseSkillAt(stun, slime.Pos)); // 100 AV: its turn moves from 200 to 300.
+            var first = run.Events.OfType<TurnDelayedEvent>().Single();
+            Assert.IsTrue(slime.IsDelayed);
+            Assert.IsFalse(run.CanDelay(slime));
+            Assert.AreEqual(AvTime.FromWhole(300), run.Forecast(5).First(turn => turn.Actor == slime).Time);
+
+            Assert.IsTrue(run.AttackAt(slime.Pos)); // 200 AV: Stun Strike sits out a turn.
+            Assert.IsTrue(slime.IsDelayed, "it still hasn't acted");
+
+            Assert.IsTrue(run.UseSkillAt(stun, slime.Pos)); // 300 AV, just before the slime.
+            Assert.IsFalse(run.Events.OfType<TurnDelayedEvent>().Any(), "a second stun before it acts does nothing: no stun-lock");
+            Assert.IsTrue(AttacksBy(run, slime).Any(), "so it takes its turn at 300 as planned");
+            Assert.IsFalse(slime.IsDelayed);
+
+            Assert.IsTrue(run.AttackAt(slime.Pos)); // 400 AV.
+            Assert.IsTrue(run.UseSkillAt(stun, slime.Pos)); // 500 AV: its next turn (500) can be pushed back again.
+            var second = run.Events.OfType<TurnDelayedEvent>().Single();
+            Assert.AreEqual(first.TurnsTaken + 1, second.TurnsTaken, "one delay for each of its turns");
+        }
+
+        [Test]
+        public void AStunPushesABossBackHalfAsFar()
+        {
+            var run = StunDuel(out var boss, ActorCatalog.KingSlime);
+            Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.StunStrike), Direction8.E));
+            var delay = run.Events.OfType<TurnDelayedEvent>().Single(e => e.ActorId == boss.Id);
+            Assert.AreEqual(25, delay.Percent);
+            Assert.AreEqual(25, CombatRules.DelayCap(boss));
+            Assert.AreEqual(50, CombatRules.DelayCap(run.Hero));
+        }
+
+        [Test]
+        public void ASnareCostsABossTimeInsteadOfRootingIt()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Corridor);
+            var uzuki = run.Hero;
+            uzuki.MaxHp = uzuki.Hp = 100000;
+            Place(uzuki, 5, 1);
+            var boss = run.SpawnEnemy(new GridPos(6, 1), ActorCatalog.KingSlime);
             boss.MaxHp = boss.Hp = 100000;
             run.Wait(); // The fight starts.
             Assert.IsTrue(run.InCombat);
-            run.Hero.Affinity = 100000;
-            Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.StunStrike), Direction8.E));
-            Assert.IsNull(boss.FindStatus(StatusKind.Stunned));
-            Assert.IsTrue(run.Events.OfType<TurnDelayedEvent>().Any(e => e.ActorId == boss.Id && e.Percent == 30));
+
+            // She rolls away, leaving a snare; the boss (85) follows onto it on its own turn at 10000 / 85 AV.
+            Assert.IsTrue(run.UseSkill(Slot(uzuki, SkillCatalog.RollingShot), Direction8.W));
+            Assert.AreEqual(new GridPos(5, 1), boss.Pos);
+            Assert.IsNull(boss.FindStatus(StatusKind.Rooted), "bosses can't be rooted");
+            var delay = run.Events.OfType<TurnDelayedEvent>().Single(e => e.ActorId == boss.Id);
+            Assert.AreEqual(25, delay.Percent);
+            Assert.IsFalse(delay.Stun);
+            Assert.AreEqual(Timeline.TurnLength(85) + Timeline.TurnLength(85, 125), run.Forecast(5).First(turn => turn.Actor == boss).Time,
+                "delayed during its own turn: the turn after it comes a quarter later");
+            Assert.IsTrue(boss.IsDelayed, "and nothing else can push that turn back");
         }
 
         // ---- The AI uses the kits ----

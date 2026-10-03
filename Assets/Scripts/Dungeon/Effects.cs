@@ -112,13 +112,14 @@ namespace FiveKingdoms.Dungeon
             return go;
         }
 
-        /// <summary>An arrow flying from one point to another along an attack direction; returns when it lands.</summary>
-        public static IEnumerator Arrow(Transform parent, Vector3 from, Vector3 to, Direction8 direction, Color tint, float duration)
+        /// <summary>An arrow flying from one point to another, pointing the way it flies (any angle); returns when it lands.</summary>
+        public static IEnumerator Arrow(Transform parent, Vector3 from, Vector3 to, Color tint, float duration)
         {
             var go = new GameObject("Arrow");
             go.transform.SetParent(parent, false);
-            var offset = direction.ToOffset();
-            go.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(offset.Y, offset.X) * Mathf.Rad2Deg);
+            go.transform.position = from;
+            var flight = to - from;
+            go.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(flight.y, flight.x) * Mathf.Rad2Deg); // The art points right.
             var renderer = go.AddComponent<SpriteRenderer>();
             renderer.sprite = SpriteLibrary.Get("Effects/arrow", Color.white);
             renderer.sortingOrder = EffectOrder;

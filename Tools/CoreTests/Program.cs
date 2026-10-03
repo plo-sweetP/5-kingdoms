@@ -13,11 +13,26 @@ namespace FiveKingdoms.CoreTests
     /// </summary>
     static class Program
     {
+        /// <summary>The party the reports play, leader first: the starting party, or with "-lead ID" that hero in front.</summary>
+        static ActorDefinition[] Party = ActorCatalog.StartingParty;
+
         static int Main(string[] args)
         {
-            if (args.Contains("-balance")) return BalanceReport(seeds: 200, TuningFrom(args));
+            int leadIndex = Array.IndexOf(args, "-lead");
+            if (leadIndex >= 0)
+            {
+                var leader = ActorCatalog.Find(args[leadIndex + 1]);
+                Party = new[] { leader }.Concat(Party.Where(definition => definition != leader)).ToArray();
+                args = args.Where((arg, index) => index != leadIndex && index != leadIndex + 1).ToArray();
+            }
+            // "seeds=N" runs the reports over more (or fewer) seeds than the usual 200, for a steadier number.
+            int seeds = 200;
+            foreach (string arg in args)
+                if (arg.StartsWith("seeds=")) seeds = int.Parse(arg.Substring(6));
+            args = args.Where(arg => !arg.StartsWith("seeds=")).ToArray();
+            if (args.Contains("-balance")) return BalanceReport(seeds, TuningFrom(args));
             int bossIndex = Array.IndexOf(args, "-boss");
-            if (bossIndex >= 0) return BossReport(int.Parse(args[bossIndex + 1]), seeds: 200);
+            if (bossIndex >= 0) return BossReport(int.Parse(args[bossIndex + 1]), seeds, TuningFrom(args));
             int mapIndex = Array.IndexOf(args, "-map");
             if (mapIndex >= 0) return PrintFloor(int.Parse(args[mapIndex + 1]));
             int partyIndex = Array.IndexOf(args, "-party");
@@ -148,7 +163,7 @@ namespace FiveKingdoms.CoreTests
         /// </summary>
         static int TraceParty(int seed, int fromAction)
         {
-            var run = new DungeonRun(seed, new DungeonRunConfig(), ActorCatalog.StartingParty.Select(d => new HeroProgress(d)).ToArray());
+            var run = new DungeonRun(seed, new DungeonRunConfig(), Party.Select(d => new HeroProgress(d)).ToArray());
             int floor = 0;
             for (int action = 0; action < 3000 && run.State == RunState.InProgress; action++)
             {
@@ -160,9 +175,9 @@ namespace FiveKingdoms.CoreTests
                 var command = AutoPilot.Decide(run);
                 bool used = run.Execute(command);
                 if (action >= fromAction)
-                    Console.WriteLine($"{action,5} {command,-14} used={used} combat={run.InCombat} " +
-                                      string.Join(" ", run.Party.Select(m => $"{m.Name[0]}{m.Pos}{(m == run.Hero ? "*" : "")}")) +
-                                      $" foes={run.Actors.Count(a => a.Team == Team.Enemy)}");
+                    Console.WriteLine($"{action,5} {command,-18} used={used} combat={run.InCombat} " +
+                                      string.Join(" ", run.Party.Select(m => $"{m.Name[0]}{m.Pos}{(m == run.Hero ? "*" : "")} {(m.IsAlive ? m.Hp * 100 / m.MaxHp + "%" : "down")}")) +
+                                      $" foes={run.Actors.Count(a => a.Team == Team.Enemy)} near={run.Actors.Count(a => a.Team == Team.Enemy && a.Alerted)}");
             }
             Console.WriteLine($"{run.State} on B{run.Floor}F after turn {run.Turn}");
             return 0;
@@ -175,14 +190,23 @@ namespace FiveKingdoms.CoreTests
             int fights = 0, bossFights = 0, ultimates = 0, bossUltimates = 0, swaps = 0;
             long charge = 0, bossCharge = 0;
             var floorsReached = new int[new DungeonRunConfig().FloorCount + 1];
+            var standingAtBoss = new int[Party.Length];
+            int reachedBoss = 0;
             for (int seed = 1; seed <= seeds; seed++)
             {
                 var config = tuning();
-                config.Party = ActorCatalog.StartingParty;
+                config.Party = Party;
                 var run = new DungeonRun(seed, config);
                 for (int i = 0; i < 5000 && run.State == RunState.InProgress; i++)
                 {
+                    bool wasBossFloor = run.IsBossFloor;
                     run.Execute(AutoPilot.Decide(run));
+                    if (run.IsBossFloor && !wasBossFloor)
+                    {
+                        reachedBoss++;
+                        for (int member = 0; member < run.Party.Count; member++)
+                            if (run.Party[member].IsAlive) standingAtBoss[member]++;
+                    }
                     foreach (var e in run.Events)
                     {
                         if (e is CombatStartedEvent)
@@ -212,19 +236,22 @@ namespace FiveKingdoms.CoreTests
                                       $"next command {AutoPilot.Decide(run)}, actors: {string.Join("; ", run.Actors)}");
                 }
                 floorSum += run.Floor;
-                levelSum += run.Hero.Level;
+                levelSum += run.Party.Max(member => member.Level); // A hero who fell misses EXP, so the party's best.
                 turnSum += run.Turn;
                 fallenSum += run.Party.Count(member => !member.IsAlive);
                 floorsReached[run.Floor]++;
             }
-            Console.WriteLine($"Fresh level-1 party (Uzuki, Haiden, Kristela), autopilot over {seeds} seeds: won {won}, lost {lost}, stalled {stalled}");
+            string names = string.Join(", ", Party.Select(definition => definition.Name));
+            Console.WriteLine($"Fresh level-1 party ({names}; the first leads), autopilot over {seeds} seeds: won {won}, lost {lost}, stalled {stalled}");
             Console.WriteLine($"Average: floor {floorSum / (float)seeds:0.0}, level {levelSum / (float)seeds:0.0}, turns {turnSum / (float)seeds:0}, " +
                               $"heroes fallen {fallenSum / (float)seeds:0.0} of 3");
             for (int f = 1; f < floorsReached.Length; f++) Console.WriteLine($"  ended on B{f}F: {floorsReached[f]}");
+            Console.WriteLine($"Reached the boss floor: {reachedBoss}; still standing on arrival: " +
+                              string.Join(", ", Party.Select((definition, member) => $"{definition.Name} {standingAtBoss[member] * 100 / Math.Max(1, reachedBoss)}%")));
             Console.WriteLine($"Fights: {fights / (float)seeds:0.0} a run before the boss; per hero per fight, ultimates {ultimates / 3f / Math.Max(1, fights):0.00} " +
                               $"(charge gained {charge / 3f / Math.Max(1, fights):0}), in the boss fight {bossUltimates / 3f / Math.Max(1, bossFights):0.00} " +
                               $"(charge {bossCharge / 3f / Math.Max(1, bossFights):0}); swaps {swaps / (float)seeds:0.0} a run");
-            CampaignReport(players: 100, maxAttempts: 10, tuning);
+            CampaignReport(players: seeds / 2, maxAttempts: 10, tuning);
             return 0;
         }
 
@@ -232,17 +259,25 @@ namespace FiveKingdoms.CoreTests
         /// The starting party at one level, straight into the boss arena (as the PlayMode boss test and "-fk-floors 1
         /// -fk-level N" do): how often the autopilot wins.
         /// </summary>
-        static int BossReport(int level, int seeds)
+        static int BossReport(int level, int seeds, Func<DungeonRunConfig> tuning)
         {
-            int won = 0;
+            int won = 0, ultimates = 0, turns = 0;
             for (int seed = 1; seed <= seeds; seed++)
             {
-                var party = ActorCatalog.StartingParty.Select(definition => new HeroProgress(definition, level)).ToArray();
-                var run = new DungeonRun(seed, new DungeonRunConfig { FloorCount = 1 }, party);
-                for (int i = 0; i < 2000 && run.State == RunState.InProgress; i++) run.Execute(AutoPilot.Decide(run));
+                var party = Party.Select(definition => new HeroProgress(definition, level)).ToArray();
+                var config = tuning();
+                config.FloorCount = 1;
+                var run = new DungeonRun(seed, config, party);
+                for (int i = 0; i < 2000 && run.State == RunState.InProgress; i++)
+                {
+                    run.Execute(AutoPilot.Decide(run));
+                    ultimates += run.Events.Count(e => e is SkillUsedEvent used && used.Skill.IsUltimate);
+                }
                 if (run.State == RunState.Won) won++;
+                turns += run.Turn;
             }
-            Console.WriteLine($"Starting party at Lv {level} against the King Slime: won {won} of {seeds}");
+            Console.WriteLine($"Starting party at Lv {level} against the King Slime: won {won} of {seeds} " +
+                              $"(leader turns {turns / (float)seeds:0}, ultimates per hero {ultimates / 3f / seeds:0.00})");
             return 0;
         }
 
@@ -253,7 +288,7 @@ namespace FiveKingdoms.CoreTests
             var clearedOnAttempt = new int[maxAttempts + 1];
             for (int player = 1; player <= players; player++)
             {
-                var party = ActorCatalog.StartingParty.Select(definition => new HeroProgress(definition)).ToArray();
+                var party = Party.Select(definition => new HeroProgress(definition)).ToArray();
                 for (int attempt = 1; attempt <= maxAttempts; attempt++)
                 {
                     var run = new DungeonRun(player * 1000 + attempt, tuning(), party);
@@ -261,7 +296,7 @@ namespace FiveKingdoms.CoreTests
                     if (run.State != RunState.Won) continue;
                     cleared++;
                     attemptsSum += attempt;
-                    levelSum += party[0].Level;
+                    levelSum += party.Max(hero => hero.Level);
                     clearedOnAttempt[attempt]++;
                     break;
                 }

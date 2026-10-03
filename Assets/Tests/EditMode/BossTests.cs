@@ -55,7 +55,7 @@ namespace FiveKingdoms.Tests
             var (run, boss) = BossNextToHero();
             boss.Hp = 1;
 
-            run.Move(Direction8.E);
+            run.AttackAt(boss.Pos);
 
             Assert.AreEqual(RunState.Won, run.State);
             Assert.IsTrue(run.Events.OfType<ExpGainedEvent>().Any(), "the boss gives EXP");

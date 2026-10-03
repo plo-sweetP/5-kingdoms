@@ -87,10 +87,17 @@ namespace FiveKingdoms.Tests
                 new HeroProgress(ActorCatalog.Haiden, level: 5, exp: 1),
                 new HeroProgress(ActorCatalog.Kristela, level: 6, exp: 2),
             });
-            var party = SaveSystem.LoadParty(ActorCatalog.StartingParty);
+            var party = SaveSystem.LoadParty(new[] { ActorCatalog.Uzuki, ActorCatalog.Haiden, ActorCatalog.Kristela });
             CollectionAssert.AreEqual(new[] { 4, 5, 6 }, party.Select(hero => hero.Level).ToArray());
             CollectionAssert.AreEqual(new[] { 3, 1, 2 }, party.Select(hero => hero.Exp).ToArray());
             Assert.AreEqual(4, SaveSystem.LoadHero(ActorCatalog.Uzuki).Level, "one hero's entry, as before");
+
+            // A save doesn't depend on the party's order: the starting party (a melee hero leads) finds everyone's own entry.
+            var starting = SaveSystem.LoadParty(ActorCatalog.StartingParty);
+            CollectionAssert.AreEqual(ActorCatalog.StartingParty, starting.Select(hero => hero.Definition).ToArray());
+            Assert.AreEqual(5, starting.Single(hero => hero.Definition == ActorCatalog.Haiden).Level);
+            Assert.AreEqual(6, starting.Single(hero => hero.Definition == ActorCatalog.Kristela).Level);
+            Assert.AreEqual(4, starting.Single(hero => hero.Definition == ActorCatalog.Uzuki).Level);
         }
     }
 }

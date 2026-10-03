@@ -15,15 +15,17 @@ namespace FiveKingdoms.Dungeon
     /// Entry point of the dungeon scene. Owns the rules (DungeonRun), the visuals (DungeonView), the HUD and the
     /// party's saved progress, and turns input into commands for the leader. Input is read only while nothing is
     /// animating, which keeps the game strictly turn-based; a button pressed during an animation is buffered and runs
-    /// next. Choosing an attack, skill or ultimate that needs a target starts aiming (PROGRESSION.md, "Attack range
-    /// highlight"): its reach and valid targets light up, and the player taps a target, or presses the action again to
-    /// fire at the marked one; holding a direction while pressing fires that way at once, and bumping into an adjacent
-    /// enemy still attacks right away. Touch: on-screen D-pad and buttons; tap a party card to lead that hero, tap a
-    /// tactic badge to change it. Keyboard: WASD/arrows plus Q/E/Z/C or the numpad for 8 directions, Space attack,
-    /// 1/2/3 skills, 4 ultimate, Tab switch hero, G partners' tactics, X wait, B berry, Enter stairs, T auto, R restart;
-    /// while aiming, directions pick a target, Space or the same key fires, Esc cancels. Controller: left stick or
-    /// D-pad, A attack, LB/LT/RT skills, RB ultimate, B switch hero, L3 tactics, Y wait, X berry, Start stairs, View
-    /// auto, A or Start to restart; while aiming, A fires and B cancels.
+    /// next. Attacks are deliberate (PROGRESSION.md, "Targeting and input"): walking into an enemy only turns the hero
+    /// to face it. The weapon attack, a skill or an ultimate that needs a target starts aiming: its reach and valid
+    /// targets light up, one is marked, and the player taps a target, or presses the action again to fire at the
+    /// marked one; holding a direction toward a target while pressing fires at it at once. Tapping an enemy in reach
+    /// when not aiming is the weapon attack on it. Every command names its target's tile. Touch: on-screen D-pad and
+    /// buttons; tap a party card to lead that hero, tap a tactic badge to change it. Keyboard: WASD/arrows plus
+    /// Q/E/Z/C or the numpad for 8 directions, Space attack, 1/2/3 skills, 4 ultimate, Tab switch hero, G partners'
+    /// tactics, X wait, B berry, Enter stairs, T auto, R restart; while aiming, directions pick a target (again for
+    /// the next one out that way), Space or the same key fires, Esc cancels. Controller: left stick or D-pad, A
+    /// attack, LB/LT/RT skills, RB ultimate, B switch hero, L3 tactics, Y wait, X berry, Start stairs, View auto, A or
+    /// Start to restart; while aiming, A fires and B cancels.
     /// </summary>
     public sealed class DungeonController : MonoBehaviour
     {
@@ -57,6 +59,7 @@ namespace FiveKingdoms.Dungeon
         Aiming aiming;
         Direction8? aimHeld;
         bool confirmAim, cancelAim;
+        GridPos? injectedTap;
         static readonly List<RaycastResult> HudHits = new List<RaycastResult>();
 
         /// <summary>An attack, skill or ultimate waiting for the player to pick what to aim it at.</summary>
@@ -80,7 +83,8 @@ namespace FiveKingdoms.Dungeon
 
             public bool Matches(HeroCommand command) => command.Kind == Kind && (Kind != HeroCommandKind.Skill || command.Slot == Slot);
 
-            public HeroCommand CommandFor(AimOption option) => AimedAt(Kind, Slot, option.Direction);
+            /// <summary>The command on the option at <paramref name="index"/>: its target's tile, or for a roll or dash that way.</summary>
+            public HeroCommand CommandFor(int index) => Aim.Options[index].ToCommand(Kind, Slot);
         }
 
         public DungeonRun Run => run;
@@ -88,6 +92,9 @@ namespace FiveKingdoms.Dungeon
 
         /// <summary>True while an action's animations are playing.</summary>
         public bool IsAnimating => busy;
+
+        /// <summary>True while an attack, skill or ultimate waits for the player to pick its target.</summary>
+        public bool IsAiming => aiming != null;
 
         /// <summary>The Auto button: the hero plays itself until the player turns this off.</summary>
         public bool AutoPilotEnabled
@@ -133,6 +140,9 @@ namespace FiveKingdoms.Dungeon
         /// <summary>Queues a command as if a button had been pressed (used by the autoplay smoke test).</summary>
         public void Submit(HeroCommand command) => buffered = command;
 
+        /// <summary>A tap on a map tile, as if the player had touched it there (used by tests and the autoplay smoke test).</summary>
+        public void Tap(GridPos tile) => injectedTap = tile;
+
         void StartNewRun()
         {
             StopAllCoroutines();
@@ -145,6 +155,7 @@ namespace FiveKingdoms.Dungeon
             Debug.Log($"Dungeon run started with seed {runSeed}, party: {string.Join(", ", party.Select(hero => hero.ToString()))}.");
             busy = false;
             buffered = null;
+            injectedTap = null;
             EndAiming();
             hud.HideRunEnd();
             hud.ClearLog();
@@ -173,7 +184,10 @@ namespace FiveKingdoms.Dungeon
 
             ReadButtons(keyboard, gamepad);
             var held = ReadHeldDirection(keyboard, gamepad);
-            var tapped = ReadTappedTile();
+            var tapped = ReadTappedTile() ?? injectedTap;
+            injectedTap = null;
+            // A tap on an enemy is the weapon attack on it. Buffered like a button press, so one made mid-animation counts.
+            if (tapped.HasValue && aiming == null && TapAttack(tapped.Value) is HeroCommand tap) buffered = tap;
             if (busy) return;
 
             var command = buffered;
@@ -190,53 +204,71 @@ namespace FiveKingdoms.Dungeon
             if (command == null && held.HasValue) command = HeroCommand.Move(held.Value);
             else if (command.HasValue && IsAimable(command.Value) && (!autoPilot || AllowedDuringAuto(command.Value)))
             {
-                if (held.HasValue) command = AimedAt(command.Value.Kind, command.Value.Slot, held.Value); // Held direction: fire that way at once.
-                else if (TryStartAiming(command.Value)) return;
+                command = Aim(command.Value, held);
+                if (command == null) return; // Aiming now, or there was nothing to aim at.
             }
             if (autoPilot && command.HasValue && !AllowedDuringAuto(command.Value)) hud.ShowAutoPilotBlocked();
             command = ChooseCommand(command, autoPilot, run);
             if (command.HasValue) StartCoroutine(Execute(command.Value));
         }
 
-        // ---- Aiming (PROGRESSION.md, "Attack range highlight") ----
+        // ---- Aiming (PROGRESSION.md, "Targeting and input") ----
 
         /// <summary>An attack, skill or ultimate that hasn't been pointed anywhere yet.</summary>
         static bool IsAimable(HeroCommand command) =>
             !command.Aimed && (command.Kind == HeroCommandKind.Attack || command.Kind == HeroCommandKind.Skill || command.Kind == HeroCommandKind.Ultimate);
 
-        static HeroCommand AimedAt(HeroCommandKind kind, int slot, Direction8 direction) =>
-            kind == HeroCommandKind.Attack ? HeroCommand.AttackToward(direction)
-            : kind == HeroCommandKind.Ultimate ? HeroCommand.Ultimate(direction)
-            : HeroCommand.Skill(slot, direction);
+        /// <summary>
+        /// The weapon attack on the enemy standing on a tapped tile, if it's in reach (one deliberate tap per hit). Null,
+        /// with a hint, for an enemy out of reach; null for a tap on anything else.
+        /// </summary>
+        HeroCommand? TapAttack(GridPos tile)
+        {
+            var hero = run.Hero;
+            if (!(run.ActorAt(tile) is Actor foe) || foe.Team == hero.Team) return null;
+            if (run.AttackTargetAt(hero, tile) != null) return HeroCommand.AttackAt(tile);
+            if (!autoPilot) hud.AddMessage(OutOfReachMessage(hero, foe), DungeonHud.HintColor);
+            return null;
+        }
 
         /// <summary>
-        /// Starts aiming when the action has targets to choose from. False when there's nothing to choose (no target in
-        /// reach, an action that isn't aimed, or one that can't be used now): then it just goes ahead, and the log says why
-        /// if the run refuses it.
+        /// Points an attack, skill or ultimate that hasn't been aimed yet. Returns the command to carry out now: the action
+        /// itself when it isn't aimed (heals, auras) or can't be used (the run then says why), or, with a direction held
+        /// toward a target, the action on that target at once. Returns null when aiming started (its reach and targets
+        /// light up, one of them marked) or when the weapon attack has nothing in reach (a hint says so: a swing at the
+        /// air would only waste the turn).
         /// </summary>
-        bool TryStartAiming(HeroCommand command)
+        HeroCommand? Aim(HeroCommand command, Direction8? held)
         {
             var hero = run.Hero;
             SkillDefinition skill = null;
             if (command.Kind == HeroCommandKind.Skill)
             {
-                if (run.CheckSkill(command.Slot) is SkillCheck.NoSkill or SkillCheck.OnCooldown) return false;
+                if (run.CheckSkill(command.Slot) is SkillCheck.NoSkill or SkillCheck.OnCooldown) return command;
                 skill = hero.Definition.Skills[command.Slot];
             }
             else if (command.Kind == HeroCommandKind.Ultimate)
             {
-                if (run.CheckUltimate() is SkillCheck.NoSkill or SkillCheck.NotCharged) return false;
+                if (run.CheckUltimate() is SkillCheck.NoSkill or SkillCheck.NotCharged) return command;
                 skill = hero.Definition.Ultimate;
             }
             var aim = run.AimFor(hero, skill);
-            if (!aim.NeedsAim || aim.Options.Count == 0) return false;
+            if (!aim.NeedsAim) return command;
+            if (aim.Options.Count == 0)
+            {
+                if (command.Kind != HeroCommandKind.Attack) return command;
+                hud.AddMessage(NoAttackTargetMessage(hero), DungeonHud.HintColor);
+                return null;
+            }
+            if (held.HasValue && aim.NearestToward(held.Value) is int toward && toward >= 0)
+                return aim.Options[toward].ToCommand(command.Kind, command.Slot);
 
-            aiming = new Aiming(command.Kind, command.Slot, aim, DefaultOption(aim, hero));
-            aimHeld = null;
+            aiming = new Aiming(command.Kind, command.Slot, aim, aim.Default);
+            aimHeld = held; // A direction already held (and pointing at nothing) doesn't move the mark until it changes.
             confirmAim = cancelAim = false;
             view.ShowAim(run, aim, aiming.Selected);
             hud.SetAiming(aiming.Button, AimPrompt(aim, skill));
-            return true;
+            return null;
         }
 
         /// <summary>
@@ -256,19 +288,20 @@ namespace FiveKingdoms.Dungeon
                 if (aiming.Matches(command.Value) && !command.Value.Aimed) return Fire(aiming.Selected);
                 EndAiming();
                 var next = command.Value;
-                if (IsAimable(next) && (!autoPilot || AllowedDuringAuto(next)) && TryStartAiming(next)) return null;
                 if (autoPilot && !AllowedDuringAuto(next))
                 {
                     hud.ShowAutoPilotBlocked();
                     return null;
                 }
-                return next;
+                if (!IsAimable(next)) return next;
+                var now = Aim(next, null); // Another action: aim that one instead (never at once: the stick was picking targets).
+                aimHeld = held;
+                return now;
             }
             if (tapped.HasValue)
             {
-                var options = aiming.Aim.Options;
-                for (int i = 0; i < options.Count; i++)
-                    if (options[i].Tile == tapped.Value) return Fire(i);
+                int option = aiming.Aim.IndexAt(tapped.Value);
+                if (option >= 0) return Fire(option);
                 EndAiming(); // A tap anywhere else lets it go.
                 return null;
             }
@@ -282,7 +315,7 @@ namespace FiveKingdoms.Dungeon
 
         HeroCommand Fire(int option)
         {
-            var command = aiming.CommandFor(aiming.Aim.Options[option]);
+            var command = aiming.CommandFor(option);
             EndAiming();
             return command;
         }
@@ -296,38 +329,11 @@ namespace FiveKingdoms.Dungeon
             hud.SetAiming(null, null);
         }
 
-        /// <summary>Marks the target in that direction, or the one closest to it.</summary>
+        /// <summary>Marks the nearest target that way; pressed again, the next one out (<see cref="AimInfo.Toward"/>).</summary>
         void SelectToward(Direction8 direction)
         {
-            var options = aiming.Aim.Options;
-            int best = aiming.Selected, bestTurn = int.MaxValue;
-            for (int i = 0; i < options.Count; i++)
-            {
-                int turn = Math.Abs((int)options[i].Direction - (int)direction) % 8;
-                turn = Math.Min(turn, 8 - turn);
-                if (turn >= bestTurn) continue;
-                bestTurn = turn;
-                best = i;
-            }
-            aiming.Selected = best;
-            view.ShowAim(run, aiming.Aim, best);
-        }
-
-        /// <summary>The target marked first: the one the hero faces; else the nearest; for a roll, the spot farthest from foes.</summary>
-        int DefaultOption(AimInfo aim, Actor hero)
-        {
-            int best = 0, bestScore = int.MinValue;
-            for (int i = 0; i < aim.Options.Count; i++)
-            {
-                var option = aim.Options[i];
-                int score = aim.PicksTile ? run.DistanceToNearestFoe(option.Tile, hero.Team)
-                    : option.Direction == hero.Facing ? int.MaxValue
-                    : -GridPos.ChebyshevDistance(option.Tile, hero.Pos);
-                if (score <= bestScore) continue;
-                bestScore = score;
-                best = i;
-            }
-            return best;
+            aiming.Selected = aiming.Aim.Toward(direction, aiming.Selected);
+            view.ShowAim(run, aiming.Aim, aiming.Selected);
         }
 
         string AimPrompt(AimInfo aim, SkillDefinition skill)
@@ -336,22 +342,31 @@ namespace FiveKingdoms.Dungeon
             string what = !aim.PicksTile ? "a target" : skill?.Effect == SkillEffect.Dash ? "where to dash" : "where to roll";
             switch (inputMode)
             {
-                case InputMode.Keyboard: return $"{name}: pick {what} with the arrows, press again or Space to fire, Esc to cancel.";
-                case InputMode.Gamepad: return $"{name}: pick {what} with the stick, press again or A to fire, B to cancel.";
-                default: return $"{name}: tap {what}, or tap {name} again for the marked one.";
+                case InputMode.Keyboard: return $"{name}: pick {what} with the arrows, Space fires at the marked one, Esc cancels.";
+                case InputMode.Gamepad: return $"{name}: pick {what} with the stick, A fires at the marked one, B cancels.";
+                // Short, and naming the button by its label: on a tablet it has to fit between the D-pad and the skill buttons.
+                default: return $"{name}: tap {what}, or tap {skill?.ShortName ?? name} again.";
             }
         }
 
-        /// <summary>The map tile tapped or clicked this frame, if it wasn't on a HUD control.</summary>
+        /// <summary>
+        /// The map tile tapped or clicked this frame, if it wasn't on a HUD control. Any finger counts, not only the first
+        /// one down: a thumb resting on the D-pad mustn't swallow a tap on an enemy.
+        /// </summary>
         GridPos? ReadTappedTile()
         {
-            Vector2 screen;
-            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
-                screen = Touchscreen.current.primaryTouch.position.ReadValue();
-            else if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-                screen = Mouse.current.position.ReadValue();
-            else
-                return null;
+            if (Touchscreen.current != null)
+            {
+                foreach (var touch in Touchscreen.current.touches)
+                    if (touch.press.wasPressedThisFrame && MapTileAt(touch.position.ReadValue()) is GridPos tile) return tile;
+            }
+            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) return MapTileAt(Mouse.current.position.ReadValue());
+            return null;
+        }
+
+        /// <summary>The map tile under a screen point, or null when a HUD control is in the way.</summary>
+        GridPos? MapTileAt(Vector2 screen)
+        {
             var system = EventSystem.current;
             if (system != null)
             {
@@ -413,6 +428,10 @@ namespace FiveKingdoms.Dungeon
             if (run.State != RunState.InProgress) return;
             switch (command.Kind)
             {
+                case HeroCommandKind.Attack:
+                    // A tapped enemy that moved away or fell before the tap's turn came.
+                    hud.AddMessage(NoAttackTargetMessage(run.Hero), DungeonHud.HintColor);
+                    break;
                 case HeroCommandKind.UseBerry:
                     hud.AddMessage(run.Berries == 0 ? "You have no berries." : BerryFullMessage(run.Config), DungeonHud.HintColor);
                     break;
@@ -488,7 +507,10 @@ namespace FiveKingdoms.Dungeon
             var skills = run.Hero.Definition.Skills;
             if (slot < 0 || slot >= skills.Count) return "No skill in that slot yet.";
             var skill = skills[slot];
-            switch (command.Aimed ? run.CheckSkill(slot, command.Direction) : run.CheckSkill(slot))
+            var check = command.Targeted ? run.CheckSkillAt(run.Hero, slot, command.Target)
+                : command.Aimed ? run.CheckSkill(slot, command.Direction)
+                : run.CheckSkill(slot);
+            switch (check)
             {
                 case SkillCheck.OnCooldown:
                     int turns = run.Hero.SkillCooldowns[slot];
@@ -508,7 +530,10 @@ namespace FiveKingdoms.Dungeon
             var hero = run.Hero;
             var ultimate = hero.Definition.Ultimate;
             if (ultimate == null) return $"{hero.Name} has no ultimate.";
-            switch (command.Aimed ? run.CheckUltimate(command.Direction) : run.CheckUltimate())
+            var check = command.Targeted ? run.CheckUltimateAt(hero, command.Target)
+                : command.Aimed ? run.CheckUltimate(command.Direction)
+                : run.CheckUltimate();
+            switch (check)
             {
                 case SkillCheck.NotCharged: return $"{ultimate.Name} is charging ({hero.Charge}%): it fills as {hero.Name} acts, hits and gets hit.";
                 case SkillCheck.NoTarget: return NoTargetMessage(ultimate);
@@ -517,7 +542,16 @@ namespace FiveKingdoms.Dungeon
         }
 
         static string NoTargetMessage(SkillDefinition skill) =>
-            skill.Effect == SkillEffect.Strike ? $"No enemy next to you for {skill.Name}." : $"No enemy in line within {skill.Range} tiles for {skill.Name}.";
+            skill.Effect == SkillEffect.Strike ? $"No enemy next to you for {skill.Name}." : $"No enemy in sight within {skill.Range} tiles for {skill.Name}.";
+
+        /// <summary>Why the weapon attack has nothing to aim at, for the message log.</summary>
+        public static string NoAttackTargetMessage(Actor hero) =>
+            hero.Definition.IsRanged ? $"No enemy in sight within {hero.Definition.AttackRange} tiles for {hero.Definition.AttackName}."
+            : $"No enemy next to you for {hero.Definition.AttackName}.";
+
+        static string OutOfReachMessage(Actor hero, Actor foe) =>
+            hero.Definition.IsRanged ? $"The {foe.Name} is out of {hero.Definition.AttackName}'s reach or out of sight."
+            : $"The {foe.Name} is too far for {hero.Definition.AttackName}: step next to it first.";
 
         // ---- Input ----
 

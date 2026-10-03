@@ -60,6 +60,44 @@ namespace FiveKingdoms.Core
         /// <summary>Terrain-only check for stepping one tile in a direction (actors are not considered).</summary>
         public bool CanStep(GridPos from, Direction8 dir) => IsWalkable(from + dir.ToOffset()) && IsCornerClear(from, dir);
 
+        /// <summary>
+        /// Whether a shot from <paramref name="from"/> reaches <paramref name="to"/> (PROGRESSION.md, "Ranged targets
+        /// anything ... in sight"): a straight line of floor tiles between the two that never cuts a wall corner.
+        /// Terrain only: actors never block it. The line is traced both ways (the two differ where it runs exactly
+        /// between two tiles) and it's clear if either is, so whoever can shoot can be shot back, and a mirrored room
+        /// behaves the same. Along the 8 directions it's the same test as walking the line step by step. Integer math,
+        /// so it's the same on every platform.
+        /// </summary>
+        public bool HasLineOfSight(GridPos from, GridPos to) => IsLineClear(from, to) || IsLineClear(to, from);
+
+        /// <summary>Bresenham's line from one tile to the other: every tile between must be floor, and a diagonal step needs a clear corner.</summary>
+        bool IsLineClear(GridPos from, GridPos to)
+        {
+            int dx = Math.Abs(to.X - from.X), sx = from.X < to.X ? 1 : -1;
+            int dy = -Math.Abs(to.Y - from.Y), sy = from.Y < to.Y ? 1 : -1;
+            int error = dx + dy;
+            var pos = from;
+            while (pos != to)
+            {
+                int twice = 2 * error, stepX = 0, stepY = 0;
+                if (twice >= dy)
+                {
+                    error += dy;
+                    stepX = sx;
+                }
+                if (twice <= dx)
+                {
+                    error += dx;
+                    stepY = sy;
+                }
+                Directions.TryFromDelta(stepX, stepY, out var dir);
+                if (!IsCornerClear(pos, dir)) return false;
+                pos = new GridPos(pos.X + stepX, pos.Y + stepY);
+                if (pos != to && !IsWalkable(pos)) return false;
+            }
+            return true;
+        }
+
         /// <summary>Index into <see cref="Rooms"/>, or -1 for corridors.</summary>
         public int RoomIndexAt(GridPos p)
         {

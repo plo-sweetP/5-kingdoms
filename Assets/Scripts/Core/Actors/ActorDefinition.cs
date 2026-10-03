@@ -80,7 +80,7 @@ namespace FiveKingdoms.Core
         /// <summary>The weapon it fights with until gear exists, or null.</summary>
         public WeaponDefinition Weapon { get; }
 
-        /// <summary>How far its basic attack reaches along a straight line: 1 is melee, more is a ranged shot.</summary>
+        /// <summary>How far its weapon attack reaches: 1 is melee, more is a shot at any foe in sight within that many tiles.</summary>
         public int AttackRange { get; }
 
         /// <summary>The always-ready weapon attack's name (Uzuki's Quick Shot, Haiden's Sword Slash, Kristela's Jab).</summary>
@@ -99,9 +99,9 @@ namespace FiveKingdoms.Core
     public static class ActorCatalog
     {
         /// <summary>
-        /// Archer (Medieval Realm), utility ranged DPS built around traps: her weapon attack (Quick Shot) reaches 5 tiles;
-        /// Hunter's Mark, Power Shot and Rolling Shot (which leaves a snare); ultimate Volley. The Hunter Bow's +6 SPD takes
-        /// her base 95 to 101.
+        /// Archer (Medieval Realm), utility ranged DPS built around traps: her weapon attack (Quick Shot) reaches any foe in
+        /// sight within 5 tiles; Hunter's Mark, Power Shot and Rolling Shot (which leaves a snare); ultimate Volley. The
+        /// Hunter Bow's +6 SPD takes her base 95 to 101.
         /// </summary>
         public static readonly ActorDefinition Uzuki = new ActorDefinition("uzuki", "Uzuki", maxHp: 400, attack: 60, defense: 30, expReward: 0,
             speed: 95, skills: new[] { SkillCatalog.HuntersMark, SkillCatalog.PowerShot, SkillCatalog.RollingShot },
@@ -124,8 +124,12 @@ namespace FiveKingdoms.Core
             speed: 100, skills: new[] { SkillCatalog.PiercingPunch, SkillCatalog.KiHeal, SkillCatalog.StunStrike },
             ultimate: SkillCatalog.FlurryOfBlows, hpGrowth: 45, atkGrowth: 11, defGrowth: 8, weapon: WeaponCatalog.Gauntlets);
 
-        /// <summary>The party for the first playtest, leader first (the player's own character joins later).</summary>
-        public static readonly ActorDefinition[] StartingParty = { Uzuki, Haiden, Kristela };
+        /// <summary>
+        /// The party for the first playtest, leader first (the player's own character joins later). A melee hero leads
+        /// (PROGRESSION.md, "Targeting and input"): Haiden the tank in front, Kristela behind him, Uzuki at the back. The
+        /// player can switch to anyone, and saves don't depend on the order.
+        /// </summary>
+        public static readonly ActorDefinition[] StartingParty = { Haiden, Kristela, Uzuki };
 
         /// <summary>
         /// Tuned for a party of three (with -balance), so a slime alone is no threat but a roomful is. Little EXP: every
@@ -136,11 +140,12 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// Slow and heavy (Speed 85): a hero sometimes gets two turns before it acts, e.g. to escape a slam. Tuned with
-        /// -balance for the party of three: a fresh level-1 party rarely wins (about 5%); with levels kept, players win
-        /// around Lv 9 on the 3rd attempt. Hitting hard (ATK 260) is what makes levels count: a low-level party's thinner
-        /// HP and DEF suffer most.
+        /// -balance for the party of three: a fresh level-1 party rarely wins (about 6%); with levels kept, players win
+        /// around Lv 9-10 on the 3rd attempt. Hitting hard (ATK 260) is what makes levels count: a low-level party's thinner
+        /// HP and DEF suffer most. 14000 HP (10000 before 1f part 2, when ranged hits dealt 75% and only flew along the 8
+        /// lines): more HP is what holds a low-level party back without stopping a Lv 9 one.
         /// </summary>
-        public static readonly ActorDefinition KingSlime = new ActorDefinition("king_slime", "King Slime", maxHp: 10000, attack: 260, defense: 50,
+        public static readonly ActorDefinition KingSlime = new ActorDefinition("king_slime", "King Slime", maxHp: 14000, attack: 260, defense: 50,
             expReward: 80, brain: ActorBrain.SlimeKing, speed: 85);
 
         /// <summary>

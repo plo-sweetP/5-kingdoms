@@ -38,7 +38,7 @@ namespace FiveKingdoms.Tests
             slime.Hp = 1;
             slime.ExpReward = 30;
 
-            run.Move(Direction8.E);
+            run.AttackAt(slime.Pos);
 
             Assert.AreEqual(run.Hero.Level, progress.Level);
             Assert.AreEqual(run.Hero.Exp, progress.Exp);
@@ -53,7 +53,7 @@ namespace FiveKingdoms.Tests
             var weakling = run.SpawnEnemy(new GridPos(2, 1));
             weakling.Hp = 1;
             weakling.ExpReward = 5;
-            run.Move(Direction8.E); // Defeat it: 5 EXP.
+            run.AttackAt(weakling.Pos); // Defeat it: 5 EXP.
 
             var brute = run.SpawnEnemy(new GridPos(2, 1));
             brute.Attack = 999;
@@ -71,7 +71,7 @@ namespace FiveKingdoms.Tests
             var slime = first.SpawnEnemy(new GridPos(2, 1));
             slime.Hp = 1;
             slime.ExpReward = 100;
-            first.Move(Direction8.E);
+            first.AttackAt(slime.Pos);
             int level = first.Hero.Level;
 
             var second = TestRuns.OnMap(1, progress, null, Corridor);

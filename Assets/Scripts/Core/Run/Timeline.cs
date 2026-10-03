@@ -40,7 +40,13 @@ namespace FiveKingdoms.Core
         {
             public Actor Actor;
             public AvTime Next;
+
+            /// <summary>A delay picked up during its own turn (a boss walking onto a snare): added when that turn ends.</summary>
+            public AvTime Owed;
         }
+
+        /// <summary>Whose turn is under way: from <see cref="AdvanceTo"/> until its <see cref="EndTurn"/>.</summary>
+        Actor acting;
 
         /// <summary>AV elapsed since the fight began.</summary>
         public AvTime Now { get; private set; }
@@ -71,6 +77,7 @@ namespace FiveKingdoms.Core
         public void Clear()
         {
             slots.Clear();
+            acting = null;
             Now = AvTime.Zero;
         }
 
@@ -82,7 +89,11 @@ namespace FiveKingdoms.Core
         public void Add(Actor actor, bool readyNow = false) =>
             slots[actor.Id] = new Slot { Actor = actor, Next = readyNow ? Now : Now + TurnLength(actor.Speed) };
 
-        public void Remove(int actorId) => slots.Remove(actorId);
+        public void Remove(int actorId)
+        {
+            slots.Remove(actorId);
+            if (acting != null && acting.Id == actorId) acting = null;
+        }
 
         public bool Contains(int actorId) => slots.ContainsKey(actorId);
 
@@ -98,15 +109,34 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>Moves the clock forward to <paramref name="actor"/>'s turn; call with the actor <see cref="PeekNext"/> returned.</summary>
-        public void AdvanceTo(Actor actor) => Now = slots[actor.Id].Next;
+        public void AdvanceTo(Actor actor)
+        {
+            Now = slots[actor.Id].Next;
+            acting = actor;
+        }
 
-        /// <summary>After acting, the actor's next turn is one turn after now, scaled by what the action cost.</summary>
-        public void EndTurn(Actor actor, int costPercent) => slots[actor.Id].Next = Now + TurnLength(actor.Speed, costPercent);
+        /// <summary>
+        /// After acting, the actor's next turn is one turn after now, scaled by what the action cost, plus any delay it
+        /// picked up during the turn.
+        /// </summary>
+        public void EndTurn(Actor actor, int costPercent)
+        {
+            var slot = slots[actor.Id];
+            slot.Next = Now + TurnLength(actor.Speed, costPercent) + slot.Owed;
+            slot.Owed = AvTime.Zero;
+            if (acting == actor) acting = null;
+        }
 
-        /// <summary>Pushes an actor's next turn back by <paramref name="percent"/>% of one of its turns (a slow).</summary>
+        /// <summary>
+        /// Pushes an actor's next turn back by <paramref name="percent"/>% of one of its turns (a stun, a slow). Delayed
+        /// during its own turn, it's the turn after this one that comes later.
+        /// </summary>
         public void Delay(Actor actor, int percent)
         {
-            if (slots.TryGetValue(actor.Id, out var slot)) slot.Next = slot.Next + TurnLength(actor.Speed, percent);
+            if (!slots.TryGetValue(actor.Id, out var slot)) return;
+            var delay = TurnLength(actor.Speed, percent);
+            if (actor == acting) slot.Owed = slot.Owed + delay;
+            else slot.Next = slot.Next + delay;
         }
 
         /// <summary>
@@ -123,17 +153,17 @@ namespace FiveKingdoms.Core
         /// <summary>The next <paramref name="count"/> turns in order, assuming every action costs a normal turn. Changes nothing.</summary>
         public List<TimelineTurn> Forecast(Actor leader, int count)
         {
-            var upcoming = new List<(Actor actor, AvTime next)>();
-            foreach (var slot in slots.Values) upcoming.Add((slot.Actor, slot.Next));
+            var upcoming = new List<(Actor actor, AvTime next, AvTime owed)>();
+            foreach (var slot in slots.Values) upcoming.Add((slot.Actor, slot.Next, slot.Owed));
             var turns = new List<TimelineTurn>(count);
             while (turns.Count < count && upcoming.Count > 0)
             {
                 int best = 0;
                 for (int i = 1; i < upcoming.Count; i++)
                     if (GoesBefore(upcoming[i].actor, upcoming[i].next, upcoming[best].actor, upcoming[best].next, leader)) best = i;
-                var (actor, next) = upcoming[best];
+                var (actor, next, owed) = upcoming[best];
                 turns.Add(new TimelineTurn(actor, next, CycleOf(next)));
-                upcoming[best] = (actor, next + TurnLength(actor.Speed));
+                upcoming[best] = (actor, next + TurnLength(actor.Speed) + owed, AvTime.Zero);
             }
             return turns;
         }

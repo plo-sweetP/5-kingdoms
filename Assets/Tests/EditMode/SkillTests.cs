@@ -185,6 +185,24 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
+        public void ATargetedStrikeHitsTheFoeOnThatTileOrIsRefused()
+        {
+            var run = Run();
+            var east = SlimeAt(run, 1, 0);
+            var north = SlimeAt(run, 0, 1);
+            run.Hero.Facing = Direction8.E;
+
+            Assert.AreEqual(SkillCheck.NoTarget, run.CheckSkillAt(run.Hero, Strike, run.Hero.Pos + new GridPos(-1, 0)));
+            Assert.IsFalse(run.Execute(HeroCommand.SkillAt(Strike, run.Hero.Pos + new GridPos(-1, 0))), "nobody on that tile: no falling back on another foe");
+            Assert.AreEqual(0, run.Turn);
+
+            Assert.IsTrue(run.Execute(HeroCommand.SkillAt(Strike, north.Pos)));
+            Assert.AreEqual(north.Id, run.Events.OfType<AttackEvent>().First().TargetId);
+            Assert.AreEqual(Direction8.N, run.Hero.Facing);
+            Assert.AreEqual(1000, east.Hp);
+        }
+
+        [Test]
         public void TheAutoPilotDashesDownALongWayToTheStairs()
         {
             var run = TestRuns.OnMap(2, new HeroProgress(TestHeroes.Classic), null,
@@ -242,13 +260,28 @@ namespace FiveKingdoms.Tests
         public void TheAutoPilotUsesItsStrongerSkillThenItsWeaponAttack()
         {
             var run = Run();
-            SlimeAt(run, 1, 0);
+            var slime = SlimeAt(run, 1, 0);
             run.Wait(); // The slime notices the hero; the fight is on.
             Assert.IsTrue(run.InCombat);
             var first = AutoPilot.Decide(run);
-            Assert.AreEqual(HeroCommandKind.Skill, first.Kind, "Spirit Strike (240%) beats the weapon attack (200%)");
+            Assert.AreEqual(HeroCommand.SkillAt(Strike, slime.Pos), first, "Spirit Strike (240%) beats the weapon attack (200%)");
             run.Execute(first);
-            Assert.AreEqual(HeroCommandKind.Move, AutoPilot.Decide(run).Kind, "cooling down: bump the slime instead");
+            Assert.AreEqual(HeroCommand.AttackAt(slime.Pos), AutoPilot.Decide(run), "cooling down: the weapon attack, on the slime's tile, never by walking into it");
+        }
+
+        [Test]
+        public void TheAutoPilotGoesForTheMarkedFoeThenTheLowestHp()
+        {
+            var run = Run();
+            var sturdy = SlimeAt(run, 1, 0, hp: 900);
+            var weak = SlimeAt(run, -1, 0, hp: 300);
+            var marked = SlimeAt(run, 0, 1, hp: 600);
+            run.Hero.SkillCooldowns[Strike] = 1;
+
+            Assert.AreEqual(HeroCommand.AttackAt(weak.Pos), AutoPilot.Decide(run), "the lowest HP of the three in reach");
+            marked.Statuses.Add(new StatusEffect(StatusKind.Mark, 99, 25, 3, endsOnSourceTurn: false));
+            Assert.AreEqual(HeroCommand.AttackAt(marked.Pos), AutoPilot.Decide(run), "the marked one first");
+            Assert.AreSame(marked, HeroTactics.PickTarget(run.Hero, new System.Collections.Generic.List<Actor> { sturdy, weak, marked }));
         }
     }
 }

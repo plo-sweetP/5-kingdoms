@@ -25,6 +25,9 @@ namespace FiveKingdoms.Tests
             "############",
         };
 
+        /// <summary>The three heroes with the archer in front, for tests that name who stands where (whatever the playtest's order is).</summary>
+        static readonly ActorDefinition[] UzukiLeads = { ActorCatalog.Uzuki, ActorCatalog.Haiden, ActorCatalog.Kristela };
+
         public static DungeonRun Run(ActorDefinition[] members, params string[] rows)
         {
             var config = new DungeonRunConfig
@@ -60,11 +63,12 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
-        public void TheStartingPartyStandsTogetherWithUzukiInTheLead()
+        public void TheStartingPartyStandsTogetherWithAMeleeHeroInTheLead()
         {
             var run = Run(ActorCatalog.StartingParty, Room);
-            CollectionAssert.AreEqual(new[] { "uzuki", "haiden", "kristela" }, run.Party.Select(member => member.Definition.Id).ToArray());
+            CollectionAssert.AreEqual(new[] { "haiden", "kristela", "uzuki" }, run.Party.Select(member => member.Definition.Id).ToArray());
             Assert.AreSame(run.Party[0], run.Hero);
+            Assert.IsFalse(run.Hero.Definition.IsRanged, "the first playtest starts with a melee leader (PROGRESSION.md)");
             foreach (var member in run.Party)
             {
                 Assert.IsNotNull(run.FindActor(member.Id), $"{member.Name} is on the floor");
@@ -75,7 +79,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void EachHeroHasTheirSpeed()
         {
-            var run = Run(ActorCatalog.StartingParty, Room);
+            var run = Run(UzukiLeads, Room);
             Assert.AreEqual(101, run.Party[0].Speed, "Uzuki 95 + the Hunter Bow's 6");
             Assert.AreEqual(90, run.Party[1].Speed, "Haiden");
             Assert.AreEqual(100, run.Party[2].Speed, "Kristela");
@@ -84,7 +88,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void TheLeaderSwapsPlacesWithAPartner()
         {
-            var run = Run(ActorCatalog.StartingParty, Corridor);
+            var run = Run(UzukiLeads, Corridor);
             var leader = run.Hero;
             var kristela = run.Party[2];
             Place(leader, 3, 1);
@@ -126,7 +130,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void AnAttackingPartnerGoesAfterAFoeInSight()
         {
-            var run = Run(ActorCatalog.StartingParty, Room);
+            var run = Run(UzukiLeads, Room);
             HoldAll(run);
             var kristela = run.Party[2];
             run.SetTactic(kristela, PartyTactic.Attack);
@@ -143,20 +147,21 @@ namespace FiveKingdoms.Tests
         [Test]
         public void PartnersFightOnTheirOwnTurns()
         {
-            var run = Run(ActorCatalog.StartingParty, Corridor);
+            var run = Run(UzukiLeads, Corridor);
             Place(run.Hero, 1, 1);
             Place(run.Party[1], 2, 1);
             Place(run.Party[2], 3, 1);
-            Dummy(run, 4, 1);
+            var slime = Dummy(run, 4, 1);
 
             run.Wait();
-            Assert.IsTrue(run.Events.OfType<AttackEvent>().Any(attack => attack.AttackerId == run.Party[2].Id), "Kristela hit the slime next to her");
+            Assert.IsTrue(run.Events.OfType<AttackEvent>().Any(attack => attack.AttackerId == run.Party[2].Id && attack.TargetId == slime.Id),
+                "Kristela hit the slime next to her");
         }
 
         [Test]
         public void EveryoneTakesTurnsOnTheTimelineAtTheirOwnSpeed()
         {
-            var run = Run(ActorCatalog.StartingParty, Room);
+            var run = Run(UzukiLeads, Room);
             HoldAll(run);
             Place(run.Hero, 1, 3);
             Place(run.Party[1], 1, 4);
@@ -176,7 +181,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void WhenTheLeaderFallsTheNextHeroTakesOver()
         {
-            var run = Run(ActorCatalog.StartingParty, Corridor);
+            var run = Run(UzukiLeads, Corridor);
             HoldAll(run);
             Place(run.Hero, 4, 1);
             Place(run.Party[1], 1, 1);
@@ -245,7 +250,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void SwitchingLeaderMidFightHandsTheTurnToTheNewLeader()
         {
-            var run = Run(ActorCatalog.StartingParty, Room);
+            var run = Run(UzukiLeads, Room);
             HoldAll(run);
             Place(run.Hero, 1, 3);
             Place(run.Party[1], 1, 4);
@@ -269,7 +274,7 @@ namespace FiveKingdoms.Tests
             var slime = Dummy(run, 2, 1, hp: 1);
             slime.ExpReward = 5;
 
-            run.Move(Direction8.E);
+            run.AttackAt(slime.Pos);
             Assert.IsFalse(slime.IsAlive);
             foreach (var member in run.Party)
             {
@@ -295,7 +300,7 @@ namespace FiveKingdoms.Tests
             Place(run.Hero, 3, 1);
             Place(run.Party[1], 2, 1);
             Place(run.Party[2], 1, 1);
-            run.PlaceItem(new GridPos(3, 1), ItemKind.Berry); // Under the leader: Haiden steps onto it next.
+            run.PlaceItem(new GridPos(3, 1), ItemKind.Berry); // Under the leader: the partner behind steps onto it next.
             run.Move(Direction8.E);
             Assert.AreEqual(1, run.Berries);
         }

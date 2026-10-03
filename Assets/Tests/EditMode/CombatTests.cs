@@ -12,18 +12,49 @@ namespace FiveKingdoms.Tests
             "########");
 
         [Test]
-        public void BumpingAnEnemyAttacksItInsteadOfMoving()
+        public void WalkingIntoAnEnemyOnlyTurnsToFaceIt()
         {
             var run = Corridor();
             var slime = run.SpawnEnemy(new GridPos(2, 1));
             slime.MaxHp = slime.Hp = 100;
+            run.Hero.Facing = Direction8.S;
 
-            Assert.IsTrue(run.Move(Direction8.E));
+            Assert.IsFalse(run.Move(Direction8.E), "like bumping a wall: no turn used");
+            Assert.AreEqual(0, run.Turn);
             Assert.AreEqual(new GridPos(1, 1), run.Hero.Pos);
+            Assert.AreEqual(Direction8.E, run.Hero.Facing);
+            Assert.AreEqual(100, slime.Hp, "attacks are deliberate");
+            Assert.IsInstanceOf<FacingChangedEvent>(run.Events.Single());
+        }
+
+        [Test]
+        public void TheWeaponAttackHitsTheFoeOnTheTileItIsAimedAt()
+        {
+            var run = Corridor();
+            var slime = run.SpawnEnemy(new GridPos(2, 1));
+            slime.MaxHp = slime.Hp = 100;
+            run.Hero.Facing = Direction8.S;
+
+            Assert.IsTrue(run.Execute(HeroCommand.AttackAt(slime.Pos)));
+            Assert.AreEqual(1, run.Turn);
             Assert.Less(slime.Hp, 100);
+            Assert.AreEqual(Direction8.E, run.Hero.Facing, "turns to face its target");
             var attack = run.Events.OfType<AttackEvent>().First();
             Assert.AreEqual(run.Hero.Id, attack.AttackerId);
             Assert.AreEqual(slime.Id, attack.TargetId);
+            Assert.AreEqual(slime.Pos, attack.To);
+        }
+
+        [Test]
+        public void AnAttackAtATileWithNoFoeInReachIsRefused()
+        {
+            var run = Corridor();
+            var far = run.SpawnEnemy(new GridPos(3, 1));
+            Assert.IsFalse(run.AttackAt(new GridPos(2, 1)), "nobody there");
+            Assert.IsFalse(run.AttackAt(far.Pos), "two tiles away: out of a melee hero's reach");
+            Assert.IsNull(run.AttackTargetAt(run.Hero, far.Pos));
+            Assert.AreEqual(0, run.Turn, "refused: no turn used");
+            Assert.AreEqual(far.MaxHp, far.Hp);
         }
 
         [Test]
@@ -32,7 +63,9 @@ namespace FiveKingdoms.Tests
             var run = Corridor();
             Assert.IsTrue(run.Attack());
             Assert.AreEqual(1, run.Turn);
-            Assert.AreEqual(-1, run.Events.OfType<AttackEvent>().First().TargetId);
+            var swing = run.Events.OfType<AttackEvent>().First();
+            Assert.AreEqual(-1, swing.TargetId);
+            Assert.AreEqual(run.Hero.Pos + run.Hero.Facing.ToOffset(), swing.To);
         }
 
         [Test]
@@ -53,7 +86,7 @@ namespace FiveKingdoms.Tests
             slime.ExpReward = 100;
             int attackBefore = run.Hero.Attack;
 
-            run.Move(Direction8.E);
+            run.AttackAt(slime.Pos);
 
             Assert.IsNull(run.FindActor(slime.Id));
             Assert.IsTrue(run.Events.OfType<DiedEvent>().Any(e => e.ActorId == slime.Id));
@@ -73,7 +106,8 @@ namespace FiveKingdoms.Tests
             var slime = run.SpawnEnemy(new GridPos(2, 2));
             int heroHp = run.Hero.Hp;
 
-            run.Move(Direction8.NE); // Corner is walled: no attack, just a turn in place.
+            Assert.IsFalse(run.AttackAt(slime.Pos), "the corner is walled: it isn't in reach");
+            run.Attack(Direction8.NE); // A swing that way hits nothing.
             Assert.AreEqual(slime.MaxHp, slime.Hp);
             for (int i = 0; i < 5; i++) run.Wait();
             Assert.AreEqual(heroHp, run.Hero.Hp, "the slime can't bite around the corner either");

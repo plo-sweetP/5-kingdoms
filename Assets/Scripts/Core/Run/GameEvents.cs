@@ -41,8 +41,10 @@ namespace FiveKingdoms.Core
         }
     }
 
-    /// <summary>An attack swing. TargetId is -1 when it hit nothing. A DamageEvent follows when it connects.</summary>
-    /// <summary>A swing or a shot. TargetId is -1 for a miss; a shot also says how far it flew, for the arrow.</summary>
+    /// <summary>
+    /// A swing or a shot. TargetId is -1 for a miss; a DamageEvent follows when it connects. A shot can fly at any angle:
+    /// <see cref="To"/> is the tile it lands on, <see cref="Direction"/> the nearest of the 8 directions.
+    /// </summary>
     public sealed class AttackEvent : GameEvent
     {
         public readonly int AttackerId;
@@ -53,11 +55,15 @@ namespace FiveKingdoms.Core
         /// <summary>Tiles from the attacker to the target, or to where a missed shot stopped.</summary>
         public readonly int Distance;
 
-        public AttackEvent(int attackerId, int targetId, Direction8 direction, bool ranged = false, int distance = 1)
+        /// <summary>The tile it lands on: the target's, or where a missed shot stopped.</summary>
+        public readonly GridPos To;
+
+        public AttackEvent(int attackerId, int targetId, Direction8 direction, GridPos to, bool ranged = false, int distance = 1)
         {
             AttackerId = attackerId;
             TargetId = targetId;
             Direction = direction;
+            To = to;
             Ranged = ranged;
             Distance = distance;
         }
@@ -303,16 +309,28 @@ namespace FiveKingdoms.Core
         }
     }
 
-    /// <summary>A slow: the actor's next turn was pushed back by this percent of one of its turns.</summary>
+    /// <summary>
+    /// A delay: the actor's next turn was pushed back by this percent of one of its turns (a stun, a slow, a snare under
+    /// a boss). An actor can be delayed at most once per its own turn, so no two of these for one actor carry the same
+    /// <see cref="TurnsTaken"/>.
+    /// </summary>
     public sealed class TurnDelayedEvent : GameEvent
     {
         public readonly int ActorId;
         public readonly int Percent;
 
-        public TurnDelayedEvent(int actorId, int percent)
+        /// <summary>How many turns the actor had taken when it was delayed (<see cref="Actor.TurnsTaken"/>).</summary>
+        public readonly int TurnsTaken;
+
+        /// <summary>It was a stun (Stun Strike) rather than a slow or a snare.</summary>
+        public readonly bool Stun;
+
+        public TurnDelayedEvent(int actorId, int percent, int turnsTaken, bool stun = false)
         {
             ActorId = actorId;
             Percent = percent;
+            TurnsTaken = turnsTaken;
+            Stun = stun;
         }
     }
 
@@ -339,17 +357,6 @@ namespace FiveKingdoms.Core
         public TrapTriggeredEvent(int trapId, int actorId)
         {
             TrapId = trapId;
-            ActorId = actorId;
-        }
-    }
-
-    /// <summary>A stunned actor lost its turn.</summary>
-    public sealed class TurnSkippedEvent : GameEvent
-    {
-        public readonly int ActorId;
-
-        public TurnSkippedEvent(int actorId)
-        {
             ActorId = actorId;
         }
     }

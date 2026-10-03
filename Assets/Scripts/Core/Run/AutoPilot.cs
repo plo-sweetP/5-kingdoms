@@ -5,12 +5,14 @@ namespace FiveKingdoms.Core
 {
     /// <summary>
     /// Plays the leader automatically: step out of a boss's wind-up; use a charged ultimate when it's worth it; when low,
-    /// heal with a skill or eat a berry; heal or guard the party; a ranged leader gets out of melee; fight a foe in reach,
-    /// with skills chosen by <see cref="HeroTactics"/>; in a fight, a ranged leader finds a tile to shoot from; otherwise
-    /// chase nearby enemies, pick up nearby berries, then head for the stairs, dashing down straight
-    /// stretches (or for the boss, on the boss floor). Partners play themselves (<see cref="PartnerBrain"/>).
+    /// heal with a skill or eat a berry; heal or guard the party; a ranged leader gets out of melee; a badly hurt one
+    /// swaps back behind a healthier ally; fight a foe in reach, with the target and skill chosen by
+    /// <see cref="HeroTactics"/> (the marked enemy first, then the lowest HP); in a fight, a ranged leader finds a tile to
+    /// shoot from; otherwise chase nearby enemies, pick up nearby berries, then head for the stairs, dashing down
+    /// straight stretches (or for the boss, on the boss floor). It never walks into a foe: every attack is an explicit
+    /// command naming its target. Partners play themselves (<see cref="PartnerBrain"/>).
     /// Drives the soak tests, the balance report and the unattended autoplay smoke test. Not meant to play well,
-    /// just plausibly. Targets are chosen by walking distance, which only shrinks while the hero follows the path;
+    /// just plausibly. Where to walk is chosen by walking distance, which only shrinks while the hero follows the path;
     /// choosing by straight-line distance made it flip between two goals at doorways.
     /// </summary>
     public static class AutoPilot
@@ -41,6 +43,7 @@ namespace FiveKingdoms.Core
             if (HeroTactics.TryHealParty(run, hero, out command)) return command;
             if (HeroTactics.TryGuard(run, hero, out command)) return command;
             if (HeroTactics.TryStepOutOfMelee(run, hero, out command)) return command;
+            if (HeroTactics.TryRunToSafety(run, hero, out command)) return command;
             if (HeroTactics.TryMark(run, hero, out command)) return command;
             if (HeroTactics.TryAttack(run, hero, out command)) return command;
             // A ranged leader hangs back at a tile it can shoot from; a melee one chases below, as it always has.
@@ -53,27 +56,38 @@ namespace FiveKingdoms.Core
             if (!map.InBounds(map.Stairs))
             {
                 // Boss floor: no stairs, so the only way forward is through the enemies.
-                if (TryStepTowardNearest(run, enemies, FarSearchLimit, blocked, out step)) return HeroCommand.Move(step);
+                if (TryStepTowardNearest(run, enemies, FarSearchLimit, blocked, out step)) return Walk(run, step);
                 return HeroCommand.Wait;
             }
 
-            if (TryStepTowardNearest(run, enemies, ChaseRange, blocked, out step)) return HeroCommand.Move(step);
+            if (TryStepTowardNearest(run, enemies, ChaseRange, blocked, out step)) return Walk(run, step);
 
             if (run.Berries < run.Config.MaxBerries)
             {
                 var berries = new List<GridPos>();
                 foreach (var item in run.Items) berries.Add(item.Pos);
-                if (TryStepTowardNearest(run, berries, BerryDetourRange, blocked, out step)) return HeroCommand.Move(step);
+                if (TryStepTowardNearest(run, berries, BerryDetourRange, blocked, out step)) return Walk(run, step);
             }
 
-            // A monster dozing in a corridor can block every way to the stairs: then walk at it and fight through (allies
-            // still only as the formation allows).
+            // A monster dozing in a corridor can block every way to the stairs: then walk up to it and fight through
+            // (allies still only as the formation allows).
             Func<GridPos, bool> alliesInTheWay = p => run.ActorAt(p) is Actor other && other.Team == hero.Team && blocked(p);
             if (!Pathfinder.TryFirstStep(map, hero.Pos, map.Stairs, blocked, FarSearchLimit, out step, out int length) &&
                 !Pathfinder.TryFirstStep(map, hero.Pos, map.Stairs, alliesInTheWay, FarSearchLimit, out step, out length))
                 return HeroCommand.Wait;
             int dash = HeroTactics.SkillSlot(hero, SkillEffect.Dash);
-            return DashSaves(run, dash, map.Stairs, step, length, blocked) ? HeroCommand.Skill(dash, step) : HeroCommand.Move(step);
+            return DashSaves(run, dash, map.Stairs, step, length, blocked) ? HeroCommand.Skill(dash, step) : Walk(run, step);
+        }
+
+        /// <summary>
+        /// One step along a path. Walking into a foe would only turn the leader to face it, so when one stands on the next
+        /// tile the leader attacks it instead (and waits if its weapon can't reach it).
+        /// </summary>
+        static HeroCommand Walk(DungeonRun run, Direction8 step)
+        {
+            var next = run.Hero.Pos + step.ToOffset();
+            if (!(run.ActorAt(next) is Actor other) || other.Team == run.Hero.Team) return HeroCommand.Move(step);
+            return run.AttackTargetAt(run.Hero, next) != null ? HeroCommand.AttackAt(next) : HeroCommand.Wait;
         }
 
         /// <summary>True when dashing along the first step of the path gets at least two tiles closer to the goal.</summary>

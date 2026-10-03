@@ -18,17 +18,19 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
 ## Commands (from the repo root)
 - Core tests, ~2 s: `dotnet run --project Tools/CoreTests` (add a name filter as an argument to run a subset)
 - Balance report: `dotnet run --project Tools/CoreTests -- -balance` (try numbers with `key=value` overrides, see
-  `TuningFrom`); the party straight at the boss: `-- -boss <level>`; print a floor: `-- -map <seed>`; trace the
-  autopilot: `-- -trace <seed> <fromAction>` (solo) or `-- -party <seed> <fromAction>`
+  `TuningFrom`; `seeds=600` for a steadier number; `-lead kristela` puts another hero in front); the party straight
+  at the boss: `-- -boss <level>`; print a floor: `-- -map <seed>`; trace the autopilot: `-- -trace <seed> <fromAction>`
+  (solo) or `-- -party <seed> <fromAction>`
 - Regenerate art: `python Tools/pixelart/make_sprites.py --preview preview.png`
 - Unity tests: `Unity.exe -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults results.xml`
 - Windows build: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildWindowsDev`
 - Autoplay smoke test: `Builds/Windows/5Kingdoms.exe -screen-fullscreen 0 -fk-autoplay <screenshot folder>`
-  (add `-fk-floors 1 -fk-level 9` to go straight to the boss; autoplay always uses its own throwaway save)
+  (add `-fk-floors 1 -fk-level 10` to go straight to the boss; autoplay always uses its own throwaway save, and
+  aims each targeted action once the way a player does, saving `aim_*.png`)
 
 Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway save), `-fk-save PATH`,
-`-fk-input keyboard|gamepad` (start with that HUD layout, e.g. to screenshot the skill row), `-fk-leader haiden|kristela`
-(someone other than Uzuki leads). PlayMode tests set
+`-fk-input keyboard|gamepad` (start with that HUD layout, e.g. to screenshot the skill row), `-fk-leader kristela|uzuki`
+(someone other than Haiden leads). PlayMode tests set
 `DungeonController.Overrides` instead. The real save is `save.json` in `Application.persistentDataPath`
 (`SaveSystem`); never let tests or tools write to it.
 
@@ -44,6 +46,15 @@ the project open; copy Assets/Packages/ProjectSettings to a scratch folder and r
   (`HeroTactics`) are the balance report's players, so a new skill or item needs AI rules too.
 - There is no mana (PROGRESSION.md, "Skill resources"): skills sit out the hero's next turn, each hero has an
   always-ready weapon attack, and ultimates need a full charge meter (`Actor.Charge`).
+- Attacks are deliberate (PROGRESSION.md, "Targeting and input"): moving into an enemy never attacks (it only turns
+  the hero, no turn used). Attacks, skills and ultimates on a foe carry its tile (`HeroCommand.AttackAt / SkillAt /
+  UltimateAt`); the AI must always use those (the soak tests fail on a refused command or an attack at nothing) and
+  picks targets with `HeroTactics.PickTarget` (marked first, then lowest HP). The controller aims in two steps from
+  `DungeonRun.AimFor` (`AimInfo`: reach, targets, the one marked first).
+- Shots reach any foe within range that `DungeonMap.HasLineOfSight` sees (walls and wall corners block, actors
+  don't; it's symmetric). Use `DungeonRun.InShotReach / FoesInSight / ShotTargetAt`, not line walks.
+- Delays (stuns, slows, a snare under a boss) go through `DungeonRun.Delay`: capped at 50% of a turn (25% on a boss)
+  and at most once per the target's own turn (`Actor.IsDelayed`). Never skip a turn.
 - "Enter Play Mode" has domain reload off: statics survive between Play sessions, so reset them on scene load.
 - Combat turn order lives in `Core/Run/Timeline.cs` (Honkai Star Rail-style action value). Game time is exact `AvTime`
   (BigInteger fractions): never use floats for time or turn decisions; ties go to the leader, then the lower actor id.

@@ -90,17 +90,79 @@ namespace FiveKingdoms.Tests
             Assert.AreEqual(turn, controller.Run.Turn, "with auto-pilot off, nothing happens without input");
         }
 
+        [UnityTest]
+        public IEnumerator TheWeaponAttackIsAimedInTwoStepsAndATapOnAnEnemyAttacksIt()
+        {
+            DungeonController.Overrides = new LaunchOptions { SavePath = savePath, FreshSave = true };
+            yield return LoadDungeon();
+            var controller = Object.FindFirstObjectByType<DungeonController>();
+            Time.timeScale = 4f;
+            var run = controller.Run;
+
+            // Nothing in reach at the start: the attack button says so, and no turn passes.
+            controller.Submit(HeroCommand.Attack);
+            yield return Settle(controller);
+            Assert.IsFalse(controller.IsAiming, "nothing to aim at");
+            Assert.AreEqual(0, run.Turn, "no swing at the air");
+
+            yield return PlayUntilAFoeIsInReach(controller);
+            Assert.Greater(run.AimFor(run.Hero, null).Options.Count, 0, $"the autopilot never reached a foe ({run.State} on turn {run.Turn})");
+
+            // Step one: the button. The reach lights up, a target is marked, and nothing has happened yet.
+            int turn = run.Turn;
+            controller.Submit(HeroCommand.Attack);
+            yield return Settle(controller);
+            Assert.IsTrue(controller.IsAiming, "the weapon attack waits for its target");
+            Assert.AreEqual(turn, run.Turn);
+
+            // A tap away from every target lets it go.
+            controller.Tap(run.Hero.Pos);
+            yield return Settle(controller);
+            Assert.IsFalse(controller.IsAiming);
+            Assert.AreEqual(turn, run.Turn);
+
+            // Step two: pressed again, it fires at the marked target.
+            var aim = run.AimFor(run.Hero, null);
+            var marked = aim.Options[aim.Default].Target;
+            int hp = marked.Hp;
+            controller.Submit(HeroCommand.Attack);
+            yield return Settle(controller);
+            Assert.IsTrue(controller.IsAiming);
+            controller.Submit(HeroCommand.Attack);
+            yield return Settle(controller);
+            Assert.IsFalse(controller.IsAiming);
+            Assert.AreEqual(turn + 1, run.Turn, "one attack, one turn");
+            Assert.Less(marked.Hp, hp, "on the marked target");
+            if (run.State != RunState.InProgress) yield break;
+
+            // Tapping an enemy in reach when not aiming attacks it directly: one tap per hit.
+            yield return PlayUntilAFoeIsInReach(controller);
+            aim = run.AimFor(run.Hero, null);
+            if (aim.Options.Count == 0) yield break; // The run ended first.
+            var tapped = aim.Options[aim.Default].Target;
+            hp = tapped.Hp;
+            turn = run.Turn;
+            controller.Tap(tapped.Pos);
+            yield return Settle(controller);
+            Assert.AreEqual(turn + 1, run.Turn);
+            Assert.Less(tapped.Hp, hp);
+        }
+
         [Test]
         public void WhileAutoPlaysThePlayersMovesAndActionsAreIgnored()
         {
             var run = new DungeonRun(3);
             var autoChoice = AutoPilot.Decide(run);
-            foreach (var playerCommand in new[] { HeroCommand.Move(Direction8.N), HeroCommand.Attack, HeroCommand.Wait, HeroCommand.UseBerry, HeroCommand.Descend })
+            var playerCommands = new[]
+            {
+                HeroCommand.Move(Direction8.N), HeroCommand.Attack, HeroCommand.AttackAt(new GridPos(1, 1)), HeroCommand.Wait, HeroCommand.UseBerry,
+                HeroCommand.Descend,
+            };
+            foreach (var playerCommand in playerCommands)
             {
                 var chosen = DungeonController.ChooseCommand(playerCommand, autoPilot: true, run);
-                Assert.AreEqual(autoChoice.Kind, chosen.Value.Kind, $"{playerCommand} is ignored during auto");
-                Assert.AreEqual(autoChoice.Direction, chosen.Value.Direction);
-                Assert.AreEqual(playerCommand.Kind, DungeonController.ChooseCommand(playerCommand, autoPilot: false, run).Value.Kind,
+                Assert.AreEqual(autoChoice, chosen.Value, $"{playerCommand} is ignored during auto");
+                Assert.AreEqual(playerCommand, DungeonController.ChooseCommand(playerCommand, autoPilot: false, run).Value,
                     "without auto, the player's command is used");
             }
             Assert.IsNull(DungeonController.ChooseCommand(null, autoPilot: false, run), "no input, no auto: nothing happens");
@@ -110,13 +172,13 @@ namespace FiveKingdoms.Tests
         public void WhileAutoPlaysThePlayerCanStillUseSkillsUltimatesAndSwitchHeroes()
         {
             var run = new DungeonRun(3);
-            foreach (var command in new[] { HeroCommand.Skill(1), HeroCommand.Skill(2, Direction8.E), HeroCommand.UltimateFacing, HeroCommand.SwitchLeader(1) })
+            var commands = new[]
             {
-                var chosen = DungeonController.ChooseCommand(command, autoPilot: true, run).Value;
-                Assert.AreEqual(command.Kind, chosen.Kind);
-                Assert.AreEqual(command.Slot, chosen.Slot);
-                Assert.AreEqual(command.Aimed, chosen.Aimed);
-            }
+                HeroCommand.Skill(1), HeroCommand.Skill(2, Direction8.E), HeroCommand.SkillAt(1, new GridPos(4, 2)), HeroCommand.UltimateFacing,
+                HeroCommand.UltimateAt(new GridPos(4, 2)), HeroCommand.SwitchLeader(1),
+            };
+            foreach (var command in commands)
+                Assert.AreEqual(command, DungeonController.ChooseCommand(command, autoPilot: true, run).Value);
         }
 
         [Test]
@@ -127,7 +189,11 @@ namespace FiveKingdoms.Tests
             StringAssert.Contains("needs healing", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(0)));
             StringAssert.Contains("No enemy next to you", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(1)));
             var archer = new DungeonRun(3, new DungeonRunConfig { Hero = ActorCatalog.Uzuki });
-            StringAssert.Contains("No enemy in line", DungeonController.SkillRefusalMessage(archer, HeroCommand.Skill(1)));
+            StringAssert.Contains("No enemy in sight", DungeonController.SkillRefusalMessage(archer, HeroCommand.Skill(1)));
+            StringAssert.Contains("No enemy in sight", DungeonController.SkillRefusalMessage(archer, HeroCommand.SkillAt(1, archer.Hero.Pos + new GridPos(2, 1))));
+            // The weapon attack with nothing in reach is stopped with a hint instead of a swing at the air.
+            StringAssert.Contains("No enemy in sight within 5 tiles for Quick Shot", DungeonController.NoAttackTargetMessage(archer.Hero));
+            StringAssert.Contains("No enemy next to you for Sword Slash", DungeonController.NoAttackTargetMessage(run.Hero));
             run.Hero.SkillCooldowns[1] = 1;
             StringAssert.Contains("ready again next turn", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(1)));
             StringAssert.Contains("is charging", DungeonController.UltimateRefusalMessage(run, HeroCommand.UltimateFacing));
@@ -156,6 +222,31 @@ namespace FiveKingdoms.Tests
             }
             while (controller.IsAnimating && Time.realtimeSinceStartup < deadline) yield return null; // Finish the last turn.
             Time.timeScale = 1f;
+        }
+
+        /// <summary>Lets the controller take the input in and play out whatever it started.</summary>
+        static IEnumerator Settle(DungeonController controller)
+        {
+            yield return null;
+            yield return null;
+            float deadline = Time.realtimeSinceStartup + 30f;
+            while (controller.IsAnimating && Time.realtimeSinceStartup < deadline) yield return null;
+        }
+
+        /// <summary>The autopilot plays until the leader has an enemy in its weapon attack's reach (or the run ends).</summary>
+        static IEnumerator PlayUntilAFoeIsInReach(DungeonController controller)
+        {
+            float deadline = Time.realtimeSinceStartup + 120f;
+            while (Time.realtimeSinceStartup < deadline && controller.Run.State == RunState.InProgress)
+            {
+                if (controller.IsIdle)
+                {
+                    var run = controller.Run;
+                    if (run.AimFor(run.Hero, null).Options.Count > 0) yield break;
+                    controller.Submit(AutoPilot.Decide(run));
+                }
+                yield return null;
+            }
         }
 
         static string DescribeScene()

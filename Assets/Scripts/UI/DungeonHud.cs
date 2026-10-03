@@ -15,8 +15,8 @@ namespace FiveKingdoms.UI
     /// <summary>
     /// Landscape HUD for the dungeon, built in code. The party's HP, ultimate charge, EXP and levels and the floor across
     /// the top, plus a boss bar on boss floors; D-pad bottom-left; the weapon attack, the three skills and the ultimate
-    /// bottom-right; Wait and Berry top-right; a message log; an aiming prompt; floating numbers; fades, floor banner and
-    /// end-of-run panel. The D-pad and attack button hide while a keyboard or controller is in use (PC, Steam Deck); the
+    /// bottom-right (each starts aiming: pick it, then the target); Wait and Berry top-right; a message log; an aiming
+    /// prompt; floating numbers; fades, floor banner and end-of-run panel. The D-pad and attack button hide while a keyboard or controller is in use (PC, Steam Deck); the
     /// skill buttons stay, in a row with their keys, since they also show cooldowns, Quick tags and the charge.
     /// Layout is in 1920x1080 reference pixels, scaled to the screen height and kept inside the safe area.
     /// </summary>
@@ -47,10 +47,10 @@ namespace FiveKingdoms.UI
         /// <summary>Key hints sit just under the party's cards (3 heroes), the turn-order strip under the hints.</summary>
         static readonly float KeysTop = -24f - PartyPanel.Height(3) - 8f;
 
-        const string KeyboardHint = "Move: WASD/arrows + QEZC   Attack: Space   Skills: 1 2 3   Ultimate: 4   Switch hero: Tab   Tactics: G\n" +
-                                    "Wait: X   Berry: B   Stairs: Enter   Auto: T   Aim: arrows, press again to fire, Esc cancels (or hold a direction)";
-        const string GamepadHint = "Move: stick/D-pad   Attack: A   Skills: LB LT RT   Ultimate: RB   Switch hero: B   Tactics: L3\n" +
-                                   "Wait: Y   Berry: X   Stairs: Start   Auto: View   Aim: stick, press again to fire, B cancels";
+        const string KeyboardHint = "Move: WASD/arrows + QEZC   Attack: Space, then a target   Skills: 1 2 3   Ultimate: 4   Switch hero: Tab   Tactics: G\n" +
+                                    "Wait: X   Berry: B   Stairs: Enter   Auto: T   Aim: arrows pick, Space fires, Esc cancels (or click the enemy)";
+        const string GamepadHint = "Move: stick/D-pad   Attack: A, then a target   Skills: LB LT RT   Ultimate: RB   Switch hero: B   Tactics: L3\n" +
+                                   "Wait: Y   Berry: X   Stairs: Start   Auto: View   Aim: stick picks, A fires, B cancels";
         static readonly string[] KeyboardSkillKeys = { "1", "2", "3", "4" };
         static readonly string[] GamepadSkillKeys = { "LB", "LT", "RT", "RB" };
 
@@ -256,7 +256,7 @@ namespace FiveKingdoms.UI
         }
 
         /// <summary>
-        /// Aiming mode (PROGRESSION.md, "Attack range highlight"): the button being aimed glows and a prompt says how to
+        /// Aiming mode (PROGRESSION.md, "Targeting and input"): the button being aimed glows and a prompt says how to
         /// fire. <paramref name="button"/>: 0-2 a skill, 3 the ultimate, -1 the weapon attack; null ends aiming.
         /// </summary>
         public void SetAiming(int? button, string prompt)

@@ -50,7 +50,7 @@ namespace FiveKingdoms.Tests
             Assert.IsTrue(run.Events.OfType<CombatStartedEvent>().Any());
             Assert.AreEqual(run.Hero, run.Forecast(1)[0].Actor, "the hero's turn comes first");
 
-            run.Move(Direction8.E); // Defeat it.
+            run.AttackAt(slime.Pos); // Defeat it.
             Assert.IsFalse(run.InCombat);
             Assert.IsTrue(run.Events.OfType<CombatEndedEvent>().Any());
         }

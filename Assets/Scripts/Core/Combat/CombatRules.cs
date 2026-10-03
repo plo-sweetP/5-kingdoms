@@ -32,21 +32,32 @@ namespace FiveKingdoms.Core
         public const int SpreadMaxPercent = 100;
 
         /// <summary>
-        /// PROGRESSION.md, "Ranged vs melee": ranged hits (weapon attacks, shots, area skills) deal 75% of an equivalent
+        /// PROGRESSION.md, "Ranged vs melee": ranged hits (weapon attacks, shots, area skills) deal 90% of an equivalent
         /// melee hit, and 30% less again with a foe next to the shooter (the point-blank rule).
         /// </summary>
-        public const int RangedDamagePercent = 75;
+        public const int RangedDamagePercent = 90;
         public const int PointBlankPercent = 70;
+
+        /// <summary>
+        /// The turn-manipulation budget for delays (PROGRESSION.md, "Delays / stuns"): one effect pushes a turn back by at
+        /// most 50% of a turn, 25% on a boss, and an actor can be delayed at most once per its own turn.
+        /// </summary>
+        public const int MaxDelayPercent = 50;
+        public const int MaxBossDelayPercent = 25;
+
+        /// <summary>The most one delay may push <paramref name="target"/>'s turn back, in percent of one of its turns.</summary>
+        public static int DelayCap(Actor target) => target.Definition.IsBoss ? MaxBossDelayPercent : MaxDelayPercent;
 
         /// <summary>
         /// The ultimate's charge meter (PROGRESSION.md, "Skill resources"): full at 100. It fills as a hero acts (each
         /// attack or skill), deals damage (each hit landed) and takes damage (each hit taken); an ultimate's own hits don't
         /// refill it. Tuned with -balance for about two ultimates per hero in the boss fight (counting the charge carried
         /// in) and one every two or three normal fights: those are short (a hero acts about twice), so one per normal
-        /// fight would put an ultimate in every other action.
+        /// fight would put an ultimate in every other action. An action gives 15 (20 before shots could be aimed at any
+        /// foe in sight: an archer who shoots every turn charged too fast).
         /// </summary>
         public const int MaxCharge = 100;
-        public const int ChargePerAction = 20;
+        public const int ChargePerAction = 15;
         public const int ChargePerHitDealt = 10;
         public const int ChargePerHitTaken = 20;
 
@@ -78,7 +89,7 @@ namespace FiveKingdoms.Core
         public static DamageRoll RollBasicAttack(Actor attacker, Actor defender, Rng rng, int reachPercent = 100) =>
             RollDamage(attacker, defender, rng, BasicAttackPercent, reachPercent: reachPercent);
 
-        /// <summary>What's left of a hit after the ranged cuts: 100 in melee, 75 for a shot, 52 for a shot at point-blank range.</summary>
+        /// <summary>What's left of a hit after the ranged cuts: 100 in melee, 90 for a shot, 63 for a shot at point-blank range.</summary>
         public static int ReachPercent(bool ranged, bool pointBlank) =>
             !ranged ? 100 : pointBlank ? RangedDamagePercent * PointBlankPercent / 100 : RangedDamagePercent;
 

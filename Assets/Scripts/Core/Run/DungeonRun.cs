@@ -8,6 +8,25 @@ namespace FiveKingdoms.Core
     /// <summary>Whether a skill can be used right now, and if not, why (for button states and messages).</summary>
     public enum SkillCheck { Ready, NoSkill, OnCooldown, NotCharged, NoTarget, NotNeeded, Blocked }
 
+    /// <summary>Where an action is pointed: a direction, or the tile of the foe it's for (tapped, or picked by the AI).</summary>
+    internal readonly struct AimAt
+    {
+        public AimAt(Direction8 direction)
+        {
+            Direction = direction;
+            Target = null;
+        }
+
+        public AimAt(GridPos target)
+        {
+            Direction = Direction8.S;
+            Target = target;
+        }
+
+        public Direction8 Direction { get; }
+        public GridPos? Target { get; }
+    }
+
     /// <summary>
     /// One dungeon expedition with a party of heroes: the turn-based rules for exploring floors and fighting.
     /// The player controls the leader (<see cref="Hero"/>); the other party members act on their own
@@ -18,9 +37,10 @@ namespace FiveKingdoms.Core
     /// records what happened in <see cref="Events"/> for the presentation layer to animate. Every hero starts from a
     /// <see cref="HeroProgress"/> and EXP earned is recorded back into it as it happens. The run is lost when the whole
     /// party has fallen (or, if the dungeon says so, when the leader falls). There is no mana: skills sit out a turn
-    /// after use, and ultimates need a full charge meter (PROGRESSION.md, "Skill resources"). Ranged hits are weaker
-    /// than melee ones, and weaker still at point-blank range ("Ranged vs melee"). No Unity dependency, so it can be unit
-    /// tested and simulated headlessly.
+    /// after use, and ultimates need a full charge meter (PROGRESSION.md, "Skill resources"). Attacks are deliberate:
+    /// walking into an enemy only turns to face it, and shots can be aimed at any foe in sight within reach. Ranged hits
+    /// are weaker than melee ones, and weaker still at point-blank range ("Ranged vs melee"). No Unity dependency, so it
+    /// can be unit tested and simulated headlessly.
     /// </summary>
     public sealed class DungeonRun
     {
@@ -181,20 +201,24 @@ namespace FiveKingdoms.Core
             switch (command.Kind)
             {
                 case HeroCommandKind.Move: return Move(command.Direction);
-                case HeroCommandKind.Attack: return command.Aimed ? Attack(command.Direction) : Attack();
+                case HeroCommandKind.Attack: return Attack(AimOf(command, Hero));
                 case HeroCommandKind.Wait: return Wait();
                 case HeroCommandKind.UseBerry: return UseBerry();
                 case HeroCommandKind.Descend: return Descend();
-                case HeroCommandKind.Skill: return command.Aimed ? UseSkill(command.Slot, command.Direction) : UseSkill(command.Slot);
+                case HeroCommandKind.Skill: return UseSkill(command.Slot, AimOf(command, Hero));
                 case HeroCommandKind.SwitchLeader: return SwitchLeader(command.Slot);
-                case HeroCommandKind.Ultimate: return command.Aimed ? UseUltimate(command.Direction) : UseUltimate();
+                case HeroCommandKind.Ultimate: return UseUltimate(AimOf(command, Hero));
                 default: throw new ArgumentOutOfRangeException(nameof(command), command.Kind, null);
             }
         }
 
+        /// <summary>Where a command points: the foe on its target tile, its direction, or the way <paramref name="actor"/> faces.</summary>
+        static AimAt AimOf(HeroCommand command, Actor actor) =>
+            command.Targeted ? new AimAt(command.Target) : new AimAt(command.Aimed ? command.Direction : actor.Facing);
+
         /// <summary>
-        /// Walk one tile, attack whatever enemy stands there, or swap places with a partner. Bumping a wall only turns
-        /// the leader and costs no turn.
+        /// Walk one tile, or swap places with a partner. Walking into a wall or an enemy only turns the leader to face it
+        /// and costs no turn: attacks are deliberate (PROGRESSION.md, "Targeting and input").
         /// </summary>
         public bool Move(Direction8 dir)
         {
@@ -203,17 +227,29 @@ namespace FiveKingdoms.Core
             return true;
         }
 
-        /// <summary>Attack along the way the leader faces, even at nothing (a missed swing or shot still uses the turn).</summary>
-        public bool Attack() => Attack(Hero.Facing);
+        /// <summary>
+        /// The weapon attack the way the leader faces: the foe that way, else any in reach (next to a melee hero, in sight
+        /// of a ranged one). With nothing in reach it's a missed swing or shot, which still uses the turn.
+        /// </summary>
+        public bool Attack() => Attack(new AimAt(Hero.Facing));
 
-        /// <summary>Turn toward <paramref name="direction"/> and attack along it.</summary>
-        public bool Attack(Direction8 direction)
+        /// <summary>Turn toward <paramref name="direction"/> and attack that way.</summary>
+        public bool Attack(Direction8 direction) => Attack(new AimAt(direction));
+
+        /// <summary>The weapon attack on the foe at <paramref name="target"/>. Refused (no turn used) unless it's in reach and in sight.</summary>
+        public bool AttackAt(GridPos target) => Attack(new AimAt(target));
+
+        bool Attack(AimAt aim)
         {
-            if (!BeginAction()) return false;
-            ResolveAttack(Hero, direction);
+            if (!BeginAction() || aim.Target.HasValue && AttackTargetAt(Hero, aim.Target.Value) == null) return false;
+            ResolveAttack(Hero, aim);
             FinishLeaderTurn(Config.Costs.PercentFor(ActionKind.Attack));
             return true;
         }
+
+        /// <summary>The foe at <paramref name="tile"/> if <paramref name="user"/>'s weapon attack reaches it, else null.</summary>
+        public Actor AttackTargetAt(Actor user, GridPos tile) =>
+            user.Definition.IsRanged ? ShotTargetAt(user, tile, user.Definition.AttackRange) : StrikeTargetAt(user, tile);
 
         public bool Wait()
         {
@@ -240,7 +276,12 @@ namespace FiveKingdoms.Core
         public SkillCheck CheckSkill(int slot, Direction8 aim) => CheckSkill(Hero, slot, aim);
 
         /// <summary>Whether <paramref name="user"/> could use its skill in <paramref name="slot"/> aimed at <paramref name="aim"/>.</summary>
-        public SkillCheck CheckSkill(Actor user, int slot, Direction8 aim)
+        public SkillCheck CheckSkill(Actor user, int slot, Direction8 aim) => CheckSkill(user, slot, new AimAt(aim));
+
+        /// <summary>The same, aimed at the foe on <paramref name="target"/> (for a roll or a dash: toward that tile).</summary>
+        public SkillCheck CheckSkillAt(Actor user, int slot, GridPos target) => CheckSkill(user, slot, new AimAt(target));
+
+        SkillCheck CheckSkill(Actor user, int slot, AimAt aim)
         {
             var skills = user.Definition.Skills;
             if (slot < 0 || slot >= skills.Count) return SkillCheck.NoSkill;
@@ -253,7 +294,11 @@ namespace FiveKingdoms.Core
 
         public SkillCheck CheckUltimate(Direction8 aim) => CheckUltimate(Hero, aim);
 
-        public SkillCheck CheckUltimate(Actor user, Direction8 aim)
+        public SkillCheck CheckUltimate(Actor user, Direction8 aim) => CheckUltimate(user, new AimAt(aim));
+
+        public SkillCheck CheckUltimateAt(Actor user, GridPos target) => CheckUltimate(user, new AimAt(target));
+
+        SkillCheck CheckUltimate(Actor user, AimAt aim)
         {
             var ultimate = user.Definition.Ultimate;
             if (ultimate == null) return SkillCheck.NoSkill;
@@ -262,31 +307,59 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>Whether a skill aimed at <paramref name="aim"/> would have something to do.</summary>
-        SkillCheck CheckTarget(Actor user, SkillDefinition skill, Direction8 aim)
+        SkillCheck CheckTarget(Actor user, SkillDefinition skill, AimAt aim)
         {
             switch (skill.Effect)
             {
-                case SkillEffect.Strike: return FindStrikeTarget(user, aim, out _) != null ? SkillCheck.Ready : SkillCheck.NoTarget;
+                case SkillEffect.Strike: return StrikeTarget(user, aim, out _) != null ? SkillCheck.Ready : SkillCheck.NoTarget;
                 case SkillEffect.Shot when skill.RollTiles > 0:
-                    return DashDestination(user, skill.RollTiles, aim) != user.Pos ? SkillCheck.Ready : SkillCheck.Blocked;
+                    return DashDestination(user, skill.RollTiles, DirectionOf(user, aim)) != user.Pos ? SkillCheck.Ready : SkillCheck.Blocked;
                 case SkillEffect.Shot:
                 case SkillEffect.Mark:
                 case SkillEffect.Area:
-                    return FindShotTarget(user, aim, skill.Range, out _, out _) != null ? SkillCheck.Ready : SkillCheck.NoTarget;
+                    return ShotTarget(user, aim, skill.Range) != null ? SkillCheck.Ready : SkillCheck.NoTarget;
                 case SkillEffect.Heal: return HealTargets(user, skill).Count > 0 ? SkillCheck.Ready : SkillCheck.NotNeeded;
-                case SkillEffect.Dash: return DashDestination(user, skill.Power, aim) != user.Pos ? SkillCheck.Ready : SkillCheck.Blocked;
+                case SkillEffect.Dash: return DashDestination(user, skill.Power, DirectionOf(user, aim)) != user.Pos ? SkillCheck.Ready : SkillCheck.Blocked;
                 default: return SkillCheck.Ready;
             }
+        }
+
+        /// <summary>The way an aim points: its direction, or (of the 8) the nearest to its target.</summary>
+        static Direction8 DirectionOf(Actor user, AimAt aim) => aim.Target.HasValue ? Directions.Approximate(user.Pos, aim.Target.Value) : aim.Direction;
+
+        /// <summary>The foe a shot aimed that way would hit: the target if it's in reach and in sight, else by direction.</summary>
+        Actor ShotTarget(Actor user, AimAt aim, int range) =>
+            aim.Target.HasValue ? ShotTargetAt(user, aim.Target.Value, range) : FindShotTarget(user, aim.Direction, range);
+
+        /// <summary>The foe a strike aimed that way would hit: the one on the target tile, or by direction (<see cref="FindStrikeTarget"/>).</summary>
+        Actor StrikeTarget(Actor user, AimAt aim, out Direction8 direction)
+        {
+            if (!aim.Target.HasValue) return FindStrikeTarget(user, aim.Direction, out direction);
+            direction = Directions.Toward(user.Pos, aim.Target.Value);
+            return StrikeTargetAt(user, aim.Target.Value);
+        }
+
+        /// <summary>The foe on <paramref name="tile"/> if a melee blow from <paramref name="user"/> reaches it (next to it, corner allowing), else null.</summary>
+        public Actor StrikeTargetAt(Actor user, GridPos tile)
+        {
+            var foe = ActorAt(tile);
+            if (foe == null || foe.Team == user.Team || GridPos.ChebyshevDistance(user.Pos, tile) != 1) return null;
+            return Map.IsCornerClear(user.Pos, Directions.Toward(user.Pos, tile)) ? foe : null;
         }
 
         /// <summary>
         /// Uses one of the leader's skills the way it faces: applies its effect, then ends the turn with the skill's own
         /// AV cost and starts its cooldown. Refused (no turn used) unless <see cref="CheckSkill(int)"/> is Ready.
         /// </summary>
-        public bool UseSkill(int slot) => UseSkill(slot, Hero.Facing);
+        public bool UseSkill(int slot) => UseSkill(slot, new AimAt(Hero.Facing));
 
         /// <summary>The same, aimed: strikes, shots and dashes go toward <paramref name="aim"/>, turning the leader for free.</summary>
-        public bool UseSkill(int slot, Direction8 aim)
+        public bool UseSkill(int slot, Direction8 aim) => UseSkill(slot, new AimAt(aim));
+
+        /// <summary>The same, on the foe at <paramref name="target"/> (refused unless it's a valid target).</summary>
+        public bool UseSkillAt(int slot, GridPos target) => UseSkill(slot, new AimAt(target));
+
+        bool UseSkill(int slot, AimAt aim)
         {
             if (!BeginAction() || !TryUseSkill(Hero, slot, aim, out int cost)) return false;
             FinishLeaderTurn(cost);
@@ -297,9 +370,14 @@ namespace FiveKingdoms.Core
         /// The leader's ultimate, the way it faces: empties the charge meter and applies its effect. Refused (no turn used)
         /// unless <see cref="CheckUltimate()"/> is Ready.
         /// </summary>
-        public bool UseUltimate() => UseUltimate(Hero.Facing);
+        public bool UseUltimate() => UseUltimate(new AimAt(Hero.Facing));
 
-        public bool UseUltimate(Direction8 aim)
+        public bool UseUltimate(Direction8 aim) => UseUltimate(new AimAt(aim));
+
+        /// <summary>The same, on (or centered on) the foe at <paramref name="target"/>.</summary>
+        public bool UseUltimateAt(GridPos target) => UseUltimate(new AimAt(target));
+
+        bool UseUltimate(AimAt aim)
         {
             if (!BeginAction() || !TryUseUltimate(Hero, aim, out int cost)) return false;
             FinishLeaderTurn(cost);
@@ -361,38 +439,22 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>
-        /// The first foe straight along <paramref name="direction"/> within <paramref name="range"/> tiles. Walls and
-        /// blocked corners stop the line; allies don't (arrows fly past friends). <paramref name="distance"/> is how far
-        /// it got: to the foe, or to where the line stopped.
+        /// Whether a shot from <paramref name="from"/> reaches <paramref name="to"/> (PROGRESSION.md, "Ranged vs melee"):
+        /// within <paramref name="range"/> tiles (counting diagonals as one) and in sight. Walls and wall corners block
+        /// a shot; allies and other actors don't.
         /// </summary>
-        public Actor FirstFoeInLine(Actor from, Direction8 direction, int range, out int distance) =>
-            FirstFoeInLine(from.Pos, from.Team, direction, range, out distance);
-
-        /// <summary>The same, from any tile, for a shooter of <paramref name="team"/> (the AI asks "could I shoot from there?").</summary>
-        public Actor FirstFoeInLine(GridPos from, Team team, Direction8 direction, int range, out int distance)
+        public bool InShotReach(GridPos from, GridPos to, int range)
         {
-            var pos = from;
-            distance = 0;
-            for (int step = 1; step <= range; step++)
-            {
-                if (!Map.IsCornerClear(pos, direction)) break;
-                var next = pos + direction.ToOffset();
-                if (!Map.IsWalkable(next)) break;
-                pos = next;
-                distance = step;
-                var occupant = ActorAt(pos);
-                if (occupant != null && occupant.Team != team) return occupant;
-            }
-            if (distance == 0) distance = 1;
-            return null;
+            int distance = GridPos.ChebyshevDistance(from, to);
+            return distance >= 1 && distance <= range && Map.HasLineOfSight(from, to);
         }
 
-        /// <summary>Whether a shooter of <paramref name="team"/> standing on <paramref name="from"/> would have any foe in line within <paramref name="range"/>.</summary>
-        public bool AnyFoeInLine(GridPos from, Team team, int range)
+        /// <summary>How many tiles a shot at nothing flies along <paramref name="direction"/> before a wall, a corner or its range stops it (at least 1).</summary>
+        int MissDistance(GridPos from, Direction8 direction, int range)
         {
-            foreach (var dir in Directions.All)
-                if (FirstFoeInLine(from, team, dir, range, out _) != null) return true;
-            return false;
+            int distance = 0;
+            for (var pos = from; distance < range && Map.CanStep(pos, direction); distance++) pos += direction.ToOffset();
+            return Math.Max(1, distance);
         }
 
         /// <summary>Whether a foe of <paramref name="team"/> stands next to <paramref name="pos"/>.</summary>
@@ -416,48 +478,91 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// Whether party AI may move <paramref name="mover"/> into <paramref name="other"/>'s tile, swapping the two
-        /// (PROGRESSION.md, "No swap loops"): only a melee hero swaps, never with another melee hero, never back with
-        /// the one it just swapped with, and only when the swap puts it next to a foe or strictly closer to one. The
-        /// player's own moves always swap.
+        /// (PROGRESSION.md, "Swaps, without loops"). Two kinds: a melee hero swaps past a ranged one to get next to a foe
+        /// or strictly closer to one; and a badly hurt hero swaps with a healthier ally standing farther from the foes
+        /// ("run to safety", melee pairs included). Never straight back with the one it just swapped with. The player's
+        /// own moves always swap.
         /// </summary>
         public bool CanSwap(Actor mover, Actor other)
         {
             if (other == null || other == mover || other.Team != mover.Team || !other.IsAlive) return false;
-            if (mover.Definition.IsRanged || !other.Definition.IsRanged) return false;
             if (mover.SwappedWithId == other.Id && mover.SwapBlockTurns > 0) return false;
             if (other.SwappedWithId == mover.Id && other.SwapBlockTurns > 0) return false;
             if (GridPos.ChebyshevDistance(mover.Pos, other.Pos) != 1 || !Map.IsCornerClear(mover.Pos, Directions.Toward(mover.Pos, other.Pos))) return false;
-            int after = DistanceToNearestFoe(other.Pos, mover.Team);
-            return after == 1 || after < DistanceToNearestFoe(mover.Pos, mover.Team);
+            if (IsSaferSwap(mover, other)) return true;
+            if (mover.Definition.IsRanged || !other.Definition.IsRanged) return false;
+            int there = DistanceToNearestFoe(other.Pos, mover.Team);
+            return there == 1 || there < DistanceToNearestFoe(mover.Pos, mover.Team);
         }
 
         /// <summary>
-        /// The foe a shot aimed at <paramref name="preferred"/> would hit; if nothing is that way, the nearest foe along any
-        /// other straight line in range. Null if none.
+        /// "Run to safety": <paramref name="mover"/> is badly hurt, and <paramref name="other"/> is a healthier ally
+        /// standing farther from the foes, so swapping takes the hurt one away from them.
         /// </summary>
-        public Actor FindShotTarget(Actor user, Direction8 preferred, int range, out Direction8 direction, out int distance)
+        public bool IsSaferSwap(Actor mover, Actor other) =>
+            IsBadlyHurt(mover) && !IsBadlyHurt(other) &&
+            DistanceToNearestFoe(other.Pos, mover.Team) > DistanceToNearestFoe(mover.Pos, mover.Team);
+
+        /// <summary>Under this share of max HP a hero may swap away from the foes ("run to safety").</summary>
+        public const int BadlyHurtPercent = 30;
+
+        public static bool IsBadlyHurt(Actor actor) => actor.Hp * 100 < actor.MaxHp * BadlyHurtPercent;
+
+        /// <summary>
+        /// The foe a shot aimed toward <paramref name="preferred"/> would hit: the nearest foe in shot reach whose nearest
+        /// direction is that one, else the nearest in reach anywhere. Null if none.
+        /// </summary>
+        public Actor FindShotTarget(Actor user, Direction8 preferred, int range)
         {
-            direction = preferred;
-            var target = FirstFoeInLine(user, preferred, range, out distance);
-            if (target != null) return target;
-            int best = int.MaxValue;
-            foreach (var dir in Directions.All)
+            Actor that = null, any = null;
+            int thatDistance = int.MaxValue, anyDistance = int.MaxValue;
+            foreach (var actor in FoesInSight(user, range))
             {
-                var candidate = FirstFoeInLine(user, dir, range, out int candidateDistance);
-                if (candidate == null || candidateDistance >= best) continue;
-                best = candidateDistance;
-                target = candidate;
-                direction = dir;
-                distance = candidateDistance;
+                int distance = GridPos.ChebyshevDistance(user.Pos, actor.Pos);
+                if (distance < anyDistance)
+                {
+                    any = actor;
+                    anyDistance = distance;
+                }
+                if (distance < thatDistance && Directions.Approximate(user.Pos, actor.Pos) == preferred)
+                {
+                    that = actor;
+                    thatDistance = distance;
+                }
             }
-            return target;
+            return that ?? any;
+        }
+
+        /// <summary>The foe on <paramref name="tile"/> if a shot from <paramref name="user"/> reaches it (in range and in sight), else null.</summary>
+        public Actor ShotTargetAt(Actor user, GridPos tile, int range)
+        {
+            var foe = ActorAt(tile);
+            return foe != null && foe.Team != user.Team && InShotReach(user.Pos, tile, range) ? foe : null;
+        }
+
+        /// <summary>Whether a shooter of <paramref name="team"/> standing on <paramref name="from"/> would have any foe in shot reach (the AI asks "could I shoot from there?").</summary>
+        public bool AnyFoeInSight(GridPos from, Team team, int range)
+        {
+            foreach (var actor in actors)
+                if (actor.Team != team && InShotReach(from, actor.Pos, range)) return true;
+            return false;
+        }
+
+        /// <summary>Every foe of <paramref name="user"/> a shot could reach: in sight within <paramref name="range"/>.</summary>
+        public List<Actor> FoesInSight(Actor user, int range)
+        {
+            var foes = new List<Actor>();
+            foreach (var actor in actors)
+                if (actor.Team != user.Team && InShotReach(user.Pos, actor.Pos, range)) foes.Add(actor);
+            return foes;
         }
 
         /// <summary>
         /// What <paramref name="user"/>'s <paramref name="skill"/> (null: its weapon attack) can reach and be aimed at right
-        /// now, for the targeting highlight. Strikes reach the neighbors; shots, marks, areas and ranged weapon attacks
-        /// reach along the 8 lines (past allies, up to walls) and target the first foe on each; rolls and dashes pick
-        /// where to move. Cooldowns and charge aren't checked here.
+        /// now, for the two-step targeting (PROGRESSION.md, "Targeting and input"). Strikes and melee weapon attacks reach
+        /// the neighbors; shots, marks, areas and ranged weapon attacks reach every tile in sight within range and target
+        /// every foe there; rolls and dashes pick where to move. One option is marked to begin with
+        /// (<see cref="AimInfo.Default"/>). Cooldowns and charge aren't checked here.
         /// </summary>
         public AimInfo AimFor(Actor user, SkillDefinition skill)
         {
@@ -465,48 +570,73 @@ namespace FiveKingdoms.Core
             if (!info.NeedsAim) return info;
 
             bool moves = skill != null && (skill.Effect == SkillEffect.Dash || skill.RollTiles > 0);
-            bool line = skill == null ? user.Definition.AttackRange > 1 : skill.Effect != SkillEffect.Strike && !moves;
+            bool shot = skill == null ? user.Definition.IsRanged : skill.Effect != SkillEffect.Strike && !moves;
             int range = skill == null ? user.Definition.AttackRange : moves ? (skill.RollTiles > 0 ? skill.RollTiles : skill.Power) : skill.Range;
             info.AreaRadius = skill != null && skill.Effect == SkillEffect.Area ? skill.Radius : 0;
             info.PicksTile = moves;
 
-            foreach (var dir in Directions.All)
+            if (shot)
             {
-                if (moves)
+                for (int dy = -range; dy <= range; dy++)
                 {
-                    var end = DashDestination(user, range, dir);
-                    if (end == user.Pos) continue;
-                    for (var pos = user.Pos; pos != end;)
+                    for (int dx = -range; dx <= range; dx++)
                     {
-                        pos += dir.ToOffset();
-                        info.AddReach(pos);
-                    }
-                    info.AddOption(new AimOption(end, dir, null));
-                }
-                else if (line)
-                {
-                    var pos = user.Pos;
-                    for (int step = 1; step <= range; step++)
-                    {
-                        if (!Map.IsCornerClear(pos, dir) || !Map.IsWalkable(pos + dir.ToOffset())) break;
-                        pos += dir.ToOffset();
+                        var pos = new GridPos(user.Pos.X + dx, user.Pos.Y + dy);
+                        if (!Map.IsWalkable(pos) || !InShotReach(user.Pos, pos, range)) continue;
                         info.AddReach(pos);
                         var occupant = ActorAt(pos);
-                        if (occupant == null || occupant.Team == user.Team) continue;
-                        info.AddOption(new AimOption(pos, dir, occupant));
-                        break;
+                        if (occupant != null && occupant.Team != user.Team)
+                            info.AddOption(new AimOption(pos, Directions.Approximate(user.Pos, pos), occupant, Math.Max(Math.Abs(dx), Math.Abs(dy))));
                     }
                 }
-                else
+            }
+            else
+            {
+                foreach (var dir in Directions.All)
                 {
-                    var pos = user.Pos + dir.ToOffset();
-                    if (!Map.IsWalkable(pos) || !Map.IsCornerClear(user.Pos, dir)) continue;
-                    info.AddReach(pos);
-                    var occupant = ActorAt(pos);
-                    if (occupant != null && occupant.Team != user.Team) info.AddOption(new AimOption(pos, dir, occupant));
+                    if (moves)
+                    {
+                        var end = DashDestination(user, range, dir);
+                        if (end == user.Pos) continue;
+                        for (var pos = user.Pos; pos != end;)
+                        {
+                            pos += dir.ToOffset();
+                            info.AddReach(pos);
+                        }
+                        info.AddOption(new AimOption(end, dir, null, GridPos.ChebyshevDistance(user.Pos, end)));
+                    }
+                    else
+                    {
+                        var pos = user.Pos + dir.ToOffset();
+                        if (!Map.IsWalkable(pos) || !Map.IsCornerClear(user.Pos, dir)) continue;
+                        info.AddReach(pos);
+                        var occupant = ActorAt(pos);
+                        if (occupant != null && occupant.Team != user.Team) info.AddOption(new AimOption(pos, dir, occupant, 1));
+                    }
                 }
             }
+            info.Default = DefaultAim(user, info);
             return info;
+        }
+
+        /// <summary>
+        /// The option marked when aiming starts: the nearest foe the way the user faces, else the nearest foe; for a roll or
+        /// a dash, the spot farthest from the foes. Between equals, the first found. -1 with no options.
+        /// </summary>
+        int DefaultAim(Actor user, AimInfo info)
+        {
+            int best = -1;
+            long bestScore = long.MinValue;
+            for (int i = 0; i < info.Options.Count; i++)
+            {
+                var option = info.Options[i];
+                long score = info.PicksTile ? DistanceToNearestFoe(option.Tile, user.Team)
+                    : (option.Direction == user.Facing ? 1000 : 0) - option.Distance;
+                if (score <= bestScore) continue;
+                bestScore = score;
+                best = i;
+            }
+            return best;
         }
 
         // ---- Setup helpers, also used by tests. ----
@@ -634,11 +764,12 @@ namespace FiveKingdoms.Core
         void StartLeaderTurn() => StartTurn(Hero);
 
         /// <summary>
-        /// Any actor's turn is starting: whatever it gave "until its next turn" ends, and an aura it holds heals the allies
-        /// next to it and counts down a turn.
+        /// Any actor's turn is starting: it can be delayed again from here on, whatever it gave "until its next turn" ends,
+        /// and an aura it holds heals the allies next to it and counts down a turn.
         /// </summary>
         void StartTurn(Actor actor)
         {
+            actor.TurnsTaken++;
             ExpireStatusesFrom(actor);
             var aura = actor.FindStatus(StatusKind.Aura);
             if (aura == null) return;
@@ -676,7 +807,7 @@ namespace FiveKingdoms.Core
             if (!started) StartTurn(partner);
             var command = PartnerBrain.Decide(this, partner);
             int cost = Config.Costs.PercentFor(ActionKind.Wait);
-            var aim = command.Aimed ? command.Direction : partner.Facing;
+            var aim = AimOf(command, partner);
             switch (command.Kind)
             {
                 case HeroCommandKind.Move:
@@ -684,6 +815,7 @@ namespace FiveKingdoms.Core
                     if (TryMove(partner, command.Direction, allowSwap: CanSwap(partner, occupant), out int moveCost)) cost = moveCost;
                     break;
                 case HeroCommandKind.Attack:
+                    if (aim.Target.HasValue && AttackTargetAt(partner, aim.Target.Value) == null) break; // Nothing there to hit.
                     ResolveAttack(partner, aim);
                     cost = Config.Costs.PercentFor(ActionKind.Attack);
                     break;
@@ -716,22 +848,13 @@ namespace FiveKingdoms.Core
         int TakeEnemyTurn(Actor enemy)
         {
             StartTurn(enemy);
-            var stun = enemy.FindStatus(StatusKind.Stunned);
-            if (stun != null)
-            {
-                enemy.Statuses.Remove(stun);
-                events.Add(new TurnSkippedEvent(enemy.Id));
-                events.Add(new StatusEndedEvent(enemy.Id, StatusKind.Stunned));
-                EndOwnTurn(enemy);
-                return Config.Costs.PercentFor(ActionKind.Wait);
-            }
             if (enemy.SpecialCooldown > 0) enemy.SpecialCooldown--;
             var intent = EnemyBrain.Decide(this, enemy);
             var kind = ActionKind.Wait;
             switch (intent.Kind)
             {
                 case IntentKind.Attack:
-                    ResolveAttack(enemy, intent.Direction);
+                    ResolveAttack(enemy, new AimAt(intent.Direction));
                     kind = ActionKind.Attack;
                     break;
                 case IntentKind.Move:
@@ -762,21 +885,15 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>
-        /// Moves <paramref name="actor"/> one tile: an enemy there is attacked instead, and with <paramref name="allowSwap"/>
-        /// a party member there swaps places (the pair then can't swap back for a few turns). False (no turn used) when a
-        /// wall or someone else is in the way. A hero stepping out of melee counts a retreat step.
+        /// Moves a hero one tile; with <paramref name="allowSwap"/> a party member there swaps places (the pair then can't
+        /// swap back for a few turns). False (no turn used, just a turn to face that way) when a wall or anyone else is in
+        /// the way: walking into an enemy doesn't attack it. A hero stepping out of melee counts a retreat step.
         /// </summary>
         bool TryMove(Actor actor, Direction8 dir, bool allowSwap, out int cost)
         {
             cost = 0;
             actor.Facing = dir;
             var occupant = ActorAt(actor.Pos + dir.ToOffset());
-            if (occupant != null && occupant.Team != actor.Team && Map.IsCornerClear(actor.Pos, dir))
-            {
-                ResolveAttack(actor, dir);
-                cost = Config.Costs.PercentFor(ActionKind.Attack);
-                return true;
-            }
             if (occupant != null && allowSwap && occupant.Team == actor.Team && Map.CanStep(actor.Pos, dir))
             {
                 var from = actor.Pos;
@@ -822,16 +939,26 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>
-        /// A weapon attack (always ready): a melee blow, or a shot along the line for heroes with reach (Uzuki's bow),
-        /// which deals less, and less again at point-blank range. A hero's attack charges its ultimate.
+        /// A weapon attack (always ready): a melee blow on a foe next to the attacker, or for heroes with reach (Uzuki's bow)
+        /// a shot at any foe in sight, which deals less, and less again at point-blank range. With no foe to hit it's a
+        /// miss. A hero's attack charges its ultimate.
         /// </summary>
-        void ResolveAttack(Actor attacker, Direction8 dir)
+        void ResolveAttack(Actor attacker, AimAt aim)
         {
-            attacker.Facing = dir;
             int range = attacker.Definition.AttackRange;
-            bool ranged = range > 1;
-            var target = FirstFoeInLine(attacker, dir, range, out int distance);
-            events.Add(new AttackEvent(attacker.Id, target?.Id ?? -1, dir, ranged: ranged, distance: distance));
+            bool ranged = attacker.Definition.IsRanged;
+            var dir = DirectionOf(attacker, aim);
+            var target = ranged ? ShotTarget(attacker, aim, range) : StrikeTarget(attacker, aim, out dir);
+            int distance = 1;
+            if (ranged)
+            {
+                if (target != null) dir = Directions.Approximate(attacker.Pos, target.Pos);
+                distance = target != null ? GridPos.ChebyshevDistance(attacker.Pos, target.Pos) : MissDistance(attacker.Pos, dir, range);
+            }
+            attacker.Facing = dir;
+            var offset = dir.ToOffset();
+            var lands = target?.Pos ?? attacker.Pos + new GridPos(offset.X * distance, offset.Y * distance);
+            events.Add(new AttackEvent(attacker.Id, target?.Id ?? -1, dir, lands, ranged: ranged, distance: distance));
             if (target != null) ApplyDamage(attacker, target, CombatRules.RollBasicAttack(attacker, target, Random, ReachPercent(attacker, ranged)));
             if (attacker.Team == Team.Hero) Acted(attacker);
         }
@@ -859,7 +986,7 @@ namespace FiveKingdoms.Core
 
         // ---- Skills ----
 
-        bool TryUseSkill(Actor user, int slot, Direction8 aim, out int cost)
+        bool TryUseSkill(Actor user, int slot, AimAt aim, out int cost)
         {
             cost = 0;
             if (CheckSkill(user, slot, aim) != SkillCheck.Ready) return false;
@@ -872,7 +999,7 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>A hero's ultimate: empties its charge meter, then the effect (whose own hits don't charge it again).</summary>
-        bool TryUseUltimate(Actor user, Direction8 aim, out int cost)
+        bool TryUseUltimate(Actor user, AimAt aim, out int cost)
         {
             cost = 0;
             if (CheckUltimate(user, aim) != SkillCheck.Ready) return false;
@@ -894,7 +1021,7 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>A skill's or ultimate's effect, aimed at <paramref name="aim"/>.</summary>
-        void Perform(Actor user, SkillDefinition skill, Direction8 aim)
+        void Perform(Actor user, SkillDefinition skill, AimAt aim)
         {
             events.Add(new SkillUsedEvent(user.Id, skill));
             switch (skill.Effect)
@@ -903,7 +1030,7 @@ namespace FiveKingdoms.Core
                     ResolveStrike(user, skill, aim);
                     break;
                 case SkillEffect.Shot:
-                    if (skill.RollTiles > 0) aim = Roll(user, skill, aim);
+                    if (skill.RollTiles > 0) aim = new AimAt(Roll(user, skill, DirectionOf(user, aim)));
                     ResolveShot(user, skill, aim);
                     break;
                 case SkillEffect.Area:
@@ -914,8 +1041,8 @@ namespace FiveKingdoms.Core
                     break;
                 case SkillEffect.Mark:
                 {
-                    var target = FindShotTarget(user, aim, skill.Range, out var dir, out _);
-                    user.Facing = dir;
+                    var target = ShotTarget(user, aim, skill.Range);
+                    user.Facing = Directions.Approximate(user.Pos, target.Pos);
                     ClearMarksFrom(user);
                     AddStatus(target, StatusKind.Mark, user, skill.Power, skill.StatusTurns, endsOnSourceTurn: false);
                     break;
@@ -927,10 +1054,11 @@ namespace FiveKingdoms.Core
                 case SkillEffect.Dash:
                 {
                     var from = user.Pos;
-                    user.Facing = aim;
+                    var dir = DirectionOf(user, aim);
+                    user.Facing = dir;
                     user.PreviousPos = from;
-                    user.Pos = DashDestination(user, skill.Power, aim);
-                    events.Add(new DashedEvent(user.Id, from, user.Pos, aim));
+                    user.Pos = DashDestination(user, skill.Power, dir);
+                    events.Add(new DashedEvent(user.Id, from, user.Pos, dir));
                     PickUpItemUnder(user);
                     break;
                 }
@@ -946,9 +1074,9 @@ namespace FiveKingdoms.Core
         /// the user when the target falls), then the shove itself, the enemy behind for a piercing blow, and any slow,
         /// stun or status.
         /// </summary>
-        void ResolveStrike(Actor user, SkillDefinition skill, Direction8 aim)
+        void ResolveStrike(Actor user, SkillDefinition skill, AimAt aim)
         {
-            var target = FindStrikeTarget(user, aim, out var dir);
+            var target = StrikeTarget(user, aim, out var dir);
             user.Facing = dir;
             var behind = target.Pos + dir.ToOffset();
             bool pinned = skill.Shove && !CanPush(target, dir);
@@ -963,22 +1091,22 @@ namespace FiveKingdoms.Core
                     if (victim == null) break;
                     user.Facing = victimDir;
                 }
-                events.Add(new AttackEvent(user.Id, victim.Id, victimDir));
+                events.Add(new AttackEvent(user.Id, victim.Id, victimDir, victim.Pos));
                 ApplyDamage(user, victim, CombatRules.RollDamage(user, victim, Random, percent, element: skill.Element));
             }
             if (skill.Shove && target.IsAlive && State == RunState.InProgress) Push(target, dir, 1);
-            if (target.IsAlive) ApplyOnHit(user, target, skill, slow: true);
+            if (target.IsAlive) ApplyOnHit(user, target, skill, first: true);
 
             if (!skill.Pierce || State != RunState.InProgress || !Map.IsCornerClear(target.Pos == behind ? user.Pos : target.Pos, dir)) return;
             var second = ActorAt(behind);
             if (second == null || second.Team == user.Team || second == target) return;
-            events.Add(new AttackEvent(user.Id, second.Id, dir, distance: 2));
+            events.Add(new AttackEvent(user.Id, second.Id, dir, second.Pos, distance: 2));
             ApplyDamage(user, second, CombatRules.RollDamage(user, second, Random, skill.Power, element: skill.Element));
         }
 
         /// <summary>
         /// Rolls the user up to the skill's RollTiles toward <paramref name="aim"/>, leaving its trap on the tile it left.
-        /// Returns the way to shoot afterwards: back where it came from (the shot itself finds the nearest foe in line).
+        /// Returns the way to shoot afterwards: back where it came from (the shot itself finds the nearest foe in sight).
         /// </summary>
         Direction8 Roll(Actor user, SkillDefinition skill, Direction8 aim)
         {
@@ -1012,12 +1140,12 @@ namespace FiveKingdoms.Core
             events.Add(new TrapTriggeredEvent(trap.Id, actor.Id));
             var owner = FindActor(trap.OwnerId);
             if (trap.Kind != TrapKind.Snare) return;
-            // Bosses can't be rooted, as they can't be stunned: the snare costs them time instead.
+            // Bosses can't be rooted: the snare costs them time instead (a delay, under the same budget as a stun).
             if (actor.Definition.IsBoss) Delay(actor, BossSnareDelayPercent);
             else AddStatus(actor, StatusKind.Rooted, owner ?? actor, 0, SnareTurns, endsOnSourceTurn: false);
         }
 
-        const int BossSnareDelayPercent = 30;
+        const int BossSnareDelayPercent = CombatRules.MaxBossDelayPercent;
 
         /// <summary>A snare holds for the turn its victim steps on it plus its next two.</summary>
         const int SnareTurns = 3;
@@ -1057,15 +1185,16 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// A shot skill. With a Multishot weapon (the Hunter Bow), a ranged physical skill fires 2 arrows at reduced damage:
-        /// the first at the aimed target, the second at another foe in range if there is one, else the same target. Each
-        /// arrow rolls damage and crit on its own; a slow or knockback lands only once per target. Shots take the ranged
-        /// cuts (point-blank if a foe is next to the shooter as it fires). Nothing in line after a roll: no shot.
+        /// the first at the aimed target, the second at another foe in sight within range if there is one, else the same
+        /// target. Each arrow rolls damage and crit on its own; a slow or knockback (straight away from the shooter, to the
+        /// nearest of the 8 directions) lands only once per target. Shots take the ranged cuts (point-blank if a foe is next
+        /// to the shooter as it fires). Nothing in sight after a roll: no shot.
         /// </summary>
-        void ResolveShot(Actor user, SkillDefinition skill, Direction8 aim)
+        void ResolveShot(Actor user, SkillDefinition skill, AimAt aim)
         {
-            var first = FindShotTarget(user, aim, skill.Range, out var firstDirection, out int firstDistance);
+            var first = ShotTarget(user, aim, skill.Range);
             if (first == null) return;
-            user.Facing = firstDirection;
+            user.Facing = Directions.Approximate(user.Pos, first.Pos);
             var weapon = user.Weapon;
             bool multishot = weapon != null && weapon.Passive == WeaponPassive.Multishot &&
                              skill.Kind == DamageKind.Physical && skill.Reach == AttackReach.Ranged;
@@ -1077,23 +1206,18 @@ namespace FiveKingdoms.Core
             for (int arrow = 0; arrow < arrows && State == RunState.InProgress; arrow++)
             {
                 var target = first;
-                var direction = firstDirection;
-                int distance = firstDistance;
-                if (arrow > 0 && TryFindOtherFoeInLine(user, skill.Range, hit, out var other, out var otherDirection, out int otherDistance))
-                {
-                    target = other;
-                    direction = otherDirection;
-                    distance = otherDistance;
-                }
+                if (arrow > 0 && TryFindOtherFoeInSight(user, skill.Range, hit, out var other)) target = other;
                 if (!target.IsAlive) break;
-                distance = GridPos.ChebyshevDistance(user.Pos, target.Pos); // It may have been knocked back by the first arrow.
+                // Where it stands now: the first arrow may have knocked it back.
+                var direction = Directions.Approximate(user.Pos, target.Pos);
+                int distance = GridPos.ChebyshevDistance(user.Pos, target.Pos);
 
-                events.Add(new AttackEvent(user.Id, target.Id, direction, ranged: true, distance: distance));
+                events.Add(new AttackEvent(user.Id, target.Id, direction, target.Pos, ranged: true, distance: distance));
                 ApplyDamage(user, target, CombatRules.RollDamage(user, target, Random, percent, element: skill.Element, reachPercent: reach));
                 bool firstHit = !hit.Contains(target);
                 if (firstHit) hit.Add(target);
                 if (!target.IsAlive) continue;
-                ApplyOnHit(user, target, skill, slow: firstHit);
+                ApplyOnHit(user, target, skill, first: firstHit);
                 if (firstHit && skill.Knockback > 0 && State == RunState.InProgress) Push(target, direction, skill.Knockback);
             }
         }
@@ -1102,10 +1226,10 @@ namespace FiveKingdoms.Core
         /// An area skill (Volley): centered on the foe a shot aimed that way would hit, every foe within Radius of it takes
         /// the skill's hits, with the ranged cuts.
         /// </summary>
-        void ResolveArea(Actor user, SkillDefinition skill, Direction8 aim)
+        void ResolveArea(Actor user, SkillDefinition skill, AimAt aim)
         {
-            var center = FindShotTarget(user, aim, skill.Range, out var direction, out _);
-            user.Facing = direction;
+            var center = ShotTarget(user, aim, skill.Range);
+            user.Facing = Directions.Approximate(user.Pos, center.Pos);
             int reach = ReachPercent(user, skill.IsRanged);
             var area = center.Pos;
             events.Add(new AreaAttackEvent(user.Id, area, skill.Radius));
@@ -1123,35 +1247,31 @@ namespace FiveKingdoms.Core
             }
         }
 
-        /// <summary>The nearest foe along any straight line in range that hasn't been hit yet.</summary>
-        bool TryFindOtherFoeInLine(Actor user, int range, List<Actor> exclude, out Actor target, out Direction8 direction, out int distance)
+        /// <summary>The nearest foe in sight within range that hasn't been hit yet.</summary>
+        bool TryFindOtherFoeInSight(Actor user, int range, List<Actor> exclude, out Actor target)
         {
             target = null;
-            direction = Direction8.S;
-            distance = 0;
             int best = int.MaxValue;
-            foreach (var dir in Directions.All)
+            foreach (var candidate in FoesInSight(user, range))
             {
-                var candidate = FirstFoeInLine(user, dir, range, out int candidateDistance);
-                if (candidate == null || exclude.Contains(candidate) || candidateDistance >= best) continue;
-                best = candidateDistance;
+                int d = GridPos.ChebyshevDistance(user.Pos, candidate.Pos);
+                if (exclude.Contains(candidate) || d >= best) continue;
+                best = d;
                 target = candidate;
-                direction = dir;
-                distance = candidateDistance;
             }
             return target != null;
         }
 
-        /// <summary>What a skill does to a foe it hit, besides damage: a slow (once per use), a stun, and a status.</summary>
-        void ApplyOnHit(Actor user, Actor target, SkillDefinition skill, bool slow)
+        /// <summary>
+        /// What a skill does to a foe it hit, besides damage: a slow or a stun (on the <paramref name="first"/> hit of a
+        /// use only; both push its next turn back), and a status. A stun rolls its chance (Affinity against Resist) only
+        /// on a target that can still be delayed.
+        /// </summary>
+        void ApplyOnHit(Actor user, Actor target, SkillDefinition skill, bool first)
         {
-            if (slow && skill.DelayPercent > 0) Delay(target, skill.DelayPercent);
-            if (slow && skill.StunChance > 0)
-            {
-                if (target.Definition.IsBoss) Delay(target, skill.BossDelayPercent); // Bosses can't be stunned: they lose time instead.
-                else if (Random.Range(0, 1000) < StatusChance(user, target, skill.StunChance))
-                    AddStatus(target, StatusKind.Stunned, user, 0, 1, endsOnSourceTurn: false);
-            }
+            if (first && skill.DelayPercent > 0) Delay(target, skill.DelayPercent);
+            if (first && skill.StunChance > 0 && CanDelay(target) && Random.Range(0, 1000) < StatusChance(user, target, skill.StunChance))
+                Delay(target, skill.StunPercent, stun: true);
             if (skill.Status.HasValue)
                 AddStatus(target, skill.Status.Value, user, skill.StatusPower, skill.StatusTurns, endsOnSourceTurn: false);
         }
@@ -1160,12 +1280,25 @@ namespace FiveKingdoms.Core
         static int StatusChance(Actor user, Actor target, int basePercent) =>
             (int)((long)basePercent * 10 * (1000 + user.Affinity) / 1000 * Math.Max(0, 1000 - target.Resist) / 1000);
 
-        /// <summary>Pushes a foe's next turn back on the timeline (only in a fight: exploring, everyone acts once anyway).</summary>
-        void Delay(Actor target, int percent)
+        /// <summary>
+        /// Whether a delay (a stun, a slow) would land on <paramref name="target"/> right now: only in a fight (exploring,
+        /// everyone acts once per leader action anyway), and only if its coming turn hasn't been pushed back already.
+        /// </summary>
+        public bool CanDelay(Actor target) => InCombat && timeline.Contains(target.Id) && !target.IsDelayed;
+
+        /// <summary>
+        /// Pushes <paramref name="target"/>'s next turn back on the timeline, never skipping it (PROGRESSION.md, "Delays /
+        /// stuns"): by at most 50% of one of its turns per effect (25% on a boss), and at most once per its own turn, so
+        /// nothing can be stun-locked. False if it couldn't be delayed.
+        /// </summary>
+        bool Delay(Actor target, int percent, bool stun = false)
         {
-            if (percent <= 0 || !InCombat || !timeline.Contains(target.Id)) return;
+            if (percent <= 0 || !CanDelay(target)) return false;
+            percent = Math.Min(percent, CombatRules.DelayCap(target));
+            target.DelayedOnTurn = target.TurnsTaken;
             timeline.Delay(target, percent);
-            events.Add(new TurnDelayedEvent(target.Id, percent));
+            events.Add(new TurnDelayedEvent(target.Id, percent, target.TurnsTaken, stun));
+            return true;
         }
 
         /// <summary>The enemy in the <paramref name="preferred"/> direction (if the corner allows), otherwise the first adjacent one; null if none.</summary>

@@ -9,7 +9,8 @@ namespace FiveKingdoms.Dungeon
     /// <summary>
     /// Unattended smoke test for builds: launch the game with "-fk-autoplay &lt;folder&gt;" and the hero plays
     /// itself using the AutoPilot, saving screenshots along the way (some mid-animation) and quitting after
-    /// a fixed number of actions. Does nothing in normal play.
+    /// a fixed number of actions. The first use of each targeted action goes through the player's two-step aiming
+    /// (press, screenshot of the highlight, press again), so that path runs in the build too. Does nothing in normal play.
     /// </summary>
     public sealed class AutoplayDriver : MonoBehaviour
     {
@@ -45,6 +46,7 @@ namespace FiveKingdoms.Dungeon
             int actions = 0, shot = 0, attackShots = 0, chargeShots = 0;
             var skillsShown = new System.Collections.Generic.HashSet<SkillEffect>();
             var ultimatesShown = new System.Collections.Generic.HashSet<string>();
+            var aimsShown = new System.Collections.Generic.HashSet<string>();
             float started = Time.realtimeSinceStartup;
             while (actions < MaxActions && Time.realtimeSinceStartup - started < TimeLimit)
             {
@@ -57,8 +59,26 @@ namespace FiveKingdoms.Dungeon
                 }
 
                 var command = AutoPilot.Decide(run);
-                bool attacks = command.Kind == HeroCommandKind.Attack || command.Kind == HeroCommandKind.Move &&
-                    run.ActorAt(run.Hero.Pos + command.Direction.ToOffset()) is Actor target && target.Team != Team.Hero;
+                // The first time the autopilot picks each targeted action, do it the way a player does: press its button
+                // (the reach lights up and a target is marked), take a screenshot, then press again to fire at the marked one.
+                if (command.Targeted && !controller.IsAiming && aimsShown.Add(AimName(run, command)))
+                {
+                    var button = command.Kind == HeroCommandKind.Attack ? HeroCommand.Attack
+                        : command.Kind == HeroCommandKind.Ultimate ? HeroCommand.UltimateFacing
+                        : HeroCommand.Skill(command.Slot);
+                    controller.Submit(button);
+                    yield return null;
+                    yield return null;
+                    if (controller.IsAiming)
+                    {
+                        yield return Capture($"aim_{AimName(run, command)}_action{actions + 1}");
+                        controller.Submit(button);
+                        actions++;
+                        yield return null;
+                    }
+                    continue;
+                }
+                bool attacks = command.Kind == HeroCommandKind.Attack; // Always an explicit command: nobody attacks by walking into a foe.
                 bool bossWasHelped = run.Boss?.CalledForHelp ?? true;
                 var skill = command.Kind == HeroCommandKind.Skill ? run.Hero.Definition.Skills[command.Slot]
                     : command.Kind == HeroCommandKind.Ultimate ? run.Hero.Definition.Ultimate
@@ -106,6 +126,12 @@ namespace FiveKingdoms.Dungeon
                       $"Lv {final.Hero.Level}, HP {final.Hero.Hp}/{final.Hero.MaxHp}, turn {final.Turn}.");
             Application.Quit();
         }
+
+        /// <summary>What a targeted command aims: the leader's weapon attack, or the skill or ultimate by its id.</summary>
+        static string AimName(DungeonRun run, HeroCommand command) =>
+            command.Kind == HeroCommandKind.Attack ? "attack_" + run.Hero.Definition.Id
+            : command.Kind == HeroCommandKind.Ultimate ? run.Hero.Definition.Ultimate.Id
+            : run.Hero.Definition.Skills[command.Slot].Id;
 
         IEnumerator Capture(string name)
         {

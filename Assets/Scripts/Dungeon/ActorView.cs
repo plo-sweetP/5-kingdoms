@@ -88,17 +88,22 @@ namespace FiveKingdoms.Dungeon
             return view;
         }
 
-        /// <summary>One small icon per status (mark, snare, taunt, stun, guard, aura), in a row over the actor's head.</summary>
-        public void SetStatuses(IReadOnlyList<StatusEffect> statuses)
+        /// <summary>
+        /// One small icon per status (mark, snare, taunt, guard, aura), in a row over the actor's head, and last a stun
+        /// icon while its coming turn is pushed back (<paramref name="delayed"/>: a stun or a slow, until it acts).
+        /// </summary>
+        public void SetStatuses(IReadOnlyList<StatusEffect> statuses, bool delayed)
         {
-            int count = statuses?.Count ?? 0;
+            int statusCount = statuses?.Count ?? 0;
+            int count = statusCount + (delayed ? 1 : 0);
             while (statusIcons.Count < count) statusIcons.Add(NewRenderer("Icon", statusRow, null, HpBarOrder + 2));
             for (int i = 0; i < statusIcons.Count; i++)
             {
                 var icon = statusIcons[i];
                 icon.gameObject.SetActive(i < count);
                 if (i >= count) continue;
-                icon.sprite = SpriteLibrary.Get("Effects/status_" + statuses[i].Kind.ToString().ToLowerInvariant(), Color.white);
+                string name = i < statusCount ? statuses[i].Kind.ToString().ToLowerInvariant() : "stunned";
+                icon.sprite = SpriteLibrary.Get("Effects/status_" + name, Color.white);
                 icon.transform.localPosition = new Vector3((i - (count - 1) / 2f) * IconSpacing, 0f, 0f);
             }
         }

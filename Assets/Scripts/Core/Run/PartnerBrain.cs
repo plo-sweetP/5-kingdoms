@@ -5,10 +5,11 @@ namespace FiveKingdoms.Core
     /// <summary>
     /// AI for the party members the player isn't controlling (GAME_PLAN.md, Party). Each turn a partner gets out of a
     /// boss's wind-up, uses its ultimate when it's worth it, heals or guards when the party needs it, gets out of melee if
-    /// it's a ranged hero, and attacks a foe in reach (<see cref="HeroTactics"/>). Otherwise it moves: in a fight, melee
-    /// partners close in on a foe and ranged ones find a tile to shoot from (PROGRESSION.md, "Battle formation"); while
-    /// exploring, its <see cref="PartyTactic"/> decides: Attack goes after foes it can see while staying near the leader,
-    /// Follow keeps in line behind the member ahead of it. Hold stays where it is, even in a fight. Decides only;
+    /// it's a ranged hero, swaps back behind a healthier ally if it's badly hurt, and attacks a foe in reach (the marked
+    /// enemy first, then the lowest HP; <see cref="HeroTactics"/>). Otherwise it moves: in a fight, melee partners close
+    /// in on a foe and ranged ones find a tile to shoot from (PROGRESSION.md, "Battle formation"); while exploring, its
+    /// <see cref="PartyTactic"/> decides: Attack goes after foes it can see while staying near the leader, Follow keeps
+    /// in line behind the member ahead of it. Hold stays where it is, even in a fight. Decides only;
     /// <see cref="DungeonRun"/> carries the command out.
     /// </summary>
     public static class PartnerBrain
@@ -28,6 +29,7 @@ namespace FiveKingdoms.Core
             if (HeroTactics.TryHealParty(run, partner, out command)) return command;
             if (HeroTactics.TryGuard(run, partner, out command)) return command;
             if (HeroTactics.TryStepOutOfMelee(run, partner, out command)) return command;
+            if (HeroTactics.TryRunToSafety(run, partner, out command)) return command;
             if (HeroTactics.TryMark(run, partner, out command)) return command;
             if (HeroTactics.TryAttack(run, partner, out command)) return command;
 

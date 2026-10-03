@@ -19,7 +19,7 @@ namespace FiveKingdoms.Core
         Dash,
 
         /// <summary>
-        /// A ranged hit on the first enemy along a straight line within Range tiles (walls and corners stop it). Can roll
+        /// A ranged hit on any enemy in sight within Range tiles (walls and wall corners block it, allies don't). Can roll
         /// first (leaving a trap behind), knock the target back, slow it or put a status on it.
         /// </summary>
         Shot,
@@ -34,8 +34,8 @@ namespace FiveKingdoms.Core
         Mark,
 
         /// <summary>
-        /// Rains down on a foe within Range along a straight line (aimed, or the nearest), hitting every foe within Radius
-        /// of it: <see cref="SkillDefinition.Hits"/> hits of Power% ATK each (Volley).
+        /// Rains down on a foe in sight within Range (aimed, or the nearest), hitting every foe within Radius of it:
+        /// <see cref="SkillDefinition.Hits"/> hits of Power% ATK each (Volley).
         /// </summary>
         Area,
 
@@ -67,7 +67,7 @@ namespace FiveKingdoms.Core
     /// ultimate has no cooldown but needs a full charge meter. Each skill also has its own action-value cost: a Quick
     /// skill (half a turn) brings the user's next turn sooner. Tags (physical or magic, melee, ranged or area, element)
     /// are what gear sets and weapon passives key off. Strikes and shots can also move the user first, shove or knock
-    /// the target back, slow or stun it, or put a status on it.
+    /// the target back, slow or stun it (both push its next turn back on the timeline), or put a status on it.
     /// </summary>
     public sealed class SkillDefinition
     {
@@ -84,7 +84,7 @@ namespace FiveKingdoms.Core
             StatusKind? status = null, int statusPower = 0, int statusTurns = 0,
             HealTarget healTarget = HealTarget.Self, bool healsFromUser = false,
             bool pierce = false, bool shove = false, int wallBonusPercent = 0, int knockback = 0,
-            int stunChance = 0, int bossDelayPercent = 0, int rollTiles = 0, TrapKind leavesTrap = TrapKind.None)
+            int stunChance = 0, int stunPercent = CombatRules.MaxDelayPercent, int rollTiles = 0, TrapKind leavesTrap = TrapKind.None)
         {
             Id = id;
             Name = name;
@@ -111,7 +111,7 @@ namespace FiveKingdoms.Core
             WallBonusPercent = wallBonusPercent;
             Knockback = knockback;
             StunChance = stunChance;
-            BossDelayPercent = bossDelayPercent;
+            StunPercent = stunPercent;
             RollTiles = rollTiles;
             LeavesTrap = leavesTrap;
         }
@@ -156,7 +156,10 @@ namespace FiveKingdoms.Core
         /// </summary>
         public int Radius { get; }
 
-        /// <summary>Pushes each enemy hit back on the timeline by this percent of one of its turns (a slow).</summary>
+        /// <summary>
+        /// Pushes each enemy hit back on the timeline by this percent of one of its turns (a slow), within the delay
+        /// budget (<see cref="CombatRules.DelayCap"/>, and at most once per the enemy's own turn).
+        /// </summary>
         public int DelayPercent { get; }
 
         /// <summary>A status put on each enemy hit, with its power and length in the enemy's own turns.</summary>
@@ -176,14 +179,17 @@ namespace FiveKingdoms.Core
         public bool Shove { get; }
         public int WallBonusPercent { get; }
 
-        /// <summary>Shots: knocks the target back this many tiles along the shot (onto a trap, say).</summary>
+        /// <summary>Shots: knocks the target back this many tiles, straight away from the shooter (onto a trap, say).</summary>
         public int Knockback { get; }
 
-        /// <summary>Base chance in percent to stun (skip its next turn), scaled by the user's Affinity and the target's Resist.</summary>
+        /// <summary>Base chance in percent to stun, scaled by the user's Affinity and the target's Resist.</summary>
         public int StunChance { get; }
 
-        /// <summary>Bosses can't be stunned: a stun pushes their next turn back by this percent of a turn instead.</summary>
-        public int BossDelayPercent { get; }
+        /// <summary>
+        /// A stun pushes the target's next turn back by this percent of a turn instead of skipping it (a boss by at most
+        /// <see cref="CombatRules.MaxBossDelayPercent"/>), and never twice before the target acts: no stun-lock.
+        /// </summary>
+        public int StunPercent { get; }
 
         /// <summary>Moves (rolls) this many tiles the way it's aimed before acting.</summary>
         public int RollTiles { get; }
@@ -224,14 +230,14 @@ namespace FiveKingdoms.Core
             SkillEffect.Shot, power: 300, reach: AttackReach.Ranged, range: RangedReach, knockback: 1);
 
         /// <summary>
-        /// Roll 2 tiles, then shoot (150% ATK) the nearest foe in line: out of melee and attacking in one turn. A snare
+        /// Roll 2 tiles, then shoot (150% ATK) the nearest foe in sight: out of melee and attacking in one turn. A snare
         /// trap stays on the tile she left, rooting the first enemy that steps on it.
         /// </summary>
         public static readonly SkillDefinition RollingShot = new SkillDefinition("rolling_shot", "Rolling Shot", "Roll",
             SkillEffect.Shot, power: 150, reach: AttackReach.Ranged, range: RangedReach,
             rollTiles: 2, leavesTrap: TrapKind.Snare);
 
-        /// <summary>Ultimate: arrows rain on a 3x3 area around a foe in line, two hits of 200% ATK on every foe there.</summary>
+        /// <summary>Ultimate: arrows rain on a 3x3 area around a foe in sight, two hits of 200% ATK on every foe there.</summary>
         public static readonly SkillDefinition Volley = new SkillDefinition("volley", "Volley", "Volley",
             SkillEffect.Area, power: 200, ultimate: true, reach: AttackReach.Area, hits: 2, range: RangedReach, radius: 1);
 
@@ -271,11 +277,11 @@ namespace FiveKingdoms.Core
             SkillEffect.Heal, power: 25, costPercent: SkillDefinition.QuickCostPercent);
 
         /// <summary>
-        /// 160% ATK with a 60% chance (Affinity against Resist) to stun, so the target skips its next turn. Bosses can't be
-        /// stunned: their next turn is pushed back 30% instead.
+        /// 160% ATK with a 60% chance (Affinity against Resist) to stun: the target's next turn comes 50% of a turn later
+        /// (a boss's 25%). No skipped turns, and nothing is delayed twice before it acts, so no stun-lock.
         /// </summary>
         public static readonly SkillDefinition StunStrike = new SkillDefinition("stun_strike", "Stun Strike", "Stun",
-            SkillEffect.Strike, power: 160, stunChance: 60, bossDelayPercent: 30);
+            SkillEffect.Strike, power: 160, stunChance: 60, stunPercent: 50);
 
         /// <summary>
         /// Ultimate: 5 rapid strikes of 80% ATK (moving on to another adjacent foe if the target falls), and it costs only

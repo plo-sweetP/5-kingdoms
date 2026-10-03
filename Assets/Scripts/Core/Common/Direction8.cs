@@ -45,5 +45,19 @@ namespace FiveKingdoms.Core
             TryFromDelta(to.X - from.X, to.Y - from.Y, out var dir);
             return dir;
         }
+
+        /// <summary>
+        /// Of the 8 directions, the one closest to the line from one tile to another (a shot at any angle: which way the
+        /// shooter turns, which way a knockback goes). Straight when one axis is under half the other, else diagonal.
+        /// </summary>
+        public static Direction8 Approximate(GridPos from, GridPos to)
+        {
+            int dx = to.X - from.X, dy = to.Y - from.Y;
+            int ax = Math.Abs(dx), ay = Math.Abs(dy);
+            if (ay * 2 < ax) dy = 0;
+            else if (ax * 2 < ay) dx = 0;
+            TryFromDelta(dx, dy, out var dir);
+            return dir;
+        }
     }
 }

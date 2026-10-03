@@ -8,7 +8,7 @@
 | Orientation | **Landscape only**, on phones and tablets (test devices: Samsung S22 Ultra, Galaxy Tab S8+) |
 | Monetization | Phase 1: free-to-play where **breeding is the gacha** for monsters. Later: a paid gacha for **characters and weapons** |
 | Art | **Pixel art** in the spirit of Final Fantasy Tactics Advance and Pokemon Mystery Dungeon: simple chibi sprites, flashier attack and defense animations. 32 px = 1 tile. Placeholders generated in code for now, AI-assisted art later |
-| Controls | 8-way grid movement. On-screen D-pad + buttons first, tap-to-move later |
+| Controls | 8-way grid movement. On-screen D-pad + buttons first, tap-to-move later. **Attacks are deliberate:** choose the attack, then its target, or tap an enemy in reach; walking into an enemy only turns to face it |
 | Team | Peter (CS degree, C++/C#/Java/Python) directs, reviews and playtests. Claude writes most code |
 
 ## Pitch
@@ -53,7 +53,8 @@ Design notes:
 Full specs: [docs/design/PROGRESSION.md](docs/design/PROGRESSION.md) (levels, classes, professions, Traces, respec,
 energy) and [docs/design/GEAR.md](docs/design/GEAR.md) (damage formula, stats, gear, sets, weapons).
 - **Player character (later):** the player creates their own character and picks one of the 5 kingdoms as their
-  origin, which opens that kingdom's inherited classes. Until the creator exists, Uzuki leads the party.
+  origin, which opens that kingdom's inherited classes. Until the creator exists, Haiden leads the playtest party
+  (a melee hero in front; the player can switch to anyone).
 - **Uzuki is the first companion** (Medieval Realm; concept sketch: spiky blue hair, cyan eyes, sleeveless top with
   strap, one pauldron, baggy cuffed pants, boots). Placeholder sprite exists.
 - **Starting party for the first playtest** (the player's own character joins later as the 4th):
@@ -113,14 +114,15 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 
 ## Party (planned)
 - **Up to 4 characters on screen**: a leader plus 3 partners, as in Mystery Dungeon. The size is one constant (`MaxPartySize`), so trying 3 is a one-line change if 4 feels crowded on a phone.
-- **First playtest (1f): a party of 3**, Uzuki, Haiden and Kristela (see Heroes above). The player's own character
-  joins later as the 4th.
+- **First playtest (1f): a party of 3**, Haiden, Kristela and Uzuki (see Heroes above), with Haiden leading. The
+  player's own character joins later as the 4th.
 - The player controls the leader; partners act by AI with simple tactics (follow me / go after enemies / hold back), and the player can switch which character they control. Each character keeps their own 3 skills + ultimate.
 - Turn order: exploring, the leader acts, then the partners, then enemies. In fights every party member acts on the AV
   timeline at their own speed. In corridors partners follow in a line and swap places with the leader when bumped.
 - **Ranged vs melee (decided, PROGRESSION.md):** in a fight melee partners close in on a foe (swapping past a ranged
-  ally when that's shorter, never with another melee hero and never straight back), ranged ones hang back at a tile
-  they can shoot from, and a ranged hero with a foe next to it steps out of melee once, then shoots anyway.
+  ally when that's shorter, never straight back), ranged ones hang back at a tile they can shoot from (any foe in
+  sight within 5 tiles), and a ranged hero with a foe next to it steps out of melee once, then shoots anyway. A badly
+  hurt hero (under 30% HP) may swap back behind a healthier ally, two melee heroes included ("run to safety").
 - Defeat: by default the run ends when the whole party has fallen (open question: or when the leader falls?).
 - Enemies and bosses can target any party member; area attacks hit everyone in range.
 - Each character has their own saved progress (level, EXP, gear).
@@ -159,6 +161,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 
 ## Part 2: Dungeon crawl (Mystery Dungeon style)
 - Grid movement in 8 directions. Every action is a turn, then all enemies act. Diagonal moves and attacks can't cut wall corners.
+- Shots reach any foe in sight within 5 tiles, at any angle: walls and wall corners block them, allies and other actors don't.
 - Procedural floors: rooms and corridors, stairs down, items; later traps and monster houses.
 - **Stages and a boss:** each dungeon is a set of floors (stages) ending in a boss fight.
 - **Levels carry in and out:** the party enters at its farm-earned level and gear; EXP earned inside is kept.
@@ -186,7 +189,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 1c | Combat timeline: Honkai Star Rail-style action value (AV) turn order on the grid, Speed stat, turn-order strip | **Done** |
 | 1d | Mana (berries restore it), first skills with AV costs, healing (mana was removed again in 1f) | **Done** |
 | 1e | Combat math (GEAR.md step 1-3): multiplicative damage formula, 10x HP/ATK/DEF rescale, Crit Rate/Crit DMG stats (5%/50%), per-actor stat sheet, skill tags; difficulty re-tuned to match 1d | **Done** |
-| 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, aiming highlight, packs | Part 1 **done**; part 2 (the targeting and input decisions) next, then the playtest |
+| 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, packs; shots at anything in sight, deliberate two-step attacks, stuns as timeline delays | **Done** (parts 1 and 2). **First playtest checkpoint: Peter plays it; 1g-1i wait for his go** |
 | 1g | Classes and professions core (PROGRESSION.md): points, tiers 1-25, milestones, stat bumps, prerequisites and kingdom locks, loadout, respec; real content for the starting 3 classes and 3 professions | |
 | 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
 | 1i | Hero screen between runs: equipment, class and profession tiers, loadout (until the farm exists) | |
@@ -260,7 +263,8 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
   123/200 reach the boss floor; with levels kept, players win on attempt 2.7 at Lv 9.5 (1d: 2.5 at Lv 9.3).
 - The golden replay fingerprint was re-recorded, since every hit changed on purpose.
 
-**Milestone 1f, part 1 (party of 3; the first playtest checkpoint comes after part 2):**
+**Milestone 1f, part 1 (party of 3)**, kept as a record: part 2 below replaced its ranged numbers, the 8-line
+aiming, attacking by walking into an enemy, the skipped-turn stun, the swap rule and the balance:
 - **Party:** Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword) and Kristela (Monk, Gauntlets) with the approved
   starting kits (PROGRESSION.md). The player leads one hero (tap a party card, Tab or B to switch: free while
   exploring; mid-fight the old leader's turn is played by its AI); partners play by AI with Attack, Follow or Hold
@@ -292,19 +296,47 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
   for Kristela's gauntlets. Weapons on the hero sprites come with final art.
 - **Playtest flags:** `-fk-leader haiden` or `-fk-leader kristela` puts that hero in the lead.
 
-**Milestone 1f, part 2 (next), decided by Peter while part 1 was being built** (PROGRESSION.md, "Ranged vs melee" and
-"Targeting and input"):
-- Ranged hits deal **90%** of a melee hit (x0.70 more at point-blank), and ranged attacks target **any foe in sight
-  within 5 tiles**, not only along the 8 lines (walls block shots, allies don't). Commands carry a target tile.
-- Attacks are deliberate: **walking into an enemy no longer attacks** (the hero turns to face it, keeping the turn);
-  the weapon attack has its own button and works like a skill (choose it, then the target); tapping an enemy in reach
-  attacks it directly. A lone valid target is preselected.
-- **Stun is a timeline delay:** Stun Strike pushes the target's next turn back 50% (bosses 25%) instead of skipping
-  it, and an actor can be delayed at most once per its own turn (the same rule later when monsters stun heroes).
-- **Run to safety:** a badly hurt hero may swap away from the foes with an ally, two melee heroes included. The
-  pair cooldown and the soak check still apply.
-- The AI picks targets the same way: the marked enemy first, then the lowest HP.
-- The playtest build starts with Haiden or Kristela leading.
+**Milestone 1f, part 2 (targeting and input; the first playtest checkpoint)**, Peter's decisions from PROGRESSION.md
+("Ranged vs melee", "Targeting and input", "Delays / stuns"):
+- **Shots at anything in sight:** ranged weapon attacks, Shot skills, Hunter's Mark and Volley's center can target any
+  foe within 5 tiles (a diagonal counts as one) that's in sight, not only along the 8 lines. Walls and wall corners
+  block a shot; allies and other actors don't; if A can shoot B, B can shoot A. Arrows fly at any angle, and a
+  knockback goes straight away from the shooter (the nearest of the 8 ways). Ranged hits deal **90%** of a melee hit
+  (63% at point-blank).
+- **Deliberate attacks:** walking into an enemy only turns the hero to face it and keeps the turn, like bumping a
+  wall. The weapon attack works like a skill: press it (the red button, Space, A), its reach lights up with every
+  valid target marked, then tap the target, or press again for the marked one (a lone target is marked to begin
+  with). Tapping an enemy in reach when not aiming attacks it directly. With nothing in reach the attack says so
+  instead of swinging at the air. Holding a direction toward a target while pressing still fires at once; while
+  aiming, pressing a direction again moves the mark to the next target out that way. Commands carry the target's
+  tile (`HeroCommand.AttackAt / SkillAt / UltimateAt`).
+- **Stun is a delay:** Stun Strike (60%, Affinity vs Resist) pushes the target's next turn back 50% of a turn (a
+  boss's 25%) instead of skipping it. One budget covers every delay (a snare under a boss costs it 25% too): at most
+  50% per effect, 25% on a boss, and **at most once per the target's own turn**, so nothing is stun-locked. A stun
+  icon shows while a turn is pushed back. The Stunned status and skipped turns are gone. Fixed on the way: a delay a
+  boss picked up during its own turn (walking onto a snare) used to be lost when the turn ended.
+- **Run to safety:** a badly hurt hero (under 30% HP) with a foe next to it swaps back behind a healthier ally
+  standing farther from the foes, two melee heroes included. Partners and the autopilot both do it when they can't
+  heal. The pair cooldown and the soak check for back-and-forth swaps still apply.
+- **AI targets:** partners and the autopilot attack with explicit commands naming the target's tile, never by walking
+  into a foe, and pick the marked enemy first, then the lowest HP (then the nearest). Uzuki marks the foe she's about
+  to shoot; Volley centers where it catches the most.
+- **Melee leader:** the party starts as Haiden, Kristela, Uzuki (`ActorCatalog.StartingParty`), the tank in front.
+  A tap on a party card (or Tab / B) switches hero; `-fk-leader kristela` or `uzuki` starts with that one.
+- **Re-tune:** the party hits harder now (Uzuki shoots nearly every turn, at 90%), so the King Slime has 14000 HP
+  (was 10000) and an action charges the ultimate by 15 (was 20). Balance (autopilot, Haiden leading, 200 seeds): 14
+  fresh level-1 runs win (7%; 6.8% over 600 seeds), all 200 reach the boss floor; with levels kept, the first clear
+  comes on attempt 3.1 at Lv 9.6. Ultimates: 2.2 per hero in the boss fight, one every 2.7 normal fights. A Lv 9
+  party sent straight to the boss wins 196 of 200, a Lv 10 one always. (A 16000 HP boss would bring fresh wins to
+  3.5% but push the first clear to attempt 3.5 at Lv 10.3.)
+- **Checks:** 187 Core tests (new: line of sight, targeted commands, the delay rule, run to safety, target choice,
+  what aiming marks) and 13 PlayMode tests (new: the two-step aiming and tap-to-attack in the real scene). The soak
+  tests also fail if the autopilot walks into an enemy or has a command refused, if a hero attacks nothing, or if
+  anything is delayed twice before it acts. The golden replay was re-recorded (explicit targeted attacks, lowest HP
+  first). The autoplay smoke test now aims each action once the way a player does and screenshots the highlight.
+  The balance tool takes `-lead ID` and `seeds=N`, and reports who still stands on arrival at the boss floor: with
+  the autopilot leading Haiden, he does in about a third of fresh runs, Kristela in half, Uzuki always (the same as
+  in part 1: its melee leader walks into every pack first).
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.
@@ -318,6 +350,9 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
     short), so 1f tunes for two per hero in the boss fight and one every 2-3 normal fights.
 9. Keep the 85-100% random damage spread (Mystery Dungeon style), or drop it as in the Honkai: Star Rail formula,
    where only crits vary? Kept for now; one number in `CombatRules`.
+12. Slime EXP is 3 (+1 per floor), since every hero standing gets it in full. OK?
+13. With nothing in reach, the weapon attack button says so and keeps the turn (1f part 2) instead of swinging at the
+    air as it did before. OK, or should a missed swing still pass the turn (there's a Wait button for that)?
 8. ~~Crystal Ice Legion Hunter's prerequisites, the Space/Time element, monk weapons.~~ Answered in the specs: Archer 15 +
    Mage 10; Darkness covers time and space; Kristela uses Gauntlets (the Monk/fist weapon type, passive later).
 5. Store policy and legal check before any paid gacha (odds disclosure is required in app stores and some regions).

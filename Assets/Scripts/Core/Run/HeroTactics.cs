@@ -6,9 +6,11 @@ namespace FiveKingdoms.Core
     /// <summary>
     /// Fighting decisions shared by the leader's <see cref="AutoPilot"/> and the partners' <see cref="PartnerBrain"/>:
     /// get out of a boss's wind-up, use a charged ultimate when it's worth it, heal whoever needs it, guard, get a ranged
-    /// hero out of melee, and pick an attack on a foe in reach. In a fight, melee heroes close in on a foe and ranged ones
-    /// find a tile to shoot from behind them (PROGRESSION.md, "Ranged vs melee"). Works from a hero's skills by their
-    /// effects, so new kits need no new AI.
+    /// hero out of melee, swap a badly hurt hero away from the foes, and pick an attack on a foe in reach. Attacks are
+    /// deliberate (PROGRESSION.md, "Targeting and input"): every one names its target, chosen the same way by every hero
+    /// (<see cref="PickTarget"/>: the marked enemy first, then the lowest HP), and nobody attacks by walking into a foe.
+    /// In a fight, melee heroes close in on a foe and ranged ones find a tile to shoot from behind them ("Ranged vs
+    /// melee"). Works from a hero's skills by their effects, so new kits need no new AI.
     /// </summary>
     public static class HeroTactics
     {
@@ -46,6 +48,51 @@ namespace FiveKingdoms.Core
             return -1;
         }
 
+        // ---- Targets ----
+
+        /// <summary>
+        /// The foe to go for among those in reach (PROGRESSION.md, "Auto picks targets deliberately"): the marked enemy
+        /// first, then the lowest HP; between equals the nearest, then the lower id. Null if there are none.
+        /// </summary>
+        public static Actor PickTarget(Actor hero, List<Actor> foes)
+        {
+            Actor best = null;
+            foreach (var foe in foes)
+                if (best == null || ComesBefore(hero, foe, best)) best = foe;
+            return best;
+        }
+
+        static bool ComesBefore(Actor hero, Actor a, Actor b)
+        {
+            bool aMarked = a.FindStatus(StatusKind.Mark) != null, bMarked = b.FindStatus(StatusKind.Mark) != null;
+            if (aMarked != bMarked) return aMarked;
+            if (a.Hp != b.Hp) return a.Hp < b.Hp;
+            int aDistance = GridPos.ChebyshevDistance(hero.Pos, a.Pos), bDistance = GridPos.ChebyshevDistance(hero.Pos, b.Pos);
+            if (aDistance != bDistance) return aDistance < bDistance;
+            return a.Id < b.Id;
+        }
+
+        /// <summary>The foes a melee blow from <paramref name="hero"/> reaches: next to it, corners allowing.</summary>
+        public static List<Actor> FoesInStrikeReach(DungeonRun run, Actor hero)
+        {
+            var foes = new List<Actor>();
+            foreach (var actor in run.Actors)
+                if (actor.Team != hero.Team && run.StrikeTargetAt(hero, actor.Pos) != null) foes.Add(actor);
+            return foes;
+        }
+
+        /// <summary>Every foe one of the hero's attacks could hit from where it stands: next to it, or in sight within its shots' reach.</summary>
+        static List<Actor> FoesInReach(DungeonRun run, Actor hero)
+        {
+            int reach = Reach(hero);
+            var foes = reach > 1 ? run.FoesInSight(hero, reach) : new List<Actor>();
+            foreach (var foe in FoesInStrikeReach(run, hero))
+                if (!foes.Contains(foe)) foes.Add(foe);
+            return foes;
+        }
+
+        // ---- Decisions, in the order the brains ask them ----
+
         /// <summary>
         /// A boss is winding up a slam that would hit <paramref name="hero"/>: step out of reach, or, if there's nowhere
         /// to go, raise a guard.
@@ -74,8 +121,8 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// The hero's ultimate, once its meter is full and it's worth it (not on a foe a weapon attack would finish): a
-        /// Volley where it catches the most foes; a Flurry on a foe in reach; an Aura in a fight when allies next to the
-        /// hero are in melee or hurt, or the boss is fighting.
+        /// Volley centered where it catches the most foes; a Flurry on the foe it would attack anyway; an Aura in a fight
+        /// when allies next to the hero are in melee or hurt, or the boss is fighting.
         /// </summary>
         public static bool TryUltimate(DungeonRun run, Actor hero, out HeroCommand command)
         {
@@ -86,29 +133,29 @@ namespace FiveKingdoms.Core
             {
                 case SkillEffect.Area:
                 {
+                    // Among centers that catch as many, the one the hero would attack anyway.
+                    var centers = run.FoesInSight(hero, ultimate.Range);
+                    centers.Sort((a, b) => ComesBefore(hero, a, b) ? -1 : ComesBefore(hero, b, a) ? 1 : 0);
                     int best = 0;
-                    foreach (var dir in Directions.All)
+                    foreach (var center in centers)
                     {
-                        var center = run.FirstFoeInLine(hero, dir, ultimate.Range, out _);
-                        if (center == null) continue;
                         int worth = 0;
                         foreach (var actor in run.Actors)
                             if (actor.Team != hero.Team && GridPos.ChebyshevDistance(actor.Pos, center.Pos) <= ultimate.Radius)
                                 worth += actor.Definition.IsBoss ? 2 : 1;
                         if (worth <= best || worth == 1 && !Sturdy(hero, center)) continue;
                         best = worth;
-                        command = HeroCommand.Ultimate(dir);
+                        command = HeroCommand.UltimateAt(center.Pos);
                     }
                     return best > 0;
                 }
                 case SkillEffect.Strike:
                 {
-                    if (!TryPickTarget(run, hero, out var target, out var toward, out int distance) || distance != 1) return false;
-                    int adjacent = 0;
-                    foreach (var actor in run.Actors)
-                        if (actor.Team != hero.Team && GridPos.ChebyshevDistance(actor.Pos, hero.Pos) == 1) adjacent++;
-                    if (adjacent < 2 && !Sturdy(hero, target) || run.CheckUltimate(hero, toward) != SkillCheck.Ready) return false;
-                    command = HeroCommand.Ultimate(toward);
+                    var near = FoesInStrikeReach(run, hero);
+                    var target = PickTarget(hero, near);
+                    if (target == null || near.Count < 2 && !Sturdy(hero, target)) return false;
+                    if (run.CheckUltimateAt(hero, target.Pos) != SkillCheck.Ready) return false;
+                    command = HeroCommand.UltimateAt(target.Pos);
                     return true;
                 }
                 case SkillEffect.Aura:
@@ -150,8 +197,8 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>
-        /// Hunter's Mark (a Quick action) on a foe worth it (a boss, or one that will take several hits) when the hero's
-        /// mark isn't on anyone yet.
+        /// Hunter's Mark (a Quick action) on the foe the hero is about to attack, if it's worth it (a boss, or one that
+        /// will take several hits) and the hero's mark isn't on anyone yet. Everyone then goes for the marked foe.
         /// </summary>
         public static bool TryMark(DungeonRun run, Actor hero, out HeroCommand command)
         {
@@ -163,10 +210,9 @@ namespace FiveKingdoms.Core
                 var status = actor.FindStatus(StatusKind.Mark);
                 if (status != null && status.SourceId == hero.Id) return false; // Already hunting something.
             }
-            var skill = hero.Definition.Skills[mark];
-            var target = run.FindShotTarget(hero, hero.Facing, skill.Range, out var toward, out _);
-            if (target == null || !WorthAStatus(hero, target) || run.CheckSkill(hero, mark, toward) != SkillCheck.Ready) return false;
-            command = HeroCommand.Skill(mark, toward);
+            var target = PickTarget(hero, run.FoesInSight(hero, hero.Definition.Skills[mark].Range));
+            if (target == null || !WorthAStatus(hero, target) || run.CheckSkillAt(hero, mark, target.Pos) != SkillCheck.Ready) return false;
+            command = HeroCommand.SkillAt(mark, target.Pos);
             return true;
         }
 
@@ -190,7 +236,7 @@ namespace FiveKingdoms.Core
                 {
                     if (run.CheckSkill(hero, roll, dir) != SkillCheck.Ready) continue;
                     var end = run.DashDestination(hero, skill.RollTiles, dir);
-                    if (run.FoeAdjacent(end, hero.Team) || !run.AnyFoeInLine(end, hero.Team, skill.Range)) continue;
+                    if (run.FoeAdjacent(end, hero.Team) || !run.AnyFoeInSight(end, hero.Team, skill.Range)) continue;
                     int distance = run.DistanceToNearestFoe(end, hero.Team);
                     if (distance <= best) continue;
                     best = distance;
@@ -205,13 +251,35 @@ namespace FiveKingdoms.Core
             {
                 var next = hero.Pos + dir.ToOffset();
                 if (!run.Map.CanStep(hero.Pos, dir) || run.ActorAt(next) != null) continue;
-                if (run.FoeAdjacent(next, hero.Team) || !run.AnyFoeInLine(next, hero.Team, reach)) continue;
+                if (run.FoeAdjacent(next, hero.Team) || !run.AnyFoeInSight(next, hero.Team, reach)) continue;
                 int distance = run.DistanceToNearestFoe(next, hero.Team);
                 if (distance <= bestStep) continue;
                 bestStep = distance;
                 command = HeroCommand.Move(dir);
             }
             return bestStep > 0;
+        }
+
+        /// <summary>
+        /// "Run to safety" (PROGRESSION.md, "Swaps, without loops"): a badly hurt hero with a foe next to it swaps places
+        /// with a healthier ally standing farther from the foes, two melee heroes included. Of several such allies, the one
+        /// standing farthest from them. The pair can't swap back for a few turns (<see cref="DungeonRun.CanSwap"/>).
+        /// </summary>
+        public static bool TryRunToSafety(DungeonRun run, Actor hero, out HeroCommand command)
+        {
+            command = HeroCommand.Wait;
+            if (!DungeonRun.IsBadlyHurt(hero) || !run.FoeAdjacent(hero)) return false;
+            int best = 0;
+            foreach (var dir in Directions.All)
+            {
+                var ally = run.ActorAt(hero.Pos + dir.ToOffset());
+                if (ally == null || !run.IsSaferSwap(hero, ally) || !run.CanSwap(hero, ally)) continue;
+                int distance = run.DistanceToNearestFoe(ally.Pos, hero.Team);
+                if (distance <= best) continue;
+                best = distance;
+                command = HeroCommand.Move(dir);
+            }
+            return best > 0;
         }
 
         /// <summary>A foe that would survive the hero's weapon attack (bosses always): worth an ultimate on its own.</summary>
@@ -251,27 +319,38 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>
-        /// An attack on a foe in reach, if there is one. The target: the first adjacent foe in turn order (corners
-        /// allowing), or for heroes with ranged attacks the nearest foe along a clear straight line. The attack, best
-        /// first: a skill that puts a status (or a stun) on a strong target that doesn't have it yet, the hardest-hitting
-        /// skill that beats the weapon attack, and otherwise the weapon attack. Skills cost nothing but a turn's cooldown,
-        /// so a hero alternates between them.
+        /// An attack on a foe in reach, if there is one: the target by <see cref="PickTarget"/> (the marked enemy first,
+        /// then the lowest HP) among the foes next to the hero and, for heroes with shots, those in sight within range.
+        /// The attack on it, best first: a skill that puts a status or a stun on a strong target that doesn't have it yet,
+        /// the hardest-hitting skill that beats the weapon attack, and otherwise the weapon attack. Skills cost nothing
+        /// but a turn's cooldown, so a hero alternates between them. The command names the target's tile.
         /// </summary>
         public static bool TryAttack(DungeonRun run, Actor hero, out HeroCommand command)
         {
             command = HeroCommand.Wait;
-            if (!TryPickTarget(run, hero, out var target, out var toward, out int distance)) return false;
+            var foes = FoesInReach(run, hero);
+            // The best target first; one that nothing ready reaches (only a skill that's cooling down) gives way to the next.
+            while (foes.Count > 0)
+            {
+                var target = PickTarget(hero, foes);
+                if (TryAttack(run, hero, target, out command)) return true;
+                foes.Remove(target);
+            }
+            return false;
+        }
 
+        static bool TryAttack(DungeonRun run, Actor hero, Actor target, out HeroCommand command)
+        {
+            command = HeroCommand.Wait;
             var skills = hero.Definition.Skills;
             int control = -1, strongest = -1, strongestPower = CombatRules.BasicAttackPercent;
             for (int slot = 0; slot < skills.Count; slot++)
             {
                 var skill = skills[slot];
-                if (!skill.DealsDamage || skill.RollTiles > 0 || !InReach(skill, distance)) continue; // Rolls are for getting out of melee.
-                if (run.CheckSkill(hero, slot, toward) != SkillCheck.Ready) continue;
-                bool controls = skill.Status.HasValue || skill.StunChance > 0;
-                bool fresh = (!skill.Status.HasValue || target.FindStatus(skill.Status.Value) == null) && target.FindStatus(StatusKind.Stunned) == null;
-                if (controls && fresh && WorthAStatus(hero, target) && control < 0) control = slot;
+                if (!skill.DealsDamage || skill.RollTiles > 0) continue; // Rolls are for getting out of melee.
+                if (run.CheckSkillAt(hero, slot, target.Pos) != SkillCheck.Ready) continue;
+                bool fresh = skill.Status.HasValue && target.FindStatus(skill.Status.Value) == null || skill.StunChance > 0 && run.CanDelay(target);
+                if (fresh && WorthAStatus(hero, target) && control < 0) control = slot;
                 int power = skill.Power * skill.Hits;
                 if (power <= strongestPower) continue;
                 strongestPower = power;
@@ -280,12 +359,11 @@ namespace FiveKingdoms.Core
             int chosen = control >= 0 ? control : strongest;
             if (chosen >= 0)
             {
-                command = HeroCommand.Skill(chosen, toward);
+                command = HeroCommand.SkillAt(chosen, target.Pos);
                 return true;
             }
-            if (distance > hero.Definition.AttackRange) return false; // Only skills reach that far.
-            // Melee: bump into it (the original autopilot's attack). Ranged: shoot along the line.
-            command = distance == 1 && hero.Definition.AttackRange == 1 ? HeroCommand.Move(toward) : HeroCommand.AttackToward(toward);
+            if (run.AttackTargetAt(hero, target.Pos) == null) return false; // Only skills reach that one.
+            command = HeroCommand.AttackAt(target.Pos);
             return true;
         }
 
@@ -350,47 +428,20 @@ namespace FiveKingdoms.Core
         {
             command = HeroCommand.Wait;
             int reach = Reach(hero);
-            Func<GridPos, bool> isGoal = p => !run.FoeAdjacent(p, hero.Team) && run.AnyFoeInLine(p, hero.Team, reach);
+            Func<GridPos, bool> isGoal = p => !run.FoeAdjacent(p, hero.Team) && run.AnyFoeInSight(p, hero.Team, reach);
             if (!Pathfinder.TryFindNearest(run.Map, hero.Pos, isGoal, p => run.ActorAt(p) != null, FightSearchSteps, out var step, out _, out _))
                 return false;
             command = HeroCommand.Move(step);
             return true;
         }
 
-        /// <summary>How far the hero's attacks reach along a line (its weapon attack or its longest shot).</summary>
+        /// <summary>How far the hero's attacks reach (its weapon attack or its longest shot); 1 for a melee hero.</summary>
         public static int Reach(Actor hero)
         {
             int reach = hero.Definition.AttackRange;
             foreach (var skill in hero.Definition.Skills)
                 if (skill.Effect == SkillEffect.Shot && skill.Range > reach) reach = skill.Range;
             return reach;
-        }
-
-        static bool InReach(SkillDefinition skill, int distance) =>
-            skill.Effect == SkillEffect.Strike ? distance == 1 : distance <= skill.Range;
-
-        /// <summary>
-        /// The foe to attack: the first adjacent one in turn order whose corner is clear, else (for ranged heroes) the
-        /// nearest one along a clear straight line within reach.
-        /// </summary>
-        static bool TryPickTarget(DungeonRun run, Actor hero, out Actor target, out Direction8 toward, out int distance)
-        {
-            foreach (var actor in run.Actors)
-            {
-                if (actor.Team == hero.Team || GridPos.ChebyshevDistance(hero.Pos, actor.Pos) != 1) continue;
-                var dir = Directions.Toward(hero.Pos, actor.Pos);
-                if (!run.Map.IsCornerClear(hero.Pos, dir)) continue;
-                target = actor;
-                toward = dir;
-                distance = 1;
-                return true;
-            }
-            target = null;
-            toward = hero.Facing;
-            distance = 0;
-            if (Reach(hero) <= 1) return false;
-            target = run.FindShotTarget(hero, hero.Facing, Reach(hero), out toward, out distance);
-            return target != null;
         }
 
         /// <summary>A step that takes <paramref name="hero"/> out of reach of an attack centered on <paramref name="threat"/>.</summary>

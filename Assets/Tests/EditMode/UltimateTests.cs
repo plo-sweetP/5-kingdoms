@@ -130,6 +130,22 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
+        public void VolleyCanBeCenteredOnAnyFoeInSight()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Room); // Uzuki at (1, 3).
+            var onLine = Dummy(run, 3, 3);
+            var offLine = Dummy(run, 5, 5); // Four over, two up: on none of the 8 lines, and out of the first one's area.
+            run.Hero.Charge = CombatRules.MaxCharge;
+
+            Assert.AreEqual(SkillCheck.Ready, run.CheckUltimateAt(run.Hero, offLine.Pos));
+            Assert.AreEqual(SkillCheck.NoTarget, run.CheckUltimateAt(run.Hero, new GridPos(4, 4)), "it needs a foe to center on");
+            Assert.IsTrue(run.Execute(HeroCommand.UltimateAt(new GridPos(5, 5))));
+            Assert.AreEqual(new GridPos(5, 5), run.Events.OfType<AreaAttackEvent>().Single().Center);
+            Assert.AreEqual(2, HitsOn(run, offLine));
+            Assert.AreEqual(0, HitsOn(run, onLine));
+        }
+
+        [Test]
         public void AuraOfProtectionShieldsAndHealsTheAlliesNextToHaiden()
         {
             var run = Run(new[] { ActorCatalog.Haiden, ActorCatalog.Kristela, ActorCatalog.Uzuki }, Room);
@@ -168,7 +184,19 @@ namespace FiveKingdoms.Tests
             Dummy(run, 5, 4, hp: 50);
             var command = AutoPilot.Decide(run);
             Assert.AreEqual(HeroCommandKind.Ultimate, command.Kind, "two in the area are");
-            Assert.AreEqual(Direction8.E, command.Direction);
+            Assert.AreEqual(HeroCommand.UltimateAt(new GridPos(5, 3)), command, "centered on one of them");
+        }
+
+        [Test]
+        public void TheAutoPilotCentersTheVolleyWhereItCatchesTheMost()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Room); // Uzuki at (1, 3).
+            Dummy(run, 3, 3, hp: 50); // The weakest, and alone.
+            Dummy(run, 5, 4);
+            Dummy(run, 6, 5);
+            Dummy(run, 6, 3);
+            run.Hero.Charge = CombatRules.MaxCharge;
+            Assert.AreEqual(HeroCommand.UltimateAt(new GridPos(5, 4)), AutoPilot.Decide(run), "the three to the east, around the middle one");
         }
 
         [Test]

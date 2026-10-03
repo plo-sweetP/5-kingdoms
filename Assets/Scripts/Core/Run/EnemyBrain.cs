@@ -39,7 +39,8 @@ namespace FiveKingdoms.Core
         /// <summary>Boss turns between slams.</summary>
         public const int SlamCooldown = 3;
 
-        public const int SlamDamagePercent = 160;
+        /// <summary>The slam hits for this percent of ATK (a basic attack is 200%).</summary>
+        public const int SlamDamagePercent = 320;
         public const int HelpersSummoned = 2;
 
         public static Intent Decide(DungeonRun run, Actor self) =>

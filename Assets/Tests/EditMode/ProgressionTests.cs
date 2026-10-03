@@ -23,10 +23,10 @@ namespace FiveKingdoms.Tests
 
             Assert.AreEqual(4, hero.Level);
             Assert.AreEqual(7, hero.Exp);
-            Assert.AreEqual(basis.MaxHp + 3 * CombatRules.LevelUpHp, hero.MaxHp);
+            Assert.AreEqual(basis.MaxHp + 3 * basis.HpGrowth, hero.MaxHp);
             Assert.AreEqual(hero.MaxHp, hero.Hp, "a run starts at full HP");
-            Assert.AreEqual(basis.Attack + 3 * CombatRules.LevelUpAttack, hero.Attack);
-            Assert.AreEqual(basis.Defense + 3 * CombatRules.LevelUpDefense, hero.Defense);
+            Assert.AreEqual(basis.Attack + 3 * basis.AtkGrowth, hero.Attack);
+            Assert.AreEqual(basis.Defense + 3 * basis.DefGrowth, hero.Defense);
         }
 
         [Test]

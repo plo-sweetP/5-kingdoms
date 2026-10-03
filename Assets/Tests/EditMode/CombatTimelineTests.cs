@@ -89,8 +89,8 @@ namespace FiveKingdoms.Tests
         [Test]
         public void RegenerationRunsOnAvTimeSoFasterHeroesTakeMoreStepsPerHp()
         {
-            Assert.AreEqual(2, HpRegainedIn12Steps(heroSpeed: 100), "12 steps at speed 100 = 1200 AV = 2 HP");
-            Assert.AreEqual(1, HpRegainedIn12Steps(heroSpeed: 200), "12 steps at speed 200 = 600 AV = 1 HP");
+            Assert.AreEqual(20, HpRegainedIn12Steps(heroSpeed: 100), "12 steps at speed 100 = 1200 AV = 2 ticks of 10 HP");
+            Assert.AreEqual(10, HpRegainedIn12Steps(heroSpeed: 200), "12 steps at speed 200 = 600 AV = 1 tick of 10 HP");
         }
 
         static int HpRegainedIn12Steps(int heroSpeed)

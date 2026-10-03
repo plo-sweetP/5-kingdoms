@@ -19,7 +19,7 @@ namespace FiveKingdoms.Tests
 
         static DungeonRun Run() => TestRuns.OnMap(1, new HeroProgress(ActorCatalog.Uzuki), null, Hall);
 
-        static Actor SlimeAt(DungeonRun run, int dx, int dy, int hp = 100)
+        static Actor SlimeAt(DungeonRun run, int dx, int dy, int hp = 1000)
         {
             var slime = run.SpawnEnemy(run.Hero.Pos + new GridPos(dx, dy));
             slime.MaxHp = slime.Hp = hp;
@@ -44,7 +44,7 @@ namespace FiveKingdoms.Tests
             run.Hero.Mp = 0;
 
             Assert.IsTrue(run.UseSkill(Strike));
-            Assert.Less(slime.Hp, 100);
+            Assert.Less(slime.Hp, 1000);
             Assert.AreEqual(SkillCatalog.SpiritStrike.ManaGain, run.Hero.Mp);
             Assert.IsTrue(run.Events.OfType<SkillUsedEvent>().Any());
             Assert.AreEqual(slime.Id, run.Events.OfType<AttackEvent>().First().TargetId);
@@ -63,7 +63,7 @@ namespace FiveKingdoms.Tests
             Assert.AreEqual(SkillCheck.Ready, run.CheckSkill(Strike));
             run.UseSkill(Strike);
             Assert.AreEqual(Direction8.S, run.Hero.Facing, "turns to face the enemy it hits");
-            Assert.Less(slime.Hp, 100);
+            Assert.Less(slime.Hp, 1000);
         }
 
         [Test]
@@ -173,7 +173,7 @@ namespace FiveKingdoms.Tests
             var west = SlimeAt(run, -1, 0);
             Assert.IsTrue(run.Execute(HeroCommand.Skill(Strike, Direction8.W)));
             Assert.AreEqual(west.Id, run.Events.OfType<AttackEvent>().First().TargetId);
-            Assert.AreEqual(100, east.Hp);
+            Assert.AreEqual(1000, east.Hp);
         }
 
         [Test]
@@ -224,7 +224,7 @@ namespace FiveKingdoms.Tests
         public void LevelingUpGrowsMaxMana()
         {
             var run = TestRuns.OnMap(1, new HeroProgress(ActorCatalog.Uzuki, level: 5), null, Hall);
-            Assert.AreEqual(ActorCatalog.Uzuki.MaxMp + 4 * CombatRules.LevelUpMp, run.Hero.MaxMp);
+            Assert.AreEqual(ActorCatalog.Uzuki.MaxMp + 4 * ActorCatalog.Uzuki.MpGrowth, run.Hero.MaxMp);
         }
 
         [Test]

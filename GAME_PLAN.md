@@ -43,7 +43,8 @@ Design notes:
 
 ## Element system
 - **Base elements (5):** Fire, Water, Wind, Earth, Darkness.
-- **Advanced / variant elements** grow out of base ones: Lightning (from Fire), Ice (from Water), Metal (from Earth), Space/Time (from Darkness). Wind's advanced form is TBD.
+- **Advanced / variant elements** grow out of base ones: Lightning (from Fire), Ice (from Water), Metal (from Earth). Wind's advanced form is TBD.
+- **Darkness is the "everything else" magic element** (decided 2026-10-03): it covers time, cosmic and space magic, so there's no separate Space/Time element.
 - Implementation: a data-driven element chart (ScriptableObject): each element has a parent, strengths, weaknesses. An advanced element inherits its parent's matchups plus its own tweaks. New elements can be added later without code changes.
 - Breeding hook: advanced elements are unlocked by specific parent pairs and ingredients, so they act as the "rare" tier.
 - Open: Is there a Light element? Darkness is in the base set without an opposite. Decide before building the type chart.
@@ -60,9 +61,11 @@ energy) and [docs/design/GEAR.md](docs/design/GEAR.md) (damage formula, stats, g
   | Hero | Kingdom | Class | Role | Profession | Base SPD |
   |---|---|---|---|---|---|
   | Uzuki | Medieval Realm | Archer (later specs into Ice Mage) | Utility DPS: ranged, slows, control and support shots | Alchemist (team potions) | 95 |
-  | Haiden (boy) | Dynasty Nation | Rune Warrior | Tank-healer frontliner: fire runes that guard and mend | Blacksmith (equipment) | 90 |
+  | Haiden (boy) | Dynasty Nation | Rune Warrior | Tank DPS with some healing: fire runes that hit, guard and mend | Blacksmith (equipment) | 90 |
   | Kristela (girl, a princess) | Medieval Realm | Monk | Melee DPS, speed build | Chef (food buffs and heals) | 100 |
 
+  Weapons: Uzuki a **Hunter Bow**, Haiden a **Long Sword**, Kristela **Gauntlets** (stats only for the first playtest,
+  except the Hunter Bow's Multishot).
   Concept sketches: [Haiden](docs/concept/haiden.jpg) (spiky orange-brown hair, blue headband with long tails, red
   eyes), [Kristela](docs/concept/kristela.jpg) (long wavy blonde hair, blue eyes, gold X-shaped hair clip on one side).
 - **Persistent progression:** characters keep their level and gear between dungeon runs (unlike Mystery Dungeon's resets). They level up and gear up outside, at the farm, then enter dungeons to clear the stages and the boss. Defeating monsters and bosses inside a dungeon also gives EXP that carries back out.
@@ -178,8 +181,8 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 1b | Dungeon follow-ups: hero level/EXP kept between runs (saved), a boss on the last floor, controller support, Auto button | **Done** |
 | 1c | Combat timeline: Honkai Star Rail-style action value (AV) turn order on the grid, Speed stat, turn-order strip | **Done** |
 | 1d | Mana (berries restore it), first skills with AV costs, healing | **Done** |
-| 1e | Combat math (GEAR.md step 1-3): multiplicative damage formula, 10x HP/ATK/DEF rescale, Crit Rate/Crit DMG stats (5%/50%), per-actor stat sheet, skill tags; difficulty re-tuned to match 1d | Next |
-| 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer kit, Hunter Bow), Haiden, Kristela; AI partners with follow/attack/hold tactics, switching control, corridor follow and swap, everyone on the AV timeline | |
+| 1e | Combat math (GEAR.md step 1-3): multiplicative damage formula, 10x HP/ATK/DEF rescale, Crit Rate/Crit DMG stats (5%/50%), per-actor stat sheet, skill tags; difficulty re-tuned to match 1d | **Done** |
+| 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer kit, Hunter Bow), Haiden (Long Sword), Kristela (Gauntlets); AI partners with follow/attack/hold tactics, switching control, corridor follow and swap, everyone on the AV timeline | Next |
 | 1g | Classes and professions core (PROGRESSION.md): points, tiers 1-25, milestones, stat bumps, prerequisites and kingdom locks, loadout, respec; real content for the starting 3 classes and 3 professions | |
 | 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
 | 1i | Hero screen between runs: equipment, class and profession tiers, loadout (until the farm exists) | |
@@ -236,14 +239,33 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 - **Layouts checked** on phone (19.5:9) and tablet/Steam Deck (16:10) shapes, for touch, keyboard and controller
   (new `-fk-input keyboard|gamepad` launch flag); with keys or a controller the message log moves to the bottom-left.
 
+**Milestone 1e (combat math)**, GEAR.md "Building it" steps 1-3:
+- **Damage formula:** (skill% x ATK + extra damage) x (1 + DMG bonus) x crit x DEF mult x RES mult, where
+  DEF mult = K / (K + DEF) and K = 10 x (attacker level + 20). A basic attack is 200% ATK. Everything is integer math,
+  so a seeded run replays the same on every platform. The old 85-100% random spread stays for now (open question 9).
+- **10x stats:** Uzuki 400 HP / 60 ATK / 30 DEF, +50 / +10 / +10 per level; regeneration 10 HP per tick.
+- **Crit** is a per-actor stat: 5% Crit Rate for +50% Crit DMG, for everyone (was 8% for +50%). Crit Rate caps at 100%.
+- **Stat sheet:** (base + level growth + weapon) x (1 + % bonuses) + flat bonuses. Only HP, ATK and DEF take %
+  bonuses; SPD and the percentage stats (crit, Affinity, Resist) only add up. Weapons count as base (stats only so far).
+- **Skill tags:** physical or magic, melee, ranged or area, and an element. Skill power is in percent of ATK
+  (Spirit Strike 240%, the same as its old 120% of a basic attack).
+- **Monster levels:** monsters spawn at the floor's level (a B3F slime is level 3); per-level growth replaces the old
+  per-floor bonuses, and the King Slime has none.
+- **Re-tune:** with DEF as a share instead of a subtraction, weak hits no longer bounce off a leveled hero, so slimes
+  hit for ATK 40 (+6 per floor) and the King Slime has 1300 HP / 80 ATK. Balance: 8/200 fresh level-1 runs win (4%),
+  123/200 reach the boss floor; with levels kept, players win on attempt 2.7 at Lv 9.5 (1d: 2.5 at Lv 9.3).
+- The golden replay fingerprint was re-recorded, since every hit changed on purpose.
+
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.
 2. Pixel art spec (to go in ART_BIBLE.md): placeholders use 32 px tiles and 32x32 chibi sprites; confirm, and set palette limits and animation frame counts.
 3. ~~Exact armor pieces and how many weapon slots.~~ Answered in GEAR.md: head, body, hands, feet, 2 rings, 1 weapon.
 4. ~~Stamina and timers.~~ Answered: see "Energy" above.
 7. Does a run end when the leader falls, or only when the whole party has fallen? (Default for 1f: the whole party.)
-8. Open design questions from the specs (they don't block any milestone): Crystal Ice Legion Hunter's prerequisites
-   (Archer instead of Knight?), the Space/Time element, and weapons for monks and fist fighters.
+9. Keep the 85-100% random damage spread (Mystery Dungeon style), or drop it as in the Honkai: Star Rail formula,
+   where only crits vary? Kept for now; one number in `CombatRules`.
+8. ~~Crystal Ice Legion Hunter's prerequisites, the Space/Time element, monk weapons.~~ Answered in the specs: Archer 15 +
+   Mage 10; Darkness covers time and space; Kristela uses Gauntlets (the Monk/fist weapon type, passive later).
 5. Store policy and legal check before any paid gacha (odds disclosure is required in app stores and some regions).
 6. A Mac for iOS, or a build service?
 

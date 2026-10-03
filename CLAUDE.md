@@ -41,6 +41,9 @@ the project open; copy Assets/Packages/ProjectSettings to a scratch folder and r
 - "Enter Play Mode" has domain reload off: statics survive between Play sessions, so reset them on scene load.
 - Combat turn order lives in `Core/Run/Timeline.cs` (Honkai Star Rail-style action value). Game time is exact `AvTime`
   (BigInteger fractions): never use floats for time or turn decisions; ties go to the leader, then the lower actor id.
+- Damage follows GEAR.md's multiplicative formula (`CombatRules.RollDamage`), in integer math, never floats. Final stats
+  come from each actor's `StatSheet`: (base + level growth + weapon) x % + flat. Crit Rate, Crit DMG, Affinity and
+  Resist are in tenths of a percent (50 = 5%). Design specs for gear and progression are in `docs/design/`.
 - `GoldenReplayTests` pins equal-speed behavior to the pre-timeline engine. If a rules change is meant to alter
   replays, re-record its fingerprint and say why in the commit.
 - Planned: party of up to 4 (`MaxPartySize`), PC/Steam with controller support. Write AI and combat so any

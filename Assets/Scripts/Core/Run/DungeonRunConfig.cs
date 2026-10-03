@@ -34,11 +34,14 @@ namespace FiveKingdoms.Core
         /// <summary>Mana a berry restores. Healing comes from skills (Second Wind) and slow regeneration.</summary>
         public int BerryRestoreMp = 15;
 
-        /// <summary>HP a berry heals. 0 in the game (berries restore mana); the prototype used 30.</summary>
+        /// <summary>HP a berry heals. 0 in the game (berries restore mana); the prototype healed 300 (30 before the 10x rescale).</summary>
         public int BerryHealHp;
 
-        /// <summary>AV per 1 HP of natural regeneration (6 turns at Speed 100). 0 turns it off.</summary>
+        /// <summary>AV between ticks of natural regeneration (6 turns at Speed 100). 0 turns it off.</summary>
         public int RegenIntervalAv = 600;
+
+        /// <summary>HP each regeneration tick restores.</summary>
+        public int RegenHp = 10;
 
         /// <summary>What each kind of action costs on the timeline, in percent of a normal turn.</summary>
         public ActionCosts Costs = new ActionCosts();

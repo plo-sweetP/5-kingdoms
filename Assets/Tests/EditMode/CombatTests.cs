@@ -59,7 +59,7 @@ namespace FiveKingdoms.Tests
             Assert.IsTrue(run.Events.OfType<DiedEvent>().Any(e => e.ActorId == slime.Id));
             Assert.Greater(run.Hero.Level, 1);
             Assert.AreEqual(run.Hero.Level - 1, run.Events.OfType<LevelUpEvent>().Count());
-            Assert.AreEqual(attackBefore + (run.Hero.Level - 1) * CombatRules.LevelUpAttack, run.Hero.Attack);
+            Assert.AreEqual(attackBefore + (run.Hero.Level - 1) * run.Hero.Definition.AtkGrowth, run.Hero.Attack);
         }
 
         [Test]

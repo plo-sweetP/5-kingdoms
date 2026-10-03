@@ -234,7 +234,7 @@ namespace FiveKingdoms.Core
                     var target = FindStrikeTarget(aim, out var dir);
                     Hero.Facing = dir;
                     events.Add(new AttackEvent(Hero.Id, target.Id, dir));
-                    ApplyDamage(Hero, target, CombatRules.RollHeavyAttack(Hero, target, Random, skill.Power));
+                    ApplyDamage(Hero, target, CombatRules.RollDamage(Hero, target, Random, skill.Power, element: skill.Element));
                     break;
                 }
                 case SkillEffect.Heal:
@@ -304,25 +304,14 @@ namespace FiveKingdoms.Core
         // ---- Setup helpers, also used by tests. ----
 
         /// <summary>
-        /// Adds a monster. Regular monsters get tougher on deeper floors; bosses keep their own stats. Mid-fight a new
-        /// monster's first turn is one full turn away, unless <paramref name="readyNow"/> (reinforcements arriving
-        /// between rounds act in the coming round).
+        /// Adds a monster at the floor's level, so its level growth makes deeper floors tougher (bosses have none and keep
+        /// their own stats). Mid-fight a new monster's first turn is one full turn away, unless <paramref name="readyNow"/>
+        /// (reinforcements arriving between rounds act in the coming round).
         /// </summary>
         public Actor SpawnEnemy(GridPos pos, ActorDefinition definition = null, bool readyNow = false)
         {
-            var enemy = new Actor(nextId++, definition ?? Config.Enemy, Team.Enemy, pos);
-            if (enemy.Definition.IsBoss)
-            {
-                enemy.SpecialCooldown = 2; // A moment's grace before the first slam.
-            }
-            else
-            {
-                int floorBonus = Floor - 1;
-                enemy.MaxHp = enemy.Hp = enemy.MaxHp + floorBonus * 3;
-                enemy.Attack += floorBonus;
-                enemy.Defense += floorBonus / 2;
-                enemy.ExpReward += floorBonus * 2;
-            }
+            var enemy = new Actor(nextId++, definition ?? Config.Enemy, Team.Enemy, pos, level: Floor);
+            if (enemy.Definition.IsBoss) enemy.SpecialCooldown = 2; // A moment's grace before the first slam.
             actors.Add(enemy);
             if (InCombat) timeline.Add(enemy, readyNow);
             return enemy;
@@ -506,7 +495,7 @@ namespace FiveKingdoms.Core
             {
                 if (target.Team == boss.Team || !target.IsAlive) continue;
                 if (GridPos.ChebyshevDistance(boss.Pos, target.Pos) > EnemyBrain.SlamRadius) continue;
-                ApplyDamage(boss, target, CombatRules.RollHeavyAttack(boss, target, Random, EnemyBrain.SlamDamagePercent));
+                ApplyDamage(boss, target, CombatRules.RollDamage(boss, target, Random, EnemyBrain.SlamDamagePercent));
                 if (State != RunState.InProgress) return;
             }
         }
@@ -581,7 +570,7 @@ namespace FiveKingdoms.Core
 
         void Regenerate()
         {
-            if (Hero.IsAlive && Hero.Hp < Hero.MaxHp) Hero.Hp++;
+            if (Hero.IsAlive) Hero.Hp = Math.Min(Hero.MaxHp, Hero.Hp + Config.RegenHp);
         }
 
         /// <summary>Every so often a new enemy wanders in out of the hero's sight, so camping on a floor isn't free.</summary>

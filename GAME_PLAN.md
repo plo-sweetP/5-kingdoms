@@ -1,4 +1,4 @@
-# 5 Kingdoms: Game Plan (v0.2)
+# 5 Kingdoms: Game Plan (v0.3)
 
 ## Decisions locked in
 | Topic | Decision |
@@ -49,12 +49,33 @@ Design notes:
 - Open: Is there a Light element? Darkness is in the base set without an opposite. Decide before building the type chart.
 
 ## Heroes, skills and equipment (planned)
-- **Main character:** Uzuki (concept sketch: spiky blue hair, cyan eyes, sleeveless top with strap, one pauldron, baggy cuffed pants, boots). Placeholder sprite exists.
+Full specs: [docs/design/PROGRESSION.md](docs/design/PROGRESSION.md) (levels, classes, professions, Traces, respec,
+energy) and [docs/design/GEAR.md](docs/design/GEAR.md) (damage formula, stats, gear, sets, weapons).
+- **Player character (later):** the player creates their own character and picks one of the 5 kingdoms as their
+  origin, which opens that kingdom's inherited classes. Until the creator exists, Uzuki leads the party.
+- **Uzuki is the first companion** (Medieval Realm; concept sketch: spiky blue hair, cyan eyes, sleeveless top with
+  strap, one pauldron, baggy cuffed pants, boots). Placeholder sprite exists.
+- **Starting party for the first playtest** (the player's own character joins later as the 4th):
+
+  | Hero | Kingdom | Class | Role | Profession | Base SPD |
+  |---|---|---|---|---|---|
+  | Uzuki | Medieval Realm | Archer (later specs into Ice Mage) | Utility DPS: ranged, slows, control and support shots | Alchemist (team potions) | 95 |
+  | Haiden (boy) | Dynasty Nation | Rune Warrior | Tank-healer frontliner: fire runes that guard and mend | Blacksmith (equipment) | 90 |
+  | Kristela (girl, a princess) | Medieval Realm | Monk | Melee DPS, speed build | Chef (food buffs and heals) | 100 |
+
+  Concept sketches: [Haiden](docs/concept/haiden.jpg) (spiky orange-brown hair, blue headband with long tails, red
+  eyes), [Kristela](docs/concept/kristela.jpg) (long wavy blonde hair, blue eyes, gold X-shaped hair clip on one side).
 - **Persistent progression:** characters keep their level and gear between dungeon runs (unlike Mystery Dungeon's resets). They level up and gear up outside, at the farm, then enter dungeons to clear the stages and the boss. Defeating monsters and bosses inside a dungeon also gives EXP that carries back out.
-- **Skills:** each character gets **3 class/job/race skills + 1 ultimate**. Skills can cost mana, cost nothing (with more unique effects), or build mana. Ultimates (buffs, debuffs, damage, summons, ...) are designed later. Uzuki's first three skills exist since 1d (see Progress); the ultimate slot is still locked.
-- **Equipment slots:** a **4-piece armor set + 2 rings + weapon slot(s)**. Set bonuses for wearing a full armor set are a natural fit.
-- **Equipment sources:** looted in dungeons or crafted on the farm. **Weapons can also come from the gacha.**
-- Data rule: gear, sets and drop tables live in data assets, like everything else.
+- **Skills:** each character gets **3 skills + 1 ultimate** from their own starting kit, upgraded, extended or replaced
+  by class and profession milestones. Skills can cost mana, cost nothing (with more unique effects), or build mana.
+  Ultimates (buffs, debuffs, damage, summons, ...) are designed with the classes.
+- **Classes and professions** share one point per level (100 at level 100), spent freely on class or profession
+  tiers 1-25 (PROGRESSION.md).
+- **Equipment slots:** 4 armor pieces (head, body, hands, feet) + 2 rings + 1 weapon for heroes; monsters wear 1 ring,
+  2 rings, or 2 armor pieces + 1 ring by size. Armor and rings form 2- and 4-piece sets (GEAR.md).
+- **Equipment sources:** unappraised boxes from dungeons (they survive defeat), crafting on the farm, and weapons also
+  from the gacha.
+- Data rule: gear, sets, classes and drop tables live in data, like everything else.
 
 ## Gacha
 - **Monsters come from breeding** (the free, earned "gacha").
@@ -83,13 +104,17 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 - **Content:** slimes 100 (same as the hero), King Slime 85 (slow and heavy: about every 6th turn the hero gets two in a row).
 - **Regression anchor:** with all speeds equal, the timeline reproduces the original alternating turns exactly (golden
   replay test; balance report identical before and after).
-- **Later:** Break/toughness with elements (1e), speed buffs and debuffs through skills, the party of 4 (the scheduler
-  already handles any number of actors per team).
+- **Later:** every party member on the timeline at their own speed (1f), Break/toughness with elements (1j), speed
+  buffs and debuffs through skills (turn effects get their own budget, PROGRESSION.md).
 
 ## Party (planned)
 - **Up to 4 characters on screen**: a leader plus 3 partners, as in Mystery Dungeon. The size is one constant (`MaxPartySize`), so trying 3 is a one-line change if 4 feels crowded on a phone.
+- **First playtest (1f): a party of 3**, Uzuki, Haiden and Kristela (see Heroes above). The player's own character
+  joins later as the 4th.
 - The player controls the leader; partners act by AI with simple tactics (follow me / go after enemies / hold back), and the player can switch which character they control. Each character keeps their own 3 skills + ultimate.
-- Turn order: leader, then partners, then enemies. In corridors partners follow in a line and swap places with the leader when bumped.
+- Turn order: exploring, the leader acts, then the partners, then enemies. In fights every party member acts on the AV
+  timeline at their own speed. In corridors partners follow in a line and swap places with the leader when bumped.
+- Defeat: by default the run ends when the whole party has fallen (open question: or when the leader falls?).
 - Enemies and bosses can target any party member; area attacks hit everyone in range.
 - Each character has their own saved progress (level, EXP, gear).
 - Open: are partners only gacha characters, or can bred monsters fill party slots too? (Earlier plan: farm monsters join the party.)
@@ -108,8 +133,17 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 - Auto-play for **smaller daily runs/missions**, and eventually for the **main quest**.
 - Foundation exists: the Core `AutoPilot` already plays whole dungeon runs (used today for automated tests and balance reports). The in-game feature will need smarter tactics, player-set rules (e.g. "heal below 40%"), and rewards/limits so it doesn't replace playing.
 
+## Energy (the daily limit, decided)
+From PROGRESSION.md; answers the old open question on stamina and timers.
+- **Energy** refills fully every 24 hours at the daily reset. Unspent energy carries over, capped at 2 days' worth.
+- **Costs energy:** gear-farming dungeons, special bosses and EXP-material dungeons (so the "about a week of daily play
+  to take a hero from 1 to 100" target holds).
+- **Free:** story progression, regular dungeons and their bosses, and the farm. Players are never locked out of playing.
+- **Weekly bosses:** a few clears a week, rewarding summoning crystals (the pull currency) and resources.
+- **Refills:** items from the battle pass and events; premium refills are limited per day (store and legal checks apply).
+
 ## Part 1: Farm and breeding
-- Tile-based farm (Unity Tilemap), crops with growth stages, seasons, energy or stamina.
+- Tile-based farm (Unity Tilemap), crops with growth stages, seasons. The farm costs no energy.
 - Real-time timers for crops and eggs, with offline progress calculated on return.
 - Monsters on the farm: hunger, mood and affinity. They can do jobs (water, harvest).
 - **Breeding:** 2 parents + ingredient -> egg (timer) -> hatch. Inputs: parents' kingdom, traits and rarity. Outputs: species, rarity tier, mutation chance, inherited traits, and a pity counter for rare results.
@@ -123,7 +157,7 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 - **Levels carry in and out:** the party enters at its farm-earned level and gear; EXP earned inside is kept.
 - **Berries** restore mana (15 MP); healing comes from skills (Second Wind) and, later, other items. A dungeon can also
   make its berries heal HP (`BerryHealHp` in its config).
-- Party of 1-3 (hero + monsters later). Skills, items, gear.
+- A party of up to 4 heroes (3 in the first playtest); monster partners later. Skills, items, gear.
 - Run ends by reaching the bottom or being defeated. Defeat has a soft penalty, with no permadeath of monsters in v1.
 - The generator is seeded so runs are reproducible, which helps testing.
 - **Built in Milestone 1:** see "Progress" below.
@@ -144,7 +178,12 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 | 1b | Dungeon follow-ups: hero level/EXP kept between runs (saved), a boss on the last floor, controller support, Auto button | **Done** |
 | 1c | Combat timeline: Honkai Star Rail-style action value (AV) turn order on the grid, Speed stat, turn-order strip | **Done** |
 | 1d | Mana (berries restore it), first skills with AV costs, healing | **Done** |
-| 1e | Elements and Break/toughness (needs the element chart) | Next |
+| 1e | Combat math (GEAR.md step 1-3): multiplicative damage formula, 10x HP/ATK/DEF rescale, Crit Rate/Crit DMG stats (5%/50%), per-actor stat sheet, skill tags; difficulty re-tuned to match 1d | Next |
+| 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer kit, Hunter Bow), Haiden, Kristela; AI partners with follow/attack/hold tactics, switching control, corridor follow and swap, everyone on the AV timeline | |
+| 1g | Classes and professions core (PROGRESSION.md): points, tiers 1-25, milestones, stat bumps, prerequisites and kingdom locks, loadout, respec; real content for the starting 3 classes and 3 professions | |
+| 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
+| 1i | Hero screen between runs: equipment, class and profession tiers, loadout (until the farm exists) | |
+| 1j | Elements and Break/toughness (needs the element chart) | Later |
 | 2 | Farm prototype: plant, grow, harvest, inventory, day/season clock | |
 | 3 | Monster and breeding core: stats, traits, egg, hatch, rarity and pity, with tests on the odds | |
 | 4 | Connect the loops: farm monsters enter dungeons, loot flows back, saves work | |
@@ -200,8 +239,11 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.
 2. Pixel art spec (to go in ART_BIBLE.md): placeholders use 32 px tiles and 32x32 chibi sprites; confirm, and set palette limits and animation frame counts.
-3. Exact armor pieces (e.g. head/body/hands/feet) and how many weapon slots.
-4. Stamina and timers: how aggressive? Must stay friendly for short phone sessions.
+3. ~~Exact armor pieces and how many weapon slots.~~ Answered in GEAR.md: head, body, hands, feet, 2 rings, 1 weapon.
+4. ~~Stamina and timers.~~ Answered: see "Energy" above.
+7. Does a run end when the leader falls, or only when the whole party has fallen? (Default for 1f: the whole party.)
+8. Open design questions from the specs (they don't block any milestone): Crystal Ice Legion Hunter's prerequisites
+   (Archer instead of Knight?), the Space/Time element, and weapons for monks and fist fighters.
 5. Store policy and legal check before any paid gacha (odds disclosure is required in app stores and some regions).
 6. A Mac for iOS, or a build service?
 

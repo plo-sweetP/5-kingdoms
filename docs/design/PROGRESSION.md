@@ -21,7 +21,8 @@ Classes, Traces and professions are for **heroes only**. Monsters get their iden
   and to fill **profession slots at the home base**.
   - **Uzuki** (the first companion): 5th kingdom (Medieval Realm). Signature class **Crystal Ice Legion Hunter**: an
     Ice Hunter Bow user who summons ice avatars to fight alongside.
-  - **Haiden** (boy): 3rd kingdom (Dynasty Nation). Fire **Rune Warrior**; signature class **Runegod Fire Blade**.
+  - **Haiden** (boy): 3rd kingdom (Dynasty Nation). Starts as a **Paladin**, later trains fire **Rune Warrior**
+    toward his signature class **Runegod Fire Blade**.
     Concept: [docs/concept/haiden.jpg](../concept/haiden.jpg): spiky orange-brown hair, blue headband with long
     tails, red eyes.
   - **Kristela** (girl): 5th kingdom (Medieval Realm), a princess. Base class **Monk**; signature class **Princess
@@ -33,13 +34,83 @@ Classes, Traces and professions are for **heroes only**. Monsters get their iden
 | Hero | Class | Role | Profession | Base SPD (*proposed*) |
 |---|---|---|---|---|
 | Uzuki | Archer, speccing into Mage (Ice) toward Crystal Ice Legion Hunter | **Utility DPS** (ranged; traps, slows and control) | Alchemist (potions for the team) | 95 |
-| Haiden | Rune Warrior | **Tank DPS with some healing** (frontliner; fire runes that hit, guard and mend) | Blacksmith (equipment) | 90 |
+| Haiden | Paladin (later Rune Warrior, toward Runegod Fire Blade) | **Tank first, with some healing** (frontliner; fire runes that guard, mend and hit back) | Blacksmith (equipment) | 90 |
 | Kristela | Monk | **Melee DPS** (speed build) | Chef (food buffs and heals) | 100 |
 
 Together they cover tank (with some healing), melee DPS and utility DPS, so the player's own character can fill
 whatever role they like.
 
 **Weapons:** Uzuki uses a **Hunter Bow**, Haiden a **Long Sword**, Kristela **Gauntlets** (see GEAR.md).
+
+**Starting kits (approved).** Skills are borrowed from D&D; numbers are first drafts to tune.
+
+**Turn rules are ours, not D&D's (decided):**
+- Each turn is one choice: **step one tile, or use one attack/skill**. The AV timeline decides who goes next.
+- **Quick skills** cost half a turn, so the hero comes up again sooner. At most one per hero. The UI shows a small
+  "Quick" tag, never D&D terms like "bonus action".
+- **Reactions** (few) fire automatically on their trigger, at most once per cycle, and never prompt the player.
+- Statuses stay few, short and shown as icons. The player controls one hero while partners use AI, and Auto is
+  always available. Deep enough to be satisfying, light enough for manual phone play.
+
+**Skill resources (decided: no mana):**
+- **No mana.** Every skill has a **1-turn cooldown**: after using it, it's unavailable on the hero's next turn, so
+  the same skill can't be used twice in a row.
+- Every hero has an **always-ready weapon attack** with no cooldown, so there's always something useful to do
+  (names are drafts: Uzuki's Quick Shot, Haiden's Sword Slash, Kristela's Jab).
+- **Ultimates use a charge meter** that fills as the hero acts, deals damage and takes damage. When it's full, the
+  ultimate is ready.
+- Berries heal HP again (in 1d they restored mana).
+- **Ultimate charge carries over between fights** within a run (decided), so walking into the boss with a full
+  meter is a real strategy. *Proposed* tuning: about one ultimate per hero per normal fight, two in a boss fight.
+
+**Ranged vs melee (decided).** A ranged leader shouldn't solo every fight while the melee heroes watch.
+- **Ranged reach: 5 tiles.** Ranged weapon attacks and shots deal **90%** of an equivalent melee hit (a multiplier
+  on the skill's %). A light touch, so ranged builds aren't punished.
+- **Point-blank rule (from D&D):** a ranged attack made while an enemy is adjacent to the shooter deals **30% less**.
+- **Shots pass through allies.** No friendly fire, nothing to worry about.
+- **Battle formation:** when a fight starts, melee partners move to the front and ranged ones hang back behind
+  them.
+- **Melee partners always engage:** in a fight they pick an enemy and path their way to it, around or swapping past
+  allies, instead of waiting behind the leader.
+- **Ranged heroes step out of melee:** with an enemy adjacent, a ranged hero steps back to a tile it can still shoot
+  from (Uzuki's Rolling Shot does this and attacks in one turn). If there's no such tile, or the enemy keeps
+  following, it shoots anyway at the point-blank penalty rather than retreating forever.
+- **Swaps, without loops.** A swap is allowed when it either puts a melee hero next to an enemy (or strictly closer
+  to one), or **moves a badly hurt hero away from enemies** ("run to safety"; this one works between two melee heroes
+  too). A pair that just swapped can't swap back for a few turns. The soak test fails if it sees the same two heroes
+  swapping back and forth.
+- **Ranged targets anything within 5 tiles that's in sight** (decided), not only along the 8 grid lines. Walls block
+  shots; allies don't. Damage stays at 90% of melee.
+
+**Targeting and input (decided).**
+- **Two steps for skills and ultimates:** tap the skill, the tiles it can reach light up (Fire Emblem style) with
+  valid targets marked, then tap the target. A lone valid target is preselected, so one more tap confirms. Area
+  skills (e.g. Volley) show their area.
+- **Basic Attack button, always free:** the hero's weapon attack (no cooldown) has its own button and works the same
+  way: tap it, then tap the target.
+- **Tapping an enemy in reach** uses the basic attack on it directly: one deliberate tap per hit.
+- **Walking into an enemy no longer attacks.** The hero turns to face it and keeps the turn, like bumping a wall, so
+  the D-pad never causes accidental hits.
+- **Auto picks targets deliberately** through the same two steps: the marked enemy first, then the lowest HP.
+- **Bigger fights:** more enemies per encounter, including some that close distance quickly, so no single hero can
+  clear a room alone.
+- **Ranged enemies** come later, under the same limits.
+- Playtests can start with Haiden or Kristela leading.
+
+| Hero | Skill | Effect |
+|---|---|---|
+| Uzuki | **Hunter's Mark** | Bonus action. The marked target takes +25% damage from Uzuki for 3 turns; the mark jumps to a new target on a kill |
+| Uzuki | **Power Shot** | Heavy ranged shot (~300% ATK) that knocks the target back 1 tile, e.g. onto a trap |
+| Uzuki | **Rolling Shot** | Roll 2 tiles, then shoot (~150% ATK). Leaves a **snare trap** on the tile Uzuki left, rooting the first enemy that steps on it |
+| Uzuki | Ultimate: **Volley** | Arrows rain on a 3x3 area at range |
+| Haiden | **Heal** | Heal an adjacent ally or himself for ~20% of **Haiden's** max HP (tanky builds heal more) |
+| Haiden | **Divine Strike** | Smite (~250% ATK). Fire damage until a Light element is decided |
+| Haiden | **Shoulder Bash** | Shove 1 tile; the target must attack Haiden on its next turn (like Compelled Duel). Against a wall: +50% damage instead of moving |
+| Haiden | Ultimate: **Aura of Protection** | 3 turns: allies next to Haiden take 30% less damage, and he heals adjacent allies at the start of each of his turns |
+| Kristela | **Piercing Punch** | Hits the target and the enemy behind it (~220% ATK) |
+| Kristela | **Ki Heal** | Quick skill: heal herself ~25% |
+| Kristela | **Stun Strike** | ~160% ATK with a chance (Affinity vs Resist) to **stun**: the target's next turn is pushed back 50% of a turn on the timeline (bosses 25%). No skipped turns, so no stun-lock |
+| Kristela | Ultimate: **Flurry of Blows** | 5 rapid strikes, then her next turn comes 30% sooner |
 
 ## Levels 1-100
 - **Each level gives 1 point** (100 at level 100), spent on class or profession tiers in any mix.
@@ -95,8 +166,12 @@ whatever role they like.
     need fewer prerequisite tiers (e.g. 5 fewer).
 
   This keeps gacha heroes distinct without walling off most builds.
-- Turn-manipulation effects (Strategist, Shogun, Windrider's Cloak) need their own budget like speed. *Proposed*: no
-  single effect moves a turn by more than 30%, and an actor can't be advanced more than once per enemy turn.
+- Turn-manipulation effects (Strategist, Shogun, Windrider's Cloak, stuns) need their own budget like speed:
+  - **Advances:** at most 30% of a turn per effect, and an actor can't be advanced more than once per enemy turn
+    (*proposed*).
+  - **Delays / stuns (decided):** a stun pushes the target's next turn back on the timeline instead of skipping it;
+    at most 50% of a turn per effect (25% on bosses), and an actor can be delayed at most once per its own turn. The
+    same rule applies when monsters and bosses stun heroes later.
 - Transformation ultimates last a set number of the hero's own turns, so the timeline shows when they end.
 
 ## Class list (first draft)
@@ -140,7 +215,7 @@ Each kingdom's classes match its flavor, so players know what style they're buil
   - **Railgun Sniper** (Gunslinger 20 + Mech Engineer 5): long piercing line shots.
 
 ### Dynasty Nation (3rd): Chinese dynasty, with samurai/ninja influence
-- **Base:** **Rune Warrior** (Haiden's class: elemental runes carved into weapon and armor, melee), **Spirit Monk**
+- **Base:** **Rune Warrior** (elemental runes carved into weapon and armor, melee; Haiden trains it later), **Spirit Monk**
   (ancestor spirits empower allies), **Strategist** (timeline control: speed up allies' turns, delay enemies').
 - **Advanced (affinity):** **Onmyoji** (Spirit Monk 15 + Strategist 10): summons spirit familiars.
 - **Inherited** (prerequisites are *sketches*):

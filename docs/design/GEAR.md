@@ -149,7 +149,7 @@ class and crit Traces included; average hit = 1 + Crit Rate x Crit DMG:
 | **Mage Robe** | +10% magic damage | Magic skills deal extra damage equal to 25% of ATK |
 | **Heavy Armor** | +15% DEF | Each hit taken is reduced by 15% of final DEF (never below 30% of the hit) |
 | **Duelist's Leathers** | +8% Crit Rate | Each crit grants +6% Crit DMG, stacking 3 times, until combat ends |
-| **Pilgrim's Vestments** | +10% healing done | Restore a little mana at the start of each turn |
+| **Pilgrim's Vestments** | +10% healing done | +5% ultimate charge at the start of each of the wearer's turns |
 | **Windrider's Cloak** | +10% ultimate damage | After using the ultimate, this hero's next turn comes 25% sooner on the timeline |
 | **Shadowstalker** | +10% Affinity | +12% damage against targets with a status effect, +20% with 2 or more |
 | **Bloodrage Hide** | +12% HP | When hit, +8% Crit Rate for 2 turns, stacking twice |
@@ -168,11 +168,11 @@ Changes from Peter's first ideas, and why:
 ## Ring sets (2-piece)
 | Set | Bonus |
 |---|---|
-| **Hawk's Eye** | +8% Crit Rate; +10% mana gained |
-| **Executioner's Seal** | +16% Crit DMG; +10% mana gained |
+| **Hawk's Eye** | +8% Crit Rate; +10% ultimate charge gained |
+| **Executioner's Seal** | +16% Crit DMG; +10% ultimate charge gained |
 | **Bloodbond** | Skill damage heals the user for 8% of the damage dealt |
 | **Mender's Band** | +12% healing done |
-| **Arcane Ward** | While the user has mana, 20% of damage taken is paid with mana instead of HP (rate tuned with the mana numbers) |
+| **Arcane Ward** | At the start of each fight, gain a barrier worth 15% of max HP that absorbs damage before HP; it recharges for the next fight |
 | **Stoneguard** | -8% damage taken |
 | **Heartwood Band** | +12% HP |
 | **Venom Coil** | +10% Affinity; poison and bleed damage +15% |
@@ -227,5 +227,6 @@ All tables are data, not code. Tests: substat rules, upgrade tiers, crafted pick
 ## Open questions
 1. Final element and status lists (Peter is still deciding; statuses so far: poison, paralysis, sleep, bleed, slow).
    Decided so far: Darkness is the "everything else" magic element, covering time, cosmic and space magic.
-2. Mana numbers for Pilgrim's Vestments, Hawk's Eye, Executioner's Seal and Arcane Ward.
+2. Ultimate charge numbers (how fast the meter fills, and the set and ring bonuses to it). There is no mana; see
+   PROGRESSION.md, "Skill resources".
 3. Final set and weapon names.

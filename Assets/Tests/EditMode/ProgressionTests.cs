@@ -16,10 +16,10 @@ namespace FiveKingdoms.Tests
         [Test]
         public void HeroEntersAtTheirSavedLevelWithMatchingStats()
         {
-            var progress = new HeroProgress(ActorCatalog.Uzuki, level: 4, exp: 7);
+            var progress = new HeroProgress(TestHeroes.Classic, level: 4, exp: 7);
             var run = TestRuns.OnMap(1, progress, null, Corridor);
             var hero = run.Hero;
-            var basis = ActorCatalog.Uzuki;
+            var basis = TestHeroes.Classic;
 
             Assert.AreEqual(4, hero.Level);
             Assert.AreEqual(7, hero.Exp);

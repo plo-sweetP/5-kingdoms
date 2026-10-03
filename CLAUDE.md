@@ -17,7 +17,9 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
 
 ## Commands (from the repo root)
 - Core tests, ~2 s: `dotnet run --project Tools/CoreTests` (add a name filter as an argument to run a subset)
-- Balance report: `dotnet run --project Tools/CoreTests -- -balance`; print a floor: `-- -map <seed>`; trace the autopilot: `-- -trace <seed> <fromAction>`
+- Balance report: `dotnet run --project Tools/CoreTests -- -balance` (try numbers with `key=value` overrides, see
+  `TuningFrom`); the party straight at the boss: `-- -boss <level>`; print a floor: `-- -map <seed>`; trace the
+  autopilot: `-- -trace <seed> <fromAction>` (solo) or `-- -party <seed> <fromAction>`
 - Regenerate art: `python Tools/pixelart/make_sprites.py --preview preview.png`
 - Unity tests: `Unity.exe -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults results.xml`
 - Windows build: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildWindowsDev`
@@ -25,7 +27,8 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
   (add `-fk-floors 1 -fk-level 9` to go straight to the boss; autoplay always uses its own throwaway save)
 
 Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway save), `-fk-save PATH`,
-`-fk-input keyboard|gamepad` (start with that HUD layout, e.g. to screenshot the skill row). PlayMode tests set
+`-fk-input keyboard|gamepad` (start with that HUD layout, e.g. to screenshot the skill row), `-fk-leader haiden|kristela`
+(someone other than Uzuki leads). PlayMode tests set
 `DungeonController.Overrides` instead. The real save is `save.json` in `Application.persistentDataPath`
 (`SaveSystem`); never let tests or tools write to it.
 
@@ -35,9 +38,12 @@ the project open; copy Assets/Packages/ProjectSettings to a scratch folder and r
 ## Conventions
 - Landscape only; Android builds use IL2CPP + ARM64 (`Assets/Editor/ProjectSettingsApplier.cs`).
 - Unity's C# is 9.0: no file-scoped namespaces, global usings or records.
-- Balance numbers live in `DungeonRunConfig`, `ActorCatalog`, `SkillCatalog`, `CombatRules` and `EnemyBrain` (boss
-  moves); check `-balance` after changing them (it reports fresh runs and a campaign with levels kept between runs).
-  The autopilot is the balance report's player, so a new skill or item needs autopilot rules too.
+- Balance numbers live in `DungeonRunConfig`, `ActorCatalog`, `SkillCatalog`, `CombatRules` (damage, the ranged cuts,
+  the ultimate's charge rates) and `EnemyBrain` (boss moves); check `-balance` after changing them (it reports fresh
+  runs, ultimates per fight and a campaign with levels kept between runs). The autopilot and the partners' AI
+  (`HeroTactics`) are the balance report's players, so a new skill or item needs AI rules too.
+- There is no mana (PROGRESSION.md, "Skill resources"): skills sit out the hero's next turn, each hero has an
+  always-ready weapon attack, and ultimates need a full charge meter (`Actor.Charge`).
 - "Enter Play Mode" has domain reload off: statics survive between Play sessions, so reset them on scene load.
 - Combat turn order lives in `Core/Run/Timeline.cs` (Honkai Star Rail-style action value). Game time is exact `AvTime`
   (BigInteger fractions): never use floats for time or turn decisions; ties go to the leader, then the lower actor id.

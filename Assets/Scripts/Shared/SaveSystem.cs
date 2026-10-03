@@ -31,19 +31,39 @@ namespace FiveKingdoms
             return entry != null ? new HeroProgress(definition, entry.level, entry.exp) : new HeroProgress(definition);
         }
 
-        public static void SaveHero(HeroProgress progress)
+        public static void SaveHero(HeroProgress progress) => SaveParty(new[] { progress });
+
+        /// <summary>Each hero's saved progress, in the order given (a fresh start for heroes not in the save yet).</summary>
+        public static HeroProgress[] LoadParty(IReadOnlyList<ActorDefinition> definitions)
+        {
+            var data = Read(out _);
+            var party = new HeroProgress[definitions.Count];
+            for (int i = 0; i < party.Length; i++)
+            {
+                var definition = definitions[i];
+                var entry = data?.heroes.Find(hero => hero.id == definition.Id);
+                party[i] = entry != null ? new HeroProgress(definition, entry.level, entry.exp) : new HeroProgress(definition);
+            }
+            return party;
+        }
+
+        /// <summary>Saves every hero's progress in one write, keeping other heroes already in the save.</summary>
+        public static void SaveParty(IEnumerable<HeroProgress> party)
         {
             var data = Read(out bool fromNewerBuild);
             if (fromNewerBuild) return; // Never overwrite a save written by a newer version of the game.
             data ??= new SaveData();
-            var entry = data.heroes.Find(hero => hero.id == progress.Definition.Id);
-            if (entry == null)
+            foreach (var progress in party)
             {
-                entry = new HeroSave { id = progress.Definition.Id };
-                data.heroes.Add(entry);
+                var entry = data.heroes.Find(hero => hero.id == progress.Definition.Id);
+                if (entry == null)
+                {
+                    entry = new HeroSave { id = progress.Definition.Id };
+                    data.heroes.Add(entry);
+                }
+                entry.level = progress.Level;
+                entry.exp = progress.Exp;
             }
-            entry.level = progress.Level;
-            entry.exp = progress.Exp;
             data.version = CurrentVersion;
             Write(data);
         }

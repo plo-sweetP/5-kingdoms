@@ -25,9 +25,12 @@ namespace FiveKingdoms.Dungeon
         /// <summary>Start the HUD in this input mode instead of touch (to check the keyboard or controller layout).</summary>
         public InputMode? StartInputMode;
 
+        /// <summary>The hero (by id: uzuki, haiden, kristela) who leads instead of the first in the party, for playtests.</summary>
+        public string Leader;
+
         /// <summary>
-        /// Flags: -fk-floors N, -fk-level N, -fk-save PATH, -fk-input touch|keyboard|gamepad, and -fk-autoplay FOLDER
-        /// (which also uses a fresh save inside FOLDER, so smoke tests never touch the player's save).
+        /// Flags: -fk-floors N, -fk-level N, -fk-save PATH, -fk-input touch|keyboard|gamepad, -fk-leader ID, and
+        /// -fk-autoplay FOLDER (which also uses a fresh save inside FOLDER, so smoke tests never touch the player's save).
         /// </summary>
         public static LaunchOptions FromCommandLine()
         {
@@ -38,6 +41,7 @@ namespace FiveKingdoms.Dungeon
                 StartLevel = IntArg(args, "-fk-level"),
                 SavePath = StringArg(args, "-fk-save"),
                 StartInputMode = Enum.TryParse(StringArg(args, "-fk-input"), ignoreCase: true, out InputMode mode) ? mode : (InputMode?)null,
+                Leader = StringArg(args, "-fk-leader")?.ToLowerInvariant(),
             };
             string autoplayFolder = StringArg(args, "-fk-autoplay");
             if (autoplayFolder != null && options.SavePath == null)

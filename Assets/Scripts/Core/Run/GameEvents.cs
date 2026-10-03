@@ -42,17 +42,24 @@ namespace FiveKingdoms.Core
     }
 
     /// <summary>An attack swing. TargetId is -1 when it hit nothing. A DamageEvent follows when it connects.</summary>
+    /// <summary>A swing or a shot. TargetId is -1 for a miss; a shot also says how far it flew, for the arrow.</summary>
     public sealed class AttackEvent : GameEvent
     {
         public readonly int AttackerId;
         public readonly int TargetId;
         public readonly Direction8 Direction;
+        public readonly bool Ranged;
 
-        public AttackEvent(int attackerId, int targetId, Direction8 direction)
+        /// <summary>Tiles from the attacker to the target, or to where a missed shot stopped.</summary>
+        public readonly int Distance;
+
+        public AttackEvent(int attackerId, int targetId, Direction8 direction, bool ranged = false, int distance = 1)
         {
             AttackerId = attackerId;
             TargetId = targetId;
             Direction = direction;
+            Ranged = ranged;
+            Distance = distance;
         }
     }
 
@@ -171,7 +178,10 @@ namespace FiveKingdoms.Core
         }
     }
 
-    /// <summary>A skill was used; its effects (attack, heal, dash, mana) follow as their own events.</summary>
+    /// <summary>
+    /// A skill or ultimate was used; its effects (attack, heal, dash, charge) follow as their own events. Carries the
+    /// hero and skill, so a presentation layer can show a manga panel or an ultimate's cutscene.
+    /// </summary>
     public sealed class SkillUsedEvent : GameEvent
     {
         public readonly int ActorId;
@@ -184,18 +194,46 @@ namespace FiveKingdoms.Core
         }
     }
 
-    /// <summary>Mana went up (positive) or was spent (negative).</summary>
-    public sealed class ManaChangedEvent : GameEvent
+    /// <summary>A hero's ultimate charge went up (positive) or was used up by its ultimate (negative).</summary>
+    public sealed class ChargeChangedEvent : GameEvent
     {
         public readonly int ActorId;
         public readonly int Amount;
-        public readonly int MpAfter;
+        public readonly int ChargeAfter;
 
-        public ManaChangedEvent(int actorId, int amount, int mpAfter)
+        public ChargeChangedEvent(int actorId, int amount, int chargeAfter)
         {
             ActorId = actorId;
             Amount = amount;
-            MpAfter = mpAfter;
+            ChargeAfter = chargeAfter;
+        }
+    }
+
+    /// <summary>An area skill (Volley) comes down on every tile within Radius of Center; the hits follow as DamageEvents.</summary>
+    public sealed class AreaAttackEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly GridPos Center;
+        public readonly int Radius;
+
+        public AreaAttackEvent(int actorId, GridPos center, int radius)
+        {
+            ActorId = actorId;
+            Center = center;
+            Radius = radius;
+        }
+    }
+
+    /// <summary>Two party members swapped places (their moves follow as MovedEvents).</summary>
+    public sealed class SwappedEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly int OtherId;
+
+        public SwappedEvent(int actorId, int otherId)
+        {
+            ActorId = actorId;
+            OtherId = otherId;
         }
     }
 
@@ -226,5 +264,106 @@ namespace FiveKingdoms.Core
     {
         public readonly bool Won;
         public RunEndedEvent(bool won) { Won = won; }
+    }
+
+    /// <summary>The player now controls this party member (switched by hand, or because the leader fell).</summary>
+    public sealed class LeaderChangedEvent : GameEvent
+    {
+        public readonly int ActorId;
+
+        public LeaderChangedEvent(int actorId)
+        {
+            ActorId = actorId;
+        }
+    }
+
+    public sealed class StatusAppliedEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly StatusKind Kind;
+        public readonly int SourceId;
+
+        public StatusAppliedEvent(int actorId, StatusKind kind, int sourceId)
+        {
+            ActorId = actorId;
+            Kind = kind;
+            SourceId = sourceId;
+        }
+    }
+
+    public sealed class StatusEndedEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly StatusKind Kind;
+
+        public StatusEndedEvent(int actorId, StatusKind kind)
+        {
+            ActorId = actorId;
+            Kind = kind;
+        }
+    }
+
+    /// <summary>A slow: the actor's next turn was pushed back by this percent of one of its turns.</summary>
+    public sealed class TurnDelayedEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly int Percent;
+
+        public TurnDelayedEvent(int actorId, int percent)
+        {
+            ActorId = actorId;
+            Percent = percent;
+        }
+    }
+
+    public sealed class TrapPlacedEvent : GameEvent
+    {
+        public readonly int TrapId;
+        public readonly TrapKind Kind;
+        public readonly GridPos Pos;
+
+        public TrapPlacedEvent(int trapId, TrapKind kind, GridPos pos)
+        {
+            TrapId = trapId;
+            Kind = kind;
+            Pos = pos;
+        }
+    }
+
+    /// <summary>A trap went off under an enemy (its effect follows as a status) and is gone.</summary>
+    public sealed class TrapTriggeredEvent : GameEvent
+    {
+        public readonly int TrapId;
+        public readonly int ActorId;
+
+        public TrapTriggeredEvent(int trapId, int actorId)
+        {
+            TrapId = trapId;
+            ActorId = actorId;
+        }
+    }
+
+    /// <summary>A stunned actor lost its turn.</summary>
+    public sealed class TurnSkippedEvent : GameEvent
+    {
+        public readonly int ActorId;
+
+        public TurnSkippedEvent(int actorId)
+        {
+            ActorId = actorId;
+        }
+    }
+
+    /// <summary>Someone was shoved or knocked back. The move itself follows as a MovedEvent.</summary>
+    public sealed class PushedEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly bool Blocked;
+
+        public PushedEvent(int actorId, bool blocked)
+        {
+            ActorId = actorId;
+            Blocked = blocked;
+        }
     }
 }

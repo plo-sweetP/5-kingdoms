@@ -107,27 +107,30 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
-        public void WhileAutoPlaysThePlayerCanStillUseSkills()
+        public void WhileAutoPlaysThePlayerCanStillUseSkillsUltimatesAndSwitchHeroes()
         {
             var run = new DungeonRun(3);
-            foreach (var skill in new[] { HeroCommand.Skill(1), HeroCommand.Skill(2, Direction8.E) })
+            foreach (var command in new[] { HeroCommand.Skill(1), HeroCommand.Skill(2, Direction8.E), HeroCommand.UltimateFacing, HeroCommand.SwitchLeader(1) })
             {
-                var chosen = DungeonController.ChooseCommand(skill, autoPilot: true, run).Value;
-                Assert.AreEqual(HeroCommandKind.Skill, chosen.Kind);
-                Assert.AreEqual(skill.Slot, chosen.Slot);
-                Assert.AreEqual(skill.Aimed, chosen.Aimed);
+                var chosen = DungeonController.ChooseCommand(command, autoPilot: true, run).Value;
+                Assert.AreEqual(command.Kind, chosen.Kind);
+                Assert.AreEqual(command.Slot, chosen.Slot);
+                Assert.AreEqual(command.Aimed, chosen.Aimed);
             }
         }
 
         [Test]
-        public void ARefusedSkillSaysWhy()
+        public void ARefusedSkillOrUltimateSaysWhy()
         {
-            var run = new DungeonRun(3); // Fresh run: full HP and MP, nobody adjacent.
-            StringAssert.Contains("already full", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(1)));
-            StringAssert.Contains("No enemy", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(0)));
-            run.Hero.Hp = 1;
-            run.Hero.Mp = 0;
-            StringAssert.Contains("Not enough MP", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(1)));
+            // Haiden alone on a fresh floor: full HP, nobody near.
+            var run = new DungeonRun(3, new DungeonRunConfig { Hero = ActorCatalog.Haiden });
+            StringAssert.Contains("needs healing", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(0)));
+            StringAssert.Contains("No enemy next to you", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(1)));
+            var archer = new DungeonRun(3, new DungeonRunConfig { Hero = ActorCatalog.Uzuki });
+            StringAssert.Contains("No enemy in line", DungeonController.SkillRefusalMessage(archer, HeroCommand.Skill(1)));
+            run.Hero.SkillCooldowns[1] = 1;
+            StringAssert.Contains("ready again next turn", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(1)));
+            StringAssert.Contains("is charging", DungeonController.UltimateRefusalMessage(run, HeroCommand.UltimateFacing));
         }
 
         static IEnumerator LoadDungeon()

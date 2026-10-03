@@ -1,20 +1,24 @@
 using System.Collections;
+using System.Collections.Generic;
 using FiveKingdoms.Core;
 using UnityEngine;
 
 namespace FiveKingdoms.Dungeon
 {
     /// <summary>
-    /// Visual for one actor: body sprite, drop shadow, idle motion, enemy HP bar, and the step hop, attack
-    /// lunge, hit flash, boss wind-up and leap, and death animations. The root transform sits exactly on the
-    /// tile; all wobble is applied to a child so it never drifts from the gameplay position. Sprites taller than
-    /// a tile (bosses) stand on the tile's lower edge and overflow upward.
+    /// Visual for one actor: body sprite, drop shadow, idle motion, enemy HP bar, status icons, an aura's glow, and the
+    /// step hop, attack lunge, hit flash, boss wind-up and leap, and death animations. The root transform sits exactly on
+    /// the tile; all wobble is applied to a child so it never drifts from the gameplay position. Sprites taller than a
+    /// tile (bosses) stand on the tile's lower edge and overflow upward.
     /// </summary>
     public sealed class ActorView : MonoBehaviour
     {
         const int ShadowOrder = 30;
+        const int AuraOrder = 3;
         const int HpBarOrder = 9000;
         const float HpBarWidth = 0.7f;
+        const float IconSpacing = 13f * SpriteLibrary.Pixel;
+        static readonly Color AuraColor = new Color(1f, 0.8f, 0.3f);
         static readonly Color HurtTint = new Color(1f, 0.5f, 0.5f);
         static readonly Color ChargeTint = new Color(1f, 0.7f, 0.7f);
 
@@ -24,8 +28,12 @@ namespace FiveKingdoms.Dungeon
         SpriteRenderer shadow;
         Transform hpBar;
         Transform hpFill;
+        Transform statusRow;
+        readonly List<SpriteRenderer> statusIcons = new List<SpriteRenderer>();
+        GameObject auraField;
         bool squishy;
         bool charging;
+        Color statusTint = Color.white;
         int maxHp;
         float idleClock;
         float hop;
@@ -70,9 +78,46 @@ namespace FiveKingdoms.Dungeon
                 view.flash.color = new Color(1f, 1f, 1f, 0f);
             }
             // Bosses show their HP in the HUD instead of over their heads.
-            if (!view.IsHero && !view.IsBoss) view.CreateHpBar(SpriteLibrary.VisibleTop(sprite) + 3f * SpriteLibrary.Pixel);
+            float top = SpriteLibrary.VisibleTop(sprite);
+            bool hpBar = !view.IsHero && !view.IsBoss;
+            if (hpBar) view.CreateHpBar(top + 3f * SpriteLibrary.Pixel);
+            view.statusRow = new GameObject("Statuses").transform;
+            view.statusRow.SetParent(root.transform, false);
+            view.statusRow.localPosition = new Vector3(0f, top + view.lift + (hpBar ? 12f : 8f) * SpriteLibrary.Pixel, 0f);
             view.SetHp(actor.Hp);
             return view;
+        }
+
+        /// <summary>One small icon per status (mark, snare, taunt, stun, guard, aura), in a row over the actor's head.</summary>
+        public void SetStatuses(IReadOnlyList<StatusEffect> statuses)
+        {
+            int count = statuses?.Count ?? 0;
+            while (statusIcons.Count < count) statusIcons.Add(NewRenderer("Icon", statusRow, null, HpBarOrder + 2));
+            for (int i = 0; i < statusIcons.Count; i++)
+            {
+                var icon = statusIcons[i];
+                icon.gameObject.SetActive(i < count);
+                if (i >= count) continue;
+                icon.sprite = SpriteLibrary.Get("Effects/status_" + statuses[i].Kind.ToString().ToLowerInvariant(), Color.white);
+                icon.transform.localPosition = new Vector3((i - (count - 1) / 2f) * IconSpacing, 0f, 0f);
+            }
+        }
+
+        /// <summary>Aura of Protection: a soft gold glow over the 3x3 tiles the aura covers, moving with its holder.</summary>
+        public void SetAura(bool on)
+        {
+            if (on && auraField == null)
+            {
+                var field = NewRenderer("Aura", transform, SpriteLibrary.White, AuraOrder);
+                field.transform.localScale = new Vector3(3f - 2f * SpriteLibrary.Pixel, 3f - 2f * SpriteLibrary.Pixel, 1f);
+                field.gameObject.AddComponent<Pulse>().Init(AuraColor, 0.1f, 0.24f, 3f);
+                auraField = field.gameObject;
+            }
+            else if (!on && auraField != null)
+            {
+                Destroy(auraField);
+                auraField = null;
+            }
         }
 
         public void Place(Vector3 position)
@@ -107,8 +152,18 @@ namespace FiveKingdoms.Dungeon
         public void SetCharging(bool value)
         {
             charging = value;
-            body.color = value ? ChargeTint : Color.white;
+            body.color = RestingColor;
         }
+
+        /// <summary>A lasting tint for a status (a guard's blue, a mark's red); white for none.</summary>
+        public void SetStatusTint(Color tint)
+        {
+            if (statusTint == tint) return;
+            statusTint = tint;
+            body.color = RestingColor;
+        }
+
+        Color RestingColor => charging ? ChargeTint : statusTint;
 
         /// <summary>Attack swing: a short wind-up away from the target, then a fast lunge toward it. Call Recover after impact.</summary>
         public IEnumerator Lunge(Vector3 direction, float distance)
@@ -169,6 +224,8 @@ namespace FiveKingdoms.Dungeon
         {
             charging = false;
             if (hpBar != null) hpBar.gameObject.SetActive(false);
+            statusRow.gameObject.SetActive(false);
+            SetAura(false);
             SetFlash(1f);
             yield return new WaitForSeconds(IsBoss ? 0.3f : 0.08f);
             float duration = IsBoss ? 0.6f : 0.3f;
@@ -234,7 +291,7 @@ namespace FiveKingdoms.Dungeon
                 yield return null;
             }
             lunge = Vector3.zero;
-            body.color = charging ? ChargeTint : Color.white;
+            body.color = RestingColor;
         }
 
         IEnumerator FadeInRoutine()

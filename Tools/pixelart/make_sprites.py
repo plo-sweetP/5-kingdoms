@@ -181,6 +181,140 @@ def make_uzuki():
     return add_outline(from_grid(UZUKI, UZUKI_PALETTE), rgb('#1b1530'))
 
 
+def padded(rows):
+    """Rows given as (left padding, pixels), filled out to 32 columns, so hand-drawn art can't drift a column."""
+    out = []
+    for pad, pixels in rows:
+        row = '.' * pad + pixels
+        assert len(row) <= T, 'row %r is %d wide' % (row, len(row))
+        out.append(row + '.' * (T - len(row)))
+    assert len(out) == T, '%d rows' % len(out)
+    return out
+
+
+HAIDEN_PALETTE = {
+    'H': rgb('#c8692c'), 'h': rgb('#8f4519'), 'L': rgb('#f2a564'),
+    'K': rgb('#2f62d6'), 'k': rgb('#1d3c8a'),
+    'S': rgb('#f6d2b3'), 's': rgb('#d9a07e'),
+    'e': rgb('#3a0f12'), 'E': rgb('#e0302c'), 'W': rgb('#ffffff'), 'n': rgb('#b85c55'),
+    'R': rgb('#b03a2e'), 'r': rgb('#6e1f1a'), 'G': rgb('#e8b84a'),
+    'w': rgb('#e9e6df'), 'B': rgb('#2b2b38'),
+    'P': rgb('#4a4f63'), 'p': rgb('#2f3242'),
+    'O': rgb('#3a2618'), 'o': rgb('#22160d'),
+}
+
+# Haiden (Dynasty Nation), from the concept sketch: spiky orange-brown hair, a blue headband whose long tails stream
+# out to one side, red eyes. A crimson tunic with a gold front, wrapped forearms, slate trousers.
+HAIDEN = padded([
+    (0, ''),
+    (11, 'H....H...H'),
+    (7, 'H...HH..HH..HH...H'),
+    (7, 'HH.HLHhHLHhHLHh.Hh'),
+    (6, 'hHHHHLHHHLHHHLHHHHHh'),
+    (5, 'hHHHHHHHHHHHHHHHHHHHHh'),
+    (5, 'hHHHHHHHHHHHHHHHHHHHHh'),
+    (6, 'kKKKKKKKKKKKKKKKKKKk'),
+    (6, 'kKKKKKKKKKKKKKKKKKKkKKk'),
+    (7, 'hHSHHHSSHHHHSHHHHhkKKKk'),
+    (7, 'hHSSHSSSSHHSSSHSHh..kKKk'),
+    (7, 'hHsSeeSSSSSSeeSSsh...kKk'),
+    (7, 'hHsSWESSSSSSWESSsh....kk'),
+    (7, 'hHsSEESSSSSSEESSsh'),
+    (8, 'hsSSSSSSSSSSSSSsh'),
+    (9, 'sSSSSSSnnSSSSSs'),
+    (10, 'ssSSSSSSSSSss'),
+    (14, 'ssss'),
+    (9, 'sRRRRRGGRRRRRs'),
+    (8, 'sSRRRRRGGRRRRRSs'),
+    (8, 'sSRRRRRGGRRRRRSs'),
+    (8, 'wwRRRRRGGRRRRRww'),
+    (8, 'wwrRRRRGGRRRRrww'),
+    (8, 'SSrRRRRGGRRRRrSS'),
+    (10, 'BBBBBBBBBBBB'),
+    (10, 'pPPPPPPPPPPp'),
+    (9, 'pPPPPPppPPPPPp'),
+    (9, 'pPPPPp..pPPPPp'),
+    (10, 'ppppp..ppppp'),
+    (10, 'OOOOO..OOOOO'),
+    (10, 'ooooo..ooooo'),
+    (0, ''),
+])
+
+
+def make_haiden():
+    return add_outline(from_grid(HAIDEN, HAIDEN_PALETTE), rgb('#1b1530'))
+
+
+KRISTELA_PALETTE = {
+    'Y': rgb('#f3d34a'), 'y': rgb('#c9a12a'), 'L': rgb('#fff3a8'),
+    'X': rgb('#b8741a'),
+    'S': rgb('#f6d2b3'), 's': rgb('#d9a07e'),
+    'e': rgb('#12224a'), 'E': rgb('#3a7be0'), 'W': rgb('#ffffff'), 'n': rgb('#d0747a'),
+    'w': rgb('#f2efe6'), 'B': rgb('#3d6fd1'), 'b': rgb('#24438a'),
+    'M': rgb('#c4cedb'), 'm': rgb('#6f7c8e'),
+    'P': rgb('#3c4a78'), 'p': rgb('#26304f'),
+    'O': rgb('#6b4329'), 'o': rgb('#41281a'),
+}
+
+# Kristela (Medieval Realm, a princess and Monk), from the concept sketch: long wavy blonde hair falling past her
+# shoulders, blue eyes, a gold X-shaped clip on one side. A white gi with a blue sash, metal gauntlets, blue trousers.
+KRISTELA = padded([
+    (0, ''),
+    (11, 'yYYYYYYYYy'),
+    (9, 'yYYYLLYYYYYYy'),
+    (8, 'yYYYLLYYYYYYYYy'),
+    (7, 'yYYYYYYYYYYYYYYYy'),
+    (6, 'yYXYXYYYYYYYYYYYYYy'),
+    (6, 'yYYXYYYYYYYYYYYYYYYy'),
+    (6, 'yYXYXYYSYYYYYSYYYYYy'),
+    (6, 'yYYYYSSSYYYYSSSSYYYy'),
+    (6, 'yYYSSSSSSSSSSSSSSYYy'),
+    (6, 'yYYSSSSSSSSSSSSSSSYy'),
+    (6, 'yYYsSeeSSSSSSeeSSsYy'),
+    (6, 'yYYsSWESSSSSSWESSsYy'),
+    (6, 'yYYsSEESSSSSSEESSsYy'),
+    (6, 'yYYYsSSSSSSSSSSSsYYy'),
+    (5, 'yYYYYsSSSSnnSSSSsYYYYy'),
+    (5, 'yYYYY.ssSSSSSSss.YYYYy'),
+    (5, 'yYYYY....ssss....YYYYy'),
+    (5, 'yYYYYswwwwBBwwwwsYYYYy'),
+    (5, 'yYYYsSwwwwBBwwwwSsYYYy'),
+    (5, 'yYYYsSwwwwBBwwwwSsYYYy'),
+    (6, 'yYYMMwwwwBBwwwwMMYYy'),
+    (7, 'yYMMwwwwBBwwwwMMYy'),
+    (8, 'ymmwwwwBBwwwwmmy'),
+    (10, 'bBBBBBBBBBBBb'),
+    (10, 'pPPPPPPPPPPPp'),
+    (9, 'pPPPPPPpPPPPPPp'),
+    (9, 'pPPPPp...pPPPPp'),
+    (10, 'ppppp...ppppp'),
+    (10, 'OOOOO...OOOOO'),
+    (10, 'ooooo...ooooo'),
+    (0, ''),
+])
+
+
+def make_kristela():
+    return add_outline(from_grid(KRISTELA, KRISTELA_PALETTE), rgb('#1b1530'))
+
+
+def make_arrow():
+    """An arrow flying right (rotated in-game): fletching, a wooden shaft and an iron head."""
+    shaft, head, head_dark = rgb('#c8a46a'), rgb('#dfe6ee'), rgb('#7d8794')
+    feather, feather_dark = rgb('#f2efe6'), rgb('#c43b30')
+    c = Canvas()
+    for x in range(9, 23):
+        c.set(x, 16, shaft)
+    for x, y in ((23, 16), (24, 16), (25, 16), (23, 15), (23, 17), (24, 15)):
+        c.set(x, y, head)
+    c.set(24, 17, head_dark)
+    for x, y in ((6, 14), (7, 15), (8, 15), (6, 18), (7, 17), (8, 17), (7, 14), (7, 18)):
+        c.set(x, y, feather)
+    c.set(6, 15, feather_dark)
+    c.set(6, 17, feather_dark)
+    return add_outline(c, rgb('#2a1a10'))
+
+
 def make_slime():
     base, light, dark, deep = rgb('#5ecb5a'), rgb('#9be890'), rgb('#3a9442'), rgb('#25682f')
     shine, eye, outline = rgb('#f2fff0'), rgb('#132613'), rgb('#163d1d')
@@ -264,6 +398,57 @@ def make_king_slime():
     crown = from_grid(KING_CROWN, {'y': rgb('#b8901e'), 'Y': rgb('#f2c94c'), 'R': rgb('#e0443c')})
     c.paste(crown, 15, 11)
     return add_outline(c, rgb('#2a1240'))
+
+
+def make_bat():
+    """A fast cave bat: a round purple body, big ears, yellow eyes and fangs, scalloped wings spread wide. It flies, so
+    it sits higher in the tile than the slimes."""
+    body, light, dark = rgb('#6b4a9e'), rgb('#9a7fd0'), rgb('#45306c')
+    wing, wing_dark, bone = rgb('#5b3d86'), rgb('#432b66'), rgb('#2e1d47')
+    eye, pupil, fang, ear_in = rgb('#ffd84a'), rgb('#2a1a10'), rgb('#ffffff'), rgb('#d48ab4')
+    c = Canvas()
+    cx, cy = 16.0, 15.0
+    # Wings behind the body: from the shoulder up to a pointed tip, the trailing edge dipping between three finger bones.
+    for side in (-1, 1):
+        for x in range(T):
+            d = (x + 0.5 - cx) * side
+            if d < 3.0 or d > 15.5:
+                continue
+            t = (d - 3.0) / 12.5
+            top = 12.0 - 7.5 * t
+            bottom = 20.5 - 12.0 * t ** 1.4 - 2.6 * abs(math.sin(t * math.pi * 3.0)) * (1.0 - 0.4 * t)
+            for y in range(T):
+                if top <= y + 0.5 <= max(top + 1.0, bottom):
+                    c.set(x, y, wing_dark if y + 0.5 > bottom - 1.2 else wing)
+        for k in (1, 2, 3):  # Finger bones from the shoulder to each low point of the edge.
+            t_end = k / 3.0
+            for i in range(14):
+                t = t_end * i / 13.0
+                d = 3.0 + 12.5 * t
+                y = (12.0 - 7.5 * t) + ((20.5 - 12.0 * t_end ** 1.4) - (12.0 - 7.5 * t_end) - 0.5) * (i / 13.0) * 0.9
+                c.set(int(cx + side * d - (0 if side > 0 else 1)), int(y), bone)
+    for y in range(T):
+        for x in range(T):
+            nx, ny = (x + 0.5 - cx) / 5.6, (y + 0.5 - cy) / 6.2
+            d2 = nx * nx + ny * ny
+            if d2 > 1.0:
+                continue
+            nz = math.sqrt(max(0.0, 1.0 - d2))
+            lit = -0.45 * nx - 0.55 * ny + 0.70 * nz
+            c.set(x, y, light if lit > 0.8 else body if lit > 0.3 else dark)
+    for ex, sign in ((12, -1), (19, 1)):  # Ears.
+        for i, (dx, dy) in enumerate(((0, 0), (0, -1), (sign, -1), (0, -2), (sign, -2), (sign, -3))):
+            c.set(ex + dx, 9 + dy, body if i != 2 else ear_in)
+    for ex in (13, 18):
+        c.set(ex, 14, eye)
+        c.set(ex + (1 if ex == 13 else -1), 14, eye)
+        c.set(ex + (1 if ex == 13 else -1), 15, pupil)
+        c.set(ex, 15, eye)
+    for x in range(14, 18):
+        c.set(x, 18, dark)
+    c.set(14, 19, fang)
+    c.set(17, 19, fang)
+    return add_outline(c, rgb('#1b1030'))
 
 
 def make_shadow():
@@ -412,6 +597,128 @@ def make_berry():
     return add_outline(c, rgb('#2a1010'))
 
 
+def make_snare():
+    """Uzuki's snare trap, lying on the floor: a rope noose pegged down at both ends, with a knot."""
+    rope, rope_dark, rope_light = rgb('#c9a66b'), rgb('#8c6a3c'), rgb('#ead3a0')
+    wood, wood_dark = rgb('#7a5332'), rgb('#4a3020')
+    c = Canvas()
+    cx, cy, rx, ry = 16.0, 20.0, 9.0, 4.5
+    for y in range(T):
+        for x in range(T):
+            nx, ny = (x + 0.5 - cx) / rx, (y + 0.5 - cy) / ry
+            d = math.sqrt(nx * nx + ny * ny)
+            if abs(d - 1.0) <= 0.16:
+                c.set(x, y, rope_dark if ny > 0.3 else rope_light if ny < -0.6 else rope)
+    for px in (6, 26):  # Pegs holding it down.
+        for y in range(17, 22):
+            c.set(px, y, wood if y < 21 else wood_dark)
+        c.set(px - 1, 17, wood_dark)
+        c.set(px + 1, 17, wood_dark)
+    for x, y in ((15, 15), (16, 15), (17, 15), (16, 14), (15, 16), (17, 16)):  # The knot.
+        c.set(x, y, rope_dark)
+    c.set(16, 15, rope_light)
+    return add_outline(c, rgb('#2a1a10'))
+
+
+def make_reticle():
+    """Target marker for the aiming highlight: four corner brackets (tinted in-game)."""
+    white = rgb('#ffffff')
+    c = Canvas()
+    for corner_x, corner_y, sx, sy in ((1, 1, 1, 1), (30, 1, -1, 1), (1, 30, 1, -1), (30, 30, -1, -1)):
+        for i in range(7):
+            c.set(corner_x + sx * i, corner_y, white)
+            c.set(corner_x, corner_y + sy * i, white)
+            c.set(corner_x + sx * i, corner_y + sy, white)
+            c.set(corner_x + sx, corner_y + sy * i, white)
+    return c
+
+
+def make_punch():
+    """Impact burst for gauntlet blows (Kristela's Jab and Flurry): a four-pointed star, drawn white and tinted in-game."""
+    core, edge = rgb('#ffffff'), rgb('#ffe9a8')
+    c = Canvas()
+    for y in range(T):
+        for x in range(T):
+            dx, dy = x + 0.5 - 16, y + 0.5 - 16
+            r = math.hypot(dx, dy)
+            angle = math.atan2(dy, dx)
+            spike = 6.0 + 7.0 * max(0.0, math.cos(angle * 4.0)) ** 3
+            if r <= spike:
+                c.set(x, y, core if r <= spike * 0.55 else edge)
+    return c
+
+
+def icon(draw):
+    """A 12x12 status icon (shown in a row above an actor), outlined so it reads on any background."""
+    c = Canvas(12, 12)
+    draw(c)
+    return add_outline(c, rgb('#140c1c'))
+
+
+def draw_mark(c):
+    red, white = rgb('#ff5a4e'), rgb('#ffffff')
+    for y in range(12):
+        for x in range(12):
+            d = math.hypot(x + 0.5 - 6, y + 0.5 - 6)
+            if 3.4 <= d <= 4.6:
+                c.set(x, y, red)
+    for i in range(1, 11):
+        if not 4 <= i <= 7:
+            c.set(i, 6, red)
+            c.set(6, i, red)
+    c.set(6, 6, white)
+
+
+def draw_root(c):
+    rope, dark = rgb('#d8b071'), rgb('#8c6a3c')
+    for y in range(12):
+        for x in range(12):
+            d = math.hypot((x + 0.5 - 6) / 1.0, (y + 0.5 - 7) / 0.6)
+            if 3.1 <= d <= 4.4:
+                c.set(x, y, rope if y < 7 else dark)
+    for x, y in ((6, 2), (5, 3), (6, 3), (7, 3), (6, 4)):
+        c.set(x, y, dark)
+
+
+def draw_taunt(c):
+    orange, light = rgb('#ff8a3a'), rgb('#ffd29a')
+    for y in range(1, 8):
+        c.set(5, y, orange)
+        c.set(6, y, orange)
+    c.set(5, 1, light)
+    for x in (5, 6):
+        c.set(x, 9, orange)
+        c.set(x, 10, orange)
+
+
+def draw_stun(c):
+    yellow, light = rgb('#ffd84a'), rgb('#fff6c2')
+    for cx, cy, size in ((3, 4, 2), (8, 7, 2)):
+        c.set(cx, cy, light)
+        for i in range(1, size + 1):
+            for dx, dy in ((i, 0), (-i, 0), (0, i), (0, -i)):
+                c.set(cx + dx, cy + dy, yellow)
+
+
+def draw_guard(c):
+    blue, light, dark = rgb('#5d8dff'), rgb('#b8ceff'), rgb('#2f4fa8')
+    for y in range(1, 11):
+        half = 4 if y < 7 else 4 - (y - 6)
+        for x in range(6 - half, 6 + half):
+            c.set(x, y, light if x < 6 and y < 5 else blue if x < 6 else dark)
+
+
+def draw_aura(c):
+    gold, light = rgb('#ffcc4a'), rgb('#fff1b8')
+    for y in range(12):
+        for x in range(12):
+            d = math.hypot(x + 0.5 - 6, y + 0.5 - 6)
+            if d <= 2.6:
+                c.set(x, y, light if d < 1.4 else gold)
+    for dx, dy in ((0, -5), (0, 4), (-5, 0), (4, 0), (-4, -4), (3, -4), (-4, 3), (3, 3)):
+        c.set(6 + dx, 6 + dy, gold)
+
+
 def make_slash(frame):
     """Crescent swipe; three frames: start, full, fade. Drawn for a rightward swing, rotated in-game."""
     core, edge = rgb('#ffffff'), rgb('#a8f4ff')
@@ -436,9 +743,22 @@ def make_slash(frame):
 
 SPRITES = {
     'Characters/uzuki': make_uzuki,
+    'Characters/haiden': make_haiden,
+    'Characters/kristela': make_kristela,
     'Characters/slime': make_slime,
     'Characters/king_slime': make_king_slime,
+    'Characters/bat': make_bat,
     'Effects/shadow': make_shadow,
+    'Effects/arrow': make_arrow,
+    'Effects/snare': make_snare,
+    'Effects/reticle': make_reticle,
+    'Effects/punch': make_punch,
+    'Effects/status_mark': lambda: icon(draw_mark),
+    'Effects/status_rooted': lambda: icon(draw_root),
+    'Effects/status_taunt': lambda: icon(draw_taunt),
+    'Effects/status_stunned': lambda: icon(draw_stun),
+    'Effects/status_guard': lambda: icon(draw_guard),
+    'Effects/status_aura': lambda: icon(draw_aura),
     'Effects/slash_0': lambda: make_slash(0),
     'Effects/slash_1': lambda: make_slash(1),
     'Effects/slash_2': lambda: make_slash(2),
@@ -492,7 +812,10 @@ def make_preview(sprites, scale):
     # Large single-sprite close-ups along the bottom.
     strip = Canvas(w * T, 2 * T, rgb('#1d1a26'))
     x = 8
-    for name in ('Characters/uzuki', 'Characters/slime', 'Characters/king_slime', 'Items/berry', 'Effects/slash_1'):
+    for name in ('Characters/uzuki', 'Characters/haiden', 'Characters/kristela', 'Characters/slime', 'Characters/bat',
+                 'Characters/king_slime', 'Items/berry', 'Effects/arrow', 'Effects/snare', 'Effects/punch',
+                 'Effects/status_mark', 'Effects/status_rooted', 'Effects/status_taunt', 'Effects/status_stunned',
+                 'Effects/status_guard', 'Effects/status_aura'):
         big = sprites[name].scaled(2 if sprites[name].h <= T else 1)
         strip.paste(big, x, 2 * T - big.h)
         x += big.w + 16

@@ -26,6 +26,7 @@ namespace FiveKingdoms.Dungeon
             var args = Environment.GetCommandLineArgs();
             int index = Array.IndexOf(args, Flag);
             if (index < 0) return;
+            Application.runInBackground = true; // Unattended: keep playing when the window loses focus.
             var driver = controller.gameObject.AddComponent<AutoplayDriver>();
             driver.controller = controller;
             driver.folder = index + 1 < args.Length && !args[index + 1].StartsWith("-")
@@ -43,6 +44,7 @@ namespace FiveKingdoms.Dungeon
 
             int actions = 0, shot = 0, attackShots = 0, chargeShots = 0;
             var skillsShown = new System.Collections.Generic.HashSet<SkillEffect>();
+            var ultimatesShown = new System.Collections.Generic.HashSet<string>();
             float started = Time.realtimeSinceStartup;
             while (actions < MaxActions && Time.realtimeSinceStartup - started < TimeLimit)
             {
@@ -58,16 +60,19 @@ namespace FiveKingdoms.Dungeon
                 bool attacks = command.Kind == HeroCommandKind.Attack || command.Kind == HeroCommandKind.Move &&
                     run.ActorAt(run.Hero.Pos + command.Direction.ToOffset()) is Actor target && target.Team != Team.Hero;
                 bool bossWasHelped = run.Boss?.CalledForHelp ?? true;
-                var skill = command.Kind == HeroCommandKind.Skill ? run.Hero.Definition.Skills[command.Slot] : null;
+                var skill = command.Kind == HeroCommandKind.Skill ? run.Hero.Definition.Skills[command.Slot]
+                    : command.Kind == HeroCommandKind.Ultimate ? run.Hero.Definition.Ultimate
+                    : null;
                 controller.Submit(command);
                 actions++;
                 yield return null; // Let the controller resolve the turn.
                 var boss = controller.Run.Boss;
-                if (skill != null && skillsShown.Add(skill.Effect))
+                if (skill != null && (skill.IsUltimate ? ultimatesShown.Add(skill.Id) : skillsShown.Add(skill.Effect)))
                 {
-                    // The first of each kind of skill, at its showiest moment: the slash, the heal sparkles, the afterimages.
-                    yield return new WaitForSeconds(skill.Effect == SkillEffect.Strike ? 0.24f : skill.Effect == SkillEffect.Heal ? 0.2f : 0.08f);
-                    yield return Capture($"skill_{skill.Id}_action{actions}");
+                    // The first of each kind of skill and each ultimate, at its showiest moment: the slash, the heal
+                    // sparkles, the afterimages, the arrow rain.
+                    yield return new WaitForSeconds(skill.IsUltimate ? 0.55f : skill.Effect == SkillEffect.Strike ? 0.24f : skill.Effect == SkillEffect.Heal ? 0.2f : 0.08f);
+                    yield return Capture($"{(skill.IsUltimate ? "ultimate" : "skill")}_{skill.Id}_action{actions}");
                 }
                 else if (boss != null && boss.Charging && chargeShots < 2)
                 {

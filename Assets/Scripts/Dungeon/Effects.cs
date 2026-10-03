@@ -1,13 +1,18 @@
+using System.Collections;
 using FiveKingdoms.Core;
 using UnityEngine;
 
 namespace FiveKingdoms.Dungeon
 {
-    /// <summary>Short-lived visual effects (slash swipes, hit bursts, sparkles, afterimages). Each one cleans itself up.</summary>
+    /// <summary>
+    /// Short-lived visual effects (slash swipes, punches, arrows and arrow rain, hit bursts, sparkles, afterimages) and the
+    /// markers that stay until removed (warning tiles, aiming highlights and reticles). Short-lived ones clean themselves up.
+    /// </summary>
     public static class Effects
     {
         const int EffectOrder = 9500;
         const int WarningOrder = 5; // Above floor and wall shadows, below stairs, items and actors.
+        const int HighlightOrder = 6;
         static Sprite[] slashFrames;
 
         /// <summary>Crescent swipe over the target tile, rotated to the attack direction.</summary>
@@ -28,6 +33,102 @@ namespace FiveKingdoms.Dungeon
             renderer.sortingOrder = EffectOrder;
             renderer.color = tint;
             go.AddComponent<Flipbook>().Play(slashFrames, 0.045f);
+        }
+
+        /// <summary>A gauntlet blow's impact: a star that pops over the target tile and fades.</summary>
+        public static void Punch(Transform parent, Vector3 position, Color tint)
+        {
+            var go = new GameObject("Punch");
+            go.transform.SetParent(parent, false);
+            go.transform.position = position;
+            go.transform.rotation = Quaternion.Euler(0f, 0f, UnityEngine.Random.Range(-20f, 20f));
+            var renderer = go.AddComponent<SpriteRenderer>();
+            renderer.sprite = SpriteLibrary.Get("Effects/punch", Color.white);
+            renderer.sortingOrder = EffectOrder;
+            renderer.color = tint;
+            go.AddComponent<PopFade>().Init(0.5f, 1.1f, 0.16f);
+        }
+
+        /// <summary>Arrows raining down onto a tile (Volley); returns when the last one lands.</summary>
+        public static IEnumerator RainArrows(Transform parent, Vector3 tileCenter, Color tint, int count, float duration)
+        {
+            var sprite = SpriteLibrary.Get("Effects/arrow", Color.white);
+            var arrows = new Transform[count];
+            var starts = new Vector3[count];
+            var delays = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                var go = new GameObject("RainArrow");
+                go.transform.SetParent(parent, false);
+                go.transform.rotation = Quaternion.Euler(0f, 0f, -90f); // Art points right; these fall straight down.
+                var renderer = go.AddComponent<SpriteRenderer>();
+                renderer.sprite = sprite;
+                renderer.sortingOrder = EffectOrder;
+                renderer.color = tint;
+                var offset = new Vector3(UnityEngine.Random.Range(-0.3f, 0.3f), UnityEngine.Random.Range(-0.2f, 0.2f), 0f);
+                starts[i] = tileCenter + offset;
+                delays[i] = duration * 0.5f * i / Mathf.Max(1, count - 1);
+                go.transform.position = starts[i] + Vector3.up * 3f;
+                arrows[i] = go.transform;
+            }
+            float fall = duration * 0.5f;
+            for (float t = 0f; t < duration; t += Time.deltaTime)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    float k = Mathf.Clamp01((t - delays[i]) / fall);
+                    arrows[i].position = starts[i] + Vector3.up * (3f * (1f - k));
+                }
+                yield return null;
+            }
+            foreach (var arrow in arrows) Object.Destroy(arrow.gameObject);
+        }
+
+        /// <summary>A translucent square over a tile (the aiming highlight's reach and area). Destroy it when aiming ends.</summary>
+        public static GameObject TileHighlight(Transform parent, Vector3 tileCenter, Color color)
+        {
+            var go = new GameObject("Highlight");
+            go.transform.SetParent(parent, false);
+            go.transform.position = tileCenter;
+            go.transform.localScale = new Vector3(1f - 2f * SpriteLibrary.Pixel, 1f - 2f * SpriteLibrary.Pixel, 1f);
+            var renderer = go.AddComponent<SpriteRenderer>();
+            renderer.sprite = SpriteLibrary.White;
+            renderer.sortingOrder = HighlightOrder;
+            renderer.color = color;
+            return go;
+        }
+
+        /// <summary>Corner brackets around a target tile; the chosen one pulses. Destroy it when aiming ends.</summary>
+        public static GameObject Reticle(Transform parent, Vector3 tileCenter, Color color, bool pulse)
+        {
+            var go = new GameObject("Reticle");
+            go.transform.SetParent(parent, false);
+            go.transform.position = tileCenter;
+            var renderer = go.AddComponent<SpriteRenderer>();
+            renderer.sprite = SpriteLibrary.Get("Effects/reticle", Color.white);
+            renderer.sortingOrder = EffectOrder;
+            renderer.color = color;
+            if (pulse) go.AddComponent<Pulse>().Init(color, 0.55f, 1f, 8f);
+            return go;
+        }
+
+        /// <summary>An arrow flying from one point to another along an attack direction; returns when it lands.</summary>
+        public static IEnumerator Arrow(Transform parent, Vector3 from, Vector3 to, Direction8 direction, Color tint, float duration)
+        {
+            var go = new GameObject("Arrow");
+            go.transform.SetParent(parent, false);
+            var offset = direction.ToOffset();
+            go.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(offset.Y, offset.X) * Mathf.Rad2Deg);
+            var renderer = go.AddComponent<SpriteRenderer>();
+            renderer.sprite = SpriteLibrary.Get("Effects/arrow", Color.white);
+            renderer.sortingOrder = EffectOrder;
+            renderer.color = tint;
+            for (float t = 0f; t < duration; t += Time.deltaTime)
+            {
+                go.transform.position = Vector3.Lerp(from, to, t / duration);
+                yield return null;
+            }
+            Object.Destroy(go);
         }
 
         /// <summary>Square pixel chips flying out and falling, for hits and defeats.</summary>
@@ -133,6 +234,37 @@ namespace FiveKingdoms.Dungeon
                 return;
             }
             spriteRenderer.sprite = frames[frame];
+        }
+    }
+
+    /// <summary>Grows from one scale to another while fading out, then removes itself.</summary>
+    sealed class PopFade : MonoBehaviour
+    {
+        float from, to, life, age;
+        SpriteRenderer spriteRenderer;
+        Color color;
+
+        public void Init(float startScale, float endScale, float lifetime)
+        {
+            from = startScale;
+            to = endScale;
+            life = lifetime;
+            spriteRenderer = GetComponent<SpriteRenderer>();
+            color = spriteRenderer.color;
+            transform.localScale = Vector3.one * from;
+        }
+
+        void Update()
+        {
+            age += Time.deltaTime;
+            if (age >= life)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            float k = age / life;
+            transform.localScale = Vector3.one * Mathf.Lerp(from, to, 1f - (1f - k) * (1f - k));
+            spriteRenderer.color = new Color(color.r, color.g, color.b, color.a * (k < 0.5f ? 1f : 2f * (1f - k)));
         }
     }
 

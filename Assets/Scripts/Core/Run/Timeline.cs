@@ -103,6 +103,12 @@ namespace FiveKingdoms.Core
         /// <summary>After acting, the actor's next turn is one turn after now, scaled by what the action cost.</summary>
         public void EndTurn(Actor actor, int costPercent) => slots[actor.Id].Next = Now + TurnLength(actor.Speed, costPercent);
 
+        /// <summary>Pushes an actor's next turn back by <paramref name="percent"/>% of one of its turns (a slow).</summary>
+        public void Delay(Actor actor, int percent)
+        {
+            if (slots.TryGetValue(actor.Id, out var slot)) slot.Next = slot.Next + TurnLength(actor.Speed, percent);
+        }
+
         /// <summary>
         /// Changes an actor's speed mid-fight. The distance it still has to cover is kept and its next turn is
         /// recomputed at the new speed; the gauge is not reset.

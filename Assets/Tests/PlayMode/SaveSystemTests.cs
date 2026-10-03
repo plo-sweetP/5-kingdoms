@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using FiveKingdoms.Core;
 using NUnit.Framework;
 using UnityEngine;
@@ -75,6 +76,21 @@ namespace FiveKingdoms.Tests
             SaveSystem.SaveHero(new HeroProgress(ActorCatalog.Uzuki, level: 5));
             File.Move(path, path + ".tmp"); // As if the game died between removing the old save and moving the new one in.
             Assert.AreEqual(5, SaveSystem.LoadHero(ActorCatalog.Uzuki).Level);
+        }
+
+        [Test]
+        public void ThePartySavesAndLoadsTogether()
+        {
+            SaveSystem.SaveParty(new[]
+            {
+                new HeroProgress(ActorCatalog.Uzuki, level: 4, exp: 3),
+                new HeroProgress(ActorCatalog.Haiden, level: 5, exp: 1),
+                new HeroProgress(ActorCatalog.Kristela, level: 6, exp: 2),
+            });
+            var party = SaveSystem.LoadParty(ActorCatalog.StartingParty);
+            CollectionAssert.AreEqual(new[] { 4, 5, 6 }, party.Select(hero => hero.Level).ToArray());
+            CollectionAssert.AreEqual(new[] { 3, 1, 2 }, party.Select(hero => hero.Exp).ToArray());
+            Assert.AreEqual(4, SaveSystem.LoadHero(ActorCatalog.Uzuki).Level, "one hero's entry, as before");
         }
     }
 }

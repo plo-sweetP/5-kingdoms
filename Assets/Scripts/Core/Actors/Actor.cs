@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Generic;
 
 namespace FiveKingdoms.Core
 {
     public enum Team { Hero, Enemy }
+
+    /// <summary>How an AI partner plays (GAME_PLAN.md): go after enemies, stay with the leader, or hold its ground.</summary>
+    public enum PartyTactic { Attack, Follow, Hold }
 
     /// <summary>
     /// A character or monster standing in the dungeon, with its current stats. Its <see cref="Stats"/> sheet is built
@@ -16,14 +20,13 @@ namespace FiveKingdoms.Core
             Id = id;
             Definition = definition;
             Team = team;
-            Pos = pos;
+            Pos = PreviousPos = pos;
             Level = Math.Max(1, level);
             Weapon = definition.Weapon;
             SkillCooldowns = new int[definition.Skills.Count];
             RecalculateStats();
             Speed = Stats.Final(StatKind.Spd);
             Hp = MaxHp;
-            Mp = MaxMp;
         }
 
         public int Id { get; }
@@ -33,6 +36,22 @@ namespace FiveKingdoms.Core
         public GridPos Pos { get; set; }
         public Direction8 Facing { get; set; } = Direction8.S;
 
+        /// <summary>Where it stood before its last step; partners follow along it in corridors.</summary>
+        public GridPos PreviousPos { get; set; }
+
+        /// <summary>For party members the leader isn't controlling.</summary>
+        public PartyTactic Tactic { get; set; }
+
+        /// <summary>Active status effects (guard, taunt, mark, root, stun, aura).</summary>
+        public List<StatusEffect> Statuses { get; } = new List<StatusEffect>();
+
+        public StatusEffect FindStatus(StatusKind kind)
+        {
+            foreach (var status in Statuses)
+                if (status.Kind == kind) return status;
+            return null;
+        }
+
         public int Level { get; set; } = 1;
         public int Exp { get; set; }
 
@@ -41,6 +60,9 @@ namespace FiveKingdoms.Core
 
         /// <summary>Counts toward the base stats; null fights unarmed (monsters).</summary>
         public WeaponDefinition Weapon { get; set; }
+
+        /// <summary>The weapon's item level (1-100); its flat stats grow with it. Starter weapons are level 1.</summary>
+        public int WeaponLevel { get; set; } = 1;
 
         public int MaxHp { get; set; }
         public int Hp { get; set; }
@@ -62,12 +84,26 @@ namespace FiveKingdoms.Core
         /// </summary>
         public int Speed { get; set; }
 
-        /// <summary>Mana for skills. Refilled at the start of each run; berries and mana-building skills restore it.</summary>
-        public int Mp { get; set; }
-        public int MaxMp { get; set; }
+        /// <summary>
+        /// The ultimate's charge meter, 0 to <see cref="CombatRules.MaxCharge"/>: it fills as the hero acts, deals damage and
+        /// takes damage, and carries over between fights within a run. Full means the ultimate is ready.
+        /// </summary>
+        public int Charge { get; set; }
+
+        public bool UltimateReady => Definition.Ultimate != null && Charge >= CombatRules.MaxCharge;
 
         /// <summary>Own turns left before each skill (by slot) can be used again.</summary>
         public int[] SkillCooldowns { get; }
+
+        /// <summary>
+        /// Party AI: the member this one last swapped places with, and its own turns left before the two may swap again
+        /// (so a pair never swaps back and forth).
+        /// </summary>
+        public int SwappedWithId { get; set; }
+        public int SwapBlockTurns { get; set; }
+
+        /// <summary>Party AI: steps a ranged hero took in a row to get out of melee (it stops retreating after one).</summary>
+        public int RetreatSteps { get; set; }
 
         /// <summary>Enemy AI state: has noticed the hero and is giving chase.</summary>
         public bool Alerted { get; set; }
@@ -85,8 +121,8 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// Rebuilds the sheet's base (definition + level growth + weapon) and reads every final stat back from the sheet.
-        /// Current HP and MP move with their maximums, so a level-up heals by what it adds. Speed is left alone: it only
-        /// changes through the timeline mid-fight, and levels never raise it.
+        /// Current HP moves with max HP, so a level-up heals by what it adds. Speed is left alone: it only changes through
+        /// the timeline mid-fight, and levels never raise it.
         /// </summary>
         public void RecalculateStats()
         {
@@ -94,14 +130,14 @@ namespace FiveKingdoms.Core
             int levels = Level - 1;
             var b = Stats.Base;
             b.Clear();
-            b[StatKind.Hp] = definition.MaxHp + levels * definition.HpGrowth + (Weapon?.Hp ?? 0);
-            b[StatKind.Atk] = definition.Attack + levels * definition.AtkGrowth + (Weapon?.Atk ?? 0);
-            b[StatKind.Def] = definition.Defense + levels * definition.DefGrowth + (Weapon?.Def ?? 0);
+            b[StatKind.Hp] = definition.MaxHp + levels * definition.HpGrowth + (Weapon?.HpAt(WeaponLevel) ?? 0);
+            b[StatKind.Atk] = definition.Attack + levels * definition.AtkGrowth + (Weapon?.AtkAt(WeaponLevel) ?? 0);
+            b[StatKind.Def] = definition.Defense + levels * definition.DefGrowth + (Weapon?.DefAt(WeaponLevel) ?? 0);
             b[StatKind.Spd] = definition.Speed + (Weapon?.Spd ?? 0);
             b[StatKind.CritRate] = definition.CritRate;
             b[StatKind.CritDmg] = definition.CritDmg;
 
-            int maxHpBefore = MaxHp, maxMpBefore = MaxMp;
+            int maxHpBefore = MaxHp;
             MaxHp = Stats.Final(StatKind.Hp);
             Attack = Stats.Final(StatKind.Atk);
             Defense = Stats.Final(StatKind.Def);
@@ -109,10 +145,8 @@ namespace FiveKingdoms.Core
             CritDmg = Stats.Final(StatKind.CritDmg);
             Affinity = Stats.Final(StatKind.Affinity);
             Resist = Stats.Final(StatKind.Resist);
-            MaxMp = definition.MaxMp + levels * definition.MpGrowth;
             ExpReward = definition.ExpReward + levels * definition.ExpGrowth;
             Hp = Math.Max(0, Math.Min(MaxHp, Hp + MaxHp - maxHpBefore));
-            Mp = Math.Max(0, Math.Min(MaxMp, Mp + MaxMp - maxMpBefore));
         }
 
         public override string ToString() => $"{Name}#{Id} {Pos} HP {Hp}/{MaxHp}";

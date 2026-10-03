@@ -8,17 +8,21 @@ using UnityEngine.Tilemaps;
 namespace FiveKingdoms.Dungeon
 {
     /// <summary>
-    /// Draws a DungeonRun (terrain, actors, items) and animates the GameEvents each action produces: steps, attacks,
-    /// skills (name pop-up, spirit-strike slash, dash afterimages), mana, heals, boss moves and floor changes.
-    /// Holds no rules of its own: everything it shows comes from the run's state and events.
+    /// Draws a DungeonRun (terrain, actors, items, traps) and animates the GameEvents each action produces: steps,
+    /// attacks (slashes, punches, arrows), skills and ultimates (name pop-ups, Volley's arrow rain), statuses (icons, an
+    /// aura's glow), traps, the ultimate's charge, heals, boss moves and floor changes. Also shows the aiming highlight
+    /// while the player picks a target. Holds no rules of its own: everything it shows comes from the run's state and
+    /// events.
     /// </summary>
     public sealed class DungeonView : MonoBehaviour
     {
         const float StepTime = 0.11f;
         const float DashTimePerTile = 0.05f;
+        const float ArrowTimePerTile = 0.035f;
         const float LungeDistance = 0.35f;
         const int WallPadding = 14; // Extra wall drawn past the map edge so the camera never shows the void.
         const int StairsOrder = 10;
+        const int TrapOrder = 15;
         const int ItemOrder = 20;
 
         static readonly Color HeroSlashTint = new Color(1f, 0.88f, 0.45f); // Warm, so it reads against the white hit flash.
@@ -33,14 +37,28 @@ namespace FiveKingdoms.Dungeon
 
         static readonly Color SpiritColor = new Color(0.55f, 0.85f, 1f);
         static readonly Color SkillTextColor = new Color(0.7f, 0.9f, 1f);
-        static readonly Color ManaTextColor = new Color(0.55f, 0.75f, 1f);
         static readonly Color DashGhostColor = new Color(0.6f, 0.85f, 1f, 0.55f);
         static readonly Color DustColor = new Color(0.78f, 0.7f, 0.58f);
+        static readonly Color SlowColor = new Color(0.6f, 0.85f, 1f);
+        static readonly Color GuardColor = new Color(0.55f, 0.75f, 1f);
+        static readonly Color MarkColor = new Color(1f, 0.45f, 0.4f);
+        static readonly Color GuardTint = new Color(0.75f, 0.85f, 1f);
+        static readonly Color MarkTint = new Color(1f, 0.78f, 0.78f);
+        static readonly Color SnareColor = new Color(0.9f, 0.75f, 0.45f);
+        static readonly Color StunColor = new Color(1f, 0.88f, 0.35f);
+        static readonly Color UltimateTextColor = new Color(1f, 0.82f, 0.3f);
+        static readonly Color PunchTint = new Color(1f, 0.95f, 0.8f);
+        static readonly Color ReachColor = new Color(0.45f, 0.72f, 1f, 0.2f);
+        static readonly Color AreaColor = new Color(1f, 0.55f, 0.25f, 0.32f);
+        static readonly Color TargetColor = new Color(1f, 0.5f, 0.4f, 0.85f);
+        static readonly Color ChosenColor = new Color(1f, 0.92f, 0.45f);
 
         readonly Dictionary<int, ActorView> actors = new Dictionary<int, ActorView>();
         SkillDefinition activeSkill; // The skill whose effects are playing, if any.
         readonly Dictionary<int, SpriteRenderer> items = new Dictionary<int, SpriteRenderer>();
+        readonly Dictionary<int, SpriteRenderer> traps = new Dictionary<int, SpriteRenderer>();
         readonly List<GameObject> warnings = new List<GameObject>();
+        readonly List<GameObject> aimMarks = new List<GameObject>();
         DungeonHud hud;
         PixelCamera pixelCamera;
         Tilemap terrain;
@@ -85,13 +103,17 @@ namespace FiveKingdoms.Dungeon
             actors.Clear();
             foreach (var item in items.Values) Destroy(item.gameObject);
             items.Clear();
+            foreach (var trap in traps.Values) Destroy(trap.gameObject);
+            traps.Clear();
             ClearWarnings();
+            ClearAim();
 
             DrawTerrain(run.Map);
             stairs.gameObject.SetActive(run.Map.InBounds(run.Map.Stairs));
             stairs.transform.position = TileCenter(run.Map.Stairs);
             foreach (var actor in run.Actors) AddActor(actor);
             foreach (var item in run.Items) AddItem(item);
+            foreach (var trap in run.Traps) AddTrap(trap.Id, trap.Pos);
 
             var boss = run.Boss;
             if (boss != null) hud.ShowBoss(boss.Name, boss.Hp, boss.MaxHp);
@@ -111,16 +133,58 @@ namespace FiveKingdoms.Dungeon
         public IEnumerator Play(DungeonRun run, IReadOnlyList<GameEvent> events)
         {
             activeSkill = null;
+            bool expLogged = false;
             for (int i = 0; i < events.Count; i++)
             {
                 switch (events[i])
                 {
+                    case LeaderChangedEvent leaderChanged:
+                        if (actors.TryGetValue(leaderChanged.ActorId, out var newLeader))
+                        {
+                            pixelCamera.Target = newLeader.transform;
+                            hud.AddMessage($"{newLeader.DisplayName} takes the lead.", GoldColor);
+                        }
+                        break;
+                    case StatusAppliedEvent status:
+                        ShowStatus(run, status);
+                        break;
+                    case StatusEndedEvent ended:
+                        if (actors.TryGetValue(ended.ActorId, out var cleared)) ShowStatuses(cleared, run.FindActor(ended.ActorId));
+                        break;
+                    case ChargeChangedEvent charge:
+                        ShowCharge(run, charge);
+                        break;
+                    case AreaAttackEvent area:
+                        yield return AnimateVolley(run, area);
+                        break;
+                    case TrapPlacedEvent placed:
+                        AddTrap(placed.TrapId, placed.Pos);
+                        break;
+                    case TrapTriggeredEvent triggered:
+                        yield return AnimateTrap(triggered);
+                        break;
+                    case PushedEvent pushed when pushed.Blocked:
+                        if (actors.TryGetValue(pushed.ActorId, out var pinned))
+                            hud.ShowFloatingText(pinned.transform.position + Vector3.up * 0.95f, pinned.IsBoss ? "Won't budge!" : "Pinned!", WarningColor, 0.8f);
+                        break;
+                    case TurnSkippedEvent skipped:
+                        if (actors.TryGetValue(skipped.ActorId, out var stunned))
+                        {
+                            hud.ShowFloatingText(stunned.transform.position + Vector3.up * 0.95f, "Stunned", StunColor, 0.8f);
+                            hud.AddMessage($"{Subject(stunned)} is stunned and loses its turn.", StunColor);
+                            yield return new WaitForSeconds(0.2f);
+                        }
+                        break;
+                    case TurnDelayedEvent delayed:
+                        if (actors.TryGetValue(delayed.ActorId, out var slowed))
+                        {
+                            hud.ShowFloatingText(slowed.transform.position + Vector3.up * 0.95f, "Slowed", SlowColor, 0.8f);
+                            hud.AddMessage($"{Subject(slowed)} is slowed: its next turn comes {delayed.Percent}% later.", SlowColor);
+                        }
+                        break;
                     case SkillUsedEvent used:
                         activeSkill = used.Skill;
                         yield return AnimateSkillUse(used);
-                        break;
-                    case ManaChangedEvent mana:
-                        ShowMana(run, mana);
                         break;
                     case DashedEvent dash:
                         yield return AnimateDash(dash);
@@ -164,7 +228,9 @@ namespace FiveKingdoms.Dungeon
                         yield return AnimateDeath(died);
                         break;
                     case ExpGainedEvent exp:
-                        hud.AddMessage($"Gained {exp.Amount} EXP.");
+                        // Everyone standing gets the same EXP: say it once.
+                        if (!expLogged) hud.AddMessage(run.Party.Count > 1 ? $"The party gained {exp.Amount} EXP." : $"Gained {exp.Amount} EXP.");
+                        expLogged = true;
                         break;
                     case LevelUpEvent levelUp:
                         if (actors.TryGetValue(levelUp.ActorId, out var leveled))
@@ -172,7 +238,7 @@ namespace FiveKingdoms.Dungeon
                             hud.ShowFloatingText(leveled.transform.position + Vector3.up * 0.9f, "LEVEL UP!", GoldColor, 1.1f);
                             Effects.Sparkle(effectRoot, leveled.transform.position, GoldColor);
                         }
-                        hud.AddMessage($"{run.Hero.Name} grew to Lv {levelUp.Level}!", GoldColor);
+                        hud.AddMessage($"{leveled?.DisplayName ?? run.Hero.Name} grew to Lv {levelUp.Level}!", GoldColor);
                         yield return new WaitForSeconds(0.35f);
                         break;
                     case HealedEvent heal:
@@ -180,7 +246,7 @@ namespace FiveKingdoms.Dungeon
                         {
                             hud.ShowFloatingText(healed.transform.position + Vector3.up * 0.55f, "+" + heal.Amount, HealColor, 1.1f);
                             Effects.Sparkle(effectRoot, healed.transform.position, HealColor);
-                            if (healed.IsHero) hud.SetHeroHp(heal.HpAfter, run.Hero.MaxHp);
+                            if (healed.IsHero) hud.SetMemberHp(heal.ActorId, heal.HpAfter, MaxHpOf(run, heal.ActorId));
                             hud.AddMessage($"{healed.DisplayName} recovered {heal.Amount} HP.", HealColor);
                         }
                         yield return new WaitForSeconds(0.25f);
@@ -262,24 +328,190 @@ namespace FiveKingdoms.Dungeon
         static float StepDuration(int speed) =>
             StepTime * Mathf.Clamp(Mathf.Sqrt(ActorDefinition.DefaultSpeed / (float)Mathf.Max(1, speed)), 0.8f, 1.25f);
 
-        /// <summary>The skill's name pops up over its user (and goes in the log), with a flash of spirit light.</summary>
+        /// <summary>A shot: a short draw, an arrow flying along the line, then the hit where it lands.</summary>
+        IEnumerator AnimateShot(DungeonRun run, ActorView shooter, AttackEvent attack, DamageEvent hit, Vector3 direction)
+        {
+            yield return shooter.Lunge(-direction, 0.1f);
+            var offset = attack.Direction.ToOffset();
+            var from = shooter.transform.position + direction * 0.3f;
+            var to = shooter.transform.position + new Vector3(offset.X, offset.Y, 0f) * attack.Distance;
+            bool skillShot = activeSkill != null && activeSkill.Effect == SkillEffect.Shot;
+            yield return Effects.Arrow(effectRoot, from, to, attack.Direction, skillShot ? SpiritColor : Color.white,
+                ArrowTimePerTile * Mathf.Max(1, attack.Distance));
+            StartCoroutine(shooter.Recover(0.08f));
+            if (hit == null)
+            {
+                Effects.Burst(effectRoot, to, DustColor, 3, 1f);
+                yield break;
+            }
+            ShowDamage(run, hit, direction);
+            if (skillShot) Effects.Burst(effectRoot, to, SpiritColor, 8, 2.5f);
+            if (actors.TryGetValue(hit.TargetId, out var target))
+                hud.AddMessage(DescribeHit(shooter, target, hit), target.IsHero ? HeroHurtColor : DungeonHud.TextColor);
+            yield return new WaitForSeconds(hit.Critical ? 0.12f : 0.05f);
+        }
+
+        /// <summary>
+        /// A status landed: a word over the actor, a line in the log, its icon over the head, and a lasting tint (blue
+        /// guard, red mark) or glow (an aura).
+        /// </summary>
+        void ShowStatus(DungeonRun run, StatusAppliedEvent status)
+        {
+            if (!actors.TryGetValue(status.ActorId, out var view)) return;
+            actors.TryGetValue(status.SourceId, out var source);
+            string sourceName = source != null ? source.DisplayName : "";
+            switch (status.Kind)
+            {
+                case StatusKind.Guard:
+                    hud.ShowFloatingText(view.transform.position + Vector3.up * 0.95f, "Guard", GuardColor, 0.75f);
+                    if (status.ActorId == status.SourceId) hud.AddMessage($"{sourceName} raises a guard rune.", GuardColor);
+                    break;
+                case StatusKind.Taunt:
+                    hud.ShowFloatingText(view.transform.position + Vector3.up * 0.95f, "Taunted", WarningColor, 0.75f);
+                    hud.AddMessage($"{Subject(view)} is taunted into attacking {sourceName}.", WarningColor);
+                    break;
+                case StatusKind.Mark:
+                    hud.ShowFloatingText(view.transform.position + Vector3.up * 0.95f, "Marked", MarkColor, 0.75f);
+                    hud.AddMessage($"{Subject(view)} is marked: it takes more damage.", MarkColor);
+                    break;
+                case StatusKind.Rooted:
+                    hud.ShowFloatingText(view.transform.position + Vector3.up * 0.95f, "Snared", SnareColor, 0.75f);
+                    break;
+                case StatusKind.Stunned:
+                    hud.ShowFloatingText(view.transform.position + Vector3.up * 0.95f, "Stunned!", StunColor, 0.8f);
+                    hud.AddMessage($"{Subject(view)} is stunned!", StunColor);
+                    break;
+                case StatusKind.Aura:
+                    hud.ShowFloatingText(view.transform.position + Vector3.up * 1.05f, "Aura of Protection", UltimateTextColor, 0.75f);
+                    hud.AddMessage($"{sourceName}'s aura shields and heals the allies next to him.", UltimateTextColor);
+                    break;
+            }
+            ShowStatuses(view, run.FindActor(status.ActorId));
+        }
+
+        /// <summary>Brings an actor's status icons, tint and aura glow in line with its statuses.</summary>
+        static void ShowStatuses(ActorView view, Actor actor)
+        {
+            view.SetStatusTint(StatusTint(actor));
+            view.SetStatuses(actor?.Statuses);
+            view.SetAura(actor?.FindStatus(StatusKind.Aura) != null);
+        }
+
+        /// <summary>Keeps the heroes' ultimate meters in step; when one fills up, it says so over the hero.</summary>
+        void ShowCharge(DungeonRun run, ChargeChangedEvent charge)
+        {
+            hud.SetMemberCharge(charge.ActorId, charge.ChargeAfter);
+            if (charge.Amount <= 0 || charge.ChargeAfter < CombatRules.MaxCharge || !actors.TryGetValue(charge.ActorId, out var hero)) return;
+            var ultimate = PartyMember(run, charge.ActorId)?.Definition.Ultimate;
+            hud.ShowFloatingText(hero.transform.position + new Vector3(-0.55f, 0.5f, 0f), "ULT ready!", UltimateTextColor, 0.75f);
+            if (ultimate != null) hud.AddMessage($"{hero.DisplayName}'s {ultimate.Name} is ready!", UltimateTextColor);
+        }
+
+        // ---- Aiming (PROGRESSION.md, "Attack range highlight") ----
+
+        /// <summary>
+        /// Highlights where the action reaches, marks every valid target (the chosen one pulses) and, for an area skill,
+        /// the area around the chosen target. Stays until <see cref="ClearAim"/>.
+        /// </summary>
+        public void ShowAim(DungeonRun run, AimInfo aim, int chosen)
+        {
+            ClearAim();
+            foreach (var tile in aim.Reach) aimMarks.Add(Effects.TileHighlight(effectRoot, TileCenter(tile), ReachColor));
+            for (int i = 0; i < aim.Options.Count; i++)
+            {
+                var option = aim.Options[i];
+                aimMarks.Add(Effects.Reticle(effectRoot, TileCenter(option.Tile), i == chosen ? ChosenColor : TargetColor, pulse: i == chosen));
+                if (i != chosen || aim.AreaRadius <= 0) continue;
+                for (int dy = -aim.AreaRadius; dy <= aim.AreaRadius; dy++)
+                    for (int dx = -aim.AreaRadius; dx <= aim.AreaRadius; dx++)
+                    {
+                        var tile = new GridPos(option.Tile.X + dx, option.Tile.Y + dy);
+                        if (run.Map.IsWalkable(tile)) aimMarks.Add(Effects.TileHighlight(effectRoot, TileCenter(tile), AreaColor));
+                    }
+            }
+        }
+
+        public void ClearAim()
+        {
+            foreach (var mark in aimMarks)
+                if (mark != null) Destroy(mark);
+            aimMarks.Clear();
+        }
+
+        /// <summary>The body tint for an actor's statuses: blue while guarded, red while marked.</summary>
+        static Color StatusTint(Actor actor)
+        {
+            if (actor == null) return Color.white;
+            if (actor.FindStatus(StatusKind.Guard) != null) return GuardTint;
+            if (actor.FindStatus(StatusKind.Mark) != null) return MarkTint;
+            return Color.white;
+        }
+
+        static Actor PartyMember(DungeonRun run, int actorId)
+        {
+            foreach (var member in run.Party)
+                if (member.Id == actorId) return member;
+            return null;
+        }
+
+        static int MaxHpOf(DungeonRun run, int actorId) => PartyMember(run, actorId)?.MaxHp ?? run.FindActor(actorId)?.MaxHp ?? 1;
+
+        /// <summary>
+        /// The skill's name pops up over its user (and goes in the log), with a flash of spirit light. An ultimate gets a
+        /// bigger, golden moment (its cutscene comes later; the event already says whose ultimate it is).
+        /// </summary>
         IEnumerator AnimateSkillUse(SkillUsedEvent used)
         {
             if (!actors.TryGetValue(used.ActorId, out var user)) yield break;
+            if (used.Skill.IsUltimate)
+            {
+                hud.AddMessage($"{user.DisplayName} unleashes {used.Skill.Name}!", UltimateTextColor);
+                hud.ShowFloatingText(user.transform.position + Vector3.up * 1.05f, used.Skill.Name + "!", UltimateTextColor, 1.1f);
+                Effects.Sparkle(effectRoot, user.transform.position, UltimateTextColor);
+                Effects.Shockwave(effectRoot, user.transform.position, UltimateTextColor, 16, 2.5f);
+                pixelCamera.Shake(0.08f, 0.25f);
+                yield return new WaitForSeconds(0.3f);
+                yield break;
+            }
             hud.AddMessage($"{user.DisplayName} used {used.Skill.Name}!", SkillTextColor);
             hud.ShowFloatingText(user.transform.position + Vector3.up * 0.95f, used.Skill.Name, SkillTextColor, 0.7f);
-            if (used.Skill.Effect == SkillEffect.Dash) yield break; // The dash itself is the show.
+            if (used.Skill.Effect == SkillEffect.Dash || used.Skill.RollTiles > 0) yield break; // The dash itself is the show.
             Effects.Sparkle(effectRoot, user.transform.position, SpiritColor);
             yield return new WaitForSeconds(0.12f);
         }
 
-        /// <summary>Keeps the MP bar in step with the animation; gains pop up beside the hero.</summary>
-        void ShowMana(DungeonRun run, ManaChangedEvent mana)
+        /// <summary>Volley: a draw, then arrows rain on every tile of the area; the hits follow as damage events.</summary>
+        IEnumerator AnimateVolley(DungeonRun run, AreaAttackEvent area)
         {
-            if (mana.ActorId != run.Hero.Id) return;
-            hud.SetHeroMp(mana.MpAfter, run.Hero.MaxMp);
-            if (mana.Amount > 0 && actors.TryGetValue(mana.ActorId, out var hero))
-                hud.ShowFloatingText(hero.transform.position + new Vector3(-0.55f, 0.45f, 0f), $"+{mana.Amount} MP", ManaTextColor, 0.7f);
+            if (actors.TryGetValue(area.ActorId, out var shooter)) yield return shooter.Lunge(Vector3.down * 0.5f, 0.12f);
+            for (int dy = -area.Radius; dy <= area.Radius; dy++)
+                for (int dx = -area.Radius; dx <= area.Radius; dx++)
+                {
+                    var tile = new GridPos(area.Center.X + dx, area.Center.Y + dy);
+                    if (run.Map.IsWalkable(tile)) StartCoroutine(Effects.RainArrows(effectRoot, TileCenter(tile), UltimateTextColor, 3, 0.36f));
+                }
+            yield return new WaitForSeconds(0.36f);
+            for (int dy = -area.Radius; dy <= area.Radius; dy++)
+                for (int dx = -area.Radius; dx <= area.Radius; dx++)
+                    Effects.Burst(effectRoot, TileCenter(new GridPos(area.Center.X + dx, area.Center.Y + dy)), DustColor, 3, 1.5f);
+            pixelCamera.Shake(0.1f, 0.2f);
+            if (shooter != null) StartCoroutine(shooter.Recover(0.1f));
+        }
+
+        /// <summary>A snare goes off: it snaps shut around whoever stepped on it, then is gone.</summary>
+        IEnumerator AnimateTrap(TrapTriggeredEvent triggered)
+        {
+            if (traps.TryGetValue(triggered.TrapId, out var trap))
+            {
+                traps.Remove(triggered.TrapId);
+                StartCoroutine(PopAndDestroy(trap));
+            }
+            if (actors.TryGetValue(triggered.ActorId, out var victim))
+            {
+                hud.AddMessage($"{Subject(victim)} steps on a snare!", SnareColor);
+                Effects.Burst(effectRoot, victim.transform.position + Vector3.down * 0.3f, SnareColor, 8, 2f);
+            }
+            yield return new WaitForSeconds(0.12f);
         }
 
         /// <summary>A quick slide over several tiles, leaving fading afterimages and a puff of dust at each end.</summary>
@@ -313,12 +545,21 @@ namespace FiveKingdoms.Dungeon
             attacker.SetFacing(attack.Direction);
             var offset = attack.Direction.ToOffset();
             var direction = new Vector3(offset.X, offset.Y, 0f).normalized;
+            if (attack.Ranged)
+            {
+                yield return AnimateShot(run, attacker, attack, hit, direction);
+                yield break;
+            }
             // A skill strike lunges further and cuts with spirit light.
             bool skillStrike = attacker.IsHero && activeSkill != null && activeSkill.Effect == SkillEffect.Strike;
 
             yield return attacker.Lunge(direction, skillStrike ? LungeDistance * 1.3f : LungeDistance);
             var targetTile = attacker.transform.position + new Vector3(offset.X, offset.Y, 0f);
-            Effects.Slash(effectRoot, targetTile, attack.Direction, skillStrike ? SpiritColor : attacker.IsHero ? HeroSlashTint : EnemySlashTint);
+            // The weapon shows in the hit: gauntlets punch, blades (and claws) slash.
+            if (run.FindActor(attack.AttackerId)?.Weapon?.Type == WeaponType.Gauntlets)
+                Effects.Punch(effectRoot, targetTile, skillStrike ? SpiritColor : PunchTint);
+            else
+                Effects.Slash(effectRoot, targetTile, attack.Direction, skillStrike ? SpiritColor : attacker.IsHero ? HeroSlashTint : EnemySlashTint);
             if (skillStrike) Effects.Burst(effectRoot, targetTile, SpiritColor, 10, 3f);
 
             if (hit != null)
@@ -339,7 +580,7 @@ namespace FiveKingdoms.Dungeon
             // Numbers pop above the target, unless the attacker stands above it: then beside it, so they don't cover the attacker.
             var numberOffset = knockDirection.y < -0.1f ? new Vector3(0.6f, 0.1f, 0f) : Vector3.up * (target.IsBoss ? 1f : 0.55f);
             hud.ShowFloatingText(target.transform.position + numberOffset, hit.Amount.ToString(), color, hit.Critical ? 1.5f : 1f);
-            if (target.IsHero) hud.SetHeroHp(hit.HpAfter, run.Hero.MaxHp);
+            if (target.IsHero) hud.SetMemberHp(hit.TargetId, hit.HpAfter, MaxHpOf(run, hit.TargetId));
             if (target.IsBoss) hud.SetBossHp(hit.HpAfter);
             Effects.Burst(effectRoot, target.transform.position, hit.Critical ? CritColor : Color.white, hit.Critical ? 12 : 5, 2.5f);
             pixelCamera.Shake(hit.Critical ? 0.14f : 0.05f, hit.Critical ? 0.22f : 0.1f);
@@ -464,6 +705,7 @@ namespace FiveKingdoms.Dungeon
                 if (!actors.TryGetValue(actor.Id, out var view)) continue;
                 view.Place(TileCenter(actor.Pos));
                 view.SetHp(actor.Hp);
+                ShowStatuses(view, actor);
             }
         }
 
@@ -478,8 +720,17 @@ namespace FiveKingdoms.Dungeon
                 squishy: !isHero, burstColor: burstColor);
             view.Place(TileCenter(actor.Pos));
             view.SetFacing(actor.Facing);
+            ShowStatuses(view, actor);
             actors[actor.Id] = view;
             return view;
+        }
+
+        void AddTrap(int trapId, GridPos pos)
+        {
+            if (traps.ContainsKey(trapId)) return;
+            var renderer = NewSprite("Snare", itemRoot, SpriteLibrary.Get("Effects/snare", SnareColor), TrapOrder);
+            renderer.transform.position = TileCenter(pos);
+            traps[trapId] = renderer;
         }
 
         void AddItem(FloorItem item)

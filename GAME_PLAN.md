@@ -61,7 +61,7 @@ energy) and [docs/design/GEAR.md](docs/design/GEAR.md) (damage formula, stats, g
   | Hero | Kingdom | Class | Role | Profession | Base SPD |
   |---|---|---|---|---|---|
   | Uzuki | Medieval Realm | Archer (later specs into Ice Mage) | Utility DPS: ranged, slows, control and support shots | Alchemist (team potions) | 95 |
-  | Haiden (boy) | Dynasty Nation | Rune Warrior | Tank DPS with some healing: fire runes that hit, guard and mend | Blacksmith (equipment) | 90 |
+  | Haiden (boy) | Dynasty Nation | Paladin (later Rune Warrior, toward Runegod Fire Blade) | Tank first, with some healing | Blacksmith (equipment) | 90 |
   | Kristela (girl, a princess) | Medieval Realm | Monk | Melee DPS, speed build | Chef (food buffs and heals) | 100 |
 
   Weapons: Uzuki a **Hunter Bow**, Haiden a **Long Sword**, Kristela **Gauntlets** (stats only for the first playtest,
@@ -70,8 +70,9 @@ energy) and [docs/design/GEAR.md](docs/design/GEAR.md) (damage formula, stats, g
   eyes), [Kristela](docs/concept/kristela.jpg) (long wavy blonde hair, blue eyes, gold X-shaped hair clip on one side).
 - **Persistent progression:** characters keep their level and gear between dungeon runs (unlike Mystery Dungeon's resets). They level up and gear up outside, at the farm, then enter dungeons to clear the stages and the boss. Defeating monsters and bosses inside a dungeon also gives EXP that carries back out.
 - **Skills:** each character gets **3 skills + 1 ultimate** from their own starting kit, upgraded, extended or replaced
-  by class and profession milestones. Skills can cost mana, cost nothing (with more unique effects), or build mana.
-  Ultimates (buffs, debuffs, damage, summons, ...) are designed with the classes.
+  by class and profession milestones. **No mana (decided):** a skill sits out the hero's next turn after use, every
+  hero has an always-ready weapon attack, and ultimates fill a charge meter as the hero acts, hits and gets hit
+  (PROGRESSION.md, "Skill resources"). Ultimates (buffs, debuffs, damage, summons, ...) grow with the classes.
 - **Classes and professions** share one point per level (100 at level 100), spent freely on class or profession
   tiers 1-25 (PROGRESSION.md).
 - **Equipment slots:** 4 armor pieces (head, body, hands, feet) + 2 rings + 1 weapon for heroes; monsters wear 1 ring,
@@ -107,8 +108,8 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 - **Content:** slimes 100 (same as the hero), King Slime 85 (slow and heavy: about every 6th turn the hero gets two in a row).
 - **Regression anchor:** with all speeds equal, the timeline reproduces the original alternating turns exactly (golden
   replay test; balance report identical before and after).
-- **Later:** every party member on the timeline at their own speed (1f), Break/toughness with elements (1j), speed
-  buffs and debuffs through skills (turn effects get their own budget, PROGRESSION.md).
+- Every party member acts on the timeline at their own speed (1f). **Later:** Break/toughness with elements (1j),
+  speed buffs and debuffs through skills (turn effects get their own budget, PROGRESSION.md).
 
 ## Party (planned)
 - **Up to 4 characters on screen**: a leader plus 3 partners, as in Mystery Dungeon. The size is one constant (`MaxPartySize`), so trying 3 is a one-line change if 4 feels crowded on a phone.
@@ -117,6 +118,9 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 - The player controls the leader; partners act by AI with simple tactics (follow me / go after enemies / hold back), and the player can switch which character they control. Each character keeps their own 3 skills + ultimate.
 - Turn order: exploring, the leader acts, then the partners, then enemies. In fights every party member acts on the AV
   timeline at their own speed. In corridors partners follow in a line and swap places with the leader when bumped.
+- **Ranged vs melee (decided, PROGRESSION.md):** in a fight melee partners close in on a foe (swapping past a ranged
+  ally when that's shorter, never with another melee hero and never straight back), ranged ones hang back at a tile
+  they can shoot from, and a ranged hero with a foe next to it steps out of melee once, then shoots anyway.
 - Defeat: by default the run ends when the whole party has fallen (open question: or when the leader falls?).
 - Enemies and bosses can target any party member; area attacks hit everyone in range.
 - Each character has their own saved progress (level, EXP, gear).
@@ -158,8 +162,8 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 - Procedural floors: rooms and corridors, stairs down, items; later traps and monster houses.
 - **Stages and a boss:** each dungeon is a set of floors (stages) ending in a boss fight.
 - **Levels carry in and out:** the party enters at its farm-earned level and gear; EXP earned inside is kept.
-- **Berries** restore mana (15 MP); healing comes from skills (Second Wind) and, later, other items. A dungeon can also
-  make its berries heal HP (`BerryHealHp` in its config).
+- **Berries** heal the leader 300 HP (`BerryHealHp`); in 1d they restored mana, which no longer exists.
+- **Bigger fights:** monsters come in packs of 2-4, and half the packs bring a fast bat, so no hero clears a room alone.
 - A party of up to 4 heroes (3 in the first playtest); monster partners later. Skills, items, gear.
 - Run ends by reaching the bottom or being defeated. Defeat has a soft penalty, with no permadeath of monsters in v1.
 - The generator is seeded so runs are reproducible, which helps testing.
@@ -180,9 +184,9 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 1 | Dungeon prototype: hero on generated floors, enemies, combat, stairs, items | **Done** (first playtest: "looks great") |
 | 1b | Dungeon follow-ups: hero level/EXP kept between runs (saved), a boss on the last floor, controller support, Auto button | **Done** |
 | 1c | Combat timeline: Honkai Star Rail-style action value (AV) turn order on the grid, Speed stat, turn-order strip | **Done** |
-| 1d | Mana (berries restore it), first skills with AV costs, healing | **Done** |
+| 1d | Mana (berries restore it), first skills with AV costs, healing (mana was removed again in 1f) | **Done** |
 | 1e | Combat math (GEAR.md step 1-3): multiplicative damage formula, 10x HP/ATK/DEF rescale, Crit Rate/Crit DMG stats (5%/50%), per-actor stat sheet, skill tags; difficulty re-tuned to match 1d | **Done** |
-| 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer kit, Hunter Bow), Haiden (Long Sword), Kristela (Gauntlets); AI partners with follow/attack/hold tactics, switching control, corridor follow and swap, everyone on the AV timeline | Next |
+| 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, aiming highlight, packs | Part 1 **done**; part 2 (the targeting and input decisions) next, then the playtest |
 | 1g | Classes and professions core (PROGRESSION.md): points, tiers 1-25, milestones, stat bumps, prerequisites and kingdom locks, loadout, respec; real content for the starting 3 classes and 3 professions | |
 | 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
 | 1i | Hero screen between runs: equipment, class and profession tiers, loadout (until the farm exists) | |
@@ -218,7 +222,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 **Milestone 1c (combat timeline)**: see "Combat timeline (action value)" above. Balance with the slower King Slime:
 7/200 fresh level-1 autopilot runs win (was 3); with levels kept, players beat the boss on attempt 2.5 at Lv 9.3 (was 2.6 at 9.4).
 
-**Milestone 1d (mana and skills)**:
+**Milestone 1d (mana and skills)**, kept as a record (1f removed mana):
 - **Mana:** Uzuki has 30 MP (+2 per level), full at the start of each run. Berries restore 15 MP; a basic hit that
   connects gives +2 MP. No natural MP regeneration.
 - **Uzuki's skills**, one of each kind:
@@ -256,12 +260,62 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
   123/200 reach the boss floor; with levels kept, players win on attempt 2.7 at Lv 9.5 (1d: 2.5 at Lv 9.3).
 - The golden replay fingerprint was re-recorded, since every hit changed on purpose.
 
+**Milestone 1f, part 1 (party of 3; the first playtest checkpoint comes after part 2):**
+- **Party:** Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword) and Kristela (Monk, Gauntlets) with the approved
+  starting kits (PROGRESSION.md). The player leads one hero (tap a party card, Tab or B to switch: free while
+  exploring; mid-fight the old leader's turn is played by its AI); partners play by AI with Attack, Follow or Hold
+  (tap the badge, or G / L3 for all). Every hero standing gets the EXP in full. The run ends when the whole party has
+  fallen, and the next hero in line takes the lead when the leader falls (open question 7).
+- **No mana (decided):** every skill sits out the hero's next turn; each hero has an always-ready weapon attack (Quick
+  Shot, Sword Slash, Jab); Quick skills (Hunter's Mark, Ki Heal) take half a turn and show a small "Quick" tag.
+- **Ultimates:** a gold charge meter on each party card fills by 20 per attack or skill, 10 per hit landed and 20 per
+  hit taken (the ultimate's own hits don't count) and carries over between fights within a run. Volley: 2 hits of
+  200% on every foe in a 3x3 area at range. Aura of Protection: for 3 of Haiden's turns, allies next to him take 30%
+  less damage and heal 10% of his max HP at the start of each of his turns. Flurry of Blows: 5 hits of 80%, moving on
+  if the target falls, and her next turn comes 30% sooner. With the autopilot that's about 2 ultimates per hero in the
+  boss fight and one every 2-3 normal fights.
+- **Ranged vs melee:** ranged reach 5 tiles; ranged hits deal 75% of a melee hit, 52% with a foe next to the shooter
+  (point-blank). Formation, engaging and the swap rules are under "Party" above; the soak tests fail if two heroes swap
+  back and forth.
+- **Kit mechanics:** Rolling Shot leaves a snare that roots the first enemy stepping on it (at most 3 per floor);
+  Power Shot knocks back; Hunter's Mark (+25% damage from Uzuki) jumps on a kill; Shoulder Bash shoves and taunts (+50%
+  against a wall); Piercing Punch hits the enemy behind; Stun Strike stuns (60%, Affinity vs Resist). Bosses can't be
+  rooted or stunned: they lose 30% of a turn instead. Statuses show as icons over heads; the aura glows over its 3x3.
+- **Aiming:** choosing an attack, skill or ultimate that needs a target highlights its reach and marks every valid
+  target along the 8 lines (Volley shows its area); tap a target, or press the action again for the marked one.
+  Holding a direction while pressing fires that way at once, and walking into an adjacent enemy still attacks.
+- **Monsters:** packs of 2-4; half bring a bat (Speed 130, frail). Slimes give 3 EXP (+1 a floor); the King Slime has
+  10000 HP / 260 ATK. Berries heal 300 HP again.
+- **Balance** (autopilot party of 3, 200 seeds): 11 fresh level-1 runs win (5.5%), 185 reach the boss floor; with
+  levels kept, the first clear comes on attempt 3.1 at Lv 9.5. A Lv 9 party sent straight to the boss always wins.
+- **Placeholder art:** Haiden, Kristela, the bat, the snare, status icons, target reticles, arrows and a punch impact
+  for Kristela's gauntlets. Weapons on the hero sprites come with final art.
+- **Playtest flags:** `-fk-leader haiden` or `-fk-leader kristela` puts that hero in the lead.
+
+**Milestone 1f, part 2 (next), decided by Peter while part 1 was being built** (PROGRESSION.md, "Ranged vs melee" and
+"Targeting and input"):
+- Ranged hits deal **90%** of a melee hit (x0.70 more at point-blank), and ranged attacks target **any foe in sight
+  within 5 tiles**, not only along the 8 lines (walls block shots, allies don't). Commands carry a target tile.
+- Attacks are deliberate: **walking into an enemy no longer attacks** (the hero turns to face it, keeping the turn);
+  the weapon attack has its own button and works like a skill (choose it, then the target); tapping an enemy in reach
+  attacks it directly. A lone valid target is preselected.
+- **Stun is a timeline delay:** Stun Strike pushes the target's next turn back 50% (bosses 25%) instead of skipping
+  it, and an actor can be delayed at most once per its own turn (the same rule later when monsters stun heroes).
+- **Run to safety:** a badly hurt hero may swap away from the foes with an ally, two melee heroes included. The
+  pair cooldown and the soak check still apply.
+- The AI picks targets the same way: the marked enemy first, then the lowest HP.
+- The playtest build starts with Haiden or Kristela leading.
+
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.
 2. Pixel art spec (to go in ART_BIBLE.md): placeholders use 32 px tiles and 32x32 chibi sprites; confirm, and set palette limits and animation frame counts.
 3. ~~Exact armor pieces and how many weapon slots.~~ Answered in GEAR.md: head, body, hands, feet, 2 rings, 1 weapon.
 4. ~~Stamina and timers.~~ Answered: see "Energy" above.
 7. Does a run end when the leader falls, or only when the whole party has fallen? (Default for 1f: the whole party.)
+10. Aura of Protection covers the allies next to Haiden, not Haiden himself (as written in PROGRESSION.md). Should it
+    cover him too?
+11. Ultimate pace: the proposed "one per normal fight" would mean an ultimate every other action (normal fights are
+    short), so 1f tunes for two per hero in the boss fight and one every 2-3 normal fights.
 9. Keep the 85-100% random damage spread (Mystery Dungeon style), or drop it as in the Honkai: Star Rail formula,
    where only crits vary? Kept for now; one number in `CombatRules`.
 8. ~~Crystal Ice Legion Hunter's prerequisites, the Space/Time element, monk weapons.~~ Answered in the specs: Archer 15 +

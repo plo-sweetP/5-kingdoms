@@ -4,10 +4,11 @@ using System.Collections.Generic;
 namespace FiveKingdoms.Core
 {
     /// <summary>
-    /// Plays the hero automatically: step out of a boss's wind-up; when low, heal with a skill (or eat a berry that heals
-    /// or pays for the heal); fight adjacent enemies, with a mana-building strike when short of mana for a heal; between
-    /// fights, eat a berry if a heal isn't affordable; chase nearby enemies, pick up nearby berries, otherwise head for
-    /// the stairs, dashing down straight stretches (or for the boss, on the boss floor).
+    /// Plays the leader automatically: step out of a boss's wind-up; use a charged ultimate when it's worth it; when low,
+    /// heal with a skill or eat a berry; heal or guard the party; a ranged leader gets out of melee; fight a foe in reach,
+    /// with skills chosen by <see cref="HeroTactics"/>; in a fight, a ranged leader finds a tile to shoot from; otherwise
+    /// chase nearby enemies, pick up nearby berries, then head for the stairs, dashing down straight
+    /// stretches (or for the boss, on the boss floor). Partners play themselves (<see cref="PartnerBrain"/>).
     /// Drives the soak tests, the balance report and the unattended autoplay smoke test. Not meant to play well,
     /// just plausibly. Targets are chosen by walking distance, which only shrinks while the hero follows the path;
     /// choosing by straight-line distance made it flip between two goals at doorways.
@@ -22,45 +23,29 @@ namespace FiveKingdoms.Core
         {
             var hero = run.Hero;
             var map = run.Map;
-            Func<GridPos, bool> blocked = p => run.ActorAt(p) != null;
+            // Foes are in the way, and so is a partner the leader just swapped with (no swapping back and forth). In a fight
+            // the leader keeps the formation too: a ranged leader never swaps forward, a melee one never past another melee hero.
+            Func<GridPos, bool> blocked = p => run.ActorAt(p) is Actor other && other != hero &&
+                (other.Team != hero.Team || other.Id == hero.SwappedWithId && hero.SwapBlockTurns > 0 ||
+                 run.InCombat && (hero.Definition.IsRanged || !other.Definition.IsRanged));
 
-            foreach (var actor in run.Actors)
-            {
-                if (actor.Team == hero.Team || !actor.Charging) continue;
-                if (GridPos.ChebyshevDistance(hero.Pos, actor.Pos) <= EnemyBrain.SlamRadius && TryStepAway(run, actor.Pos, out var away))
-                    return HeroCommand.Move(away);
-            }
+            if (HeroTactics.TryDodge(run, hero, out var command)) return command;
+            if (HeroTactics.TryUltimate(run, hero, out command)) return command;
 
-            int heal = SkillSlot(hero, SkillEffect.Heal);
-            int healCost = heal >= 0 ? hero.Definition.Skills[heal].ManaCost : 0;
-            bool berryFundsHeal = heal >= 0 && run.Config.BerryRestoreMp > 0 && hero.Mp < healCost && run.Berries > 0;
-            if (hero.Hp * 100 < hero.MaxHp * 40)
+            if (hero.Hp * 100 < hero.MaxHp * HeroTactics.SelfHealPercent)
             {
+                int heal = HeroTactics.SkillSlot(hero, SkillEffect.Heal);
                 if (heal >= 0 && run.CheckSkill(heal) == SkillCheck.Ready) return HeroCommand.Skill(heal);
-                bool berryHeals = run.Config.BerryHealHp > 0 && run.Berries > 0;
-                if (berryHeals || berryFundsHeal) return HeroCommand.UseBerry;
+                if (run.Config.BerryHealHp > 0 && run.Berries > 0) return HeroCommand.UseBerry;
             }
-
-            int strike = SkillSlot(hero, SkillEffect.Strike);
-            var enemies = new List<GridPos>();
-            foreach (var actor in run.Actors)
-            {
-                if (actor.Team == hero.Team) continue;
-                if (GridPos.ChebyshevDistance(hero.Pos, actor.Pos) == 1)
-                {
-                    var toward = Directions.Toward(hero.Pos, actor.Pos);
-                    if (map.IsCornerClear(hero.Pos, toward))
-                    {
-                        // Short of mana for a heal: a mana-building strike instead of a plain bump.
-                        if (strike >= 0 && hero.Mp < healCost && run.CheckSkill(strike) == SkillCheck.Ready) return HeroCommand.Skill(strike);
-                        return HeroCommand.Move(toward); // Bump attack.
-                    }
-                }
-                enemies.Add(actor.Pos);
-            }
-
-            // Between fights, eat a berry rather than walk into the next one without mana for a heal.
-            if (!run.InCombat && berryFundsHeal) return HeroCommand.UseBerry;
+            if (HeroTactics.TryHealParty(run, hero, out command)) return command;
+            if (HeroTactics.TryGuard(run, hero, out command)) return command;
+            if (HeroTactics.TryStepOutOfMelee(run, hero, out command)) return command;
+            if (HeroTactics.TryMark(run, hero, out command)) return command;
+            if (HeroTactics.TryAttack(run, hero, out command)) return command;
+            // A ranged leader hangs back at a tile it can shoot from; a melee one chases below, as it always has.
+            if (run.InCombat && hero.Definition.IsRanged && HeroTactics.TryTakeFiringPosition(run, hero, out command)) return command;
+            var enemies = HeroTactics.FoePositions(run, hero);
 
             if (run.HeroOnStairs) return HeroCommand.Descend;
 
@@ -81,8 +66,13 @@ namespace FiveKingdoms.Core
                 if (TryStepTowardNearest(run, berries, BerryDetourRange, blocked, out step)) return HeroCommand.Move(step);
             }
 
-            if (!Pathfinder.TryFirstStep(map, hero.Pos, map.Stairs, blocked, FarSearchLimit, out step, out int length)) return HeroCommand.Wait;
-            int dash = SkillSlot(hero, SkillEffect.Dash);
+            // A monster dozing in a corridor can block every way to the stairs: then walk at it and fight through (allies
+            // still only as the formation allows).
+            Func<GridPos, bool> alliesInTheWay = p => run.ActorAt(p) is Actor other && other.Team == hero.Team && blocked(p);
+            if (!Pathfinder.TryFirstStep(map, hero.Pos, map.Stairs, blocked, FarSearchLimit, out step, out int length) &&
+                !Pathfinder.TryFirstStep(map, hero.Pos, map.Stairs, alliesInTheWay, FarSearchLimit, out step, out length))
+                return HeroCommand.Wait;
+            int dash = HeroTactics.SkillSlot(hero, SkillEffect.Dash);
             return DashSaves(run, dash, map.Stairs, step, length, blocked) ? HeroCommand.Skill(dash, step) : HeroCommand.Move(step);
         }
 
@@ -114,32 +104,5 @@ namespace FiveKingdoms.Core
             return best != int.MaxValue;
         }
 
-        /// <summary>Slot of the hero's first skill with this effect, or -1.</summary>
-        static int SkillSlot(Actor hero, SkillEffect effect)
-        {
-            var skills = hero.Definition.Skills;
-            for (int i = 0; i < skills.Count; i++)
-                if (skills[i].Effect == effect) return i;
-            return -1;
-        }
-
-        /// <summary>A step that takes the hero out of reach of an attack centered on <paramref name="threat"/>.</summary>
-        static bool TryStepAway(DungeonRun run, GridPos threat, out Direction8 away)
-        {
-            away = Direction8.S;
-            int best = -1;
-            foreach (var dir in Directions.All)
-            {
-                var next = run.Hero.Pos + dir.ToOffset();
-                if (!run.Map.CanStep(run.Hero.Pos, dir) || run.ActorAt(next) != null) continue;
-                int distance = GridPos.ChebyshevDistance(next, threat);
-                if (distance > EnemyBrain.SlamRadius && distance > best)
-                {
-                    best = distance;
-                    away = dir;
-                }
-            }
-            return best >= 0;
-        }
     }
 }

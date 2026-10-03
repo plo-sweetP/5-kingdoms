@@ -47,45 +47,42 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
-        public void BerryRestoresManaUpToMaxAndUsesATurn()
+        public void BerryHealsUpToMaxAndUsesATurn()
         {
             var run = TestRuns.OnMap(
                 "#####",
                 "#@..#",
                 "#####");
             run.Berries = 2;
-            run.Hero.Mp = run.Hero.MaxMp - 5;
-            int hp = run.Hero.Hp;
+            run.Hero.Hp = run.Hero.MaxHp - 5;
 
             Assert.IsTrue(run.UseBerry());
-            Assert.AreEqual(run.Hero.MaxMp, run.Hero.Mp);
-            Assert.AreEqual(hp, run.Hero.Hp, "berries restore mana, not HP");
+            Assert.AreEqual(run.Hero.MaxHp, run.Hero.Hp);
             Assert.AreEqual(1, run.Berries);
             Assert.IsInstanceOf<ItemUsedEvent>(run.Events[0]);
-            Assert.AreEqual(5, run.Events.OfType<ManaChangedEvent>().Single().Amount);
+            Assert.AreEqual(5, run.Events.OfType<HealedEvent>().Single().Amount);
             Assert.AreEqual(1, run.Turn);
         }
 
         [Test]
-        public void BerryIsRefusedAtFullManaOrWhenOut()
+        public void BerryIsRefusedAtFullHpOrWhenOut()
         {
             var run = TestRuns.OnMap(
                 "#####",
                 "#@..#",
                 "#####");
             run.Berries = 1;
-            run.Hero.Hp = 1;
-            Assert.IsFalse(run.UseBerry(), "full mana: the berry would do nothing");
+            Assert.IsFalse(run.UseBerry(), "full HP: the berry would do nothing");
             Assert.AreEqual(1, run.Berries);
 
             run.Berries = 0;
-            run.Hero.Mp = 0;
+            run.Hero.Hp = 1;
             Assert.IsFalse(run.UseBerry(), "no berries");
             Assert.AreEqual(0, run.Turn);
         }
 
         [Test]
-        public void DungeonsCanStillUseHealingBerries()
+        public void HowMuchABerryHealsIsUpToTheDungeon()
         {
             var config = new DungeonRunConfig
             {
@@ -93,14 +90,12 @@ namespace FiveKingdoms.Tests
                 Populate = false,
                 Boss = null,
                 BerryHealHp = 30,
-                BerryRestoreMp = 0,
             };
             var run = new DungeonRun(1, config) { Berries = 1 };
-            run.Hero.Hp = run.Hero.MaxHp - 5;
+            run.Hero.Hp = 100;
 
             Assert.IsTrue(run.UseBerry());
-            Assert.AreEqual(run.Hero.MaxHp, run.Hero.Hp);
-            Assert.AreEqual(5, run.Events.OfType<HealedEvent>().Single().Amount);
+            Assert.AreEqual(130, run.Hero.Hp);
         }
     }
 }

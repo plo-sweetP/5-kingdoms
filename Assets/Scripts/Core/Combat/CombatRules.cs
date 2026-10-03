@@ -31,8 +31,24 @@ namespace FiveKingdoms.Core
         public const int SpreadMinPercent = 85;
         public const int SpreadMaxPercent = 100;
 
-        /// <summary>Mana a hero's basic attack restores when it connects.</summary>
-        public const int BasicAttackManaGain = 2;
+        /// <summary>
+        /// PROGRESSION.md, "Ranged vs melee": ranged hits (weapon attacks, shots, area skills) deal 75% of an equivalent
+        /// melee hit, and 30% less again with a foe next to the shooter (the point-blank rule).
+        /// </summary>
+        public const int RangedDamagePercent = 75;
+        public const int PointBlankPercent = 70;
+
+        /// <summary>
+        /// The ultimate's charge meter (PROGRESSION.md, "Skill resources"): full at 100. It fills as a hero acts (each
+        /// attack or skill), deals damage (each hit landed) and takes damage (each hit taken); an ultimate's own hits don't
+        /// refill it. Tuned with -balance for about two ultimates per hero in the boss fight (counting the charge carried
+        /// in) and one every two or three normal fights: those are short (a hero acts about twice), so one per normal
+        /// fight would put an ultimate in every other action.
+        /// </summary>
+        public const int MaxCharge = 100;
+        public const int ChargePerAction = 20;
+        public const int ChargePerHitDealt = 10;
+        public const int ChargePerHitTaken = 20;
 
         /// <summary>
         /// GEAR.md's formula: (skill% x ATK + extra damage) x (1 + DMG bonus) x crit x DEF mult x RES mult, times the
@@ -42,10 +58,12 @@ namespace FiveKingdoms.Core
         /// <param name="skillPercent">Damage in percent of ATK (a basic attack is <see cref="BasicAttackPercent"/>).</param>
         /// <param name="extraDamage">Flat damage added before the multipliers (set bonuses, weapon passives).</param>
         /// <param name="damageBonus">DMG bonus in tenths of a percent.</param>
+        /// <param name="reachPercent">The ranged and point-blank cuts (<see cref="ReachPercent"/>); 100 for melee.</param>
         public static DamageRoll RollDamage(Actor attacker, Actor defender, Rng rng, int skillPercent, int extraDamage = 0,
-            int damageBonus = 0, Element element = Element.None)
+            int damageBonus = 0, Element element = Element.None, int reachPercent = 100)
         {
             long damage = (long)attacker.Attack * skillPercent / 100 + extraDamage;
+            damage = damage * reachPercent / 100;
             damage = damage * (1000 + damageBonus) / 1000;
             damage = damage * rng.Range(SpreadMinPercent, SpreadMaxPercent + 1) / 100;
             bool critical = rng.Range(0, 1000) < attacker.CritRate;
@@ -56,9 +74,13 @@ namespace FiveKingdoms.Core
             return new DamageRoll((int)Math.Max(1, Math.Min(int.MaxValue, damage)), critical);
         }
 
-        /// <summary>A basic attack: 200% ATK, physical.</summary>
-        public static DamageRoll RollBasicAttack(Actor attacker, Actor defender, Rng rng) =>
-            RollDamage(attacker, defender, rng, BasicAttackPercent);
+        /// <summary>A basic (weapon) attack: 200% ATK, physical, cut by <paramref name="reachPercent"/> when it's a shot.</summary>
+        public static DamageRoll RollBasicAttack(Actor attacker, Actor defender, Rng rng, int reachPercent = 100) =>
+            RollDamage(attacker, defender, rng, BasicAttackPercent, reachPercent: reachPercent);
+
+        /// <summary>What's left of a hit after the ranged cuts: 100 in melee, 75 for a shot, 52 for a shot at point-blank range.</summary>
+        public static int ReachPercent(bool ranged, bool pointBlank) =>
+            !ranged ? 100 : pointBlank ? RangedDamagePercent * PointBlankPercent / 100 : RangedDamagePercent;
 
         /// <summary>The K in the DEF multiplier for an attacker of this level.</summary>
         public static int DefenseConstant(int attackerLevel) => KPerLevel * (attackerLevel + KLevelOffset);

@@ -64,5 +64,56 @@ namespace FiveKingdoms.Core
             }
             return false;
         }
+
+        /// <summary>
+        /// Breadth-first search for the nearest tile (by steps) that passes <paramref name="isGoal"/>, at most
+        /// <paramref name="maxSteps"/> away, never entering blocked tiles. Gives the first step toward it and the path's
+        /// length, or false if none is in reach (or <paramref name="start"/> itself passes).
+        /// </summary>
+        public static bool TryFindNearest(DungeonMap map, GridPos start, Func<GridPos, bool> isGoal, Func<GridPos, bool> isBlocked,
+            int maxSteps, out Direction8 firstStep, out GridPos goal, out int pathLength)
+        {
+            firstStep = Direction8.S;
+            goal = start;
+            pathLength = 0;
+            if (!map.InBounds(start) || isGoal(start)) return false;
+
+            int width = map.Width;
+            var firstDirection = new sbyte[width * map.Height];
+            var depth = new int[width * map.Height];
+            for (int i = 0; i < firstDirection.Length; i++) firstDirection[i] = Unvisited;
+
+            var queue = new Queue<GridPos>();
+            firstDirection[start.Y * width + start.X] = StartMarker;
+            queue.Enqueue(start);
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                int currentIndex = current.Y * width + current.X;
+                if (depth[currentIndex] >= maxSteps) continue;
+
+                foreach (var dir in Directions.All)
+                {
+                    if (!map.CanStep(current, dir)) continue;
+                    var next = current + dir.ToOffset();
+                    int nextIndex = next.Y * width + next.X;
+                    if (firstDirection[nextIndex] != Unvisited) continue;
+                    if (isBlocked != null && isBlocked(next)) continue;
+
+                    firstDirection[nextIndex] = current == start ? (sbyte)dir : firstDirection[currentIndex];
+                    if (isGoal(next))
+                    {
+                        firstStep = (Direction8)firstDirection[nextIndex];
+                        goal = next;
+                        pathLength = depth[currentIndex] + 1;
+                        return true;
+                    }
+                    depth[nextIndex] = depth[currentIndex] + 1;
+                    queue.Enqueue(next);
+                }
+            }
+            return false;
+        }
     }
 }

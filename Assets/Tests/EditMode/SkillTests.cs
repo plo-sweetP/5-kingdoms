@@ -17,7 +17,7 @@ namespace FiveKingdoms.Tests
             "##########",
         };
 
-        static DungeonRun Run() => TestRuns.OnMap(1, new HeroProgress(ActorCatalog.Uzuki), null, Hall);
+        static DungeonRun Run() => TestRuns.OnMap(1, new HeroProgress(TestHeroes.Classic), null, Hall);
 
         static Actor SlimeAt(DungeonRun run, int dx, int dy, int hp = 1000)
         {
@@ -28,26 +28,39 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
-        public void UzukiHasThreeSkillsAndAFullManaBar()
+        public void TheClassicKitHasThreeSkillsAndNoUltimate()
         {
             var run = Run();
             CollectionAssert.AreEqual(new[] { "spirit_strike", "second_wind", "dash" }, run.Hero.Definition.Skills.Select(s => s.Id).ToArray());
-            Assert.AreEqual(ActorCatalog.Uzuki.MaxMp, run.Hero.MaxMp);
-            Assert.AreEqual(run.Hero.MaxMp, run.Hero.Mp);
+            Assert.IsNull(run.Hero.Definition.Ultimate);
+            Assert.AreEqual(SkillCheck.NoSkill, run.CheckUltimate());
         }
 
         [Test]
-        public void SpiritStrikeHitsHarderAndBuildsMana()
+        public void SpiritStrikeHitsTheAdjacentEnemy()
         {
             var run = Run();
             var slime = SlimeAt(run, 1, 0);
-            run.Hero.Mp = 0;
 
             Assert.IsTrue(run.UseSkill(Strike));
             Assert.Less(slime.Hp, 1000);
-            Assert.AreEqual(SkillCatalog.SpiritStrike.ManaGain, run.Hero.Mp);
-            Assert.IsTrue(run.Events.OfType<SkillUsedEvent>().Any());
+            Assert.AreEqual(run.Hero.Id, run.Events.OfType<SkillUsedEvent>().Single().ActorId);
+            Assert.AreEqual("spirit_strike", run.Events.OfType<SkillUsedEvent>().Single().Skill.Id, "skill events carry the hero and skill");
             Assert.AreEqual(slime.Id, run.Events.OfType<AttackEvent>().First().TargetId);
+        }
+
+        [Test]
+        public void ASkillCantBeUsedTwoTurnsInARow()
+        {
+            var run = Run();
+            SlimeAt(run, 1, 0);
+            Assert.AreEqual(1, SkillCatalog.SpiritStrike.Cooldown, "every skill has the 1-turn cooldown");
+
+            Assert.IsTrue(run.UseSkill(Strike));
+            Assert.AreEqual(SkillCheck.OnCooldown, run.CheckSkill(Strike), "sits out the hero's next turn");
+            Assert.IsFalse(run.UseSkill(Strike));
+            Assert.IsTrue(run.Attack(Direction8.E), "the weapon attack is always ready");
+            Assert.AreEqual(SkillCheck.Ready, run.CheckSkill(Strike));
         }
 
         [Test]
@@ -79,25 +92,20 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
-        public void SecondWindHealsForMana()
+        public void SecondWindHealsHalfOfMaxHp()
         {
             var run = Run();
             run.Hero.Hp = 5;
-            int mp = run.Hero.Mp;
 
             Assert.IsTrue(run.UseSkill(Heal));
             Assert.AreEqual(5 + run.Hero.MaxHp * SkillCatalog.SecondWind.Power / 100, run.Hero.Hp);
-            Assert.AreEqual(mp - SkillCatalog.SecondWind.ManaCost, run.Hero.Mp);
         }
 
         [Test]
-        public void SecondWindIsRefusedAtFullHpOrWithoutMana()
+        public void SecondWindIsRefusedAtFullHp()
         {
             var run = Run();
             Assert.AreEqual(SkillCheck.NotNeeded, run.CheckSkill(Heal));
-            run.Hero.Hp = 5;
-            run.Hero.Mp = SkillCatalog.SecondWind.ManaCost - 1;
-            Assert.AreEqual(SkillCheck.NotEnoughMana, run.CheckSkill(Heal));
             Assert.IsFalse(run.UseSkill(Heal));
             Assert.AreEqual(0, run.Turn);
         }
@@ -179,7 +187,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void TheAutoPilotDashesDownALongWayToTheStairs()
         {
-            var run = TestRuns.OnMap(2, new HeroProgress(ActorCatalog.Uzuki), null,
+            var run = TestRuns.OnMap(2, new HeroProgress(TestHeroes.Classic), null,
                 "##########",
                 "#@......>#",
                 "##########");
@@ -211,23 +219,6 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
-        public void BasicAttacksBuildALittleMana()
-        {
-            var run = Run();
-            SlimeAt(run, 1, 0);
-            run.Hero.Mp = 0;
-            run.Move(Direction8.E);
-            Assert.AreEqual(CombatRules.BasicAttackManaGain, run.Hero.Mp);
-        }
-
-        [Test]
-        public void LevelingUpGrowsMaxMana()
-        {
-            var run = TestRuns.OnMap(1, new HeroProgress(ActorCatalog.Uzuki, level: 5), null, Hall);
-            Assert.AreEqual(ActorCatalog.Uzuki.MaxMp + 4 * ActorCatalog.Uzuki.MpGrowth, run.Hero.MaxMp);
-        }
-
-        [Test]
         public void TheAutoPilotHealsWithTheSkillWhenLow()
         {
             var run = Run();
@@ -238,27 +229,26 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
-        public void TheAutoPilotEatsABerryToPayForAHeal()
+        public void TheAutoPilotEatsABerryWhenLowAndItsHealIsCoolingDown()
         {
             var run = Run();
             run.Hero.Hp = 5;
-            run.Hero.Mp = 0;
+            run.Hero.SkillCooldowns[Heal] = 1;
             run.Berries = 1;
             Assert.AreEqual(HeroCommandKind.UseBerry, AutoPilot.Decide(run).Kind);
         }
 
         [Test]
-        public void TheAutoPilotTopsUpManaBetweenFightsButNotDuringOne()
+        public void TheAutoPilotUsesItsStrongerSkillThenItsWeaponAttack()
         {
             var run = Run();
-            run.Hero.Mp = SkillCatalog.SecondWind.ManaCost - 1;
-            run.Berries = 1;
-            Assert.AreEqual(HeroCommandKind.UseBerry, AutoPilot.Decide(run).Kind, "no enemy around: refill for the next heal");
-
             SlimeAt(run, 1, 0);
             run.Wait(); // The slime notices the hero; the fight is on.
             Assert.IsTrue(run.InCombat);
-            Assert.AreEqual(HeroCommandKind.Skill, AutoPilot.Decide(run).Kind, "healthy and next to an enemy: strike for mana instead");
+            var first = AutoPilot.Decide(run);
+            Assert.AreEqual(HeroCommandKind.Skill, first.Kind, "Spirit Strike (240%) beats the weapon attack (200%)");
+            run.Execute(first);
+            Assert.AreEqual(HeroCommandKind.Move, AutoPilot.Decide(run).Kind, "cooling down: bump the slime instead");
         }
     }
 }

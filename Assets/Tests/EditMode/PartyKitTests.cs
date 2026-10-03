@@ -1,0 +1,380 @@
+using System.Collections.Generic;
+using System.Linq;
+using FiveKingdoms.Core;
+using NUnit.Framework;
+using static FiveKingdoms.Tests.PartyTests;
+
+namespace FiveKingdoms.Tests
+{
+    /// <summary>
+    /// The starting kits approved in PROGRESSION.md: Uzuki the Archer (traps), Haiden the Paladin (tank first, some
+    /// healing), Kristela the Monk (speed melee). Milestone 1f.
+    /// </summary>
+    public class PartyKitTests
+    {
+        static readonly string[] Room =
+        {
+            "##########",
+            "#........#",
+            "#........#",
+            "#@.......#",
+            "#........#",
+            "#........#",
+            "##########",
+        };
+
+        static readonly string[] Corridor =
+        {
+            "############",
+            "#@.........#",
+            "############",
+        };
+
+        static ActorDefinition[] Only(ActorDefinition hero) => new[] { hero };
+
+        static int Slot(Actor hero, SkillDefinition skill)
+        {
+            var skills = hero.Definition.Skills;
+            for (int i = 0; i < skills.Count; i++)
+                if (skills[i] == skill) return i;
+            return -1;
+        }
+
+        static IEnumerable<AttackEvent> AttacksBy(DungeonRun run, Actor attacker) =>
+            run.Events.OfType<AttackEvent>().Where(attack => attack.AttackerId == attacker.Id);
+
+        [Test]
+        public void TheKitsAreTheApprovedOnes()
+        {
+            string Ids(ActorDefinition hero) => string.Join(",", hero.Skills.Select(skill => skill.Id)) + " / " + hero.Ultimate.Id;
+            Assert.AreEqual("hunters_mark,power_shot,rolling_shot / volley", Ids(ActorCatalog.Uzuki));
+            Assert.AreEqual("paladin_heal,divine_strike,shoulder_bash / aura_of_protection", Ids(ActorCatalog.Haiden));
+            Assert.AreEqual("piercing_punch,ki_heal,stun_strike / flurry_of_blows", Ids(ActorCatalog.Kristela));
+        }
+
+        [Test]
+        public void EverySkillSitsOutOneTurnAndUltimatesNone()
+        {
+            foreach (var hero in ActorCatalog.StartingParty)
+            {
+                foreach (var skill in hero.Skills) Assert.AreEqual(1, skill.Cooldown, skill.Name);
+                Assert.IsTrue(hero.Ultimate.IsUltimate, hero.Name);
+                Assert.AreEqual(0, hero.Ultimate.Cooldown, hero.Name);
+            }
+        }
+
+        [Test]
+        public void EachHeroHasAtMostOneQuickSkill()
+        {
+            foreach (var hero in ActorCatalog.StartingParty)
+                Assert.LessOrEqual(hero.Skills.Count(skill => skill.IsQuick), 1, hero.Name);
+            Assert.IsTrue(SkillCatalog.HuntersMark.IsQuick);
+            Assert.IsTrue(SkillCatalog.KiHeal.IsQuick);
+        }
+
+        [Test]
+        public void TheSpeedBudgetHolds()
+        {
+            // GEAR.md: pre-gear speed stays within 85-100, and no weapon gives more than the Hunter Bow's +6.
+            foreach (var hero in ActorCatalog.StartingParty)
+                Assert.That(hero.Speed, Is.InRange(85, 100), hero.Name);
+            foreach (var weapon in WeaponCatalog.All)
+                Assert.LessOrEqual(weapon.Spd, WeaponDefinition.MaxSpeed, weapon.Name);
+            Assert.AreEqual(WeaponDefinition.MaxSpeed, WeaponCatalog.HunterBow.Spd);
+        }
+
+        [Test]
+        public void EachHeroCarriesTheirWeapon()
+        {
+            Assert.AreEqual(WeaponType.Bow, ActorCatalog.Uzuki.Weapon.Type);
+            Assert.AreEqual(WeaponType.LongSword, ActorCatalog.Haiden.Weapon.Type);
+            Assert.AreEqual(WeaponType.Gauntlets, ActorCatalog.Kristela.Weapon.Type);
+        }
+
+        // ---- Uzuki ----
+
+        [Test]
+        public void EachHeroHasAnAlwaysReadyWeaponAttack()
+        {
+            Assert.AreEqual("Quick Shot", ActorCatalog.Uzuki.AttackName);
+            Assert.AreEqual("Sword Slash", ActorCatalog.Haiden.AttackName);
+            Assert.AreEqual("Jab", ActorCatalog.Kristela.AttackName);
+        }
+
+        [Test]
+        public void UzukisQuickShotReachesFiveTiles()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Corridor);
+            var near = Dummy(run, 6, 1);
+            Assert.IsTrue(run.Attack(Direction8.E));
+            var shot = AttacksBy(run, run.Hero).Single();
+            Assert.IsTrue(shot.Ranged);
+            Assert.AreEqual(near.Id, shot.TargetId);
+            Assert.AreEqual(5, shot.Distance);
+            Assert.Less(near.Hp, near.MaxHp);
+        }
+
+        [Test]
+        public void AShotFallsShortOfAFoeOutOfReach()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Corridor);
+            var far = Dummy(run, 7, 1);
+            run.Attack(Direction8.E);
+            Assert.AreEqual(-1, AttacksBy(run, run.Hero).Single().TargetId);
+            Assert.AreEqual(far.MaxHp, far.Hp);
+        }
+
+        [Test]
+        public void ArrowsFlyPastAlliesButNotWallsOrCorners()
+        {
+            var run = Run(new[] { ActorCatalog.Uzuki, ActorCatalog.Haiden }, Corridor);
+            Place(run.Hero, 1, 1);
+            Place(run.Party[1], 2, 1);
+            var slime = Dummy(run, 3, 1);
+            run.Attack(Direction8.E);
+            Assert.AreEqual(slime.Id, AttacksBy(run, run.Hero).Single().TargetId, "past Haiden");
+
+            var walled = Run(Only(ActorCatalog.Uzuki), "#######", "#@.#..#", "#######");
+            var behind = Dummy(walled, 4, 1);
+            walled.Attack(Direction8.E);
+            Assert.AreEqual(-1, AttacksBy(walled, walled.Hero).Single().TargetId, "the wall stops it");
+
+            var corner = Run(Only(ActorCatalog.Uzuki), "#####", "##..#", "#@#.#", "#####");
+            var diagonal = Dummy(corner, 2, 2);
+            corner.Attack(Direction8.NE);
+            Assert.AreEqual(-1, AttacksBy(corner, corner.Hero).Single().TargetId, "no shooting around a corner");
+            Assert.AreEqual(diagonal.MaxHp, diagonal.Hp);
+            Assert.AreEqual(behind.MaxHp, behind.Hp);
+        }
+
+        [Test]
+        public void PowerShotFiresTwoArrowsAndKnocksTheTargetBackOnce()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Corridor);
+            var slime = Dummy(run, 4, 1);
+            Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.PowerShot), Direction8.E));
+            var arrows = AttacksBy(run, run.Hero).ToList();
+            Assert.AreEqual(2, arrows.Count, "the Hunter Bow's Multishot");
+            Assert.IsTrue(arrows.All(arrow => arrow.TargetId == slime.Id && arrow.Ranged));
+            Assert.AreEqual(4, arrows[1].Distance, "the second arrow flies to where the first knocked it");
+            Assert.AreEqual(1, run.Events.OfType<PushedEvent>().Count(e => e.ActorId == slime.Id && !e.Blocked));
+        }
+
+        [Test]
+        public void TheSecondArrowFindsAnotherTarget()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Room);
+            var east = Dummy(run, 4, 3);
+            var north = Dummy(run, 1, 5);
+            run.UseSkill(Slot(run.Hero, SkillCatalog.PowerShot), Direction8.E);
+            CollectionAssert.AreEqual(new[] { east.Id, north.Id }, AttacksBy(run, run.Hero).Select(arrow => arrow.TargetId).ToArray());
+        }
+
+        [Test]
+        public void HuntersMarkIsAQuickMarkThatOnlyUzukisHitsExploit()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Corridor);
+            var slime = Dummy(run, 4, 1);
+            run.Wait(); // It comes closer; the fight starts. Uzuki (101) is up first.
+            Assert.IsTrue(run.InCombat);
+
+            Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.HuntersMark), Direction8.E));
+            Assert.AreEqual(125, run.DamageTakenPercent(slime, run.Hero), "+25% from Uzuki");
+            Assert.AreEqual(100, run.DamageTakenPercent(slime, slime), "nobody else");
+            Assert.AreEqual(Timeline.TurnLength(101) + Timeline.TurnLength(101, 50), run.Forecast(1)[0].Time, "Quick: half a turn");
+        }
+
+        [Test]
+        public void TheMarkJumpsWhenItsTargetFalls()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Corridor);
+            var first = Dummy(run, 3, 1, hp: 1);
+            var second = Dummy(run, 6, 1);
+            Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.HuntersMark), Direction8.E));
+            Assert.IsNotNull(first.FindStatus(StatusKind.Mark));
+
+            run.Attack(Direction8.E);
+            Assert.IsFalse(first.IsAlive);
+            var mark = second.FindStatus(StatusKind.Mark);
+            Assert.IsNotNull(mark, "the mark jumped");
+            Assert.AreEqual(run.Hero.Id, mark.SourceId);
+        }
+
+        [Test]
+        public void RollingShotRollsAwayShootsAndLeavesASnare()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Corridor);
+            var uzuki = run.Hero;
+            Place(uzuki, 5, 1);
+            var slime = Dummy(run, 6, 1);
+
+            Assert.IsTrue(run.UseSkill(Slot(uzuki, SkillCatalog.RollingShot), Direction8.W));
+            Assert.AreEqual(new GridPos(3, 1), uzuki.Pos, "rolled 2 tiles");
+            Assert.IsTrue(AttacksBy(run, uzuki).Any(arrow => arrow.TargetId == slime.Id), "then shot back");
+            Assert.AreEqual(1, run.Events.OfType<TrapPlacedEvent>().Count(trap => trap.Pos == new GridPos(5, 1)));
+
+            // The slime came after her and stepped on the snare where she stood.
+            Assert.AreEqual(new GridPos(5, 1), slime.Pos);
+            Assert.IsNotNull(slime.FindStatus(StatusKind.Rooted));
+            Assert.AreEqual(0, run.Traps.Count, "a trap goes off once");
+            run.Wait();
+            Assert.AreEqual(new GridPos(5, 1), slime.Pos, "rooted: it can't follow");
+        }
+
+        [Test]
+        public void HeroesWalkOverTheirOwnTraps()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Corridor);
+            Place(run.Hero, 5, 1);
+            Dummy(run, 10, 1);
+            run.UseSkill(Slot(run.Hero, SkillCatalog.RollingShot), Direction8.W);
+            Assert.AreEqual(1, run.Traps.Count);
+            run.Hero.Pos = new GridPos(4, 1);
+            run.Move(Direction8.E);
+            Assert.AreEqual(1, run.Traps.Count, "still there after Uzuki walked over it");
+        }
+
+        // ---- Haiden ----
+
+        [Test]
+        public void HaidensHealMendsTheMostHurtNeighborFromHisOwnMaxHp()
+        {
+            var run = Run(new[] { ActorCatalog.Haiden, ActorCatalog.Kristela, ActorCatalog.Uzuki }, Room);
+            foreach (var member in run.Party) run.SetTactic(member, PartyTactic.Hold);
+            var haiden = run.Hero;
+            var kristela = run.Party[1];
+            var uzuki = run.Party[2];
+            Place(haiden, 1, 3);
+            Place(kristela, 2, 3);
+            Place(uzuki, 1, 4);
+            kristela.Hp = 100;
+            uzuki.Hp = 300;
+
+            Assert.IsTrue(run.UseSkill(Slot(haiden, SkillCatalog.PaladinHeal)));
+            Assert.AreEqual(100 + haiden.MaxHp * 20 / 100, kristela.Hp, "the most hurt, by share of max HP");
+            Assert.AreEqual(300, uzuki.Hp);
+        }
+
+        [Test]
+        public void ShoulderBashShovesAndTaunts()
+        {
+            var run = Run(Only(ActorCatalog.Haiden), Corridor);
+            var slime = Dummy(run, 2, 1);
+            Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.ShoulderBash), Direction8.E));
+            Assert.IsTrue(run.Events.OfType<PushedEvent>().Any(e => e.ActorId == slime.Id && !e.Blocked));
+            Assert.IsTrue(run.Events.OfType<StatusAppliedEvent>().Any(e => e.ActorId == slime.Id && e.Kind == StatusKind.Taunt));
+        }
+
+        [Test]
+        public void ShoulderBashHitsHarderAgainstAWall()
+        {
+            int Bash(params string[] rows)
+            {
+                var run = Run(Only(ActorCatalog.Haiden), rows);
+                var slime = Dummy(run, 2, 1);
+                run.Hero.CritRate = 0;
+                run.UseSkill(Slot(run.Hero, SkillCatalog.ShoulderBash), Direction8.E);
+                return run.Events.OfType<DamageEvent>().First(hit => hit.TargetId == slime.Id).Amount;
+            }
+            int open = Bash("#####", "#@..#", "#####");
+            int walled = Bash("####", "#@.#", "####");
+            Assert.AreEqual(open * 3 / 2, walled, 2, "+50% when it can't be shoved");
+        }
+
+        [Test]
+        public void DivineStrikeIsAFireSmite()
+        {
+            var run = Run(Only(ActorCatalog.Haiden), Corridor);
+            var slime = Dummy(run, 2, 1);
+            Assert.AreEqual(Element.Fire, SkillCatalog.DivineStrike.Element);
+            Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.DivineStrike), Direction8.E));
+            Assert.Less(slime.Hp, slime.MaxHp);
+        }
+
+        // ---- Kristela ----
+
+        [Test]
+        public void PiercingPunchAlsoHitsTheEnemyBehind()
+        {
+            var run = Run(Only(ActorCatalog.Kristela), Corridor);
+            var front = Dummy(run, 2, 1);
+            var back = Dummy(run, 3, 1);
+            Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.PiercingPunch), Direction8.E));
+            Assert.Less(front.Hp, front.MaxHp);
+            Assert.Less(back.Hp, back.MaxHp);
+        }
+
+        [Test]
+        public void KiHealIsAQuickSelfHeal()
+        {
+            var run = Run(Only(ActorCatalog.Kristela), Corridor);
+            Dummy(run, 3, 1);
+            run.Wait(); // The fight starts; Kristela (100) is up at 100 AV.
+            var kristela = run.Hero;
+            kristela.Hp = 100;
+            Assert.IsTrue(run.UseSkill(Slot(kristela, SkillCatalog.KiHeal)));
+            Assert.AreEqual(kristela.MaxHp * 25 / 100, run.Events.OfType<HealedEvent>().Single().Amount);
+            Assert.AreEqual(AvTime.FromWhole(150), run.Forecast(1)[0].Time, "Quick: half a turn");
+        }
+
+        [Test]
+        public void StunStrikeMakesAFoeSkipItsTurn()
+        {
+            var run = Run(Only(ActorCatalog.Kristela), Corridor);
+            var slime = Dummy(run, 2, 1);
+            run.Hero.Affinity = 100000; // Make the 60% a sure thing.
+            Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.StunStrike), Direction8.E));
+            Assert.IsTrue(run.Events.OfType<TurnSkippedEvent>().Any(e => e.ActorId == slime.Id), "its turn right after is lost");
+            Assert.IsFalse(AttacksBy(run, slime).Any());
+        }
+
+        [Test]
+        public void ABossIsPushedBackInsteadOfStunned()
+        {
+            var run = Run(Only(ActorCatalog.Kristela), Corridor);
+            var boss = run.SpawnEnemy(new GridPos(2, 1), ActorCatalog.KingSlime);
+            boss.MaxHp = boss.Hp = 100000;
+            run.Wait(); // The fight starts.
+            Assert.IsTrue(run.InCombat);
+            run.Hero.Affinity = 100000;
+            Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.StunStrike), Direction8.E));
+            Assert.IsNull(boss.FindStatus(StatusKind.Stunned));
+            Assert.IsTrue(run.Events.OfType<TurnDelayedEvent>().Any(e => e.ActorId == boss.Id && e.Percent == 30));
+        }
+
+        // ---- The AI uses the kits ----
+
+        [Test]
+        public void TheAutoPilotMarksABigFoeFirst()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Corridor);
+            Dummy(run, 4, 1);
+            var command = AutoPilot.Decide(run);
+            Assert.AreEqual(HeroCommandKind.Skill, command.Kind);
+            Assert.AreSame(SkillCatalog.HuntersMark, run.Hero.Definition.Skills[command.Slot]);
+        }
+
+        [Test]
+        public void TheArcherRollsAwayFromAFoeNextToHer()
+        {
+            var run = Run(Only(ActorCatalog.Uzuki), Corridor);
+            Place(run.Hero, 5, 1);
+            Dummy(run, 6, 1);
+            var command = AutoPilot.Decide(run);
+            Assert.AreSame(SkillCatalog.RollingShot, run.Hero.Definition.Skills[command.Slot]);
+            Assert.AreEqual(Direction8.W, command.Direction);
+        }
+
+        [Test]
+        public void APartnerHealsTheMostHurtNeighbor()
+        {
+            var run = Run(new[] { ActorCatalog.Kristela, ActorCatalog.Haiden }, Room);
+            Place(run.Hero, 1, 3);
+            Place(run.Party[1], 2, 3);
+            run.Hero.Hp = 50;
+            var command = PartnerBrain.Decide(run, run.Party[1]);
+            Assert.AreEqual(HeroCommandKind.Skill, command.Kind);
+            Assert.AreSame(SkillCatalog.PaladinHeal, run.Party[1].Definition.Skills[command.Slot]);
+        }
+    }
+}

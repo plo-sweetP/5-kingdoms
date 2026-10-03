@@ -12,16 +12,33 @@ namespace FiveKingdoms.Tests
         const int MaxActionsPerRun = 3000;
 
         [Test]
-        public void AutoPilotRunsKeepTheWorldConsistent()
+        public void AutoPilotRunsKeepTheWorldConsistent() => Soak(seed => new DungeonRun(seed));
+
+        [Test]
+        public void PartyRunsKeepTheWorldConsistent() =>
+            Soak(seed => new DungeonRun(seed, new DungeonRunConfig { Party = ActorCatalog.StartingParty }));
+
+        [Test]
+        public void PartyRunsLedByHaidenKeepTheWorldConsistent() =>
+            Soak(seed => new DungeonRun(seed, new DungeonRunConfig { Party = new[] { ActorCatalog.Haiden, ActorCatalog.Uzuki, ActorCatalog.Kristela } }));
+
+        [Test]
+        public void PartyRunsLedByKristelaKeepTheWorldConsistent() =>
+            Soak(seed => new DungeonRun(seed, new DungeonRunConfig { Party = new[] { ActorCatalog.Kristela, ActorCatalog.Haiden, ActorCatalog.Uzuki } }));
+
+        static void Soak(System.Func<int, DungeonRun> start)
         {
             int deepestFloor = 0;
             for (int seed = 1; seed <= Seeds; seed++)
             {
-                var run = new DungeonRun(seed);
+                var run = start(seed);
+                var swaps = new Dictionary<(int, int), List<int>>();
                 for (int step = 0; step < MaxActionsPerRun && run.State == RunState.InProgress; step++)
                 {
                     run.Execute(AutoPilot.Decide(run));
-                    AssertConsistent(run, $"seed {seed}, action {step}");
+                    string context = $"seed {seed}, action {step}";
+                    AssertConsistent(run, context);
+                    AssertNoSwapLoops(run, swaps, context);
                 }
                 Assert.AreNotEqual(RunState.InProgress, run.State,
                     $"seed {seed}: the autopilot stalled on B{run.Floor}F at {run.Hero.Pos} (stairs {run.Map.Stairs})");
@@ -40,10 +57,32 @@ namespace FiveKingdoms.Tests
                 Assert.That(actor.Hp, Is.InRange(1, actor.MaxHp), $"{actor} has bad HP ({context})");
             }
             if (run.State == RunState.InProgress)
-                Assert.IsTrue(run.Actors.Contains(run.Hero), $"hero missing while the run is in progress ({context})");
+            {
+                Assert.IsTrue(run.Actors.Contains(run.Hero), $"leader missing while the run is in progress ({context})");
+                foreach (var member in run.Party)
+                    Assert.AreEqual(member.IsAlive, run.Actors.Contains(member), $"{member} standing iff alive ({context})");
+            }
             foreach (var item in run.Items)
                 Assert.IsTrue(run.Map.IsWalkable(item.Pos), $"item inside a wall ({context})");
             Assert.That(run.Berries, Is.InRange(0, run.Config.MaxBerries), context);
+            foreach (var member in run.Party)
+                Assert.That(member.Charge, Is.InRange(0, CombatRules.MaxCharge), $"{member}'s charge ({context})");
+        }
+
+        /// <summary>
+        /// PROGRESSION.md, "No swap loops": fails if the same two heroes swap back and forth (three swaps within six
+        /// leader turns). A melee partner swapping to the front as a fight starts and a ranged leader walking back through
+        /// it once the fight is over are fine.
+        /// </summary>
+        static void AssertNoSwapLoops(DungeonRun run, Dictionary<(int, int), List<int>> swaps, string context)
+        {
+            foreach (var swapped in run.Events.OfType<SwappedEvent>())
+            {
+                var pair = (System.Math.Min(swapped.ActorId, swapped.OtherId), System.Math.Max(swapped.ActorId, swapped.OtherId));
+                if (!swaps.TryGetValue(pair, out var turns)) swaps[pair] = turns = new List<int>();
+                turns.Add(run.Turn);
+                Assert.Less(turns.Count(turn => run.Turn - turn < 6), 3, $"heroes {pair} keep swapping places ({context})");
+            }
         }
     }
 }

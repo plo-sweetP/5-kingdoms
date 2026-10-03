@@ -15,10 +15,16 @@ namespace FiveKingdoms.Tests
         [Test]
         public void UzukiStartsOnTheTenTimesScaleWithBaseCrit()
         {
-            var uzuki = Make(ActorCatalog.Uzuki);
-            Assert.AreEqual(400, uzuki.MaxHp);
-            Assert.AreEqual(60, uzuki.Attack);
-            Assert.AreEqual(30, uzuki.Defense);
+            var definition = ActorCatalog.Uzuki;
+            Assert.AreEqual(400, definition.MaxHp);
+            Assert.AreEqual(60, definition.Attack);
+            Assert.AreEqual(30, definition.Defense);
+
+            var uzuki = Make(definition);
+            var bow = WeaponCatalog.HunterBow;
+            Assert.AreEqual(400 + bow.Hp, uzuki.MaxHp, "the bow's stats count as base");
+            Assert.AreEqual(60 + bow.Atk, uzuki.Attack);
+            Assert.AreEqual(30 + bow.Def, uzuki.Defense);
             Assert.AreEqual(50, uzuki.CritRate, "5% Crit Rate, in tenths of a percent");
             Assert.AreEqual(500, uzuki.CritDmg, "+50% Crit DMG");
         }
@@ -95,7 +101,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void TheStatSheetScalesBaseAndWeaponButNotFlatBonuses()
         {
-            var sword = new WeaponDefinition("test_sword", "Test Sword", hp: 100, atk: 20, def: 5, spd: 4);
+            var sword = new WeaponDefinition("test_sword", "Test Sword", WeaponType.LongSword, "Slash", hp: 100, atk: 20, def: 5, spd: 4);
             var actor = Make(Dummy(attack: 60, defense: 10, weapon: sword));
             Assert.AreEqual(80, actor.Attack, "60 base + 20 weapon");
             Assert.AreEqual(1100, actor.MaxHp);
@@ -105,6 +111,22 @@ namespace FiveKingdoms.Tests
             actor.Stats.Flat[StatKind.Atk] = 7;
             actor.RecalculateStats();
             Assert.AreEqual(95, actor.Attack, "(60 + 20) x 1.1 + 7");
+        }
+
+        [Test]
+        public void WeaponStatsGrowWithItemLevelButSpeedDoesNot()
+        {
+            var bow = WeaponCatalog.HunterBow;
+            Assert.AreEqual(bow.Atk, bow.AtkAt(1));
+            Assert.AreEqual(bow.Atk + 9 * bow.AtkPerLevel, bow.AtkAt(10));
+            Assert.AreEqual(bow.Hp + 9 * bow.HpPerLevel, bow.HpAt(10));
+
+            var archer = Make(new ActorDefinition("archer", "Archer", maxHp: 400, attack: 60, defense: 30, expReward: 0, weapon: bow));
+            int attackAtOne = archer.Attack;
+            archer.WeaponLevel = 10;
+            archer.RecalculateStats();
+            Assert.AreEqual(attackAtOne + 9 * bow.AtkPerLevel, archer.Attack);
+            Assert.AreEqual(100 + bow.Spd, archer.Speed, "SPD is flat, whatever the item level");
         }
 
         [Test]
@@ -119,14 +141,14 @@ namespace FiveKingdoms.Tests
         [Test]
         public void ALevelUpAddsTheDefinitionsGrowthAndHealsByIt()
         {
-            var uzuki = Make(ActorCatalog.Uzuki);
-            uzuki.Hp = 100;
-            CombatRules.ApplyLevelUp(uzuki);
-            Assert.AreEqual(2, uzuki.Level);
-            Assert.AreEqual(400 + ActorCatalog.Uzuki.HpGrowth, uzuki.MaxHp);
-            Assert.AreEqual(100 + ActorCatalog.Uzuki.HpGrowth, uzuki.Hp);
-            Assert.AreEqual(60 + ActorCatalog.Uzuki.AtkGrowth, uzuki.Attack);
-            Assert.AreEqual(ActorCatalog.Uzuki.Speed, uzuki.Speed, "levels never raise speed");
+            var hero = Make(TestHeroes.Classic);
+            hero.Hp = 100;
+            CombatRules.ApplyLevelUp(hero);
+            Assert.AreEqual(2, hero.Level);
+            Assert.AreEqual(400 + TestHeroes.Classic.HpGrowth, hero.MaxHp);
+            Assert.AreEqual(100 + TestHeroes.Classic.HpGrowth, hero.Hp);
+            Assert.AreEqual(60 + TestHeroes.Classic.AtkGrowth, hero.Attack);
+            Assert.AreEqual(TestHeroes.Classic.Speed, hero.Speed, "levels never raise speed");
         }
 
         [Test]

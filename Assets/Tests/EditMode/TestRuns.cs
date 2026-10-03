@@ -5,7 +5,8 @@ namespace FiveKingdoms.Tests
     static class TestRuns
     {
         /// <summary>
-        /// A run on a hand-drawn floor (repeated for every floor) with no random enemies, items, regen or boss.
+        /// A run on a hand-drawn floor (repeated for every floor) with no random enemies, items, regen or boss, and the
+        /// <see cref="TestHeroes.Classic"/> hero unless one is given.
         /// Pass a boss to make the last floor a boss floor; it still has to be spawned by the test.
         /// </summary>
         public static DungeonRun OnMap(int floorCount, HeroProgress hero, ActorDefinition boss, params string[] rows)
@@ -17,6 +18,7 @@ namespace FiveKingdoms.Tests
                 Populate = false,
                 RegenIntervalAv = 0,
                 Boss = boss,
+                Hero = TestHeroes.Classic,
             };
             return new DungeonRun(7, config, hero);
         }

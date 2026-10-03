@@ -21,7 +21,7 @@ Classes, Traces and professions are for **heroes only**. Monsters get their iden
   and to fill **profession slots at the home base**.
   - **Uzuki** (the first companion): 5th kingdom (Medieval Realm). Signature class **Crystal Ice Legion Hunter**: an
     Ice Hunter Bow user who summons ice avatars to fight alongside.
-  - **Haiden** (boy): 3rd kingdom (Dynasty Nation). Fire **Rune Warrior**; signature class **Runegod Fire Fist**.
+  - **Haiden** (boy): 3rd kingdom (Dynasty Nation). Fire **Rune Warrior**; signature class **Runegod Fire Blade**.
     Concept: [docs/concept/haiden.jpg](../concept/haiden.jpg): spiky orange-brown hair, blue headband with long
     tails, red eyes.
   - **Kristela** (girl): 5th kingdom (Medieval Realm), a princess. Base class **Monk**; signature class **Princess
@@ -33,11 +33,13 @@ Classes, Traces and professions are for **heroes only**. Monsters get their iden
 | Hero | Class | Role | Profession | Base SPD (*proposed*) |
 |---|---|---|---|---|
 | Uzuki | Archer, speccing into Mage (Ice) toward Crystal Ice Legion Hunter | **Utility DPS** (ranged; traps, slows and control) | Alchemist (potions for the team) | 95 |
-| Haiden | Rune Warrior | **Tank-healer** (frontliner; fire runes that guard and mend) | Blacksmith (equipment) | 90 |
+| Haiden | Rune Warrior | **Tank DPS with some healing** (frontliner; fire runes that hit, guard and mend) | Blacksmith (equipment) | 90 |
 | Kristela | Monk | **Melee DPS** (speed build) | Chef (food buffs and heals) | 100 |
 
-Together they cover tank-healer, melee DPS and utility DPS, so the player's own character can fill whatever role
-they like.
+Together they cover tank (with some healing), melee DPS and utility DPS, so the player's own character can fill
+whatever role they like.
+
+**Weapons:** Uzuki uses a **Hunter Bow**, Haiden a **Long Sword**, Kristela **Gauntlets** (see GEAR.md).
 
 ## Levels 1-100
 - **Each level gives 1 point** (100 at level 100), spent on class or profession tiers in any mix.
@@ -103,14 +105,15 @@ Each kingdom's classes match its flavor, so players know what style they're buil
 
 ### Medieval Realm (5th): the classic classes, faith
 - **Base:** **Warrior** (offensive melee), **Knight** (shield and protection), **Mage** (elemental magic), **Archer**
-  (ranged physical), **Cleric** (faith healing, support), **Rogue** (crit, bleed/poison, mobility), **Monk** (fast
-  unarmed martial arts, multi-hit; Kristela's base class).
+  (ranged physical), **Cleric** (faith healing, support), **Paladin** (holy warrior: armored melee and smites, with
+  light healing), **Rogue** (crit, bleed/poison, mobility), **Monk** (fast unarmed martial arts, multi-hit;
+  Kristela's base class).
 - **Advanced (affinity):** **Holy Knight** (Knight 15 + Cleric 10): tank-healer with faith shields. **Spellblade**
   (Warrior 15 + Mage 10): magic-infused melee. **Ranger** (Archer 15 + Hunter 10): traps, partner synergy.
   **Archmage** (Mage 25 + Academy Teacher 10): big area spells.
-- **Inherited:** **Crystal Ice Legion Hunter** (Knight 15 + Mage 10 with an Ice skill picked): Uzuki's class. Ice
-  Hunter Bow attacks, summons ice avatars. **Princess Timeless Monk** (*sketch*: Monk 15 + Mage 10 with a Space/Time
-  skill picked): Kristela's class. Time magic for a speed build: turn advances and flurries.
+- **Inherited:** **Crystal Ice Legion Hunter** (Archer 15 + Mage 10 with an Ice skill picked): Uzuki's class. Ice
+  Hunter Bow attacks, summons ice avatars. **Princess Timeless Monk** (*sketch*: Monk 15 + Mage 10 with a Darkness
+  (time) skill picked): Kristela's class. Time magic for a speed build: turn advances and flurries.
 
 ### Aurelius Empire (1st): dragon and phoenix bloodlines
 - **Base:** **Dragonblood Warrior** (fire/earth melee, bloodline passives), **Phoenix Acolyte** (fire healer,
@@ -125,7 +128,7 @@ Each kingdom's classes match its flavor, so players know what style they're buil
 - **Advanced (affinity):** **Artificer** (Mech Engineer 15 + Blacksmith 10): turrets and in-combat gear buffs.
 - **Inherited, magic side** (prerequisites are *sketches*):
   - **Summoner** (Arcanist 15 + Mage 10): summons sigil creatures.
-  - **Cosmic Mage** (Mage 15 + Arcanist 10, with a Space/Time skill picked): star and gravity magic.
+  - **Cosmic Mage** (Mage 15 + Arcanist 10, with a Darkness (cosmic) skill picked): star and gravity magic.
   - **Broken Star Lance** (Arcanist 15 + Wyvern Lancer 10): falling-star lance strikes.
   - **Sun Warrior** (Warrior 15 + Arcanist 10, with a Fire skill picked): radiant melee.
   - **Moon Titan** (Knight 15 + Arcanist 10, with a Darkness skill picked): lunar tank.
@@ -141,7 +144,8 @@ Each kingdom's classes match its flavor, so players know what style they're buil
   (ancestor spirits empower allies), **Strategist** (timeline control: speed up allies' turns, delay enemies').
 - **Advanced (affinity):** **Onmyoji** (Spirit Monk 15 + Strategist 10): summons spirit familiars.
 - **Inherited** (prerequisites are *sketches*):
-  - **Runegod Fire Fist** (Rune Warrior 15 + Monk 10, with a Fire rune picked): Haiden's class. Burning rune fists.
+  - **Runegod Fire Blade** (Rune Warrior 15 + Paladin 10, with a Fire rune picked): Haiden's class. A burning rune
+    long sword; a tank who deals real damage, with some healing from fire runes. Not a pure healer.
   - **Samurai** (Warrior 15 + Spirit Monk 10): iaido counters, single heavy strikes.
   - **Ninja** (Rogue 15 + Strategist 10): stealth, poison/bleed, shadow clones.
   - **Sword Singer** (Spirit Monk 15 + Warrior 10): sword dances whose songs empower allies.
@@ -156,6 +160,15 @@ Each kingdom's classes match its flavor, so players know what style they're buil
 - **Advanced (affinity):** **Pack Alpha** (Beast Warrior 15 + Animal Trainer 10): boosts monster partners.
 - **Inherited:** **Primal Beast** (Beast Warrior 25 + Beast Shaman 5): full transformation ultimate with buffed
   skills for a few turns. **Storm Roc** (Skyborn 20 + Beast Shaman 10): air transformation ultimate.
+
+**Elements:** Darkness is the "everything else" magic element. Time, cosmic and space magic all fall under it.
+
+## Skill presentation (later)
+- When a hero uses a skill, a **manga/comic panel** of their chibi performing it flies in from the right side of the
+  screen, then slides out.
+- **Ultimates** get a short **cutscene**.
+- Built later, class by class, as each skill and ultimate is designed. For now, skill events only need to carry the
+  hero and skill id so a presentation layer can show a panel per skill later.
 
 ## Speed protection
 - **Pre-gear speed = hero/race base + a class modifier, clamped to 85-100.** The modifier comes from the hero's
@@ -230,7 +243,4 @@ Each kingdom's classes match its flavor, so players know what style they're buil
 | **Merchant** | *Back burner.* Trades items. Visiting other players' trading posts needs an online backend (server-checked trades, no duplication), so start with NPC caravans offline |
 
 ## Open questions
-1. Uzuki starts as an Archer and specs into Ice Mage, but Crystal Ice Legion Hunter requires Knight 15 + Mage 10.
-   Should it be **Archer 15 + Mage 10** instead (fits the bow), or does Uzuki also train Knight?
-2. Princess Timeless Monk and Cosmic Mage lean on the Space/Time element, and the element list isn't final.
-3. Weapons for a Monk and a fist fighter (Kristela, Haiden's Runegod Fire Fist) aren't in GEAR.md yet.
+1. Long Sword and Gauntlets passives: later. They're stats-only weapons for the first playtest.

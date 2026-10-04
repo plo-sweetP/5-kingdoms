@@ -132,7 +132,11 @@ The gear rules (GEAR.md) aren't built yet (milestone 1h); this pass makes the **
 - **More head pieces, for variety** (Peter, 2026-10-04: "Bow, crown, head band in addition to what you currently
   have"): a hair bow, a crown and a headband, as cosmetic head pieces on top of the nine sets, generated in the
   pack's style. At the end of art pass 1 if there's room, otherwise the next art pass.
-- **Rings give an aura color** (Peter's idea): a soft tinted glow under the hero, one color per ring set.
+- **Rings show as a sparkle and a flash, one color per ring set** (decided 2026-10-04): a tiny twinkle in the set's
+  color near the hero's hand every few seconds, and a short pulse of that color on the hero when the set's bonus
+  fires (the bonuses themselves come with 1h). The first preview used a glow disc on the ground under the hero;
+  Peter found it "a bit much", and the ground is where the game shows what the player has to read (Aura of
+  Protection, reach highlights, warning tiles), so nothing permanent goes there.
 - A hero's look is **data**: which rig, head, weapon, armor pieces and aura. Until gear exists, each hero has a
   default look, a launch flag overrides it for trying things out, and 1h later sets it from the equipped items.
 - Every weapon and armor piece also gets a 64 px **icon** for the gear and hero screens to come.

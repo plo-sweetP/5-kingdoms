@@ -89,6 +89,24 @@ whatever role they like.
   near the leader and only by a short way; otherwise they stay behind the line. On Auto, the leader with partners in
   a fight goes for the enemies that are after the party (up to 12 steps) and waits behind a partner that holds the
   way.
+- **Doorways and corridors** (decided 2026-10-04, to build as roadmap row C1). Peter's playtest note: a melee hero
+  who steps through a room's entrance gets surrounded and falls, while the two behind him can't do anything useful.
+  This dungeon keeps its narrow corridors (Peter: other biomes will open the floor up in other ways), so the party's
+  AI, the autopilot's leader included, learns to use them:
+  - **Hold the door.** When a fight is on or about to start, the hero at the front stays on the last corridor tile
+    (the doorway) instead of stepping into the room. Only the tile straight ahead can reach him there, and the
+    archer shoots past him.
+  - **Rotate the front.** At a doorway or in a corridor, when the front hero is below about half HP and the melee
+    hero behind him is healthier, they swap: the fresh one fights, the hurt one heals behind. The swap cooldown and
+    the no-loops check still apply.
+  - **Enter when it's safe, or when there's room.** The lead hero looks before stepping in. With at most 2 enemies
+    close (within 3-4 tiles), the party goes in. With more, it goes in only if there is room to bring the second
+    (and third) melee hero into the fight beside the leader; then the leader steps in and aside so the others can
+    follow. Otherwise it holds the door. Peter: "i'll trust your judgement on this when simulating the dungeon
+    runs", so the numbers are set with the run simulations.
+  - **Not now:** pulling a pack to the door with a shot ("almost seems too advance for now"), walking in and backing
+    out to drag enemies along, and wider corridors. Reach weapons (a spear, the Arcane Sword) are the gear answer to
+    hitting past an ally.
 
 **Targeting and input (decided).**
 - **Two steps for skills and ultimates:** tap the skill, the tiles it can reach light up (Fire Emblem style) with

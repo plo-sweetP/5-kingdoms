@@ -106,7 +106,7 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 - **Speed changes** (buffs, later) keep the distance an actor has left and recompute when it acts; the gauge isn't reset.
 - **HUD:** a turn-order strip (next 5 turns of the fight, cycle dividers, "+AV" until each, SLAM on a winding-up boss's
   next turn), shown only in combat. Walk animations are slightly faster or slower with Speed.
-- **Content:** slimes 100 (same as the hero), King Slime 85 (slow and heavy: about every 6th turn the hero gets two in a row).
+- **Content:** Spiders 100 (same as the hero), the Troll 85 (slow and heavy: about every 6th turn the hero gets two in a row). They were the slimes and the King Slime before art pass 1.
 - **Regression anchor:** with all speeds equal, the timeline reproduces the original alternating turns exactly (golden
   replay test; balance report identical before and after).
 - Every party member acts on the timeline at their own speed (1f). **Later:** Break/toughness with elements (1j),

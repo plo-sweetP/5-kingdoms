@@ -1,6 +1,7 @@
 # Art direction: the Tiny Swords pack (design, 2026-10-03)
 
-Status: **decided by Peter on 2026-10-03. Art pass 1 comes before milestone 1g.** Items marked *proposed* are the
+Status: **decided by Peter on 2026-10-03; art pass 1 was built and pushed on 2026-10-04** (main 4d75ffa; what it
+contains is in GAME_PLAN.md, "Progress", and in the Drive release notes). Items marked *proposed* are the
 planning hub's defaults that Peter has seen and not objected to; a build session may change them where the pack forces
 it, and says so in its report.
 
@@ -128,10 +129,11 @@ The gear rules (GEAR.md) aren't built yet (milestone 1h); this pass makes the **
   piece carry the look (a helmet, hood or hat over the hero's hair with the face still showing; the body's colors
   and trim); hands and feet are a few pixels at this size, so they show as color accents. Peter reviewed the nine
   head pieces on 2026-10-04 ("good so far"): the archer helmet loses the metal piece that hangs in front of the
-  eyes. The previews are in `docs/screenshots/2026-10-04-art-pass-1/` once the art session pushes.
+  eyes. The preview sheets are in `docs/screenshots/2026-10-04-art-pass-1/`.
 - **More head pieces, for variety** (Peter, 2026-10-04: "Bow, crown, head band in addition to what you currently
   have"): a hair bow, a crown and a headband, as cosmetic head pieces on top of the nine sets, generated in the
-  pack's style. At the end of art pass 1 if there's room, otherwise the next art pass.
+  pack's style. Built in art pass 1 (`hair_bow`, `crown`, `headband`): one is worn instead of the armor set's
+  head piece.
 - **Rings show as a sparkle and a flash, one color per ring set** (decided 2026-10-04): a tiny twinkle in the set's
   color near the hero's hand every few seconds, and a short pulse of that color on the hero when the set's bonus
   fires (the bonuses themselves come with 1h). The first preview used a glow disc on the ground under the hero;
@@ -164,19 +166,19 @@ style. They stay short, so turns don't slow down. As a guide:
 The manga panels and ultimate cutscenes in PROGRESSION.md ("Skill presentation") are still for later.
 
 ### The rest of the game
-- **Monsters** (*proposed*), from the Enemy Pack, with the stats and behavior they have today: the **Spider** replaces
+- **Monsters** (built this way; Peter's OK on the mapping and the dungeon's name is still open), from the Enemy Pack, with the stats and behavior they have today: the **Spider** replaces
   the Slime, the **Giant Bat** the Bat, and the **Troll** the King Slime. The Troll's wind-up strip is the slam's
   warning turn, its attack the slam, its recovery the turn after, and it calls two Spiders at half HP. Names change
   with the art everywhere the player sees them; the first dungeon needs a new name ("Troll's Hollow" as a working
   name, was "Slime Cave").
-- **Dungeon** (*proposed*): it looks like the outdoors. Floors are flat ground, walls are raised ground with cliff
+- **Dungeon** (built this way): it looks like the outdoors. Floors are flat ground, walls are raised ground with cliff
   faces toward the rooms, and bushes, rocks, trees, bones and skull spikes decorate the unwalkable parts without
   hiding a walkable tile. As built: the floor uses the pack's color 4 (dry ground) and the raised ground color 3
   (lush grass), so walkable ground reads at a glance. The **cave entrance** replaces the stairs (the way down to the next floor). The boss
   room's pillars need to read clearly as blocking. A cave recolor of the floors can follow once Peter has seen it.
 - **Effects and items:** the pack's arrow, dust, explosions, fire and heal effect where they fit; the berry, the
   snare, reticles, reach highlights and status icons redrawn to match.
-- **HUD** (*proposed*): the pack's buttons, panels, ribbons and bars; round buttons for the attack, skills and
+- **HUD** (built this way): the pack's buttons, panels, ribbons and bars; round buttons for the attack, skills and
   ultimate; portraits on the party cards and the turn-order strip (the heroes' own heads, the monsters' avatars).
   Layouts for touch, keyboard and gamepad on phone (19.5:9) and tablet or Steam Deck (16:10) all keep working.
 - **View size (decided 2026-10-04 from screenshots):** at 64 px tiles and a crisp 2x zoom, a 1080p phone shows about
@@ -186,6 +188,13 @@ The manga panels and ultimate cutscenes in PROGRESSION.md ("Skill presentation")
   in the code for a player setting later ("keep C handy to allow some UI options for the player later"). Option A
   (staying at 2x and sliding the camera until the heroes sit at the screen's edge) is out: "that does look a bit
   weird".
+  - As built: while aiming, the camera moves no further than it must to show every target clear of the HUD. If that
+    move would take the party out of the middle third of the screen, or the targets don't fit at 2x, the view steps
+    out to 1x until the aim ends. On a 1080p phone: targets up to 2 tiles up or down, or 5 to the side, need no move;
+    3 up is a small nudge; 4-5 up, or 5 up and 5 down, steps out. A screen under 1056 px high already plays at 1x
+    and can't step out. `-fk-view wide` is option C; `-fk-view lead` (A) is a debug flag only.
+  - Not checked on the Android devices yet: the rule is tested by arithmetic for the S22 Ultra and Tab S8+ sizes and
+    looked at in 1560x720, 1440x900 and 2340x1080 windows.
 
 ### Done when
 The Core tests, Unity EditMode and PlayMode tests, the Windows build and the autoplay runs pass with the new art in

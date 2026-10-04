@@ -49,7 +49,7 @@ namespace FiveKingdoms.Tests
         }
 
         [UnityTest]
-        public IEnumerator AStrongHeroBeatsTheKingSlime()
+        public IEnumerator AStrongHeroBeatsTheTroll()
         {
             // One floor: straight into the boss arena, at a level that should win comfortably.
             DungeonController.Overrides = new LaunchOptions { SavePath = savePath, FreshSave = true, FloorCount = 1, StartLevel = 12 };

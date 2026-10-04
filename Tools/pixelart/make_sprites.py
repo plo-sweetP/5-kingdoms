@@ -315,7 +315,7 @@ def make_arrow():
     return add_outline(c, rgb('#2a1a10'))
 
 
-def make_slime():
+def make_spider():
     base, light, dark, deep = rgb('#5ecb5a'), rgb('#9be890'), rgb('#3a9442'), rgb('#25682f')
     shine, eye, outline = rgb('#f2fff0'), rgb('#132613'), rgb('#163d1d')
     c = Canvas()
@@ -360,8 +360,8 @@ KING_CROWN = [
 ]
 
 
-def make_king_slime():
-    """48x48 boss: a royal purple slime with a gold crown, angry brows and fangs."""
+def make_troll():
+    """48x48 boss: a royal purple spider with a gold crown, angry brows and fangs."""
     base, light, dark, deep = rgb('#9b5de5'), rgb('#c9a2f5'), rgb('#6a3cb0'), rgb('#472580')
     shine, ink, white = rgb('#f6ecff'), rgb('#1e0c30'), rgb('#ffffff')
     size = 48
@@ -402,7 +402,7 @@ def make_king_slime():
 
 def make_bat():
     """A fast cave bat: a round purple body, big ears, yellow eyes and fangs, scalloped wings spread wide. It flies, so
-    it sits higher in the tile than the slimes."""
+    it sits higher in the tile than the spiders."""
     body, light, dark = rgb('#6b4a9e'), rgb('#9a7fd0'), rgb('#45306c')
     wing, wing_dark, bone = rgb('#5b3d86'), rgb('#432b66'), rgb('#2e1d47')
     eye, pupil, fang, ear_in = rgb('#ffd84a'), rgb('#2a1a10'), rgb('#ffffff'), rgb('#d48ab4')
@@ -462,7 +462,7 @@ def make_shadow():
 
 
 # ---------------------------------------------------------------------------------------------
-# Tiles (Slime Cave)
+# Tiles (Troll's Hollow)
 
 FLOOR = rgb('#4d443b')
 
@@ -745,8 +745,8 @@ SPRITES = {
     'Characters/uzuki': make_uzuki,
     'Characters/haiden': make_haiden,
     'Characters/kristela': make_kristela,
-    'Characters/slime': make_slime,
-    'Characters/king_slime': make_king_slime,
+    'Characters/spider': make_spider,
+    'Characters/troll': make_troll,
     'Characters/bat': make_bat,
     'Effects/shadow': make_shadow,
     'Effects/arrow': make_arrow,
@@ -807,13 +807,13 @@ def make_preview(sprites, scale):
                 scene.paste(sprites['Items/berry'], x * T, y * T)
             elif ch in '@s':
                 scene.paste(sprites['Effects/shadow'], x * T, y * T)
-                scene.paste(sprites['Characters/uzuki' if ch == '@' else 'Characters/slime'], x * T, y * T, flip_x=ch == 's')
+                scene.paste(sprites['Characters/uzuki' if ch == '@' else 'Characters/spider'], x * T, y * T, flip_x=ch == 's')
     scene.paste(sprites['Effects/slash_1'], 10 * T, 5 * T)
     # Large single-sprite close-ups along the bottom.
     strip = Canvas(w * T, 2 * T, rgb('#1d1a26'))
     x = 8
-    for name in ('Characters/uzuki', 'Characters/haiden', 'Characters/kristela', 'Characters/slime', 'Characters/bat',
-                 'Characters/king_slime', 'Items/berry', 'Effects/arrow', 'Effects/snare', 'Effects/punch',
+    for name in ('Characters/uzuki', 'Characters/haiden', 'Characters/kristela', 'Characters/spider', 'Characters/bat',
+                 'Characters/troll', 'Items/berry', 'Effects/arrow', 'Effects/snare', 'Effects/punch',
                  'Effects/status_mark', 'Effects/status_rooted', 'Effects/status_taunt', 'Effects/status_stunned',
                  'Effects/status_guard', 'Effects/status_aura'):
         big = sprites[name].scaled(2 if sprites[name].h <= T else 1)

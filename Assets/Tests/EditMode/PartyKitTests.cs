@@ -171,9 +171,9 @@ namespace FiveKingdoms.Tests
             var run = Run(new[] { ActorCatalog.Uzuki, ActorCatalog.Haiden }, Corridor);
             Place(run.Hero, 1, 1);
             Place(run.Party[1], 2, 1);
-            var slime = Dummy(run, 3, 1);
+            var spider = Dummy(run, 3, 1);
             run.Attack(Direction8.E);
-            Assert.AreEqual(slime.Id, AttacksBy(run, run.Hero).Single().TargetId, "past Haiden");
+            Assert.AreEqual(spider.Id, AttacksBy(run, run.Hero).Single().TargetId, "past Haiden");
 
             var walled = Run(Only(ActorCatalog.Uzuki), "#######", "#@.#..#", "#######");
             var behind = Dummy(walled, 4, 1);
@@ -192,13 +192,13 @@ namespace FiveKingdoms.Tests
         public void PowerShotFiresTwoArrowsAndKnocksTheTargetBackOnce()
         {
             var run = Run(Only(ActorCatalog.Uzuki), Corridor);
-            var slime = Dummy(run, 4, 1);
+            var spider = Dummy(run, 4, 1);
             Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.PowerShot), Direction8.E));
             var arrows = AttacksBy(run, run.Hero).ToList();
             Assert.AreEqual(2, arrows.Count, "the Hunter Bow's Multishot");
-            Assert.IsTrue(arrows.All(arrow => arrow.TargetId == slime.Id && arrow.Ranged));
+            Assert.IsTrue(arrows.All(arrow => arrow.TargetId == spider.Id && arrow.Ranged));
             Assert.AreEqual(4, arrows[1].Distance, "the second arrow flies to where the first knocked it");
-            Assert.AreEqual(1, run.Events.OfType<PushedEvent>().Count(e => e.ActorId == slime.Id && !e.Blocked));
+            Assert.AreEqual(1, run.Events.OfType<PushedEvent>().Count(e => e.ActorId == spider.Id && !e.Blocked));
         }
 
         [Test]
@@ -215,13 +215,13 @@ namespace FiveKingdoms.Tests
         public void HuntersMarkIsAQuickMarkThatOnlyUzukisHitsExploit()
         {
             var run = Run(Only(ActorCatalog.Uzuki), Corridor);
-            var slime = Dummy(run, 4, 1);
+            var spider = Dummy(run, 4, 1);
             run.Wait(); // It comes closer; the fight starts. Uzuki (101) is up first.
             Assert.IsTrue(run.InCombat);
 
             Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.HuntersMark), Direction8.E));
-            Assert.AreEqual(125, run.DamageTakenPercent(slime, run.Hero), "+25% from Uzuki");
-            Assert.AreEqual(100, run.DamageTakenPercent(slime, slime), "nobody else");
+            Assert.AreEqual(125, run.DamageTakenPercent(spider, run.Hero), "+25% from Uzuki");
+            Assert.AreEqual(100, run.DamageTakenPercent(spider, spider), "nobody else");
             Assert.AreEqual(Timeline.TurnLength(101) + Timeline.TurnLength(101, 50), run.Forecast(1)[0].Time, "Quick: half a turn");
         }
 
@@ -247,19 +247,19 @@ namespace FiveKingdoms.Tests
             var run = Run(Only(ActorCatalog.Uzuki), Corridor);
             var uzuki = run.Hero;
             Place(uzuki, 5, 1);
-            var slime = Dummy(run, 6, 1);
+            var spider = Dummy(run, 6, 1);
 
             Assert.IsTrue(run.UseSkill(Slot(uzuki, SkillCatalog.RollingShot), Direction8.W));
             Assert.AreEqual(new GridPos(3, 1), uzuki.Pos, "rolled 2 tiles");
-            Assert.IsTrue(AttacksBy(run, uzuki).Any(arrow => arrow.TargetId == slime.Id), "then shot back");
+            Assert.IsTrue(AttacksBy(run, uzuki).Any(arrow => arrow.TargetId == spider.Id), "then shot back");
             Assert.AreEqual(1, run.Events.OfType<TrapPlacedEvent>().Count(trap => trap.Pos == new GridPos(5, 1)));
 
-            // The slime came after her and stepped on the snare where she stood.
-            Assert.AreEqual(new GridPos(5, 1), slime.Pos);
-            Assert.IsNotNull(slime.FindStatus(StatusKind.Rooted));
+            // The spider came after her and stepped on the snare where she stood.
+            Assert.AreEqual(new GridPos(5, 1), spider.Pos);
+            Assert.IsNotNull(spider.FindStatus(StatusKind.Rooted));
             Assert.AreEqual(0, run.Traps.Count, "a trap goes off once");
             run.Wait();
-            Assert.AreEqual(new GridPos(5, 1), slime.Pos, "rooted: it can't follow");
+            Assert.AreEqual(new GridPos(5, 1), spider.Pos, "rooted: it can't follow");
         }
 
         [Test]
@@ -300,10 +300,10 @@ namespace FiveKingdoms.Tests
         public void ShoulderBashShovesAndTaunts()
         {
             var run = Run(Only(ActorCatalog.Haiden), Corridor);
-            var slime = Dummy(run, 2, 1);
+            var spider = Dummy(run, 2, 1);
             Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.ShoulderBash), Direction8.E));
-            Assert.IsTrue(run.Events.OfType<PushedEvent>().Any(e => e.ActorId == slime.Id && !e.Blocked));
-            Assert.IsTrue(run.Events.OfType<StatusAppliedEvent>().Any(e => e.ActorId == slime.Id && e.Kind == StatusKind.Taunt));
+            Assert.IsTrue(run.Events.OfType<PushedEvent>().Any(e => e.ActorId == spider.Id && !e.Blocked));
+            Assert.IsTrue(run.Events.OfType<StatusAppliedEvent>().Any(e => e.ActorId == spider.Id && e.Kind == StatusKind.Taunt));
         }
 
         [Test]
@@ -312,10 +312,10 @@ namespace FiveKingdoms.Tests
             int Bash(params string[] rows)
             {
                 var run = Run(Only(ActorCatalog.Haiden), rows);
-                var slime = Dummy(run, 2, 1);
+                var spider = Dummy(run, 2, 1);
                 run.Hero.CritRate = 0;
                 run.UseSkill(Slot(run.Hero, SkillCatalog.ShoulderBash), Direction8.E);
-                return run.Events.OfType<DamageEvent>().First(hit => hit.TargetId == slime.Id).Amount;
+                return run.Events.OfType<DamageEvent>().First(hit => hit.TargetId == spider.Id).Amount;
             }
             int open = Bash("#####", "#@..#", "#####");
             int walled = Bash("####", "#@.#", "####");
@@ -326,10 +326,10 @@ namespace FiveKingdoms.Tests
         public void DivineStrikeIsAFireSmite()
         {
             var run = Run(Only(ActorCatalog.Haiden), Corridor);
-            var slime = Dummy(run, 2, 1);
+            var spider = Dummy(run, 2, 1);
             Assert.AreEqual(Element.Fire, SkillCatalog.DivineStrike.Element);
             Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.DivineStrike), Direction8.E));
-            Assert.Less(slime.Hp, slime.MaxHp);
+            Assert.Less(spider.Hp, spider.MaxHp);
         }
 
         // ---- Kristela ----
@@ -375,51 +375,51 @@ namespace FiveKingdoms.Tests
         [Test]
         public void StunStrikePushesTheFoesNextTurnBackInsteadOfSkippingIt()
         {
-            var run = StunDuel(out var slime); // The slime (100) was due at 100 AV too, right after her.
-            Assert.IsTrue(run.Execute(HeroCommand.SkillAt(Slot(run.Hero, SkillCatalog.StunStrike), slime.Pos)));
+            var run = StunDuel(out var spider); // The spider (100) was due at 100 AV too, right after her.
+            Assert.IsTrue(run.Execute(HeroCommand.SkillAt(Slot(run.Hero, SkillCatalog.StunStrike), spider.Pos)));
 
             var delay = run.Events.OfType<TurnDelayedEvent>().Single();
-            Assert.AreEqual(slime.Id, delay.ActorId);
+            Assert.AreEqual(spider.Id, delay.ActorId);
             Assert.AreEqual(50, delay.Percent, "half a turn");
             Assert.IsTrue(delay.Stun);
-            Assert.IsTrue(AttacksBy(run, slime).Any(), "delayed to 150 AV, not skipped: it still bit her before her next turn at 200");
-            Assert.AreEqual(AvTime.FromWhole(250), run.Forecast(5).First(turn => turn.Actor == slime).Time, "and stays half a turn late");
+            Assert.IsTrue(AttacksBy(run, spider).Any(), "delayed to 150 AV, not skipped: it still bit her before her next turn at 200");
+            Assert.AreEqual(AvTime.FromWhole(250), run.Forecast(5).First(turn => turn.Actor == spider).Time, "and stays half a turn late");
         }
 
         [Test]
         public void AStunOutsideAFightDoesNothing()
         {
             var run = Run(Only(ActorCatalog.Kristela), Corridor);
-            var slime = Dummy(run, 2, 1);
+            var spider = Dummy(run, 2, 1);
             run.Hero.Affinity = 100000;
-            Assert.IsTrue(run.UseSkillAt(Slot(run.Hero, SkillCatalog.StunStrike), slime.Pos)); // Exploring: everyone acts once anyway.
+            Assert.IsTrue(run.UseSkillAt(Slot(run.Hero, SkillCatalog.StunStrike), spider.Pos)); // Exploring: everyone acts once anyway.
             Assert.IsFalse(run.Events.OfType<TurnDelayedEvent>().Any());
-            Assert.IsTrue(AttacksBy(run, slime).Any());
+            Assert.IsTrue(AttacksBy(run, spider).Any());
         }
 
         [Test]
         public void AFoeIsDelayedAtMostOncePerItsOwnTurn()
         {
-            // A slow slime (50): due at 200 AV, while Kristela acts at 100, 200, 300.
-            var run = StunDuel(out var slime, foeSpeed: 50);
+            // A slow spider (50): due at 200 AV, while Kristela acts at 100, 200, 300.
+            var run = StunDuel(out var spider, foeSpeed: 50);
             int stun = Slot(run.Hero, SkillCatalog.StunStrike);
 
-            Assert.IsTrue(run.UseSkillAt(stun, slime.Pos)); // 100 AV: its turn moves from 200 to 300.
+            Assert.IsTrue(run.UseSkillAt(stun, spider.Pos)); // 100 AV: its turn moves from 200 to 300.
             var first = run.Events.OfType<TurnDelayedEvent>().Single();
-            Assert.IsTrue(slime.IsDelayed);
-            Assert.IsFalse(run.CanDelay(slime));
-            Assert.AreEqual(AvTime.FromWhole(300), run.Forecast(5).First(turn => turn.Actor == slime).Time);
+            Assert.IsTrue(spider.IsDelayed);
+            Assert.IsFalse(run.CanDelay(spider));
+            Assert.AreEqual(AvTime.FromWhole(300), run.Forecast(5).First(turn => turn.Actor == spider).Time);
 
-            Assert.IsTrue(run.AttackAt(slime.Pos)); // 200 AV: Stun Strike sits out a turn.
-            Assert.IsTrue(slime.IsDelayed, "it still hasn't acted");
+            Assert.IsTrue(run.AttackAt(spider.Pos)); // 200 AV: Stun Strike sits out a turn.
+            Assert.IsTrue(spider.IsDelayed, "it still hasn't acted");
 
-            Assert.IsTrue(run.UseSkillAt(stun, slime.Pos)); // 300 AV, just before the slime.
+            Assert.IsTrue(run.UseSkillAt(stun, spider.Pos)); // 300 AV, just before the spider.
             Assert.IsFalse(run.Events.OfType<TurnDelayedEvent>().Any(), "a second stun before it acts does nothing: no stun-lock");
-            Assert.IsTrue(AttacksBy(run, slime).Any(), "so it takes its turn at 300 as planned");
-            Assert.IsFalse(slime.IsDelayed);
+            Assert.IsTrue(AttacksBy(run, spider).Any(), "so it takes its turn at 300 as planned");
+            Assert.IsFalse(spider.IsDelayed);
 
-            Assert.IsTrue(run.AttackAt(slime.Pos)); // 400 AV.
-            Assert.IsTrue(run.UseSkillAt(stun, slime.Pos)); // 500 AV: its next turn (500) can be pushed back again.
+            Assert.IsTrue(run.AttackAt(spider.Pos)); // 400 AV.
+            Assert.IsTrue(run.UseSkillAt(stun, spider.Pos)); // 500 AV: its next turn (500) can be pushed back again.
             var second = run.Events.OfType<TurnDelayedEvent>().Single();
             Assert.AreEqual(first.TurnsTaken + 1, second.TurnsTaken, "one delay for each of its turns");
         }
@@ -427,7 +427,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void AStunPushesABossBackHalfAsFar()
         {
-            var run = StunDuel(out var boss, ActorCatalog.KingSlime);
+            var run = StunDuel(out var boss, ActorCatalog.Troll);
             Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.StunStrike), Direction8.E));
             var delay = run.Events.OfType<TurnDelayedEvent>().Single(e => e.ActorId == boss.Id);
             Assert.AreEqual(25, delay.Percent);
@@ -442,7 +442,7 @@ namespace FiveKingdoms.Tests
             var uzuki = run.Hero;
             uzuki.MaxHp = uzuki.Hp = 100000;
             Place(uzuki, 5, 1);
-            var boss = run.SpawnEnemy(new GridPos(6, 1), ActorCatalog.KingSlime);
+            var boss = run.SpawnEnemy(new GridPos(6, 1), ActorCatalog.Troll);
             boss.MaxHp = boss.Hp = 100000;
             run.Wait(); // The fight starts.
             Assert.IsTrue(run.InCombat);

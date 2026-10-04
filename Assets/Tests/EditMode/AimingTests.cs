@@ -196,12 +196,12 @@ namespace FiveKingdoms.Tests
             var run = Run(new[] { ActorCatalog.Kristela }, Room); // Kristela at (1, 3), facing south.
             Assert.AreEqual(-1, run.AimFor(run.Hero, null).Default, "nothing in reach: nothing to mark");
 
-            var slime = Dummy(run, 2, 4);
+            var spider = Dummy(run, 2, 4);
             var aim = run.AimFor(run.Hero, null);
-            Assert.AreSame(slime, aim.Options[aim.Default].Target, "one more tap confirms it");
-            Assert.AreEqual(HeroCommand.AttackAt(slime.Pos), aim.Options[aim.Default].ToCommand(HeroCommandKind.Attack, 0));
-            Assert.AreEqual(HeroCommand.SkillAt(2, slime.Pos), aim.Options[aim.Default].ToCommand(HeroCommandKind.Skill, 2));
-            Assert.AreEqual(HeroCommand.UltimateAt(slime.Pos), aim.Options[aim.Default].ToCommand(HeroCommandKind.Ultimate, 0));
+            Assert.AreSame(spider, aim.Options[aim.Default].Target, "one more tap confirms it");
+            Assert.AreEqual(HeroCommand.AttackAt(spider.Pos), aim.Options[aim.Default].ToCommand(HeroCommandKind.Attack, 0));
+            Assert.AreEqual(HeroCommand.SkillAt(2, spider.Pos), aim.Options[aim.Default].ToCommand(HeroCommandKind.Skill, 2));
+            Assert.AreEqual(HeroCommand.UltimateAt(spider.Pos), aim.Options[aim.Default].ToCommand(HeroCommandKind.Ultimate, 0));
         }
 
         [Test]

@@ -16,11 +16,11 @@ namespace FiveKingdoms.Tests
             "#########",
         };
 
-        /// <summary>A single-floor run on <see cref="Arena"/> with the King Slime standing just east of the hero.</summary>
+        /// <summary>A single-floor run on <see cref="Arena"/> with the Troll standing just east of the hero.</summary>
         static (DungeonRun run, Actor boss) BossNextToHero(int heroLevel = 10)
         {
-            var run = TestRuns.OnMap(1, new HeroProgress(ActorCatalog.Uzuki, heroLevel), ActorCatalog.KingSlime, Arena);
-            var boss = run.SpawnEnemy(run.Hero.Pos + new GridPos(1, 0), ActorCatalog.KingSlime);
+            var run = TestRuns.OnMap(1, new HeroProgress(ActorCatalog.Uzuki, heroLevel), ActorCatalog.Troll, Arena);
+            var boss = run.SpawnEnemy(run.Hero.Pos + new GridPos(1, 0), ActorCatalog.Troll);
             boss.SpecialCooldown = 0;
             boss.Alerted = true;
             return (run, boss);
@@ -36,7 +36,7 @@ namespace FiveKingdoms.Tests
             Assert.IsNotNull(run.Boss);
             Assert.AreEqual(1, run.Map.RoomIndexAt(run.Boss.Pos), "the boss waits in the arena");
             Assert.AreEqual(0, run.Map.RoomIndexAt(run.Hero.Pos), "the hero arrives in the antechamber");
-            Assert.AreEqual(ActorCatalog.KingSlime.MaxHp, run.Boss.MaxHp, "bosses don't get the per-floor bonus");
+            Assert.AreEqual(ActorCatalog.Troll.MaxHp, run.Boss.MaxHp, "bosses don't get the per-floor bonus");
             Assert.AreEqual(run.Config.BossFloorBerries, run.Items.Count);
         }
 

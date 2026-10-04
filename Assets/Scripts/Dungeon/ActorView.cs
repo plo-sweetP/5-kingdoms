@@ -60,7 +60,7 @@ namespace FiveKingdoms.Dungeon
             view.squishy = squishy;
             view.maxHp = actor.MaxHp;
             view.BurstColor = burstColor;
-            view.idleClock = UnityEngine.Random.value * 10f; // Keeps a room full of slimes from wobbling in sync.
+            view.idleClock = UnityEngine.Random.value * 10f; // Keeps a room full of spiders from wobbling in sync.
 
             var size = sprite.bounds.size;
             view.lift = Mathf.Max(0f, size.y - 1f) / 2f;

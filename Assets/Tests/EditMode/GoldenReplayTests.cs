@@ -85,10 +85,10 @@ namespace FiveKingdoms.Tests
             FastEnemy = null,
             Hero = new ActorDefinition("uzuki", "Uzuki", maxHp: 400, attack: 60, defense: 30, expReward: 0, speed: 100,
                 hpGrowth: 50, atkGrowth: 10, defGrowth: 10),
-            Enemy = new ActorDefinition("slime", "Slime", maxHp: 140, attack: 50, defense: 10, expReward: 6, speed: 100,
+            Enemy = new ActorDefinition("spider", "Spider", maxHp: 140, attack: 50, defense: 10, expReward: 6, speed: 100,
                 hpGrowth: 30, atkGrowth: 10, defGrowth: 5, expGrowth: 2),
-            Boss = new ActorDefinition("king_slime", "King Slime", maxHp: 1100, attack: 110, defense: 50, expReward: 80,
-                brain: ActorBrain.SlimeKing, speed: 100),
+            Boss = new ActorDefinition("troll", "Troll", maxHp: 1100, attack: 110, defense: 50, expReward: 80,
+                brain: ActorBrain.Troll, speed: 100),
         };
     }
 }

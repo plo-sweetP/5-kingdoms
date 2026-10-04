@@ -32,7 +32,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void ABasicHitMatchesTheSpecAtLevelOne()
         {
-            // GEAR.md: 200% of 60 ATK against a slime's 10 DEF is about 115 (K = 210, so x 210/220), before the spread.
+            // GEAR.md: 200% of 60 ATK against a spider's 10 DEF is about 115 (K = 210, so x 210/220), before the spread.
             var attacker = Make(Dummy(attack: 60));
             attacker.CritRate = 0;
             var target = Make(Dummy(defense: 10), Team.Enemy);
@@ -156,7 +156,7 @@ namespace FiveKingdoms.Tests
         {
             var first = TestRuns.OnMap("#####", "#@..#", "#####").SpawnEnemy(new GridPos(2, 1));
             Assert.AreEqual(1, first.Level);
-            Assert.AreEqual(ActorCatalog.Slime.MaxHp, first.MaxHp);
+            Assert.AreEqual(ActorCatalog.Spider.MaxHp, first.MaxHp);
 
             var deeper = new DungeonRun(4, new DungeonRunConfig { Populate = false, Boss = null });
             while (deeper.Floor < 3)
@@ -164,11 +164,11 @@ namespace FiveKingdoms.Tests
                 deeper.Hero.Pos = deeper.Map.Stairs;
                 deeper.Descend();
             }
-            var slime = deeper.SpawnEnemy(deeper.Hero.Pos + new GridPos(1, 0));
-            Assert.AreEqual(3, slime.Level);
-            Assert.AreEqual(ActorCatalog.Slime.MaxHp + 2 * ActorCatalog.Slime.HpGrowth, slime.MaxHp);
-            Assert.AreEqual(ActorCatalog.Slime.Attack + 2 * ActorCatalog.Slime.AtkGrowth, slime.Attack);
-            Assert.AreEqual(ActorCatalog.Slime.ExpReward + 2 * ActorCatalog.Slime.ExpGrowth, slime.ExpReward);
+            var spider = deeper.SpawnEnemy(deeper.Hero.Pos + new GridPos(1, 0));
+            Assert.AreEqual(3, spider.Level);
+            Assert.AreEqual(ActorCatalog.Spider.MaxHp + 2 * ActorCatalog.Spider.HpGrowth, spider.MaxHp);
+            Assert.AreEqual(ActorCatalog.Spider.Attack + 2 * ActorCatalog.Spider.AtkGrowth, spider.Attack);
+            Assert.AreEqual(ActorCatalog.Spider.ExpReward + 2 * ActorCatalog.Spider.ExpGrowth, spider.ExpReward);
         }
 
         [Test]

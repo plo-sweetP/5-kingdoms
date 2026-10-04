@@ -19,12 +19,12 @@ namespace FiveKingdoms.Tests
 
         static DungeonRun Run() => TestRuns.OnMap(1, new HeroProgress(TestHeroes.Classic), null, Hall);
 
-        static Actor SlimeAt(DungeonRun run, int dx, int dy, int hp = 1000)
+        static Actor SpiderAt(DungeonRun run, int dx, int dy, int hp = 1000)
         {
-            var slime = run.SpawnEnemy(run.Hero.Pos + new GridPos(dx, dy));
-            slime.MaxHp = slime.Hp = hp;
-            slime.Attack = 1;
-            return slime;
+            var spider = run.SpawnEnemy(run.Hero.Pos + new GridPos(dx, dy));
+            spider.MaxHp = spider.Hp = hp;
+            spider.Attack = 1;
+            return spider;
         }
 
         [Test]
@@ -40,20 +40,20 @@ namespace FiveKingdoms.Tests
         public void SpiritStrikeHitsTheAdjacentEnemy()
         {
             var run = Run();
-            var slime = SlimeAt(run, 1, 0);
+            var spider = SpiderAt(run, 1, 0);
 
             Assert.IsTrue(run.UseSkill(Strike));
-            Assert.Less(slime.Hp, 1000);
+            Assert.Less(spider.Hp, 1000);
             Assert.AreEqual(run.Hero.Id, run.Events.OfType<SkillUsedEvent>().Single().ActorId);
             Assert.AreEqual("spirit_strike", run.Events.OfType<SkillUsedEvent>().Single().Skill.Id, "skill events carry the hero and skill");
-            Assert.AreEqual(slime.Id, run.Events.OfType<AttackEvent>().First().TargetId);
+            Assert.AreEqual(spider.Id, run.Events.OfType<AttackEvent>().First().TargetId);
         }
 
         [Test]
         public void ASkillCantBeUsedTwoTurnsInARow()
         {
             var run = Run();
-            SlimeAt(run, 1, 0);
+            SpiderAt(run, 1, 0);
             Assert.AreEqual(1, SkillCatalog.SpiritStrike.Cooldown, "every skill has the 1-turn cooldown");
 
             Assert.IsTrue(run.UseSkill(Strike));
@@ -71,19 +71,19 @@ namespace FiveKingdoms.Tests
             Assert.IsFalse(run.UseSkill(Strike));
             Assert.AreEqual(0, run.Turn);
 
-            var slime = SlimeAt(run, 0, -1); // South of the hero, who looks the other way.
+            var spider = SpiderAt(run, 0, -1); // South of the hero, who looks the other way.
             run.Hero.Facing = Direction8.N;
             Assert.AreEqual(SkillCheck.Ready, run.CheckSkill(Strike));
             run.UseSkill(Strike);
             Assert.AreEqual(Direction8.S, run.Hero.Facing, "turns to face the enemy it hits");
-            Assert.Less(slime.Hp, 1000);
+            Assert.Less(spider.Hp, 1000);
         }
 
         [Test]
         public void SpiritStrikeTakesLongerOnTheTimeline()
         {
             var run = Run();
-            SlimeAt(run, 1, 0);
+            SpiderAt(run, 1, 0);
             run.Wait(); // The fight starts; the hero is due at 100 AV.
             Assert.IsTrue(run.InCombat);
 
@@ -136,7 +136,7 @@ namespace FiveKingdoms.Tests
         {
             var run = Run();
             run.Hero.Facing = Direction8.E;
-            SlimeAt(run, 2, 0);
+            SpiderAt(run, 2, 0);
             Assert.IsTrue(run.UseSkill(Dash));
             Assert.AreEqual(new GridPos(3, 2), run.Hero.Pos);
         }
@@ -177,8 +177,8 @@ namespace FiveKingdoms.Tests
         public void AnAimedStrikeHitsTheEnemyItIsAimedAt()
         {
             var run = Run();
-            var east = SlimeAt(run, 1, 0);
-            var west = SlimeAt(run, -1, 0);
+            var east = SpiderAt(run, 1, 0);
+            var west = SpiderAt(run, -1, 0);
             Assert.IsTrue(run.Execute(HeroCommand.Skill(Strike, Direction8.W)));
             Assert.AreEqual(west.Id, run.Events.OfType<AttackEvent>().First().TargetId);
             Assert.AreEqual(1000, east.Hp);
@@ -188,8 +188,8 @@ namespace FiveKingdoms.Tests
         public void ATargetedStrikeHitsTheFoeOnThatTileOrIsRefused()
         {
             var run = Run();
-            var east = SlimeAt(run, 1, 0);
-            var north = SlimeAt(run, 0, 1);
+            var east = SpiderAt(run, 1, 0);
+            var north = SpiderAt(run, 0, 1);
             run.Hero.Facing = Direction8.E;
 
             Assert.AreEqual(SkillCheck.NoTarget, run.CheckSkillAt(run.Hero, Strike, run.Hero.Pos + new GridPos(-1, 0)));
@@ -229,7 +229,7 @@ namespace FiveKingdoms.Tests
         public void DashIsQuickOnTheTimeline()
         {
             var run = Run();
-            SlimeAt(run, 3, 0);
+            SpiderAt(run, 3, 0);
             run.Wait(); // The fight starts; the hero is due at 100 AV.
             run.Hero.Facing = Direction8.W;
             run.UseSkill(Dash); // 50% of a turn.
@@ -260,22 +260,22 @@ namespace FiveKingdoms.Tests
         public void TheAutoPilotUsesItsStrongerSkillThenItsWeaponAttack()
         {
             var run = Run();
-            var slime = SlimeAt(run, 1, 0);
-            run.Wait(); // The slime notices the hero; the fight is on.
+            var spider = SpiderAt(run, 1, 0);
+            run.Wait(); // The spider notices the hero; the fight is on.
             Assert.IsTrue(run.InCombat);
             var first = AutoPilot.Decide(run);
-            Assert.AreEqual(HeroCommand.SkillAt(Strike, slime.Pos), first, "Spirit Strike (240%) beats the weapon attack (200%)");
+            Assert.AreEqual(HeroCommand.SkillAt(Strike, spider.Pos), first, "Spirit Strike (240%) beats the weapon attack (200%)");
             run.Execute(first);
-            Assert.AreEqual(HeroCommand.AttackAt(slime.Pos), AutoPilot.Decide(run), "cooling down: the weapon attack, on the slime's tile, never by walking into it");
+            Assert.AreEqual(HeroCommand.AttackAt(spider.Pos), AutoPilot.Decide(run), "cooling down: the weapon attack, on the spider's tile, never by walking into it");
         }
 
         [Test]
         public void TheAutoPilotGoesForTheMarkedFoeThenTheLowestHp()
         {
             var run = Run();
-            var sturdy = SlimeAt(run, 1, 0, hp: 900);
-            var weak = SlimeAt(run, -1, 0, hp: 300);
-            var marked = SlimeAt(run, 0, 1, hp: 600);
+            var sturdy = SpiderAt(run, 1, 0, hp: 900);
+            var weak = SpiderAt(run, -1, 0, hp: 300);
+            var marked = SpiderAt(run, 0, 1, hp: 600);
             run.Hero.SkillCooldowns[Strike] = 1;
 
             Assert.AreEqual(HeroCommand.AttackAt(weak.Pos), AutoPilot.Decide(run), "the lowest HP of the three in reach");

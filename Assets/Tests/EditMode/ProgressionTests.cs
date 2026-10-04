@@ -34,11 +34,11 @@ namespace FiveKingdoms.Tests
         {
             var progress = new HeroProgress(ActorCatalog.Uzuki);
             var run = TestRuns.OnMap(1, progress, null, Corridor);
-            var slime = run.SpawnEnemy(new GridPos(2, 1));
-            slime.Hp = 1;
-            slime.ExpReward = 30;
+            var spider = run.SpawnEnemy(new GridPos(2, 1));
+            spider.Hp = 1;
+            spider.ExpReward = 30;
 
-            run.AttackAt(slime.Pos);
+            run.AttackAt(spider.Pos);
 
             Assert.AreEqual(run.Hero.Level, progress.Level);
             Assert.AreEqual(run.Hero.Exp, progress.Exp);
@@ -68,10 +68,10 @@ namespace FiveKingdoms.Tests
         {
             var progress = new HeroProgress(ActorCatalog.Uzuki);
             var first = TestRuns.OnMap(1, progress, null, Corridor);
-            var slime = first.SpawnEnemy(new GridPos(2, 1));
-            slime.Hp = 1;
-            slime.ExpReward = 100;
-            first.AttackAt(slime.Pos);
+            var spider = first.SpawnEnemy(new GridPos(2, 1));
+            spider.Hp = 1;
+            spider.ExpReward = 100;
+            first.AttackAt(spider.Pos);
             int level = first.Hero.Level;
 
             var second = TestRuns.OnMap(1, progress, null, Corridor);
@@ -85,9 +85,9 @@ namespace FiveKingdoms.Tests
         public void CatalogFindsDefinitionsById()
         {
             Assert.AreSame(ActorCatalog.Uzuki, ActorCatalog.Find("uzuki"));
-            Assert.AreSame(ActorCatalog.KingSlime, ActorCatalog.Find("king_slime"));
+            Assert.AreSame(ActorCatalog.Troll, ActorCatalog.Find("troll"));
             Assert.IsNull(ActorCatalog.Find("nobody"));
-            Assert.IsTrue(new[] { ActorCatalog.Uzuki, ActorCatalog.Slime }.All(d => !d.IsBoss));
+            Assert.IsTrue(new[] { ActorCatalog.Uzuki, ActorCatalog.Spider }.All(d => !d.IsBoss));
         }
     }
 }

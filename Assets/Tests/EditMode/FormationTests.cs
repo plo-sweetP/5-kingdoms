@@ -118,11 +118,11 @@ namespace FiveKingdoms.Tests
             var run = Run(new[] { ActorCatalog.Uzuki }, Room);
             var uzuki = run.Hero;
             Place(uzuki, 3, 3);
-            var slime = Dummy(run, 4, 3);
+            var spider = Dummy(run, 4, 3);
             for (int slot = 0; slot < uzuki.SkillCooldowns.Length; slot++) uzuki.SkillCooldowns[slot] = 1;
             uzuki.RetreatSteps = 1; // She already stepped back once and it followed.
 
-            Assert.AreEqual(HeroCommand.AttackAt(slime.Pos), AutoPilot.Decide(run), "a point-blank Quick Shot rather than retreating forever");
+            Assert.AreEqual(HeroCommand.AttackAt(spider.Pos), AutoPilot.Decide(run), "a point-blank Quick Shot rather than retreating forever");
         }
 
         [Test]
@@ -133,14 +133,14 @@ namespace FiveKingdoms.Tests
             run.SetTactic(haiden, PartyTactic.Follow);
             Place(run.Hero, 1, 3);
             Place(haiden, 1, 4);
-            var slime = Dummy(run, 6, 3);
-            Root(slime);
+            var spider = Dummy(run, 6, 3);
+            Root(spider);
 
-            run.Wait(); // The slime notices them: the fight starts.
+            run.Wait(); // The spider notices them: the fight starts.
             Assert.IsTrue(run.InCombat);
-            int before = GridPos.ChebyshevDistance(haiden.Pos, slime.Pos);
+            int before = GridPos.ChebyshevDistance(haiden.Pos, spider.Pos);
             run.Wait();
-            Assert.Less(GridPos.ChebyshevDistance(haiden.Pos, slime.Pos), before, "Follow or not, he goes in");
+            Assert.Less(GridPos.ChebyshevDistance(haiden.Pos, spider.Pos), before, "Follow or not, he goes in");
         }
 
         [Test]
@@ -180,7 +180,7 @@ namespace FiveKingdoms.Tests
             Assert.AreEqual(new GridPos(1, 1), haiden.Pos, "he waits behind her");
         }
 
-        /// <summary>Haiden behind Kristela in a corridor, a slime in her face, her Ki Heal just used.</summary>
+        /// <summary>Haiden behind Kristela in a corridor, a spider in her face, her Ki Heal just used.</summary>
         static DungeonRun HurtMonkInFront(ActorDefinition[] members, out Actor kristela, out Actor haiden)
         {
             var run = Run(members, Corridor);
@@ -199,7 +199,7 @@ namespace FiveKingdoms.Tests
         {
             var run = HurtMonkInFront(new[] { ActorCatalog.Kristela, ActorCatalog.Haiden }, out var kristela, out var haiden);
             Assert.IsTrue(DungeonRun.IsBadlyHurt(kristela), "under 30%");
-            Assert.IsTrue(run.CanSwap(kristela, haiden), "run to safety: he stands farther from the slime");
+            Assert.IsTrue(run.CanSwap(kristela, haiden), "run to safety: he stands farther from the spider");
             Assert.IsFalse(run.CanSwap(haiden, kristela), "he isn't hurt, and melee heroes don't swap forward past each other");
 
             haiden.Hp = haiden.MaxHp * 25 / 100;
@@ -216,7 +216,7 @@ namespace FiveKingdoms.Tests
             var kristela = run.Hero;
             var haiden = run.Party[1];
             Place(kristela, 3, 3);
-            Place(haiden, 3, 4); // Beside her, and also next to the slime.
+            Place(haiden, 3, 4); // Beside her, and also next to the spider.
             Dummy(run, 4, 3);
             kristela.Hp = 1;
             Assert.IsFalse(run.CanSwap(kristela, haiden), "his tile is no safer");
@@ -271,7 +271,7 @@ namespace FiveKingdoms.Tests
             Place(uzuki, 2, 1);
             Place(kristela, 3, 1);
             Dummy(run, 5, 1);
-            Assert.IsFalse(run.CanSwap(kristela, uzuki), "Uzuki's tile is farther from the slime");
+            Assert.IsFalse(run.CanSwap(kristela, uzuki), "Uzuki's tile is farther from the spider");
 
             Place(uzuki, 3, 1);
             Place(kristela, 2, 1);
@@ -285,7 +285,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void ARangedPartnerFindsATileToShootFromAwayFromTheFoe()
         {
-            // A wall down the middle of the room hides the slime from her.
+            // A wall down the middle of the room hides the spider from her.
             var run = Run(new[] { ActorCatalog.Kristela, ActorCatalog.Uzuki },
                 "##########",
                 "#........#",
@@ -297,8 +297,8 @@ namespace FiveKingdoms.Tests
             var uzuki = run.Party[1];
             Place(run.Hero, 1, 3);
             Place(uzuki, 4, 5);
-            var slime = Dummy(run, 6, 3);
-            Root(slime);
+            var spider = Dummy(run, 6, 3);
+            Root(spider);
             HoldAll(run);
             run.Wait(); // The fight starts.
             Assert.IsTrue(run.InCombat);
@@ -312,7 +312,7 @@ namespace FiveKingdoms.Tests
             Assert.IsFalse(run.FoeAdjacent(next, uzuki.Team), "without walking into melee");
         }
 
-        /// <summary>Haiden up the ring's right-hand corridor with a slime in his face, the fight on, everyone else still to place.</summary>
+        /// <summary>Haiden up the ring's right-hand corridor with a spider in his face, the fight on, everyone else still to place.</summary>
         static DungeonRun TankInTheRing(ActorDefinition[] members)
         {
             var run = Run(members, Ring);
@@ -333,7 +333,7 @@ namespace FiveKingdoms.Tests
             var kristela = run.Party[1];
             Assert.AreEqual(new GridPos(4, 1), kristela.Pos, "right behind Haiden");
 
-            // The slime's far side is 11 steps around the ring: she doesn't go looking for it.
+            // The spider's far side is 11 steps around the ring: she doesn't go looking for it.
             Assert.AreEqual(HeroCommand.Wait, PartnerBrain.Decide(run, kristela));
             for (int i = 0; i < 4; i++) run.Wait();
             Assert.AreEqual(new GridPos(4, 1), kristela.Pos, "still there, ready to take his place");
@@ -345,7 +345,7 @@ namespace FiveKingdoms.Tests
             var run = TankInTheRing(ActorCatalog.StartingParty);
             var uzuki = run.Party[2];
             Assert.AreEqual(new GridPos(3, 1), uzuki.Pos, "around the corner, behind Kristela");
-            Assert.IsFalse(run.AnyFoeInSight(uzuki.Pos, uzuki.Team, 5), "the corner hides the slime from her");
+            Assert.IsFalse(run.AnyFoeInSight(uzuki.Pos, uzuki.Team, 5), "the corner hides the spider from her");
             Assert.IsTrue(run.AnyFoeInSight(new GridPos(4, 5), uzuki.Team, 5), "the top of the ring, 9 steps around, would give her a shot");
 
             Assert.AreEqual(HeroCommand.Wait, PartnerBrain.Decide(run, uzuki));
@@ -360,8 +360,8 @@ namespace FiveKingdoms.Tests
             var kristela = run.Party[1];
             Place(run.Hero, 4, 3);
             Place(kristela, 3, 3);
-            var slime = Dummy(run, 5, 3);
-            Root(slime);
+            var spider = Dummy(run, 5, 3);
+            Root(spider);
             HoldAll(run);
             run.Wait();
             Assert.IsTrue(run.InCombat);
@@ -369,13 +369,13 @@ namespace FiveKingdoms.Tests
 
             run.Wait();
             run.Wait();
-            Assert.AreEqual(1, GridPos.ChebyshevDistance(kristela.Pos, slime.Pos), "around Haiden, into the fight");
+            Assert.AreEqual(1, GridPos.ChebyshevDistance(kristela.Pos, spider.Pos), "around Haiden, into the fight");
         }
 
         [Test]
         public void PartnersDontLeaveTheLeaderForAFoeThatIsALongWalkAway()
         {
-            // Two corridors side by side that meet only at the far left: the slime is two tiles from Haiden through
+            // Two corridors side by side that meet only at the far left: the spider is two tiles from Haiden through
             // the wall, and eleven steps' walk.
             var run = Run(new[] { ActorCatalog.Haiden, ActorCatalog.Kristela },
                 "###########",
@@ -428,7 +428,7 @@ namespace FiveKingdoms.Tests
             Assert.IsFalse(run.IsRegroupSwap(kristela, run.Hero), "the leader is never moved this way");
 
             Dummy(run, 5, 1);
-            Assert.IsFalse(run.IsRegroupSwap(kristela, uzuki), "not with a slime next to her");
+            Assert.IsFalse(run.IsRegroupSwap(kristela, uzuki), "not with a spider next to her");
             Assert.IsFalse(run.CanSwap(kristela, uzuki), "and Uzuki's tile is no closer to it");
         }
 
@@ -470,7 +470,7 @@ namespace FiveKingdoms.Tests
         public void TheBatIsFastAndFrail()
         {
             Assert.AreEqual(130, ActorCatalog.Bat.Speed);
-            Assert.Less(ActorCatalog.Bat.MaxHp, ActorCatalog.Slime.MaxHp);
+            Assert.Less(ActorCatalog.Bat.MaxHp, ActorCatalog.Spider.MaxHp);
         }
     }
 }

@@ -121,13 +121,13 @@ namespace FiveKingdoms.Tests
         public void ADelayPushesTheNextTurnBack()
         {
             var hero = Make(1, 100, Team.Hero);
-            var slime = Make(2, 100);
+            var spider = Make(2, 100);
             var timeline = new Timeline();
-            timeline.Start(new[] { hero, slime }); // Both at 100 AV; the hero goes first.
+            timeline.Start(new[] { hero, spider }); // Both at 100 AV; the hero goes first.
 
             timeline.AdvanceTo(timeline.PeekNext(hero));
-            timeline.Delay(slime, 50); // Half of one of its turns.
-            Assert.AreEqual(AvTime.FromWhole(150), timeline.NextTurnOf(slime.Id));
+            timeline.Delay(spider, 50); // Half of one of its turns.
+            Assert.AreEqual(AvTime.FromWhole(150), timeline.NextTurnOf(spider.Id));
             Assert.AreEqual(AvTime.FromWhole(100), timeline.NextTurnOf(hero.Id), "nobody else moves");
         }
 

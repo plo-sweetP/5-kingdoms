@@ -40,7 +40,7 @@ namespace FiveKingdoms.Tests
             Dummy(run, 2, 1, attack: 50);
             Assert.AreEqual(0, run.Hero.Charge);
 
-            run.Attack(Direction8.E); // Her jab lands, then the slime bites back.
+            run.Attack(Direction8.E); // Her jab lands, then the spider bites back.
             Assert.AreEqual(CombatRules.ChargePerAction + CombatRules.ChargePerHitDealt + CombatRules.ChargePerHitTaken, run.Hero.Charge);
             Assert.IsTrue(run.Events.OfType<ChargeChangedEvent>().All(e => e.ActorId == run.Hero.Id && e.Amount > 0));
         }
@@ -71,7 +71,7 @@ namespace FiveKingdoms.Tests
             var used = run.Events.OfType<SkillUsedEvent>().Single();
             Assert.AreSame(SkillCatalog.FlurryOfBlows, used.Skill, "skill events carry the ultimate, for its cutscene later");
             Assert.AreEqual(-CombatRules.MaxCharge, run.Events.OfType<ChargeChangedEvent>().First().Amount);
-            Assert.AreEqual(CombatRules.ChargePerHitTaken, run.Hero.Charge, "its own five hits gave nothing back; only the slime's bite did");
+            Assert.AreEqual(CombatRules.ChargePerHitTaken, run.Hero.Charge, "its own five hits gave nothing back; only the spider's bite did");
         }
 
         [Test]
@@ -88,13 +88,13 @@ namespace FiveKingdoms.Tests
         public void FlurryOfBlowsStrikesFiveTimesAndHerNextTurnComesSooner()
         {
             var run = Run(Only(ActorCatalog.Kristela), Corridor);
-            var slime = Dummy(run, 2, 1);
+            var spider = Dummy(run, 2, 1);
             run.Wait(); // The fight starts; Kristela (100) is up at 100 AV.
             Assert.IsTrue(run.InCombat);
             run.Hero.Charge = CombatRules.MaxCharge;
 
             Assert.IsTrue(run.UseUltimate(Direction8.E));
-            Assert.AreEqual(5, HitsOn(run, slime));
+            Assert.AreEqual(5, HitsOn(run, spider));
             Assert.AreEqual(AvTime.FromWhole(170), run.Forecast(1)[0].Time, "70% of a turn: 30% sooner");
         }
 
@@ -187,7 +187,7 @@ namespace FiveKingdoms.Tests
             run.Hero.Charge = CombatRules.MaxCharge;
             Assert.AreNotEqual(HeroCommandKind.Ultimate, AutoPilot.Decide(run).Kind, "not before a fight");
 
-            run.Wait(); // The slime bites: the fight starts.
+            run.Wait(); // The spider bites: the fight starts.
             Assert.IsTrue(run.InCombat);
             run.Hero.Charge = CombatRules.MaxCharge;
             Assert.AreEqual(HeroCommandKind.Ultimate, AutoPilot.Decide(run).Kind, "alone and in melee: the aura covers him");
@@ -199,7 +199,7 @@ namespace FiveKingdoms.Tests
             var run = Run(Only(ActorCatalog.Uzuki), Room);
             Dummy(run, 5, 3, hp: 50);
             run.Hero.Charge = CombatRules.MaxCharge;
-            Assert.AreNotEqual(HeroCommandKind.Ultimate, AutoPilot.Decide(run).Kind, "one weak slime isn't worth it");
+            Assert.AreNotEqual(HeroCommandKind.Ultimate, AutoPilot.Decide(run).Kind, "one weak spider isn't worth it");
 
             Dummy(run, 5, 4, hp: 50);
             var command = AutoPilot.Decide(run);

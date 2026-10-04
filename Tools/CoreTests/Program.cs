@@ -126,8 +126,8 @@ namespace FiveKingdoms.CoreTests
 
         /// <summary>
         /// The dungeon config for the balance report: the defaults, or with key=value overrides from the command line to
-        /// try numbers before putting them in the catalog (slimeHp, slimeAtk, slimeDef, slimeHpGrowth, slimeAtkGrowth,
-        /// slimeDefGrowth, slimeExp, slimeExpGrowth, bossHp, bossAtk, bossDef, bossExp, enemies, extraEnemies, maxEnemies,
+        /// try numbers before putting them in the catalog (spiderHp, spiderAtk, spiderDef, spiderHpGrowth, spiderAtkGrowth,
+        /// spiderDefGrowth, spiderExp, spiderExpGrowth, bossHp, bossAtk, bossDef, bossExp, enemies, extraEnemies, maxEnemies,
         /// berries, berryHeal, packMin, packMax, fastPercent).
         /// </summary>
         static Func<DungeonRunConfig> TuningFrom(string[] args)
@@ -135,12 +135,12 @@ namespace FiveKingdoms.CoreTests
             var values = args.Where(a => a.Contains('=')).Select(a => a.Split('=')).ToDictionary(kv => kv[0], kv => int.Parse(kv[1]));
             if (values.Count == 0) return () => new DungeonRunConfig();
             int Get(string key, int fallback) => values.TryGetValue(key, out int value) ? value : fallback;
-            var slime = ActorCatalog.Slime;
-            var boss = ActorCatalog.KingSlime;
-            var enemy = new ActorDefinition(slime.Id, slime.Name, Get("slimeHp", slime.MaxHp), Get("slimeAtk", slime.Attack),
-                Get("slimeDef", slime.Defense), Get("slimeExp", slime.ExpReward), hpGrowth: Get("slimeHpGrowth", slime.HpGrowth),
-                atkGrowth: Get("slimeAtkGrowth", slime.AtkGrowth), defGrowth: Get("slimeDefGrowth", slime.DefGrowth),
-                expGrowth: Get("slimeExpGrowth", slime.ExpGrowth));
+            var spider = ActorCatalog.Spider;
+            var boss = ActorCatalog.Troll;
+            var enemy = new ActorDefinition(spider.Id, spider.Name, Get("spiderHp", spider.MaxHp), Get("spiderAtk", spider.Attack),
+                Get("spiderDef", spider.Defense), Get("spiderExp", spider.ExpReward), hpGrowth: Get("spiderHpGrowth", spider.HpGrowth),
+                atkGrowth: Get("spiderAtkGrowth", spider.AtkGrowth), defGrowth: Get("spiderDefGrowth", spider.DefGrowth),
+                expGrowth: Get("spiderExpGrowth", spider.ExpGrowth));
             var king = new ActorDefinition(boss.Id, boss.Name, Get("bossHp", boss.MaxHp), Get("bossAtk", boss.Attack), Get("bossDef", boss.Defense),
                 Get("bossExp", boss.ExpReward), brain: boss.Brain, speed: boss.Speed);
             Console.WriteLine("Overrides: " + string.Join(", ", values.Select(kv => $"{kv.Key}={kv.Value}")));
@@ -351,7 +351,7 @@ namespace FiveKingdoms.CoreTests
                 if (run.State == RunState.Won) won++;
                 turns += run.Turn;
             }
-            Console.WriteLine($"Starting party at Lv {level} against the King Slime: won {won} of {seeds} " +
+            Console.WriteLine($"Starting party at Lv {level} against the Troll: won {won} of {seeds} " +
                               $"(leader turns {turns / (float)seeds:0}, ultimates per hero {ultimates / 3f / seeds:0.00})");
             return 0;
         }
@@ -378,7 +378,7 @@ namespace FiveKingdoms.CoreTests
             }
             Console.WriteLine();
             Console.WriteLine($"Levels kept between runs, {players} autopilot parties, up to {maxAttempts} attempts each:");
-            Console.WriteLine($"  {cleared} beat the King Slime; on average on attempt {attemptsSum / (float)Math.Max(1, cleared):0.0}, at Lv {levelSum / (float)Math.Max(1, cleared):0.0}");
+            Console.WriteLine($"  {cleared} beat the Troll; on average on attempt {attemptsSum / (float)Math.Max(1, cleared):0.0}, at Lv {levelSum / (float)Math.Max(1, cleared):0.0}");
             for (int a = 1; a <= maxAttempts; a++)
                 if (clearedOnAttempt[a] > 0) Console.WriteLine($"  first clear on attempt {a}: {clearedOnAttempt[a]}");
         }

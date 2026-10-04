@@ -16,8 +16,8 @@ namespace FiveKingdoms.Tests
             "##########",
         };
 
-        static ActorDefinition Slime(int speed, int attack = 1) =>
-            new ActorDefinition("slime", "Slime", maxHp: 50, attack: attack, defense: 0, expReward: 1, speed: speed);
+        static ActorDefinition Spider(int speed, int attack = 1) =>
+            new ActorDefinition("spider", "Spider", maxHp: 50, attack: attack, defense: 0, expReward: 1, speed: speed);
 
         static DungeonRun RunWithHero(int heroSpeed, int heroHp = 500)
         {
@@ -42,15 +42,15 @@ namespace FiveKingdoms.Tests
         public void CombatStartsWhenAnEnemyNoticesTheHeroAndEndsWhenNoneDo()
         {
             var run = RunWithHero(100);
-            var slime = run.SpawnEnemy(run.Hero.Pos + new GridPos(1, 0), Slime(100));
-            slime.Hp = 1;
+            var spider = run.SpawnEnemy(run.Hero.Pos + new GridPos(1, 0), Spider(100));
+            spider.Hp = 1;
 
-            run.Wait(); // The slime notices and bites.
+            run.Wait(); // The spider notices and bites.
             Assert.IsTrue(run.InCombat);
             Assert.IsTrue(run.Events.OfType<CombatStartedEvent>().Any());
             Assert.AreEqual(run.Hero, run.Forecast(1)[0].Actor, "the hero's turn comes first");
 
-            run.AttackAt(slime.Pos); // Defeat it.
+            run.AttackAt(spider.Pos); // Defeat it.
             Assert.IsFalse(run.InCombat);
             Assert.IsTrue(run.Events.OfType<CombatEndedEvent>().Any());
         }
@@ -59,8 +59,8 @@ namespace FiveKingdoms.Tests
         public void AFasterEnemyActsTwicePerHeroTurn()
         {
             var run = RunWithHero(100);
-            var quick = run.SpawnEnemy(run.Hero.Pos + new GridPos(1, 0), Slime(200));
-            run.Wait(); // Exploring: one turn each, then the fight starts and the quick slime ambushes (50 AV).
+            var quick = run.SpawnEnemy(run.Hero.Pos + new GridPos(1, 0), Spider(200));
+            run.Wait(); // Exploring: one turn each, then the fight starts and the quick spider ambushes (50 AV).
             Assert.IsTrue(run.InCombat);
 
             run.Wait();
@@ -73,8 +73,8 @@ namespace FiveKingdoms.Tests
         public void AFasterHeroActsTwiceForEachSlowEnemyTurn()
         {
             var run = RunWithHero(200);
-            var slow = run.SpawnEnemy(run.Hero.Pos + new GridPos(1, 0), Slime(100));
-            run.Wait(); // Fight starts: the hero is due at 50 AV, the slime at 100.
+            var slow = run.SpawnEnemy(run.Hero.Pos + new GridPos(1, 0), Spider(100));
+            run.Wait(); // Fight starts: the hero is due at 50 AV, the spider at 100.
 
             int[] enemyTurns = new int[4];
             for (int i = 0; i < 4; i++)
@@ -82,7 +82,7 @@ namespace FiveKingdoms.Tests
                 run.Wait();
                 enemyTurns[i] = EnemyTurnsIn(run, slow);
             }
-            // Hero at 50 (next 100); tie at 100 goes to the hero, so the slime acts after the hero's following turn.
+            // Hero at 50 (next 100); tie at 100 goes to the hero, so the spider acts after the hero's following turn.
             CollectionAssert.AreEqual(new[] { 0, 1, 0, 1 }, enemyTurns);
         }
 
@@ -113,19 +113,19 @@ namespace FiveKingdoms.Tests
         public void ASpeedChangeMidFightKeepsProgressTowardTheNextTurn()
         {
             var run = RunWithHero(100);
-            var slime = run.SpawnEnemy(run.Hero.Pos + new GridPos(1, 0), Slime(50));
-            run.Wait(); // Fight starts: the hero is due at 100 AV, the slow slime at 200.
+            var spider = run.SpawnEnemy(run.Hero.Pos + new GridPos(1, 0), Spider(50));
+            run.Wait(); // Fight starts: the hero is due at 100 AV, the slow spider at 200.
 
-            run.SetSpeed(slime, 100); // It still has 5000 of its gauge to cover: 50 AV at the new speed.
-            Assert.AreEqual(AvTime.FromWhole(150), run.Forecast(5).First(turn => turn.Actor == slime).Time,
+            run.SetSpeed(spider, 100); // It still has 5000 of its gauge to cover: 50 AV at the new speed.
+            Assert.AreEqual(AvTime.FromWhole(150), run.Forecast(5).First(turn => turn.Actor == spider).Time,
                 "progress is kept, not reset to a full turn (which would be 200)");
         }
 
         [Test]
         public void ASlowBossGivesTheHeroTwoTurnsToEscapeItsSlam()
         {
-            var boss = new ActorDefinition("king_slime", "King Slime", maxHp: 500, attack: 20, defense: 5, expReward: 0,
-                brain: ActorBrain.SlimeKing, speed: 50);
+            var boss = new ActorDefinition("troll", "Troll", maxHp: 500, attack: 20, defense: 5, expReward: 0,
+                brain: ActorBrain.Troll, speed: 50);
             var run = TestRuns.OnMap(1, new HeroProgress(ActorCatalog.Uzuki, 10), boss, Hall);
             var king = run.SpawnEnemy(run.Hero.Pos + new GridPos(1, 0), boss);
             king.SpecialCooldown = 0;

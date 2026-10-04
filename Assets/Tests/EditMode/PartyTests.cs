@@ -48,13 +48,13 @@ namespace FiveKingdoms.Tests
 
         public static void Place(Actor actor, int x, int y) => actor.Pos = actor.PreviousPos = new GridPos(x, y);
 
-        /// <summary>A slime that won't die or hurt anyone unless the test says so.</summary>
+        /// <summary>A spider that won't die or hurt anyone unless the test says so.</summary>
         public static Actor Dummy(DungeonRun run, int x, int y, int hp = 100000, int attack = 1)
         {
-            var slime = run.SpawnEnemy(new GridPos(x, y));
-            slime.MaxHp = slime.Hp = hp;
-            slime.Attack = attack;
-            return slime;
+            var spider = run.SpawnEnemy(new GridPos(x, y));
+            spider.MaxHp = spider.Hp = hp;
+            spider.Attack = attack;
+            return spider;
         }
 
         static void HoldAll(DungeonRun run)
@@ -141,11 +141,11 @@ namespace FiveKingdoms.Tests
             Place(run.Hero, 1, 3);
             Place(run.Party[1], 1, 5);
             Place(kristela, 2, 1);
-            var slimeStart = new GridPos(6, 1);
-            Dummy(run, slimeStart.X, slimeStart.Y);
+            var spiderStart = new GridPos(6, 1);
+            Dummy(run, spiderStart.X, spiderStart.Y);
 
             run.Wait();
-            Assert.AreEqual(3, GridPos.ChebyshevDistance(kristela.Pos, slimeStart), "one step toward the slime");
+            Assert.AreEqual(3, GridPos.ChebyshevDistance(kristela.Pos, spiderStart), "one step toward the spider");
         }
 
         [Test]
@@ -155,11 +155,11 @@ namespace FiveKingdoms.Tests
             Place(run.Hero, 1, 1);
             Place(run.Party[1], 2, 1);
             Place(run.Party[2], 3, 1);
-            var slime = Dummy(run, 4, 1);
+            var spider = Dummy(run, 4, 1);
 
             run.Wait();
-            Assert.IsTrue(run.Events.OfType<AttackEvent>().Any(attack => attack.AttackerId == run.Party[2].Id && attack.TargetId == slime.Id),
-                "Kristela hit the slime next to her");
+            Assert.IsTrue(run.Events.OfType<AttackEvent>().Any(attack => attack.AttackerId == run.Party[2].Id && attack.TargetId == spider.Id),
+                "Kristela hit the spider next to her");
         }
 
         [Test]
@@ -172,12 +172,12 @@ namespace FiveKingdoms.Tests
             Place(run.Party[2], 1, 2);
             Dummy(run, 5, 3);
 
-            run.Wait(); // The slime notices the party: the fight starts.
+            run.Wait(); // The spider notices the party: the fight starts.
             Assert.IsTrue(run.InCombat);
             var turns = run.Forecast(4);
             Assert.AreSame(run.Hero, turns[0].Actor, "Uzuki (101) is first");
             Assert.AreEqual(Timeline.TurnLength(101), turns[0].Time);
-            Assert.AreSame(run.Party[2], turns[1].Actor, "Kristela (100) ties the slime and has the lower id");
+            Assert.AreSame(run.Party[2], turns[1].Actor, "Kristela (100) ties the spider and has the lower id");
             Assert.AreSame(run.Party[1], turns[3].Actor, "Haiden (90) is last");
             Assert.AreEqual(Timeline.TurnLength(90), turns[3].Time);
         }
@@ -275,11 +275,11 @@ namespace FiveKingdoms.Tests
             Place(run.Hero, 1, 1);
             Place(run.Party[1], 4, 1);
             Place(run.Party[2], 5, 1);
-            var slime = Dummy(run, 2, 1, hp: 1);
-            slime.ExpReward = 5;
+            var spider = Dummy(run, 2, 1, hp: 1);
+            spider.ExpReward = 5;
 
-            run.AttackAt(slime.Pos);
-            Assert.IsFalse(slime.IsAlive);
+            run.AttackAt(spider.Pos);
+            Assert.IsFalse(spider.IsAlive);
             foreach (var member in run.Party)
             {
                 Assert.AreEqual(5, member.Exp, member.Name);

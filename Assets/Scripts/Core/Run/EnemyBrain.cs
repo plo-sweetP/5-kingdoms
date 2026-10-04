@@ -24,7 +24,7 @@ namespace FiveKingdoms.Core
     /// <summary>
     /// Monster AI. Decides only; <see cref="DungeonRun"/> carries the intent out.
     /// Chasers notice the nearest party member when close or in the same room, chase along the shortest path,
-    /// bite when adjacent, and otherwise wander. A taunted monster goes after its taunter instead. The King Slime adds
+    /// bite when adjacent, and otherwise wander. A taunted monster goes after its taunter instead. The Troll adds
     /// a telegraphed slam and a call for help.
     /// </summary>
     public static class EnemyBrain
@@ -45,7 +45,7 @@ namespace FiveKingdoms.Core
         public const int HelpersSummoned = 2;
 
         public static Intent Decide(DungeonRun run, Actor self) =>
-            self.Definition.Brain == ActorBrain.SlimeKing ? DecideSlimeKing(run, self) : DecideChaser(run, self);
+            self.Definition.Brain == ActorBrain.Troll ? DecideTroll(run, self) : DecideChaser(run, self);
 
         /// <summary>The closest member of the opposing team: any party member, not just the leader.</summary>
         public static Actor NearestFoe(DungeonRun run, Actor self)
@@ -73,7 +73,7 @@ namespace FiveKingdoms.Core
             return taunter != null && taunter.IsAlive ? taunter : NearestFoe(run, self);
         }
 
-        static Intent DecideSlimeKing(DungeonRun run, Actor self)
+        static Intent DecideTroll(DungeonRun run, Actor self)
         {
             if (self.Charging) return Intent.Slam;
             if (!self.CalledForHelp && self.Hp * 2 <= self.MaxHp) return Intent.Summon;

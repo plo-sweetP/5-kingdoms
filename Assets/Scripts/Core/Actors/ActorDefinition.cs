@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace FiveKingdoms.Core
 {
     /// <summary>Which AI an actor uses. Bosses get their own brains.</summary>
-    public enum ActorBrain { Chaser, SlimeKing }
+    public enum ActorBrain { Chaser, Troll }
 
     /// <summary>
     /// Base stats for a character or monster species at level 1, and what each level adds. Monsters spawn at the floor's
@@ -132,10 +132,10 @@ namespace FiveKingdoms.Core
         public static readonly ActorDefinition[] StartingParty = { Haiden, Kristela, Uzuki };
 
         /// <summary>
-        /// Tuned for a party of three (with -balance), so a slime alone is no threat but a roomful is. Little EXP: every
+        /// Tuned for a party of three (with -balance), so a spider alone is no threat but a roomful is. Little EXP: every
         /// hero standing gets it in full, and dungeon EXP is meant to be a bonus on top of EXP books (PROGRESSION.md).
         /// </summary>
-        public static readonly ActorDefinition Slime = new ActorDefinition("slime", "Slime", maxHp: 330, attack: 66, defense: 10, expReward: 3,
+        public static readonly ActorDefinition Spider = new ActorDefinition("spider", "Spider", maxHp: 330, attack: 66, defense: 10, expReward: 3,
             hpGrowth: 66, atkGrowth: 10, defGrowth: 5, expGrowth: 1);
 
         /// <summary>
@@ -146,17 +146,17 @@ namespace FiveKingdoms.Core
         /// 8 lines, and before Aura of Protection covered Haiden himself): more HP is what holds a low-level party back
         /// without stopping a Lv 9 one.
         /// </summary>
-        public static readonly ActorDefinition KingSlime = new ActorDefinition("king_slime", "King Slime", maxHp: 16000, attack: 260, defense: 50,
-            expReward: 80, brain: ActorBrain.SlimeKing, speed: 85);
+        public static readonly ActorDefinition Troll = new ActorDefinition("troll", "Troll", maxHp: 16000, attack: 260, defense: 50,
+            expReward: 80, brain: ActorBrain.Troll, speed: 85);
 
         /// <summary>
         /// Fast and frail (Speed 130, the top of the readable range): it closes distance quickly, so a ranged hero can't
         /// just keep backing away. Some packs bring one (PROGRESSION.md, "Bigger fights").
         /// </summary>
-        public static readonly ActorDefinition Bat = new ActorDefinition("bat", "Bat", maxHp: 200, attack: 55, defense: 5, expReward: 2,
+        public static readonly ActorDefinition Bat = new ActorDefinition("bat", "Giant Bat", maxHp: 200, attack: 55, defense: 5, expReward: 2,
             speed: 130, hpGrowth: 40, atkGrowth: 8, defGrowth: 3, expGrowth: 1);
 
-        static readonly ActorDefinition[] All = { Uzuki, Haiden, Kristela, Slime, KingSlime, Bat };
+        static readonly ActorDefinition[] All = { Uzuki, Haiden, Kristela, Spider, Troll, Bat };
 
         /// <summary>Looks a definition up by its Id (e.g. from a save file). Null if unknown.</summary>
         public static ActorDefinition Find(string id) => Array.Find(All, definition => definition.Id == id);

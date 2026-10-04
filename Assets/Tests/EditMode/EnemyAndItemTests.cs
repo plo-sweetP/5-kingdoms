@@ -26,10 +26,10 @@ namespace FiveKingdoms.Tests
                 "#########",
                 "#@......#",
                 "#########");
-            var slime = run.SpawnEnemy(new GridPos(6, 1));
+            var spider = run.SpawnEnemy(new GridPos(6, 1));
             run.Wait();
-            Assert.AreEqual(new GridPos(5, 1), slime.Pos);
-            Assert.IsTrue(slime.Alerted);
+            Assert.AreEqual(new GridPos(5, 1), spider.Pos);
+            Assert.IsTrue(spider.Alerted);
         }
 
         [Test]

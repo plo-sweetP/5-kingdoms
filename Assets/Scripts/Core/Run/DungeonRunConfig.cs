@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace FiveKingdoms.Core
 {
-    /// <summary>Tuning for one dungeon. Defaults describe the prototype "Slime Cave".</summary>
+    /// <summary>Tuning for one dungeon. Defaults describe the prototype "Troll's Hollow".</summary>
     public sealed class DungeonRunConfig
     {
-        public string Name = "Slime Cave";
+        public string Name = "Troll's Hollow";
         public int FloorCount = 5;
         public DungeonGenConfig Generation = new DungeonGenConfig();
 
@@ -21,13 +21,13 @@ namespace FiveKingdoms.Core
 
         /// <summary>When true the run is lost as soon as the leader falls; otherwise only when the whole party has.</summary>
         public bool DefeatWhenLeaderFalls;
-        public ActorDefinition Enemy = ActorCatalog.Slime;
+        public ActorDefinition Enemy = ActorCatalog.Spider;
 
         /// <summary>
         /// Boss waiting in an arena on the last floor; defeating it clears the dungeon.
         /// Null: the last floor is an ordinary floor whose stairs clear the dungeon.
         /// </summary>
-        public ActorDefinition Boss = ActorCatalog.KingSlime;
+        public ActorDefinition Boss = ActorCatalog.Troll;
 
         /// <summary>Berries waiting in the boss floor's antechamber, to prepare with.</summary>
         public int BossFloorBerries = 2;

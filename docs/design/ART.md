@@ -171,17 +171,21 @@ The manga panels and ultimate cutscenes in PROGRESSION.md ("Skill presentation")
   name, was "Slime Cave").
 - **Dungeon** (*proposed*): it looks like the outdoors. Floors are flat ground, walls are raised ground with cliff
   faces toward the rooms, and bushes, rocks, trees, bones and skull spikes decorate the unwalkable parts without
-  hiding a walkable tile. The **cave entrance** replaces the stairs (the way down to the next floor). The boss
+  hiding a walkable tile. As built: the floor uses the pack's color 4 (dry ground) and the raised ground color 3
+  (lush grass), so walkable ground reads at a glance. The **cave entrance** replaces the stairs (the way down to the next floor). The boss
   room's pillars need to read clearly as blocking. A cave recolor of the floors can follow once Peter has seen it.
 - **Effects and items:** the pack's arrow, dust, explosions, fire and heal effect where they fit; the berry, the
   snare, reticles, reach highlights and status icons redrawn to match.
 - **HUD** (*proposed*): the pack's buttons, panels, ribbons and bars; round buttons for the attack, skills and
   ultimate; portraits on the party cards and the turn-order strip (the heroes' own heads, the monsters' avatars).
   Layouts for touch, keyboard and gamepad on phone (19.5:9) and tablet or Steam Deck (16:10) all keep working.
-- **View size (to show Peter):** at 64 px tiles and a crisp 2x zoom, a 1080p phone shows about 8.5 tiles top to
-  bottom (11 today), so a foe 5 tiles straight up or down could be off screen. Every valid target must stay visible
-  while aiming. Show Peter screenshots of the options (for example 2x with the camera leading toward the targets,
-  against a smaller zoom) and let him choose.
+- **View size (decided 2026-10-04 from screenshots):** at 64 px tiles and a crisp 2x zoom, a 1080p phone shows about
+  8.5 tiles top to bottom (11 with the old art), so a foe 5 tiles straight up or down is off screen. Every valid
+  target must stay visible while aiming. Peter chose **option B**: 2x normally; while aiming, if the targets don't
+  all fit, the view steps out to 1x and steps back after the shot or a cancel. **Option C** (1x all the time) stays
+  in the code for a player setting later ("keep C handy to allow some UI options for the player later"). Option A
+  (staying at 2x and sliding the camera until the heroes sit at the screen's edge) is out: "that does look a bit
+  weird".
 
 ### Done when
 The Core tests, Unity EditMode and PlayMode tests, the Windows build and the autoplay runs pass with the new art in

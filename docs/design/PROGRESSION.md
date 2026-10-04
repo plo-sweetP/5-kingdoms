@@ -71,17 +71,24 @@ whatever role they like.
 - **Shots pass through allies.** No friendly fire, nothing to worry about.
 - **Battle formation:** when a fight starts, melee partners move to the front and ranged ones hang back behind
   them.
-- **Melee partners always engage:** in a fight they pick an enemy and path their way to it, around or swapping past
-  allies, instead of waiting behind the leader.
+- **Melee partners always engage:** in a fight they pick an enemy near the leader (within 6 steps' walk) and path
+  their way to it, around allies when that's a short way (at most 4 steps longer than the way through them) or
+  swapping past a ranged ally. When allies hold the only way in (a corridor, a doorway), they close up and wait right
+  behind them, ready to take a place at the front.
 - **Ranged heroes step out of melee:** with an enemy adjacent, a ranged hero steps back to a tile it can still shoot
   from (Uzuki's Rolling Shot does this and attacks in one turn). If there's no such tile, or the enemy keeps
   following, it shoots anyway at the point-blank penalty rather than retreating forever.
 - **Swaps, without loops.** A swap is allowed when it either puts a melee hero next to an enemy (or strictly closer
   to one), or **moves a badly hurt hero away from enemies** ("run to safety"; this one works between two melee heroes
-  too). A pair that just swapped can't swap back for a few turns. The soak test fails if it sees the same two heroes
+  too), or lets a partner get past the partner that follows it in line when no enemy is next to either ("regroup";
+  only ever the earlier past the later, never the leader). A pair that just swapped can't swap back for a few turns. The soak test fails if it sees the same two heroes
   swapping back and forth.
 - **Ranged targets anything within 5 tiles that's in sight** (decided), not only along the 8 grid lines. Walls block
   shots; allies don't. Damage stays at 90% of melee.
+- **The party stays together** (Peter's playtest note, 2026-10-03): ranged partners take a tile to shoot from only
+  near the leader and only by a short way; otherwise they stay behind the line. On Auto, the leader with partners in
+  a fight goes for the enemies that are after the party (up to 12 steps) and waits behind a partner that holds the
+  way.
 
 **Targeting and input (decided).**
 - **Two steps for skills and ultimates:** tap the skill, the tiles it can reach light up (Fire Emblem style) with
@@ -148,6 +155,15 @@ whatever role they like.
   mix) at level 100.
 - **Milestones:** tier 5, 10, 15 = a skill pick or skill upgrade; **tier 20** = major ultimate upgrade or alternate
   ultimate; **tier 25** = major boost to the class's skills.
+- **Three options at every milestone** (Peter, 2026-10-03), for classes and professions alike: a class reads as
+  three paths side by side, and the player picks one option per milestone tier. The screen is a tree of spheres like
+  Peter's "Archer Mastery Path" reference (ART.md, "Later"). Agreed with it: a hero starts at tier 1 of their class;
+  speeds stay as they are today; respec is free below level 20, and the tea and the class masters come later.
+  *Proposed, not yet confirmed:* an option that upgrades a skill the hero doesn't know teaches the base skill
+  instead; skills are tied to a weapon type (bow, sword, fists, or none); until the farm exists, a profession's
+  options are "fight or farm", where the farm ones do nothing yet. The content for the starting classes and
+  professions is being drafted with Peter (the first Archer draft had two options per tier and gets a third,
+  including a shot that bounces between enemies).
 - **Every tier** (milestones too) also grants a small class stat bump. **Never SPD.** Budget per class at tier 25, 1-2
   stats each: HP/ATK/DEF up to +15%, Crit Rate up to +6%, Crit DMG up to +12%, Affinity/Resist/healing up to +12%.
 - Milestone skills can **upgrade** an existing skill (numbers or effects), **add** a skill to the hero's pool, or

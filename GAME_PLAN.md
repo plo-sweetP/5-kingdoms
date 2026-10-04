@@ -7,7 +7,7 @@
 | Platforms | iOS + Android first, one codebase. Developed on Windows; Android is the test platform until there's a Mac or build service. **PC on Steam (incl. Steam Deck) planned later** |
 | Orientation | **Landscape only**, on phones and tablets (test devices: Samsung S22 Ultra, Galaxy Tab S8+) |
 | Monetization | Phase 1: free-to-play where **breeding is the gacha** for monsters. Later: a paid gacha for **characters and weapons** |
-| Art | **Pixel art** in the spirit of Final Fantasy Tactics Advance and Pokemon Mystery Dungeon: simple chibi sprites, flashier attack and defense animations. 32 px = 1 tile. Placeholders generated in code for now, AI-assisted art later |
+| Art | **Pixel art from the Tiny Swords pack** by Pixel Frog (decided 2026-10-03, [docs/design/ART.md](docs/design/ART.md)): 64 px = 1 tile, chunky chibi units with frame animations. Heroes are built from layers so equipment shows on the sprite; missing pieces are made by code in the pack's style. It replaces the 32 px placeholders generated in code |
 | Controls | 8-way grid movement. On-screen D-pad + buttons first, tap-to-move later. **Attacks are deliberate:** choose the attack, then its target, or tap an enemy in reach; walking into an enemy only turns to face it |
 | Team | Peter (CS degree, C++/C#/Java/Python) directs, reviews and playtests. Claude writes most code |
 
@@ -196,7 +196,8 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 1d | Mana (berries restore it), first skills with AV costs, healing (mana was removed again in 1f) | **Done** |
 | 1e | Combat math (GEAR.md step 1-3): multiplicative damage formula, 10x HP/ATK/DEF rescale, Crit Rate/Crit DMG stats (5%/50%), per-actor stat sheet, skill tags; difficulty re-tuned to match 1d | **Done** |
 | 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, packs; shots at anything in sight, deliberate two-step attacks, stuns as timeline delays | **Done** (parts 1 and 2, and Peter's answers at the first playtest checkpoint) |
-| 1g | Classes and professions core (PROGRESSION.md): points, tiers 1-25, milestones, stat bumps, prerequisites and kingdom locks, loadout, respec; real content for the starting 3 classes and 3 professions | **Next** (Peter's go, 2026-10-03) |
+| A1 | Art pass 1 ([docs/design/ART.md](docs/design/ART.md)): the current game on the Tiny Swords art (heroes built from layers with their own faces and hair under the helmets, equipment looks for GEAR.md's weapons and armor sets, ring auras, skill animations, monsters from the Enemy Pack, the outdoor dungeon, the HUD) | **Next** (Peter, 2026-10-03: before 1g) |
+| 1g | Classes and professions core (PROGRESSION.md): points, tiers 1-25, milestones with three options each, stat bumps, prerequisites and kingdom locks, loadout, respec, a skill-tree screen of spheres; real content for the starting 3 classes and 3 professions | After the art pass (Peter's go, 2026-10-03; the content is drafted with Peter in the planning hub first) |
 | 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
 | 1i | Hero screen between runs: equipment, class and profession tiers, loadout (until the farm exists) | |
 | 1j | Elements and Break/toughness (needs the element chart) | Later |
@@ -205,7 +206,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 4 | Connect the loops: farm monsters enter dungeons, loot flows back, saves work | |
 | 5 | Vertical slice: one full kingdom with tutorial and basic UI | |
 | 6 | Content expansion: kingdoms 2-5, monster roster, skills, equipment, balancing | |
-| 7 | Art and audio pass: AI-assisted art replaces placeholders | |
+| 7 | Art and audio pass: art beyond the pack (new bosses and creatures, more heroes, biomes), audio | |
 | 8 | Monetization and live ops: shortcuts, gacha (characters + weapons), analytics, beta | |
 | 9 | Release: TestFlight and Play closed testing, store listings, launch | |
 | 10 | PC and Steam: controller polish, Steamworks, Steam payments, store page, Steam Deck check | Later |
@@ -387,7 +388,7 @@ entrance.
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.
-2. Pixel art spec (to go in ART_BIBLE.md): placeholders use 32 px tiles and 32x32 chibi sprites; confirm, and set palette limits and animation frame counts.
+2. ~~Pixel art spec.~~ Answered (2026-10-03): the Tiny Swords pack, 64 px tiles, 10 fps strips; see [docs/design/ART.md](docs/design/ART.md), which lists its own open questions.
 3. ~~Exact armor pieces and how many weapon slots.~~ Answered in GEAR.md: head, body, hands, feet, 2 rings, 1 weapon.
 4. ~~Stamina and timers.~~ Answered: see "Energy" above.
 7. ~~Does a run end when the leader falls, or only when the whole party has fallen?~~ Answered: the whole party.
@@ -408,3 +409,5 @@ entrance.
 - Code lives in the private GitHub repo `plo-sweetP/5-kingdoms`; pushes happen at milestones.
 - The project stays on the local drive, not in a Google Drive sync folder.
 - Nightly update docs go to the shared Google Drive folder: summary, what was added, current progress, PR/commit updates with explanations, and anything else important.
+- Sessions (2026-10-03): one planning hub plans with Peter, writes the specs (`docs/design/`, this file) and hands each major task to a fresh build session; build sessions build, test and push. Before a session that finished its task is closed, it adds a release notes and commit notes doc to the same Drive folder.
+- Third-party art: the Tiny Swords packs may be used commercially but not passed on, so the repo stays private (ART.md, "The pack").

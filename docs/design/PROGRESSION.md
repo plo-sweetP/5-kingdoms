@@ -205,7 +205,7 @@ Every tier: +0.4% ATK and +0.2% Crit Rate (+10% and +5% at tier 25).
 | 20 | **Deadeye** (alternate ultimate): one arrow for 900% on a single foe | **Pinning Volley:** Volley also slows what it hits by 30% and leaves a snare at its center | **Storm of Arrows:** Volley hits 3 times (was 2) |
 | 25 | **Master Marksman:** Archer shots deal +15%, with no point-blank penalty | **Master Hunter:** marks, slows and snares last one turn longer, and Hunter's Mark takes no time | **Master Trickshot:** one more bounce, and bounces and pierces deal full damage |
 
-### Paladin (Haiden's class): *proposed*, not yet seen by Peter
+### Paladin (Haiden's class): approved by Peter as a starting point (2026-10-03)
 Every tier: +0.4% HP and +0.4% DEF (+10% each at tier 25).
 
 | Tier | Guardian (protection) | Devotion (healing) | Crusader (damage) |
@@ -216,7 +216,7 @@ Every tier: +0.4% HP and +0.4% DEF (+10% each at tier 25).
 | 20 | **Bastion:** Aura of Protection blocks 40% (was 30%) and lasts 4 turns (was 3) | **Sanctuary:** the aura heals 15% a turn (was 10%) and reaches 2 tiles | **Holy Wrath** (alternate ultimate): fire on every foe next to Haiden, 350% each, and they are taunted |
 | 25 | **Master Guardian:** his taunts last a turn longer, and allies next to him always take 10% less damage | **Master of Devotion:** his heals restore 25% more, and Heal reaches allies 2 tiles away | **Master Crusader:** Paladin strikes deal +15%, and a kill with one heals him for 10% |
 
-### Monk (Kristela's class): *proposed*, not yet seen by Peter
+### Monk (Kristela's class): approved by Peter as a starting point (2026-10-03)
 Every tier: +0.4% ATK and +0.4% Crit DMG (+10% each at tier 25).
 
 | Tier | Striker (damage) | Windwalker (speed) | Mystic (ki: control and sustain) |
@@ -225,9 +225,51 @@ Every tier: +0.4% ATK and +0.4% Crit DMG (+10% each at tier 25).
 | 10 | **Double Jab:** Jab hits twice for 120% each (was once for 200%) | **Momentum:** a Jab right after a skill takes 25% less time | **Ki Surge:** Ki Heal restores 35% (was 25%) and her next strike deals +30% |
 | 15 | **Finishing Blow** (new skill): 220%, doubled against a foe below 30% HP | **Deflect:** once per cycle, the first hit on Kristela deals half damage (a reaction) | **Ki Guard** (new Quick skill): she takes 40% less damage until her next turn |
 | 20 | **Thousand Fists:** Flurry of Blows is 7 hits (was 5) | **Wind Dance** (alternate ultimate): for 3 of her turns everything she does takes 25% less time | **Quivering Palm** (alternate ultimate): one strike for 500% that always pushes the target's next turn back (50%, bosses 25%) |
-| 25 | **Master Striker:** Monk strikes deal +15%, and her multi-hit skills gain +10% Crit Rate | **Master Windwalker:** her first turn in a fight comes 30% sooner, and Quick skills no longer sit out a turn | **Master Mystic:** her stuns always land, and Ki Heal also heals the allies next to her for half |
+| 25 | **Master Striker:** Monk strikes deal +15%, and her multi-hit skills gain +10% Crit Rate | **Master Windwalker:** her first turn in a fight comes 30% sooner, and she may carry two Quick skills (*proposed change*: the approved draft said "Quick skills no longer sit out a turn", which clashes with one Quick skill per hero) | **Master Mystic:** her stuns always land, and Ki Heal also heals the allies next to her for half |
 
-Still to draft: the three professions (Alchemist, Blacksmith, Chef).
+## Starting profession content (drafts, 2026-10-03): *proposed*, not yet seen by Peter
+Each profession has a fight path, a support path and a farm path. *Proposed:* the farm path's spheres are shown but
+stay locked until the farm exists (the Blacksmith's and the Alchemist's also need gear), so for now a profession
+offers two options per tier. Profession skills join the hero's pool for the 3 skills + 1 ultimate loadout.
+
+Rules these drafts lean on (*proposed*):
+- Four building blocks that later classes reuse: a foe **takes more damage**, a foe **deals less damage**, an ally
+  **deals more damage**, an ally **takes less damage**, each for a number of the target's own turns. Two effects of
+  the same kind don't stack: the stronger one applies.
+- "At most one Quick skill per hero" is read as one in the loadout. Profession skills take a full turn.
+
+### Alchemist (Uzuki's profession)
+Every tier: +0.4% Affinity and +0.4% healing done (+10% each at tier 25).
+
+| Tier | Bomber (fight) | Apothecary (support) | Transmuter (farm, locked for now) |
+|---|---|---|---|
+| 5 | **Fire Flask** (new skill): thrown at a foe within 4 tiles: 150% Fire to it and 75% to the foes next to it | **Healing Draught** (new skill): heals an ally within 4 tiles, or himself, for 20% of their max HP | Potions brew 20% faster |
+| 10 | **Acid Flask** (new skill): 120%, and the target takes +20% damage from everyone for 2 turns | **Vigor Tonic** (new skill): an ally within 4 tiles deals +20% damage for 3 turns | A 15% chance of a second potion |
+| 15 | **Frost Flask** (new skill): every foe in a 3 x 3 area within 4 tiles takes 100%, and their next turn comes 30% later | **Stoneskin Potion** (new skill): an ally within 4 tiles takes 25% less damage for 3 turns | Reroll one substat of a gear piece for materials |
+| 20 | **Philosopher's Fire** (alternate ultimate): a 5 x 5 blast within 4 tiles, 300% to every foe in it | **Elixir of Life** (alternate ultimate): heals every ally in sight for 40% of their max HP (later it can also revive a fallen ally) | Craft Tuning Stones |
+| 25 | **Master Bomber:** flasks deal +20% and reach 5 tiles | **Master Apothecary:** his potions heal and boost 25% more and last a turn longer | Once a day, a double batch |
+
+### Blacksmith (Haiden's profession)
+Every tier: +0.4% ATK and +0.4% DEF (+10% each at tier 25).
+
+| Tier | Hammer (fight) | Armorer (support) | Forgemaster (farm, locked for now) |
+|---|---|---|---|
+| 5 | **Sundering Strike** (new skill): 180%, and the target takes +20% damage for 2 turns | **Sharpen** (new skill): an ally next to him, or himself, deals +20% damage for 3 turns | Forging takes 20% less time |
+| 10 | **Hammer Blow** (new skill): 220%, and the target's next turn comes 30% later | **Reinforce** (new skill): an ally next to him, or himself, takes 30% less damage for 3 turns | One substat of a crafted piece starts a tier higher |
+| 15 | **Shatter:** Sundering Strike's bonus is +35% and lasts 3 turns | **Field Forge:** Sharpen and Reinforce reach allies 3 tiles away | Salvage returns 25% more |
+| 20 | **Armor Shatter** (alternate ultimate): 500%, and the target takes +40% damage for 3 turns (a boss +20%) | **Battle Forge** (alternate ultimate): for 3 turns every ally deals +25% damage and takes 15% less | Once a day, a masterwork: a crafted piece with a third substat of your choice |
+| 25 | **Master Hammer:** his strikes deal +15%, and sundered foes also deal 15% less damage | **Master Armorer:** his boosts are a quarter stronger and last a turn longer | A third substat choice costs nothing extra |
+
+### Chef (Kristela's profession)
+Every tier: +0.4% HP and +0.4% healing done (+10% each at tier 25).
+
+| Tier | Hot Kitchen (fight) | Field Cook (support) | Gourmet (farm, locked for now) |
+|---|---|---|---|
+| 5 | **Hot Oil** (new skill): thrown at a foe within 3 tiles: 150% Fire, and it deals 20% less damage for 2 turns | **Trail Snack** (new skill): an ally next to her, or herself, heals 20% of max HP | A meal at home gives the party +10% max HP for the next run |
+| 10 | **Tenderize** (new skill): 200%, and the target takes +15% damage for 2 turns | **Spicy Skewer** (new skill): an ally next to her, or herself, deals +20% damage for 3 turns | One more food item can be taken into a run |
+| 15 | **Flambe:** Hot Oil covers a 3 x 3 area | **Second Helping:** her food reaches allies 3 tiles away, and Trail Snack heals 30% | Home-cooked buffs last two runs |
+| 20 | **Kitchen Inferno** (alternate ultimate): fire on every foe within 2 tiles of her, 300%, and they deal 20% less damage for 2 turns | **Feast** (alternate ultimate): heals every ally for 40% of max HP, and they deal +15% for 3 turns | Once a day, a banquet with a large buff for a whole run |
+| 25 | **Master of the Flame:** her kitchen skills deal +20%, and their effects last a turn longer | **Master Cook:** her food heals and boosts 25% more | Meals cost half the ingredients |
 
 ## Class list (first draft)
 Each kingdom's classes match its flavor, so players know what style they're building toward. Prerequisites marked

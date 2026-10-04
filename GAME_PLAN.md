@@ -196,7 +196,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 1d | Mana (berries restore it), first skills with AV costs, healing (mana was removed again in 1f) | **Done** |
 | 1e | Combat math (GEAR.md step 1-3): multiplicative damage formula, 10x HP/ATK/DEF rescale, Crit Rate/Crit DMG stats (5%/50%), per-actor stat sheet, skill tags; difficulty re-tuned to match 1d | **Done** |
 | 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, packs; shots at anything in sight, deliberate two-step attacks, stuns as timeline delays | **Done** (parts 1 and 2, and Peter's answers at the first playtest checkpoint) |
-| A1 | Art pass 1 ([docs/design/ART.md](docs/design/ART.md)): the current game on the Tiny Swords art (heroes built from layers with their own faces and hair under the helmets, equipment looks for GEAR.md's weapons and armor sets, ring auras, skill animations, monsters from the Enemy Pack, the outdoor dungeon, the HUD) | **Next** (Peter, 2026-10-03: before 1g) |
+| A1 | Art pass 1 ([docs/design/ART.md](docs/design/ART.md)): the current game on the Tiny Swords art (heroes built from layers with their own faces and hair under the helmets, equipment looks for GEAR.md's weapons and armor sets, ring auras, skill animations, monsters from the Enemy Pack, the outdoor dungeon, the HUD) | **Done** (2026-10-04; new bosses and creatures come with row 7) |
 | 1g | Classes and professions core (PROGRESSION.md): points, tiers 1-25, milestones with three options each, stat bumps, prerequisites and kingdom locks, loadout, respec, a skill-tree screen of spheres; real content for the starting 3 classes and 3 professions | After the art pass (Peter's go, 2026-10-03; the content is drafted with Peter in the planning hub first) |
 | 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
 | 1i | Hero screen between runs: equipment, class and profession tiers, loadout (until the farm exists) | |
@@ -385,6 +385,54 @@ entrance.
 - **Checks:** 195 Core tests (7 new: waiting behind the tank, no walk around the floor for a shot, a short way around
   still taken, the leash, the regroup swap and its limits, the Auto leader holding). The party trace (`-- -party`)
   prints where the foes after the party are and who swapped.
+
+**Art pass 1 (2026-10-04, roadmap row A1).** The game runs on the Tiny Swords art; the spec is
+[docs/design/ART.md](docs/design/ART.md), the sheets and screenshots are in
+[docs/screenshots/2026-10-04-art-pass-1](docs/screenshots/2026-10-04-art-pass-1).
+- **New names for the first dungeon**, to match the art (their own commit, rules untouched): the Slime is the
+  **Spider**, the Bat the **Giant Bat**, the King Slime the **Troll**, and the "Slime Cave" is **Troll's Hollow**. The
+  entries above keep the names of their time.
+- **The art build:** `python Tools/pixelart/build_art.py` (Python 3.7, standard library only) reads the packs from
+  outside the repo and writes everything under `Assets/Art/Resources`: 205 PNGs (405 KB) and `art_manifest.json`
+  (frames, pivots, animations, 9-slice borders, where the head sits on each frame of a body). It takes the pack's
+  units apart into layers, recolors and reshapes them, and draws what the pack doesn't have in its palette and
+  outline. Only what the game uses is in the repo; the packs and their `.aseprite` files never are
+  ([docs/THIRD_PARTY.md](docs/THIRD_PARTY.md)). Sprites are 64 px a tile, point-filtered and uncompressed; the
+  camera zooms in whole steps only, and the HUD's art is drawn at a whole number of screen pixels per art pixel.
+- **Heroes from layers:** a hero is stacked at run time (`HeroComposer`) from a body (the pack's Warrior, Archer,
+  Monk or Pawn, picked by the weapon), the weapon, an armor set (its colors and head piece) and the hero's own head:
+  face, eyes and hair drawn for each of the three, showing under the helmets. In the art: the 9 weapons of GEAR.md
+  (Long Sword, Great Sword, Arcane Sword, Piercer Blade, Dual Blades, Great Shield, Hunter Bow, Mage Staff,
+  Gauntlets), its 9 armor sets, its 9 ring sets (a twinkle on the hand, and a flash when the ring does something),
+  3 cosmetic head pieces (hair bow, crown, headband), and an icon for every weapon, armor piece and ring. Every hero
+  can show every weapon and armor set (a test builds them all). The looks for now: Haiden with the Long Sword in
+  Heavy Armor, Kristela with Gauntlets as a Light Warrior, Uzuki with the Hunter Bow in the Archer's Garb.
+  `-fk-look` tries others; milestone 1h sets a hero's look from the gear it has equipped (`HeroLooks.Set`).
+- **Peter's choices at the two checkpoints:** Kristela wears a skirt and no ribbon; Haiden has no headband; the
+  archer's helmet has no nose bar; the larger colored eyes and the head pieces stay; rings show as a twinkle on the
+  hand, with a flash when they act, in nine colors; the bow, crown and headband are extra head pieces. **View size:**
+  2x on a 1080p phone (sprites twice their art size, about 18 x 8.4 tiles in view). While aiming, the camera moves no
+  further than it must to show every target clear of the HUD; when that would take the party out of the middle third
+  of the screen, or the targets don't fit, it steps out to 1x until the aim ends. An always-1x view stays behind
+  `-fk-view wide` for a player setting later; a camera that slides to the targets at 2x is out (the party ends up at
+  the edge of the screen).
+- **The dungeon** is outdoors: grass to walk on, raised ground with cliff faces for walls, bushes, rocks, trees,
+  bones and skull spikes on the raised ground, and a cave entrance as the way down.
+- **Animations** come from the pack's own strips: idle, walk, the sword's two swings, guard, cast, the bow's draw and
+  release, the punches; the monsters' attacks; the Troll's wind-up (held while it charges its slam), slam, recovery
+  and fall. An attack's impact frame lands when the turn's hit does, and nothing waits for an animation, so turns
+  are as fast as before. Effects: the pack's dust, explosion and heal; drawn for it, the punch burst, the shock
+  ring, the snare, the status icons and the aim reticle. The Troll turns see-through while someone stands behind it.
+- **HUD** on the pack's UI kit: buttons, party cards and turn order with portraits cut from each hero's own look,
+  bars, the banner's ribbon, the D-pad.
+- **Rules untouched:** the balance report prints the same numbers as before the art pass (only the boss's name
+  differs) and the golden replay's fingerprint is unchanged.
+- **Checks:** 195 Core tests, 23 PlayMode tests (new: no missing sprite anywhere, every hero in every weapon and
+  armor set, the camera's aiming rule on the phone, the tablet, Peter's two devices and small screens), the Windows
+  build, and four autoplay runs (phone, straight to the boss, tablet with Uzuki leading, keyboard layout) without an
+  error or a placeholder square.
+- **Open:** Peter's OK on the monsters' and the dungeon's names; where menu frames with gold trim and a pixel font
+  come from (ART.md's open questions); new bosses and creatures (roadmap row 7).
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

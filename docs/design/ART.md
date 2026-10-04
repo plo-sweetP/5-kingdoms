@@ -98,15 +98,21 @@ creatures beyond the pack come later.
   the same equipment can still be told apart. Each hero has their own head (face, eyes, hair), drawn to follow the
   rig's head frame by frame; a head piece is drawn over it and leaves the face and part of the hair showing; with
   no head piece the whole hairstyle shows.
-  - Uzuki: spiky blue hair, cyan eyes, one pauldron. Haiden: spiky orange-brown hair, a blue headband with long
-    tails, red eyes. Kristela: long wavy blonde hair, blue eyes, a gold X-shaped clip on one side. Concept sketches
-    are in `docs/concept/`; the Pawn shows the pack's way of drawing a face.
-  - Starting looks: Haiden on the Warrior rig with the Long Sword, Uzuki on the Archer rig with the Hunter Bow,
-    Kristela with Gauntlets.
+  - Uzuki: spiky blue hair, cyan eyes, one pauldron. Haiden: spiky orange-red hair, red eyes, and **no headband**
+    (Peter, 2026-10-04, on the first previews: "U can just remove it and keep his orange red hair. The blue ribbon
+    sticking out at the end is uneeded"; the concept sketch's headband can come back as a head piece). Kristela:
+    long wavy blonde hair, blue eyes, a gold X-shaped clip on one side. Concept sketches are in `docs/concept/`; the
+    Pawn shows the pack's way of drawing a face.
+  - Eyes are drawn larger than the pack's plain dots, a dark dot over the hero's eye color, so the color reads
+    (approved 2026-10-04).
+  - Starting looks (approved 2026-10-04): Haiden on the Warrior rig with the Long Sword and shield, in Heavy Armor
+    (the great helm); Kristela with Gauntlets, in Light Warrior (the crested cap); Uzuki on the Archer rig with the
+    Hunter Bow, in Archer's Garb (the archer helmet).
 - **Female heroes read as feminine, in any armor and with any weapon** (Peter, 2026-10-03, pointing at his chibi
   class sheet): for example long hair falling from under the helmet, lashes, a slimmer or skirted outline, softer
   trim, hair accessories. Kristela is the female hero today; Haiden and Uzuki are boys (Peter, 2026-10-03; older
-  comments in the code say "she" for Uzuki and need correcting).
+  comments in the code say "she" for Uzuki and need correcting). For Kristela, Peter chose "B for now" from three
+  previews (2026-10-04): long hair, lashes, blush and her clip, plus a pleated skirt on every body.
 - Idle and run play from the rig; attacks, shots, guards and heals use the rig's strips where one fits, and the
   code-driven lunge and impact effects where none does. Hit flash, hit-stop, knockback, screen shake and the death
   animation keep working, and animations must not slow the turns down.
@@ -120,7 +126,12 @@ The gear rules (GEAR.md) aren't built yet (milestone 1h); this pass makes the **
 - **Armor:** a look for each of GEAR.md's nine sets (Archer's Garb, Light Warrior, Mage Robe, Heavy Armor, Duelist's
   Leathers, Pilgrim's Vestments, Windrider's Cloak, Shadowstalker, Bloodrage Hide). The head piece and the body
   piece carry the look (a helmet, hood or hat over the hero's hair with the face still showing; the body's colors
-  and trim); hands and feet are a few pixels at this size, so they show as color accents.
+  and trim); hands and feet are a few pixels at this size, so they show as color accents. Peter reviewed the nine
+  head pieces on 2026-10-04 ("good so far"): the archer helmet loses the metal piece that hangs in front of the
+  eyes. The previews are in `docs/screenshots/2026-10-04-art-pass-1/` once the art session pushes.
+- **More head pieces, for variety** (Peter, 2026-10-04: "Bow, crown, head band in addition to what you currently
+  have"): a hair bow, a crown and a headband, as cosmetic head pieces on top of the nine sets, generated in the
+  pack's style. At the end of art pass 1 if there's room, otherwise the next art pass.
 - **Rings give an aura color** (Peter's idea): a soft tinted glow under the hero, one color per ring set.
 - A hero's look is **data**: which rig, head, weapon, armor pieces and aura. Until gear exists, each hero has a
   default look, a launch flag overrides it for trying things out, and 1h later sets it from the equipped items.

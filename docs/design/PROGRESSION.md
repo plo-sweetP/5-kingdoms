@@ -229,8 +229,8 @@ Every tier: +0.4% ATK and +0.4% Crit DMG (+10% each at tier 25).
 
 ## Starting profession content (drafts)
 Peter approved the first drafts as a starting point on 2026-10-04 ("We can fine tune them later after we get the
-game going and farm tested") and then asked for more variety and set the healing rules below. **This is the revision
-after that; he hasn't reviewed it as a whole yet.**
+game going and farm tested") and then asked for more variety and set the healing rules below. This is the revision
+after that. Peter has seen it (2026-10-04: "Cool"); fine-tuning comes later.
 
 **Variety rule (Peter, 2026-10-04):** professions should differ in what they bring: buffs, debuffs, utility, item
 support, companion support, traps, enhancing oneself, healing. **Healing is not handed to every class or

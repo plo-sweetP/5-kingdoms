@@ -765,7 +765,7 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// Any actor's turn is starting: it can be delayed again from here on, whatever it gave "until its next turn" ends,
-        /// and an aura it holds heals the allies next to it and counts down a turn.
+        /// and an aura it holds heals it and the allies next to it, and counts down a turn.
         /// </summary>
         void StartTurn(Actor actor)
         {
@@ -773,8 +773,8 @@ namespace FiveKingdoms.Core
             ExpireStatusesFrom(actor);
             var aura = actor.FindStatus(StatusKind.Aura);
             if (aura == null) return;
-            foreach (var ally in AlliesWithin(actor, 1))
-                if (ally != actor && ally.Hp < ally.MaxHp) Heal(ally, Math.Max(1, actor.MaxHp * aura.HealPercent / 100));
+            foreach (var covered in AlliesWithin(actor, AuraRadius))
+                if (covered.Hp < covered.MaxHp) Heal(covered, Math.Max(1, actor.MaxHp * aura.HealPercent / 100));
             if (--aura.TurnsLeft > 0) return;
             actor.Statuses.Remove(aura);
             events.Add(new StatusEndedEvent(actor.Id, StatusKind.Aura));
@@ -1382,8 +1382,8 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// How much of a hit from <paramref name="attacker"/> this actor takes, in percent: a guard cuts it, and so does an
-        /// ally's aura next to it; a mark raises it (only for the hunter who placed it; with no attacker given, any mark
-        /// counts).
+        /// aura covering it (its own, or an ally's next to it); a mark raises it (only for the hunter who placed it; with
+        /// no attacker given, any mark counts).
         /// </summary>
         public int DamageTakenPercent(Actor target, Actor attacker = null)
         {
@@ -1397,13 +1397,16 @@ namespace FiveKingdoms.Core
             return percent;
         }
 
-        /// <summary>The strongest aura an ally next to <paramref name="target"/> holds, or null.</summary>
+        /// <summary>An aura covers its holder and the allies next to it (Aura of Protection: the caster too, decided 2026-10-03).</summary>
+        const int AuraRadius = 1;
+
+        /// <summary>The strongest aura covering <paramref name="target"/>: its own, or one an ally next to it holds. Null if none.</summary>
         StatusEffect AuraProtecting(Actor target)
         {
             StatusEffect best = null;
             foreach (var actor in actors)
             {
-                if (actor == target || actor.Team != target.Team || GridPos.ChebyshevDistance(actor.Pos, target.Pos) != 1) continue;
+                if (actor.Team != target.Team || GridPos.ChebyshevDistance(actor.Pos, target.Pos) > AuraRadius) continue;
                 var aura = actor.FindStatus(StatusKind.Aura);
                 if (aura != null && (best == null || aura.Power > best.Power)) best = aura;
             }

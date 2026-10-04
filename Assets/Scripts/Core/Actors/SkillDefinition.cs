@@ -40,8 +40,9 @@ namespace FiveKingdoms.Core
         Area,
 
         /// <summary>
-        /// An aura around the user for StatusTurns of its own turns: allies next to it take StatusPower% less damage, and
-        /// at the start of each of its turns it heals them for Power% of its own max HP (Aura of Protection).
+        /// An aura around the user for StatusTurns of its own turns: the user and the allies next to it take StatusPower%
+        /// less damage, and at the start of each of its turns it heals them all for Power% of its own max HP (Aura of
+        /// Protection).
         /// </summary>
         Aura,
     }
@@ -260,8 +261,8 @@ namespace FiveKingdoms.Core
             status: StatusKind.Taunt, statusTurns: 1);
 
         /// <summary>
-        /// Ultimate: for 3 of Haiden's turns, allies next to him take 30% less damage, and at the start of each of his
-        /// turns he heals them for 10% of his max HP.
+        /// Ultimate: for 3 of Haiden's turns, he and the allies next to him take 30% less damage, and at the start of each
+        /// of his turns he heals them all (himself too) for 10% of his max HP.
         /// </summary>
         public static readonly SkillDefinition AuraOfProtection = new SkillDefinition("aura_of_protection", "Aura of Protection", "Aura",
             SkillEffect.Aura, power: 10, ultimate: true, radius: 1, statusPower: 30, statusTurns: 3);

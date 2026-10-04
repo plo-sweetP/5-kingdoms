@@ -146,7 +146,7 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
-        public void AuraOfProtectionShieldsAndHealsTheAlliesNextToHaiden()
+        public void AuraOfProtectionShieldsAndHealsHaidenAndTheAlliesNextToHim()
         {
             var run = Run(new[] { ActorCatalog.Haiden, ActorCatalog.Kristela, ActorCatalog.Uzuki }, Room);
             foreach (var member in run.Party) run.SetTactic(member, PartyTactic.Hold);
@@ -157,20 +157,40 @@ namespace FiveKingdoms.Tests
             Place(kristela, 4, 3);
             Place(uzuki, 1, 1);
             kristela.Hp = 300;
+            haiden.Hp = haiden.MaxHp - 200;
             haiden.Charge = CombatRules.MaxCharge;
             int heal = haiden.MaxHp * SkillCatalog.AuraOfProtection.Power / 100;
 
             Assert.IsTrue(run.UseUltimate());
             Assert.AreEqual(70, run.DamageTakenPercent(kristela), "30% less next to Haiden");
+            Assert.AreEqual(70, run.DamageTakenPercent(haiden), "and for Haiden himself: the aura covers its caster too");
             Assert.AreEqual(100, run.DamageTakenPercent(uzuki), "not next to him");
             Assert.AreEqual(300 + heal, kristela.Hp, "healed as his next turn starts");
+            Assert.AreEqual(haiden.MaxHp - 200 + heal, haiden.Hp, "and so is he");
 
             run.Wait();
             Assert.AreEqual(300 + 2 * heal, kristela.Hp);
+            Assert.AreEqual(haiden.MaxHp - 200 + 2 * heal, haiden.Hp);
             run.Wait();
             Assert.AreEqual(kristela.MaxHp, kristela.Hp, "a third heal, up to her max");
+            Assert.AreEqual(haiden.MaxHp - 200 + 3 * heal, haiden.Hp);
             Assert.IsNull(haiden.FindStatus(StatusKind.Aura), "three of his turns, then it's over");
             Assert.AreEqual(100, run.DamageTakenPercent(kristela));
+            Assert.AreEqual(100, run.DamageTakenPercent(haiden));
+        }
+
+        [Test]
+        public void HaidenRaisesTheAuraForHimselfToo()
+        {
+            var run = Run(Only(ActorCatalog.Haiden), Room);
+            Dummy(run, 2, 3);
+            run.Hero.Charge = CombatRules.MaxCharge;
+            Assert.AreNotEqual(HeroCommandKind.Ultimate, AutoPilot.Decide(run).Kind, "not before a fight");
+
+            run.Wait(); // The slime bites: the fight starts.
+            Assert.IsTrue(run.InCombat);
+            run.Hero.Charge = CombatRules.MaxCharge;
+            Assert.AreEqual(HeroCommandKind.Ultimate, AutoPilot.Decide(run).Kind, "alone and in melee: the aura covers him");
         }
 
         [Test]

@@ -20,8 +20,9 @@ namespace FiveKingdoms.Core
         Rooted,
 
         /// <summary>
-        /// On the aura's holder: allies next to it take <see cref="StatusEffect.Power"/>% less damage, and it heals them at
-        /// the start of each of its turns, for <see cref="StatusEffect.TurnsLeft"/> of them (Aura of Protection).
+        /// On the aura's holder: it and the allies next to it take <see cref="StatusEffect.Power"/>% less damage, and it
+        /// heals them all at the start of each of its turns, for <see cref="StatusEffect.TurnsLeft"/> of them (Aura of
+        /// Protection).
         /// </summary>
         Aura,
     }

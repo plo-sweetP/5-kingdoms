@@ -52,14 +52,15 @@ namespace FiveKingdoms.Core
         /// The ultimate's charge meter (PROGRESSION.md, "Skill resources"): full at 100. It fills as a hero acts (each
         /// attack or skill), deals damage (each hit landed) and takes damage (each hit taken); an ultimate's own hits don't
         /// refill it. Tuned with -balance for about two ultimates per hero in the boss fight (counting the charge carried
-        /// in) and one every two or three normal fights: those are short (a hero acts about twice), so one per normal
-        /// fight would put an ultimate in every other action. An action gives 15 (20 before shots could be aimed at any
-        /// foe in sight: an archer who shoots every turn charged too fast).
+        /// in) and one every two or three normal fights (approved by Peter, 2026-10-03): those are short (a hero acts
+        /// about twice), so one per normal fight would put an ultimate in every other action. Each of the three gives 10.
+        /// (They were 20 / 10 / 20 in 1f part 1; an archer who shoots every turn, and a tank whose aura covers himself and
+        /// so gets used as soon as it's ready, both charged too fast at those rates.)
         /// </summary>
         public const int MaxCharge = 100;
-        public const int ChargePerAction = 15;
+        public const int ChargePerAction = 10;
         public const int ChargePerHitDealt = 10;
-        public const int ChargePerHitTaken = 20;
+        public const int ChargePerHitTaken = 10;
 
         /// <summary>
         /// GEAR.md's formula: (skill% x ATK + extra damage) x (1 + DMG bonus) x crit x DEF mult x RES mult, times the

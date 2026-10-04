@@ -122,7 +122,7 @@ namespace FiveKingdoms.Core
         /// <summary>
         /// The hero's ultimate, once its meter is full and it's worth it (not on a foe a weapon attack would finish): a
         /// Volley centered where it catches the most foes; a Flurry on the foe it would attack anyway; an Aura in a fight
-        /// when allies next to the hero are in melee or hurt, or the boss is fighting.
+        /// when the hero or an ally next to it (everyone it covers) is in melee or hurt, or the boss is fighting.
         /// </summary>
         public static bool TryUltimate(DungeonRun run, Actor hero, out HeroCommand command)
         {
@@ -160,16 +160,16 @@ namespace FiveKingdoms.Core
                 }
                 case SkillEffect.Aura:
                 {
+                    // It covers the hero and the allies next to it.
                     if (!run.InCombat) return false;
-                    bool covers = false, needed = run.Boss != null && run.Boss.Alerted;
+                    bool needed = run.Boss != null && run.Boss.Alerted;
                     foreach (var member in run.Party)
                     {
-                        if (member == hero || !member.IsAlive || GridPos.ChebyshevDistance(member.Pos, hero.Pos) > ultimate.Radius) continue;
+                        if (!member.IsAlive || GridPos.ChebyshevDistance(member.Pos, hero.Pos) > ultimate.Radius) continue;
                         if (run.FindActor(member.Id) == null) continue;
-                        covers = true;
                         if (run.FoeAdjacent(member) || member.Hp * 100 < member.MaxHp * AuraHurtPercent) needed = true;
                     }
-                    if (!covers || !needed) return false;
+                    if (!needed) return false;
                     command = HeroCommand.Ultimate(hero.Facing);
                     return true;
                 }

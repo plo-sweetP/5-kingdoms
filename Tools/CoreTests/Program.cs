@@ -187,7 +187,7 @@ namespace FiveKingdoms.CoreTests
         static int BalanceReport(int seeds, Func<DungeonRunConfig> tuning)
         {
             int won = 0, lost = 0, stalled = 0, floorSum = 0, levelSum = 0, turnSum = 0, fallenSum = 0;
-            int fights = 0, bossFights = 0, ultimates = 0, bossUltimates = 0, swaps = 0;
+            int fights = 0, bossFights = 0, ultimates = 0, bossUltimates = 0, swaps = 0, safetySwaps = 0;
             long charge = 0, bossCharge = 0;
             var floorsReached = new int[new DungeonRunConfig().FloorCount + 1];
             var standingAtBoss = new int[Party.Length];
@@ -200,6 +200,9 @@ namespace FiveKingdoms.CoreTests
                 for (int i = 0; i < 5000 && run.State == RunState.InProgress; i++)
                 {
                     bool wasBossFloor = run.IsBossFloor;
+                    // Who might run to safety during this action: badly hurt, with a foe next to them.
+                    var hurt = run.Party.Where(member => member.IsAlive && DungeonRun.IsBadlyHurt(member) && run.FoeAdjacent(member))
+                        .Select(member => member.Id).ToList();
                     run.Execute(AutoPilot.Decide(run));
                     if (run.IsBossFloor && !wasBossFloor)
                     {
@@ -219,7 +222,11 @@ namespace FiveKingdoms.CoreTests
                             if (run.IsBossFloor) bossUltimates++;
                             else ultimates++;
                         }
-                        else if (e is SwappedEvent) swaps++;
+                        else if (e is SwappedEvent swapped)
+                        {
+                            swaps++;
+                            if (hurt.Contains(swapped.ActorId)) safetySwaps++;
+                        }
                         else if (e is ChargeChangedEvent changed && changed.Amount > 0)
                         {
                             if (run.IsBossFloor) bossCharge += changed.Amount;
@@ -250,7 +257,8 @@ namespace FiveKingdoms.CoreTests
                               string.Join(", ", Party.Select((definition, member) => $"{definition.Name} {standingAtBoss[member] * 100 / Math.Max(1, reachedBoss)}%")));
             Console.WriteLine($"Fights: {fights / (float)seeds:0.0} a run before the boss; per hero per fight, ultimates {ultimates / 3f / Math.Max(1, fights):0.00} " +
                               $"(charge gained {charge / 3f / Math.Max(1, fights):0}), in the boss fight {bossUltimates / 3f / Math.Max(1, bossFights):0.00} " +
-                              $"(charge {bossCharge / 3f / Math.Max(1, bossFights):0}); swaps {swaps / (float)seeds:0.0} a run");
+                              $"(charge {bossCharge / 3f / Math.Max(1, bossFights):0}); swaps {swaps / (float)seeds:0.0} a run " +
+                              $"({safetySwaps / (float)seeds:0.00} of them a badly hurt hero running to safety)");
             CampaignReport(players: seeds / 2, maxAttempts: 10, tuning);
             return 0;
         }

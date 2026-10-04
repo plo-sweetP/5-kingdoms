@@ -379,7 +379,7 @@ namespace FiveKingdoms.Dungeon
                     break;
                 case StatusKind.Aura:
                     hud.ShowFloatingText(view.transform.position + Vector3.up * 1.05f, "Aura of Protection", UltimateTextColor, 0.75f);
-                    hud.AddMessage($"{sourceName}'s aura shields and heals the allies next to him.", UltimateTextColor);
+                    hud.AddMessage($"{sourceName}'s aura shields and heals him and the allies next to him.", UltimateTextColor);
                     break;
             }
             ShowStatuses(view, run.FindActor(status.ActorId));

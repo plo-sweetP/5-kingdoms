@@ -141,11 +141,12 @@ namespace FiveKingdoms.Core
         /// <summary>
         /// Slow and heavy (Speed 85): a hero sometimes gets two turns before it acts, e.g. to escape a slam. Tuned with
         /// -balance for the party of three: a fresh level-1 party rarely wins (about 6%); with levels kept, players win
-        /// around Lv 9-10 on the 3rd attempt. Hitting hard (ATK 260) is what makes levels count: a low-level party's thinner
-        /// HP and DEF suffer most. 14000 HP (10000 before 1f part 2, when ranged hits dealt 75% and only flew along the 8
-        /// lines): more HP is what holds a low-level party back without stopping a Lv 9 one.
+        /// around Lv 9 on the 2nd-3rd attempt. Hitting hard (ATK 260) is what makes levels count: a low-level party's
+        /// thinner HP and DEF suffer most. 16000 HP (10000 in 1f part 1, when ranged hits dealt 75% and only flew along the
+        /// 8 lines, and before Aura of Protection covered Haiden himself): more HP is what holds a low-level party back
+        /// without stopping a Lv 9 one.
         /// </summary>
-        public static readonly ActorDefinition KingSlime = new ActorDefinition("king_slime", "King Slime", maxHp: 14000, attack: 260, defense: 50,
+        public static readonly ActorDefinition KingSlime = new ActorDefinition("king_slime", "King Slime", maxHp: 16000, attack: 260, defense: 50,
             expReward: 80, brain: ActorBrain.SlimeKing, speed: 85);
 
         /// <summary>

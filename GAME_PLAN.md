@@ -123,7 +123,8 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
   ally when that's shorter, never straight back), ranged ones hang back at a tile they can shoot from (any foe in
   sight within 5 tiles), and a ranged hero with a foe next to it steps out of melee once, then shoots anyway. A badly
   hurt hero (under 30% HP) may swap back behind a healthier ally, two melee heroes included ("run to safety").
-- Defeat: by default the run ends when the whole party has fallen (open question: or when the leader falls?).
+- Defeat (decided 2026-10-03): the run ends when the whole party has fallen; when the leader falls, the next hero
+  in line takes the lead. Resurrection may come later, as an ultimate, a weapon ability or a craftable item.
 - Enemies and bosses can target any party member; area attacks hit everyone in range.
 - Each character has their own saved progress (level, EXP, gear).
 - Open: are partners only gacha characters, or can bred monsters fill party slots too? (Earlier plan: farm monsters join the party.)
@@ -189,8 +190,8 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 1c | Combat timeline: Honkai Star Rail-style action value (AV) turn order on the grid, Speed stat, turn-order strip | **Done** |
 | 1d | Mana (berries restore it), first skills with AV costs, healing (mana was removed again in 1f) | **Done** |
 | 1e | Combat math (GEAR.md step 1-3): multiplicative damage formula, 10x HP/ATK/DEF rescale, Crit Rate/Crit DMG stats (5%/50%), per-actor stat sheet, skill tags; difficulty re-tuned to match 1d | **Done** |
-| 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, packs; shots at anything in sight, deliberate two-step attacks, stuns as timeline delays | **Done** (parts 1 and 2). **First playtest checkpoint: Peter plays it; 1g-1i wait for his go** |
-| 1g | Classes and professions core (PROGRESSION.md): points, tiers 1-25, milestones, stat bumps, prerequisites and kingdom locks, loadout, respec; real content for the starting 3 classes and 3 professions | |
+| 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, packs; shots at anything in sight, deliberate two-step attacks, stuns as timeline delays | **Done** (parts 1 and 2, and Peter's answers at the first playtest checkpoint) |
+| 1g | Classes and professions core (PROGRESSION.md): points, tiers 1-25, milestones, stat bumps, prerequisites and kingdom locks, loadout, respec; real content for the starting 3 classes and 3 professions | **Next** (Peter's go, 2026-10-03) |
 | 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
 | 1i | Hero screen between runs: equipment, class and profession tiers, loadout (until the farm exists) | |
 | 1j | Elements and Break/toughness (needs the element chart) | Later |
@@ -323,36 +324,52 @@ aiming, attacking by walking into an enemy, the skipped-turn stun, the swap rule
   to shoot; Volley centers where it catches the most.
 - **Melee leader:** the party starts as Haiden, Kristela, Uzuki (`ActorCatalog.StartingParty`), the tank in front.
   A tap on a party card (or Tab / B) switches hero; `-fk-leader kristela` or `uzuki` starts with that one.
-- **Re-tune:** the party hits harder now (Uzuki shoots nearly every turn, at 90%), so the King Slime has 14000 HP
-  (was 10000) and an action charges the ultimate by 15 (was 20). Balance (autopilot, Haiden leading, 200 seeds): 14
-  fresh level-1 runs win (7%; 6.8% over 600 seeds), all 200 reach the boss floor; with levels kept, the first clear
-  comes on attempt 3.1 at Lv 9.6. Ultimates: 2.2 per hero in the boss fight, one every 2.7 normal fights. A Lv 9
-  party sent straight to the boss wins 196 of 200, a Lv 10 one always. (A 16000 HP boss would bring fresh wins to
-  3.5% but push the first clear to attempt 3.5 at Lv 10.3.)
-- **Checks:** 187 Core tests (new: line of sight, targeted commands, the delay rule, run to safety, target choice,
+- **Re-tune at the checkpoint:** the party hits harder now (Uzuki shoots nearly every turn, at 90%), so the King
+  Slime went from 10000 to 14000 HP and an action's charge from 20 to 15: 7% of fresh level-1 runs won, the first
+  clear came on attempt 3.1 at Lv 9.6, with 2.2 ultimates per hero in the boss fight. The numbers after Peter's
+  answers are below.
+- **Checks:** 188 Core tests (new: line of sight, targeted commands, the delay rule, run to safety, target choice,
   what aiming marks) and 13 PlayMode tests (new: the two-step aiming and tap-to-attack in the real scene). The soak
   tests also fail if the autopilot walks into an enemy or has a command refused, if a hero attacks nothing, or if
   anything is delayed twice before it acts. The golden replay was re-recorded (explicit targeted attacks, lowest HP
   first). The autoplay smoke test now aims each action once the way a player does and screenshots the highlight.
-  The balance tool takes `-lead ID` and `seeds=N`, and reports who still stands on arrival at the boss floor: with
-  the autopilot leading Haiden, he does in about a third of fresh runs, Kristela in half, Uzuki always (the same as
-  in part 1: its melee leader walks into every pack first).
+  The balance tool takes `-lead ID` and `seeds=N`, and reports who still stands on arrival at the boss floor and
+  how often a badly hurt hero ran to safety (rarely: about once in 20-100 runs, since heroes heal first).
+
+**First playtest checkpoint: Peter's answers (2026-10-03).**
+- The run ends when the **whole party** has fallen (resurrection may come later: an ultimate, a weapon ability or a
+  craftable item).
+- **Aura of Protection covers Haiden too:** he and the allies next to him take 30% less damage, and at the start of
+  each of his turns he heals them all, himself included, for 10% of his max HP. His AI raises it in a fight as soon as
+  anyone it covers (him included) is in melee or hurt, instead of sitting on a full meter until an ally stands next
+  to him.
+- The **ultimate pace** is approved: about 2 per hero in the boss fight, one every 2-3 normal fights. With Haiden's
+  aura now used as soon as it's ready, the old rates overshot it (one every 1.7 normal fights), so each source gives
+  **10**: an action, a hit landed, a hit taken (was 15 / 10 / 20).
+- The **85-100% damage spread** stays, and **slime EXP** (3, +1 per floor, to every hero standing) is fine.
+- The weapon attack with **nothing in reach** stays refused (no swing at the air); Wait passes a turn.
+- Also approved: Haiden leads; a boss rolls Stun Strike's chance like anyone else; a boss's snare delay is 25%; a
+  stun outside a fight does nothing.
+- **Balance now** (autopilot, Haiden leading, 200 seeds; the aura makes the party sturdier, so the King Slime has
+  **16000 HP**): 13 fresh level-1 runs win (6.5%), 199 reach the boss floor; with levels kept, the first clear comes
+  on attempt 2.8 at Lv 9.4. Ultimates: 2.1 per hero in the boss fight, one every 2.3 normal fights. On arrival at
+  the boss floor Haiden still stands in 47% of fresh runs (35% before his aura covered him), Kristela in 55%, Uzuki
+  always. A Lv 9 party sent straight to the boss wins 198 of 200, a Lv 12 one always.
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.
 2. Pixel art spec (to go in ART_BIBLE.md): placeholders use 32 px tiles and 32x32 chibi sprites; confirm, and set palette limits and animation frame counts.
 3. ~~Exact armor pieces and how many weapon slots.~~ Answered in GEAR.md: head, body, hands, feet, 2 rings, 1 weapon.
 4. ~~Stamina and timers.~~ Answered: see "Energy" above.
-7. Does a run end when the leader falls, or only when the whole party has fallen? (Default for 1f: the whole party.)
-10. Aura of Protection covers the allies next to Haiden, not Haiden himself (as written in PROGRESSION.md). Should it
-    cover him too?
-11. Ultimate pace: the proposed "one per normal fight" would mean an ultimate every other action (normal fights are
-    short), so 1f tunes for two per hero in the boss fight and one every 2-3 normal fights.
-9. Keep the 85-100% random damage spread (Mystery Dungeon style), or drop it as in the Honkai: Star Rail formula,
-   where only crits vary? Kept for now; one number in `CombatRules`.
-12. Slime EXP is 3 (+1 per floor), since every hero standing gets it in full. OK?
-13. With nothing in reach, the weapon attack button says so and keeps the turn (1f part 2) instead of swinging at the
-    air as it did before. OK, or should a missed swing still pass the turn (there's a Wait button for that)?
+7. ~~Does a run end when the leader falls, or only when the whole party has fallen?~~ Answered: the whole party.
+   Resurrection may come later.
+10. ~~Should Aura of Protection cover Haiden himself?~~ Answered: yes, the caster too.
+11. ~~Ultimate pace.~~ Answered: two per hero in the boss fight and one every 2-3 normal fights is good for now.
+9. ~~Keep the 85-100% random damage spread?~~ Answered: keep it.
+12. ~~Slime EXP of 3 (+1 per floor) to every hero standing.~~ Answered: fine.
+13. ~~The weapon attack with nothing in reach.~~ Answered: it stays refused, no swing at the air.
+14. Should a skill that needs a target be usable at nothing, to pass the turn? Today it's refused without a target
+    (no turn used), and Wait passes the turn.
 8. ~~Crystal Ice Legion Hunter's prerequisites, the Space/Time element, monk weapons.~~ Answered in the specs: Archer 15 +
    Mage 10; Darkness covers time and space; Kristela uses Gauntlets (the Monk/fist weapon type, passive later).
 5. Store policy and legal check before any paid gacha (odds disclosure is required in app stores and some regions).

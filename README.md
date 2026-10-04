@@ -37,7 +37,7 @@ Attacks are deliberate: walking into an enemy only turns your hero to face it, a
 weapon attack, a skill or an ultimate that needs a target lights up where it reaches and marks every valid target; one
 is marked to begin with (the enemy you face, else the nearest), so a second press confirms it. Melee heroes reach the
 enemies next to them; Uzuki's shots reach any enemy in sight within 5 tiles, at any angle (walls and wall corners block
-them, allies don't), for 90% of a melee hit, and less with an enemy right next to her. A stun pushes an enemy's next
+them, allies don't), for 90% of a melee hit, and less with an enemy right next to him. A stun pushes an enemy's next
 turn back instead of skipping it, and the same enemy can't be pushed back again until it has acted (the stars over its
 head). A badly hurt partner swaps back behind a healthier one. Partners stay with the leader: in a corridor or a
 doorway they wait right behind whoever is fighting instead of looking for another way around, and a partner that got

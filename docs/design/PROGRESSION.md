@@ -19,7 +19,7 @@ Classes, Traces and professions are for **heroes only**. Monsters get their iden
   kingdom's inherited classes to them.
 - The starting party of 4 is the player + three partners. Players then recruit or pull heroes to swap into the party
   and to fill **profession slots at the home base**.
-  - **Uzuki** (the first companion): 5th kingdom (Medieval Realm). Signature class **Crystal Ice Legion Hunter**: an
+  - **Uzuki** (boy, the first companion): 5th kingdom (Medieval Realm). Signature class **Crystal Ice Legion Hunter**: an
     Ice Hunter Bow user who summons ice avatars to fight alongside.
   - **Haiden** (boy): 3rd kingdom (Dynasty Nation). Starts as a **Paladin**, later trains fire **Rune Warrior**
     toward his signature class **Runegod Fire Blade**.

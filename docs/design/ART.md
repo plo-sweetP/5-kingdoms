@@ -105,7 +105,8 @@ creatures beyond the pack come later.
     Kristela with Gauntlets.
 - **Female heroes read as feminine, in any armor and with any weapon** (Peter, 2026-10-03, pointing at his chibi
   class sheet): for example long hair falling from under the helmet, lashes, a slimmer or skirted outline, softer
-  trim, hair accessories. Kristela is one; whether Uzuki is too is open question 5.
+  trim, hair accessories. Kristela is the female hero today; Haiden and Uzuki are boys (Peter, 2026-10-03; older
+  comments in the code say "she" for Uzuki and need correcting).
 - Idle and run play from the rig; attacks, shots, guards and heals use the rig's strips where one fits, and the
   code-driven lunge and impact effects where none does. Hit flash, hit-stop, knockback, screen shake and the death
   animation keep working, and animations must not slow the turns down.
@@ -188,4 +189,3 @@ weapon and armor look; and Peter has the preview sheets, screenshots and a build
 2. The view size on 1080p phones (Peter chooses from screenshots).
 3. Where the art for the gold-trimmed menu frames comes from, if Peter wants that exact look.
 4. A pixel font that matches the pack (none is included).
-5. Is Uzuki a boy or a girl? The older docs and code comments say "she"; Peter spoke of "the female hero" (one).

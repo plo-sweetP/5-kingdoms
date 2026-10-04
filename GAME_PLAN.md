@@ -55,7 +55,7 @@ energy) and [docs/design/GEAR.md](docs/design/GEAR.md) (damage formula, stats, g
 - **Player character (later):** the player creates their own character and picks one of the 5 kingdoms as their
   origin, which opens that kingdom's inherited classes. Until the creator exists, Haiden leads the playtest party
   (a melee hero in front; the player can switch to anyone).
-- **Uzuki is the first companion** (Medieval Realm; concept sketch: spiky blue hair, cyan eyes, sleeveless top with
+- **Uzuki is the first companion** (a boy, Medieval Realm; concept sketch: spiky blue hair, cyan eyes, sleeveless top with
   strap, one pauldron, baggy cuffed pants, boots). Placeholder sprite exists.
 - **Starting party for the first playtest** (the player's own character joins later as the 4th):
 
@@ -126,7 +126,7 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
 - **Staying together (Peter's playtest note, 2026-10-03):** partners fight within 6 steps' walk of the leader. With
   allies in their way (a corridor, a doorway) they walk around them only when that's at most 4 steps longer;
   otherwise they close up and wait right behind them, ready to take a place at the front, and Uzuki stays behind the
-  line when it hides her target. A partner that got cut off swaps past the one that follows it in line ("regroup").
+  line when it hides his target. A partner that got cut off swaps past the one that follows it in line ("regroup").
   On Auto, the leader doesn't walk off to the stairs while its partners fight.
 - Defeat (decided 2026-10-03): the run ends when the whole party has fallen; when the leader falls, the next hero
   in line takes the lead. Resurrection may come later, as an ultimate, a weapon ability or a craftable item.
@@ -326,7 +326,7 @@ aiming, attacking by walking into an enemy, the skipped-turn stun, the swap rule
   standing farther from the foes, two melee heroes included. Partners and the autopilot both do it when they can't
   heal. The pair cooldown and the soak check for back-and-forth swaps still apply.
 - **AI targets:** partners and the autopilot attack with explicit commands naming the target's tile, never by walking
-  into a foe, and pick the marked enemy first, then the lowest HP (then the nearest). Uzuki marks the foe she's about
+  into a foe, and pick the marked enemy first, then the lowest HP (then the nearest). Uzuki marks the foe he's about
   to shoot; Volley centers where it catches the most.
 - **Melee leader:** the party starts as Haiden, Kristela, Uzuki (`ActorCatalog.StartingParty`), the tank in front.
   A tap on a party card (or Tab / B) switches hero; `-fk-leader kristela` or `uzuki` starts with that one.

@@ -156,14 +156,13 @@ whatever role they like.
 - **Milestones:** tier 5, 10, 15 = a skill pick or skill upgrade; **tier 20** = major ultimate upgrade or alternate
   ultimate; **tier 25** = major boost to the class's skills.
 - **Three options at every milestone** (Peter, 2026-10-03), for classes and professions alike: a class reads as
-  three paths side by side, and the player picks one option per milestone tier. The screen is a tree of spheres like
-  Peter's "Archer Mastery Path" reference (ART.md, "Later"). Agreed with it: a hero starts at tier 1 of their class;
-  speeds stay as they are today; respec is free below level 20, and the tea and the class masters come later.
+  three paths side by side, and the player picks one option per milestone tier, **from any path: paths can be mixed
+  freely** (Peter: "let them mix"). The screen is a tree of spheres like Peter's "Archer Mastery Path" reference
+  (ART.md, "Later"). Agreed with it: a hero starts at tier 1 of their class; speeds stay as they are today; respec is
+  free below level 20, and the tea and the class masters come later.
   *Proposed, not yet confirmed:* an option that upgrades a skill the hero doesn't know teaches the base skill
   instead; skills are tied to a weapon type (bow, sword, fists, or none); until the farm exists, a profession's
-  options are "fight or farm", where the farm ones do nothing yet. The content for the starting classes and
-  professions is being drafted with Peter (the first Archer draft had two options per tier and gets a third,
-  including a shot that bounces between enemies).
+  options are "fight or farm", where the farm ones do nothing yet. The drafts are under "Starting class content".
 - **Every tier** (milestones too) also grants a small class stat bump. **Never SPD.** Budget per class at tier 25, 1-2
   stats each: HP/ATK/DEF up to +15%, Crit Rate up to +6%, Crit DMG up to +12%, Affinity/Resist/healing up to +12%.
 - Milestone skills can **upgrade** an existing skill (numbers or effects), **add** a skill to the hero's pool, or
@@ -190,6 +189,45 @@ whatever role they like.
     at most 50% of a turn per effect (25% on bosses), and an actor can be delayed at most once per its own turn. The
     same rule applies when monsters and bosses stun heroes later.
 - Transformation ultimates last a set number of the hero's own turns, so the timeline shows when they end.
+
+## Starting class content (drafts, 2026-10-03)
+Numbers are first drafts to tune with `-balance`. At today's levels (1-10) players reach tiers 5 and 10, so those
+matter most for now. Each option either upgrades a skill of the class or teaches a new one.
+
+### Archer (Uzuki's class): seen by Peter, who then asked for the third path and free mixing
+Every tier: +0.4% ATK and +0.2% Crit Rate (+10% and +5% at tier 25).
+
+| Tier | Marksman (single-target damage) | Hunter (traps and control) | Trickshot (several targets) |
+|---|---|---|---|
+| 5 | **Deadly Mark:** Hunter's Mark gives +40% (was +25%) | **Crippling Shot** (new skill): 180%, the target's next turn comes 30% later | **Bouncing Shot** (new skill): 160%, then it bounces to up to 2 more foes within 3 tiles, each bounce at 70% of the last hit |
+| 10 | **Heavy Draw:** Power Shot hits for 360% (was 300%) and knocks back 2 tiles | **Barbed Snare:** a snare also deals 150% ATK when it springs; 5 per floor (was 3) | **Piercing Arrow:** Power Shot also hits every foe in a line behind the target for 60% |
+| 15 | **Steady Aim:** a shot after a turn without moving deals +25% | **Shared Mark:** allies also deal +15% to the marked foe | **Splitting Arrows:** Quick Shot bounces once to a second foe for 50% |
+| 20 | **Deadeye** (alternate ultimate): one arrow for 900% on a single foe | **Pinning Volley:** Volley also slows what it hits by 30% and leaves a snare at its center | **Storm of Arrows:** Volley hits 3 times (was 2) |
+| 25 | **Master Marksman:** Archer shots deal +15%, with no point-blank penalty | **Master Hunter:** marks, slows and snares last one turn longer, and Hunter's Mark takes no time | **Master Trickshot:** one more bounce, and bounces and pierces deal full damage |
+
+### Paladin (Haiden's class): *proposed*, not yet seen by Peter
+Every tier: +0.4% HP and +0.4% DEF (+10% each at tier 25).
+
+| Tier | Guardian (protection) | Devotion (healing) | Crusader (damage) |
+|---|---|---|---|
+| 5 | **Challenge:** Shoulder Bash also taunts every foe next to Haiden, for 2 turns | **Greater Heal:** Heal restores 30% (was 20%) | **Searing Smite:** Divine Strike hits for 320% (was 250%) |
+| 10 | **Shield Wall** (new skill): Haiden and the allies next to him take 40% less damage until his next turn | **Healing Word** (new Quick skill): heals an ally within 3 tiles for 12% of Haiden's max HP | **Sweeping Slash** (new skill): hits up to three foes in front of him for 150% each |
+| 15 | **Stand Firm:** Haiden takes 20% less damage from foes he has taunted | **Radiant Smite:** Divine Strike also heals the most hurt ally next to him for 10% of his max HP | **Judgment:** Divine Strike deals +50% to a taunted foe |
+| 20 | **Bastion:** Aura of Protection blocks 40% (was 30%) and lasts 4 turns (was 3) | **Sanctuary:** the aura heals 15% a turn (was 10%) and reaches 2 tiles | **Holy Wrath** (alternate ultimate): fire on every foe next to Haiden, 350% each, and they are taunted |
+| 25 | **Master Guardian:** his taunts last a turn longer, and allies next to him always take 10% less damage | **Master of Devotion:** his heals restore 25% more, and Heal reaches allies 2 tiles away | **Master Crusader:** Paladin strikes deal +15%, and a kill with one heals him for 10% |
+
+### Monk (Kristela's class): *proposed*, not yet seen by Peter
+Every tier: +0.4% ATK and +0.4% Crit DMG (+10% each at tier 25).
+
+| Tier | Striker (damage) | Windwalker (speed) | Mystic (ki: control and sustain) |
+|---|---|---|---|
+| 5 | **Iron Fist:** Piercing Punch hits for 260% (was 220%) and reaches a third foe in the line | **Step of the Wind** (new Quick skill): moves up to 3 tiles in a straight line | **Stunning Fist:** Stun Strike hits for 200% (was 160%) with an 80% chance (was 60%) |
+| 10 | **Double Jab:** Jab hits twice for 120% each (was once for 200%) | **Momentum:** a Jab right after a skill takes 25% less time | **Ki Surge:** Ki Heal restores 35% (was 25%) and her next strike deals +30% |
+| 15 | **Finishing Blow** (new skill): 220%, doubled against a foe below 30% HP | **Deflect:** once per cycle, the first hit on Kristela deals half damage (a reaction) | **Ki Guard** (new Quick skill): she takes 40% less damage until her next turn |
+| 20 | **Thousand Fists:** Flurry of Blows is 7 hits (was 5) | **Wind Dance** (alternate ultimate): for 3 of her turns everything she does takes 25% less time | **Quivering Palm** (alternate ultimate): one strike for 500% that always pushes the target's next turn back (50%, bosses 25%) |
+| 25 | **Master Striker:** Monk strikes deal +15%, and her multi-hit skills gain +10% Crit Rate | **Master Windwalker:** her first turn in a fight comes 30% sooner, and Quick skills no longer sit out a turn | **Master Mystic:** her stuns always land, and Ki Heal also heals the allies next to her for half |
+
+Still to draft: the three professions (Alchemist, Blacksmith, Chef).
 
 ## Class list (first draft)
 Each kingdom's classes match its flavor, so players know what style they're building toward. Prerequisites marked

@@ -219,7 +219,7 @@ namespace FiveKingdoms.Core
         /// <summary>Ranged reach (PROGRESSION.md, "Ranged vs melee"): shots, marks and the Volley reach 5 tiles.</summary>
         public const int RangedReach = 5;
 
-        // ---- Uzuki, Archer: utility ranged DPS built around traps. Her Hunter Bow doubles up her shots (Multishot). ----
+        // ---- Uzuki, Archer: utility ranged DPS built around traps. His Hunter Bow doubles up his shots (Multishot). ----
 
         /// <summary>Quick: marks a foe in sight; it takes 25% more damage from Uzuki for 3 of its turns, and the mark jumps on a kill.</summary>
         public static readonly SkillDefinition HuntersMark = new SkillDefinition("hunters_mark", "Hunter's Mark", "Mark",
@@ -232,7 +232,7 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// Roll 2 tiles, then shoot (150% ATK) the nearest foe in sight: out of melee and attacking in one turn. A snare
-        /// trap stays on the tile she left, rooting the first enemy that steps on it.
+        /// trap stays on the tile he left, rooting the first enemy that steps on it.
         /// </summary>
         public static readonly SkillDefinition RollingShot = new SkillDefinition("rolling_shot", "Rolling Shot", "Roll",
             SkillEffect.Shot, power: 150, reach: AttackReach.Ranged, range: RangedReach,

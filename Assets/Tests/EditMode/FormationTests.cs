@@ -120,7 +120,7 @@ namespace FiveKingdoms.Tests
             Place(uzuki, 3, 3);
             var spider = Dummy(run, 4, 3);
             for (int slot = 0; slot < uzuki.SkillCooldowns.Length; slot++) uzuki.SkillCooldowns[slot] = 1;
-            uzuki.RetreatSteps = 1; // She already stepped back once and it followed.
+            uzuki.RetreatSteps = 1; // He already stepped back once and it followed.
 
             Assert.AreEqual(HeroCommand.AttackAt(spider.Pos), AutoPilot.Decide(run), "a point-blank Quick Shot rather than retreating forever");
         }
@@ -285,7 +285,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void ARangedPartnerFindsATileToShootFromAwayFromTheFoe()
         {
-            // A wall down the middle of the room hides the spider from her.
+            // A wall down the middle of the room hides the spider from him.
             var run = Run(new[] { ActorCatalog.Kristela, ActorCatalog.Uzuki },
                 "##########",
                 "#........#",
@@ -303,7 +303,7 @@ namespace FiveKingdoms.Tests
             run.Wait(); // The fight starts.
             Assert.IsTrue(run.InCombat);
             run.SetTactic(uzuki, PartyTactic.Follow);
-            Assert.IsFalse(run.AnyFoeInSight(uzuki.Pos, uzuki.Team, 5), "no shot from where she stands: the wall's corner is in the way");
+            Assert.IsFalse(run.AnyFoeInSight(uzuki.Pos, uzuki.Team, 5), "no shot from where he stands: the wall's corner is in the way");
 
             var command = PartnerBrain.Decide(run, uzuki);
             Assert.AreEqual(HeroCommandKind.Move, command.Kind);
@@ -345,12 +345,12 @@ namespace FiveKingdoms.Tests
             var run = TankInTheRing(ActorCatalog.StartingParty);
             var uzuki = run.Party[2];
             Assert.AreEqual(new GridPos(3, 1), uzuki.Pos, "around the corner, behind Kristela");
-            Assert.IsFalse(run.AnyFoeInSight(uzuki.Pos, uzuki.Team, 5), "the corner hides the spider from her");
-            Assert.IsTrue(run.AnyFoeInSight(new GridPos(4, 5), uzuki.Team, 5), "the top of the ring, 9 steps around, would give her a shot");
+            Assert.IsFalse(run.AnyFoeInSight(uzuki.Pos, uzuki.Team, 5), "the corner hides the spider from him");
+            Assert.IsTrue(run.AnyFoeInSight(new GridPos(4, 5), uzuki.Team, 5), "the top of the ring, 9 steps around, would give him a shot");
 
             Assert.AreEqual(HeroCommand.Wait, PartnerBrain.Decide(run, uzuki));
             for (int i = 0; i < 4; i++) run.Wait();
-            Assert.AreEqual(new GridPos(3, 1), uzuki.Pos, "she stays with the party");
+            Assert.AreEqual(new GridPos(3, 1), uzuki.Pos, "he stays with the party");
         }
 
         [Test]

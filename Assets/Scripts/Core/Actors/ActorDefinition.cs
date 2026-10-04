@@ -99,9 +99,9 @@ namespace FiveKingdoms.Core
     public static class ActorCatalog
     {
         /// <summary>
-        /// Archer (Medieval Realm), utility ranged DPS built around traps: her weapon attack (Quick Shot) reaches any foe in
+        /// Archer (Medieval Realm), utility ranged DPS built around traps: his weapon attack (Quick Shot) reaches any foe in
         /// sight within 5 tiles; Hunter's Mark, Power Shot and Rolling Shot (which leaves a snare); ultimate Volley. The
-        /// Hunter Bow's +6 SPD takes her base 95 to 101.
+        /// Hunter Bow's +6 SPD takes his base 95 to 101.
         /// </summary>
         public static readonly ActorDefinition Uzuki = new ActorDefinition("uzuki", "Uzuki", maxHp: 400, attack: 60, defense: 30, expReward: 0,
             speed: 95, skills: new[] { SkillCatalog.HuntersMark, SkillCatalog.PowerShot, SkillCatalog.RollingShot },

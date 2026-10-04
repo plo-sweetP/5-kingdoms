@@ -42,7 +42,7 @@ namespace FiveKingdoms.Tests
             Assert.IsTrue(aim.TryFind(offLine.Pos, out var southEast));
             Assert.AreEqual(Direction8.SE, southEast.Direction, "the nearest of the 8 directions");
             Assert.Contains(new GridPos(2, 3), aim.Reach.ToList(), "allies don't block it");
-            Assert.AreEqual(29, aim.Reach.Count, "every tile of the open room within 5 of her (6 x 5, less her own)");
+            Assert.AreEqual(29, aim.Reach.Count, "every tile of the open room within 5 of him (6 x 5, less his own)");
             Assert.IsFalse(aim.Reach.Contains(new GridPos(7, 3)), "out of reach");
         }
 
@@ -218,7 +218,7 @@ namespace FiveKingdoms.Tests
                 return aim.Options[aim.Default].Target;
             }
             run.Hero.Facing = Direction8.E;
-            Assert.AreSame(east, Marked(), "the one she faces, though others are nearer");
+            Assert.AreSame(east, Marked(), "the one he faces, though others are nearer");
             run.Hero.Facing = Direction8.S;
             Assert.AreSame(south, Marked());
             run.Hero.Facing = Direction8.NE;

@@ -148,7 +148,7 @@ namespace FiveKingdoms.Tests
             Assert.AreEqual(offLine.Id, shot.TargetId, "the tapped one, not the one on a line");
             Assert.AreEqual(offLine.Pos, shot.To, "the arrow flies straight at it, at any angle");
             Assert.AreEqual(3, shot.Distance);
-            Assert.AreEqual(Direction8.NE, shot.Direction, "and she turns the nearest of the 8 ways");
+            Assert.AreEqual(Direction8.NE, shot.Direction, "and he turns the nearest of the 8 ways");
             Assert.Less(offLine.Hp, offLine.MaxHp);
             Assert.AreEqual(onLine.MaxHp, onLine.Hp);
         }
@@ -254,7 +254,7 @@ namespace FiveKingdoms.Tests
             Assert.IsTrue(AttacksBy(run, uzuki).Any(arrow => arrow.TargetId == spider.Id), "then shot back");
             Assert.AreEqual(1, run.Events.OfType<TrapPlacedEvent>().Count(trap => trap.Pos == new GridPos(5, 1)));
 
-            // The spider came after her and stepped on the snare where she stood.
+            // The spider came after him and stepped on the snare where he stood.
             Assert.AreEqual(new GridPos(5, 1), spider.Pos);
             Assert.IsNotNull(spider.FindStatus(StatusKind.Rooted));
             Assert.AreEqual(0, run.Traps.Count, "a trap goes off once");
@@ -447,7 +447,7 @@ namespace FiveKingdoms.Tests
             run.Wait(); // The fight starts.
             Assert.IsTrue(run.InCombat);
 
-            // She rolls away, leaving a snare; the boss (85) follows onto it on its own turn at 10000 / 85 AV.
+            // He rolls away, leaving a snare; the boss (85) follows onto it on its own turn at 10000 / 85 AV.
             Assert.IsTrue(run.UseSkill(Slot(uzuki, SkillCatalog.RollingShot), Direction8.W));
             Assert.AreEqual(new GridPos(5, 1), boss.Pos);
             Assert.IsNull(boss.FindStatus(StatusKind.Rooted), "bosses can't be rooted");

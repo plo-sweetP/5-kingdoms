@@ -9,16 +9,14 @@ namespace FiveKingdoms.Core
     /// enemy first, then the lowest HP; <see cref="HeroTactics"/>). Otherwise it moves: in a fight, melee partners close
     /// in on a foe and ranged ones find a tile to shoot from (PROGRESSION.md, "Battle formation"); while exploring, its
     /// <see cref="PartyTactic"/> decides: Attack goes after foes it can see while staying near the leader, Follow keeps
-    /// in line behind the member ahead of it. Hold stays where it is, even in a fight. Decides only;
-    /// <see cref="DungeonRun"/> carries the command out.
+    /// in line behind the member ahead of it. Hold stays where it is, even in a fight. The party stays together: a
+    /// partner whose way is held by its own allies queues up behind them rather than walking around the floor.
+    /// Decides only; <see cref="DungeonRun"/> carries the command out.
     /// </summary>
     public static class PartnerBrain
     {
         /// <summary>How far (in steps) an attacking partner will go after a foe while exploring.</summary>
         const int ChaseSteps = 8;
-
-        /// <summary>An attacking partner only goes after foes this close to the leader, so the party doesn't scatter.</summary>
-        const int LeashRange = 6;
 
         const int FarSearchLimit = 200;
 
@@ -44,13 +42,14 @@ namespace FiveKingdoms.Core
         {
             command = HeroCommand.Wait;
             Func<GridPos, bool> blocked = p => run.ActorAt(p) != null;
+            var near = HeroTactics.NearLeader(run, partner);
             int best = int.MaxValue;
             foreach (var actor in run.Actors)
             {
                 if (actor.Team == partner.Team) continue;
                 int distance = GridPos.ChebyshevDistance(partner.Pos, actor.Pos);
                 if (!actor.Alerted && distance > run.Config.SightRange) continue;
-                if (distance > ChaseSteps || GridPos.ChebyshevDistance(run.Hero.Pos, actor.Pos) > LeashRange) continue;
+                if (distance > ChaseSteps || !near(actor.Pos)) continue;
                 if (Pathfinder.TryFirstStep(run.Map, partner.Pos, actor.Pos, blocked, ChaseSteps, out var step, out int length) && length < best)
                 {
                     best = length;
@@ -63,6 +62,9 @@ namespace FiveKingdoms.Core
         /// <summary>
         /// Keep up with the party member ahead in line (the leader, then the others in party order): stay put when next to
         /// it, step into the tile it just left when that's next to us (a tidy line in corridors), otherwise walk toward it.
+        /// Party members in the way: around them when that's a short way (<see cref="HeroTactics.DetourSteps"/>).
+        /// Otherwise, as in a corridor, it keeps to the straight way: up to whoever stands in it, and past a partner that
+        /// comes after it in line (<see cref="DungeonRun.IsRegroupSwap"/>), so a corridor can't split the party.
         /// </summary>
         static HeroCommand Follow(DungeonRun run, Actor partner)
         {
@@ -75,8 +77,19 @@ namespace FiveKingdoms.Core
                 var toward = Directions.Toward(partner.Pos, trail);
                 if (run.Map.CanStep(partner.Pos, toward)) return HeroCommand.Move(toward);
             }
-            return Pathfinder.TryFirstStep(run.Map, partner.Pos, ahead.Pos, p => run.ActorAt(p) != null, FarSearchLimit, out var step)
-                ? HeroCommand.Move(step)
+
+            Func<GridPos, bool> foes = p => run.ActorAt(p) is Actor other && other.Team != partner.Team;
+            if (!Pathfinder.TryFirstStep(run.Map, partner.Pos, ahead.Pos, foes, FarSearchLimit, out var straight, out int length))
+            {
+                // Foes hold every way there: walk up to them, to fight a way through.
+                if (!Pathfinder.TryFirstStep(run.Map, partner.Pos, ahead.Pos, null, FarSearchLimit, out straight)) return HeroCommand.Wait;
+                return run.ActorAt(partner.Pos + straight.ToOffset()) == null ? HeroCommand.Move(straight) : HeroCommand.Wait;
+            }
+            if (Pathfinder.TryFirstStep(run.Map, partner.Pos, ahead.Pos, p => run.ActorAt(p) != null, length + HeroTactics.DetourSteps, out var around))
+                return HeroCommand.Move(around);
+            var inTheWay = run.ActorAt(partner.Pos + straight.ToOffset());
+            return inTheWay == null || run.IsRegroupSwap(partner, inTheWay) && run.CanSwap(partner, inTheWay)
+                ? HeroCommand.Move(straight)
                 : HeroCommand.Wait;
         }
 

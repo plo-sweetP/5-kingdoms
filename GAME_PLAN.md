@@ -123,6 +123,11 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
   ally when that's shorter, never straight back), ranged ones hang back at a tile they can shoot from (any foe in
   sight within 5 tiles), and a ranged hero with a foe next to it steps out of melee once, then shoots anyway. A badly
   hurt hero (under 30% HP) may swap back behind a healthier ally, two melee heroes included ("run to safety").
+- **Staying together (Peter's playtest note, 2026-10-03):** partners fight within 6 steps' walk of the leader. With
+  allies in their way (a corridor, a doorway) they walk around them only when that's at most 4 steps longer;
+  otherwise they close up and wait right behind them, ready to take a place at the front, and Uzuki stays behind the
+  line when it hides her target. A partner that got cut off swaps past the one that follows it in line ("regroup").
+  On Auto, the leader doesn't walk off to the stairs while its partners fight.
 - Defeat (decided 2026-10-03): the run ends when the whole party has fallen; when the leader falls, the next hero
   in line takes the lead. Resurrection may come later, as an ultimate, a weapon ability or a craftable item.
 - Enemies and bosses can target any party member; area attacks hit everyone in range.
@@ -356,6 +361,30 @@ aiming, attacking by walking into an enemy, the skipped-turn stun, the swap rule
   the boss floor Haiden still stands in 47% of fresh runs (35% before his aura covered him), Kristela in 55%, Uzuki
   always. A Lv 9 party sent straight to the boss wins 198 of 200, a Lv 12 one always.
 
+**Party cohesion (after the checkpoint, 2026-10-03).** Peter's note from his runs: when a fight starts in a corner or
+a corridor, the hero at the back of the line may wander off, most of all while one hero tanks everything at a room
+entrance.
+- **Why it happened:** partners treated their own allies as walls. Stuck behind them in a corridor, a melee partner
+  looked for another way to the fight or to the leader (up to 12 steps for the fight; "following" could be a 60-step
+  tour of the floor), Uzuki went looking for a tile to shoot from the same way, and two partners in a corridor in the
+  wrong order could stand there for the rest of the floor. A foe just behind a wall also counted as near.
+- **Now** (the rules are under "Party" above): partners fight within 6 steps' walk of the leader; they go around
+  allies only when that's short, and otherwise close up and wait behind them; a partner swaps past the one that
+  follows it in line when neither has a foe next to it, never the other way, so the line sorts itself without loops.
+  The Auto leader, with partners in a fight, goes for the foes that are after the party (up to 12 steps off) and waits
+  behind a partner that holds the way, instead of heading for the berries and the stairs.
+- **Measured** (autopilot, Haiden leading, 200 seeds; `-- -spread`): in fights a partner was more than 4 steps' walk
+  from the leader 21.1% of the time before and 3.8% now (2.1 steps on average, was 4.1), and the farthest anyone got
+  was 42 steps before, 9 now. While exploring: 6.9% of the time before, 0.4% now. The soak tests fail if a partner
+  ends an action more than 24 steps from the leader.
+- **Balance** is where it was, so the King Slime keeps its 16000 HP. Over 600 seeds, 6.7% of fresh level-1 runs win
+  (6.5% before) and the first clear comes on attempt 2.9 at Lv 9.3 (2.7 before); Kristela reaches the boss floor
+  standing in 65% of fresh runs (54% before). The usual 200 seeds: 18 wins, 199 reach the boss floor, first clear on
+  attempt 2.9 at Lv 9.4, 2.3 ultimates per hero in the boss fight and one every 2.4 normal fights.
+- **Checks:** 195 Core tests (7 new: waiting behind the tank, no walk around the floor for a shot, a short way around
+  still taken, the leash, the regroup swap and its limits, the Auto leader holding). The party trace (`-- -party`)
+  prints where the foes after the party are and who swapped.
+
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.
 2. Pixel art spec (to go in ART_BIBLE.md): placeholders use 32 px tiles and 32x32 chibi sprites; confirm, and set palette limits and animation frame counts.
@@ -368,8 +397,8 @@ aiming, attacking by walking into an enemy, the skipped-turn stun, the swap rule
 9. ~~Keep the 85-100% random damage spread?~~ Answered: keep it.
 12. ~~Slime EXP of 3 (+1 per floor) to every hero standing.~~ Answered: fine.
 13. ~~The weapon attack with nothing in reach.~~ Answered: it stays refused, no swing at the air.
-14. Should a skill that needs a target be usable at nothing, to pass the turn? Today it's refused without a target
-    (no turn used), and Wait passes the turn.
+14. ~~Should a skill that needs a target be usable at nothing, to pass the turn?~~ Answered (2026-10-03): no. It
+    stays refused without a target (no turn used); Wait is the way to pass a turn.
 8. ~~Crystal Ice Legion Hunter's prerequisites, the Space/Time element, monk weapons.~~ Answered in the specs: Archer 15 +
    Mage 10; Darkness covers time and space; Kristela uses Gauntlets (the Monk/fist weapon type, passive later).
 5. Store policy and legal check before any paid gacha (odds disclosure is required in app stores and some regions).

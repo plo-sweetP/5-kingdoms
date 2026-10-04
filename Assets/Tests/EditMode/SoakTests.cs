@@ -11,6 +11,13 @@ namespace FiveKingdoms.Tests
         const int Seeds = 40;
         const int MaxActionsPerRun = 3000;
 
+        /// <summary>
+        /// The party stays together: no partner ends an action more than this many steps' walk from the leader. They
+        /// measure up to 15 (a partner finishing a fight while the autopilot's leader walks on); before partners queued
+        /// up behind each other in corridors it was over 40.
+        /// </summary>
+        const int MaxStepsFromLeader = 24;
+
         [Test]
         public void AutoPilotRunsKeepTheWorldConsistent() => Soak(seed => new DungeonRun(seed));
 
@@ -54,6 +61,7 @@ namespace FiveKingdoms.Tests
                     AssertDeliberate(run, command, context);
                     Assert.IsTrue(run.Execute(command), $"the autopilot's {command} was refused ({context})");
                     AssertConsistent(run, context);
+                    AssertPartyTogether(run, context);
                     AssertNoSwapLoops(run, swaps, context);
                     AssertDelayedOncePerTurn(run, delays, context);
                     AssertHeroAttacksHaveTargets(run, context);
@@ -142,6 +150,19 @@ namespace FiveKingdoms.Tests
             Assert.That(run.Berries, Is.InRange(0, run.Config.MaxBerries), context);
             foreach (var member in run.Party)
                 Assert.That(member.Charge, Is.InRange(0, CombatRules.MaxCharge), $"{member}'s charge ({context})");
+        }
+
+        /// <summary>Fails if a partner has wandered off: more than <see cref="MaxStepsFromLeader"/> steps' walk from the leader.</summary>
+        static void AssertPartyTogether(DungeonRun run, string context)
+        {
+            if (run.State != RunState.InProgress) return;
+            var steps = Pathfinder.StepsFrom(run.Map, run.Hero.Pos, MaxStepsFromLeader);
+            foreach (var member in run.Party)
+            {
+                if (member == run.Hero || !member.IsAlive) continue;
+                Assert.GreaterOrEqual(steps[member.Pos.Y * run.Map.Width + member.Pos.X], 0,
+                    $"{member.Name} is more than {MaxStepsFromLeader} steps from the leader at {run.Hero.Pos} ({context})");
+            }
         }
 
         /// <summary>

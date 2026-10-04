@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -31,6 +32,7 @@ namespace FiveKingdoms.CoreTests
                 if (arg.StartsWith("seeds=")) seeds = int.Parse(arg.Substring(6));
             args = args.Where(arg => !arg.StartsWith("seeds=")).ToArray();
             if (args.Contains("-balance")) return BalanceReport(seeds, TuningFrom(args));
+            if (args.Contains("-spread")) return SpreadReport(seeds, TuningFrom(args));
             int bossIndex = Array.IndexOf(args, "-boss");
             if (bossIndex >= 0) return BossReport(int.Parse(args[bossIndex + 1]), seeds, TuningFrom(args));
             int mapIndex = Array.IndexOf(args, "-map");
@@ -159,7 +161,8 @@ namespace FiveKingdoms.CoreTests
 
         /// <summary>
         /// Plays the starting party with the autopilot on a seed, as the game does, printing one line per floor and, from
-        /// action <paramref name="fromAction"/> on, every action with where everyone stands.
+        /// action <paramref name="fromAction"/> on, every action with where everyone stands, where the foes that are after
+        /// the party are, and who swapped places (by actor id).
         /// </summary>
         static int TraceParty(int seed, int fromAction)
         {
@@ -177,10 +180,74 @@ namespace FiveKingdoms.CoreTests
                 if (action >= fromAction)
                     Console.WriteLine($"{action,5} {command,-18} used={used} combat={run.InCombat} " +
                                       string.Join(" ", run.Party.Select(m => $"{m.Name[0]}{m.Pos}{(m == run.Hero ? "*" : "")} {(m.IsAlive ? m.Hp * 100 / m.MaxHp + "%" : "down")}")) +
-                                      $" foes={run.Actors.Count(a => a.Team == Team.Enemy)} near={run.Actors.Count(a => a.Team == Team.Enemy && a.Alerted)}");
+                                      $" foes={run.Actors.Count(a => a.Team == Team.Enemy)} after us: " +
+                                      string.Join(" ", run.Actors.Where(a => a.Team == Team.Enemy && a.Alerted).Select(a => a.Pos)) +
+                                      string.Concat(run.Events.OfType<SwappedEvent>().Select(swap => $" swap {swap.ActorId}<>{swap.OtherId}")));
             }
             Console.WriteLine($"{run.State} on B{run.Floor}F after turn {run.Turn}");
             return 0;
+        }
+
+        /// <summary>
+        /// How well the party stays together: after every action of the leader, how many steps each partner would have
+        /// to walk to reach it (walls count, other actors don't), in fights and while exploring. Lists the moments a
+        /// partner was farthest off, to look at with "-party".
+        /// </summary>
+        static int SpreadReport(int seeds, Func<DungeonRunConfig> tuning)
+        {
+            const int Far = 4, Unreached = 999;
+            var fights = new Spread();
+            var exploring = new Spread();
+            var worst = new List<(int Steps, string Where)>();
+            for (int seed = 1; seed <= seeds; seed++)
+            {
+                var config = tuning();
+                config.Party = Party;
+                var run = new DungeonRun(seed, config);
+                (int Steps, string Where) farthest = (0, null);
+                for (int action = 0; action < 5000 && run.State == RunState.InProgress; action++)
+                {
+                    run.Execute(AutoPilot.Decide(run));
+                    if (run.State != RunState.InProgress) break;
+                    var fromLeader = Pathfinder.StepsFrom(run.Map, run.Hero.Pos, Unreached);
+                    foreach (var member in run.Party)
+                    {
+                        if (member == run.Hero || !member.IsAlive) continue;
+                        int steps = fromLeader[member.Pos.Y * run.Map.Width + member.Pos.X];
+                        if (steps < 0) steps = Unreached;
+                        (run.InCombat ? fights : exploring).Add(steps, Far);
+                        if (run.InCombat && steps > farthest.Steps)
+                            farthest = (steps, $"seed {seed} action {action} B{run.Floor}F: {member.Name} {steps} steps from the leader");
+                    }
+                }
+                if (farthest.Where != null) worst.Add(farthest);
+            }
+            string names = string.Join(", ", Party.Select(definition => definition.Name));
+            Console.WriteLine($"Partners' walking distance to the leader ({names}; the first leads), autopilot over {seeds} seeds:");
+            Console.WriteLine($"  in fights: {fights.Describe(Far)}");
+            Console.WriteLine($"  exploring: {exploring.Describe(Far)}");
+            Console.WriteLine("Farthest in a fight:");
+            foreach (var entry in worst.OrderByDescending(entry => entry.Steps).Take(8)) Console.WriteLine("  " + entry.Where);
+            return 0;
+        }
+
+        /// <summary>Running totals of the partners' distances to the leader, for <see cref="SpreadReport"/>.</summary>
+        sealed class Spread
+        {
+            long samples, steps, far;
+            int most;
+
+            public void Add(int distance, int farFrom)
+            {
+                samples++;
+                steps += distance;
+                if (distance > farFrom) far++;
+                most = Math.Max(most, distance);
+            }
+
+            public string Describe(int farFrom) =>
+                $"{steps / (float)Math.Max(1, samples):0.00} steps on average, more than {farFrom} steps away " +
+                $"{far * 100f / Math.Max(1, samples):0.0}% of the time, at most {most}";
         }
 
         /// <summary>How far the autopilot gets with the default tuning and the starting party; a sanity check after balance changes.</summary>

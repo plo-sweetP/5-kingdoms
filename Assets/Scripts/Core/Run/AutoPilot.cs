@@ -8,9 +8,11 @@ namespace FiveKingdoms.Core
     /// heal with a skill or eat a berry; heal or guard the party; a ranged leader gets out of melee; a badly hurt one
     /// swaps back behind a healthier ally; fight a foe in reach, with the target and skill chosen by
     /// <see cref="HeroTactics"/> (the marked enemy first, then the lowest HP); in a fight, a ranged leader finds a tile to
-    /// shoot from; otherwise chase nearby enemies, pick up nearby berries, then head for the stairs, dashing down
-    /// straight stretches (or for the boss, on the boss floor). It never walks into a foe: every attack is an explicit
-    /// command naming its target. Partners play themselves (<see cref="PartnerBrain"/>).
+    /// shoot from; otherwise chase nearby enemies; with partners in a fight, go for the foes that are after the party,
+    /// closing up behind the partners that hold the way to them (it doesn't walk off while they fight); then pick up
+    /// nearby berries and head for the stairs, dashing down straight stretches (or for the boss, on the boss floor).
+    /// It never walks into a foe: every attack is an explicit command naming its target. Partners play themselves
+    /// (<see cref="PartnerBrain"/>).
     /// Drives the soak tests, the balance report and the unattended autoplay smoke test. Not meant to play well,
     /// just plausibly. Where to walk is chosen by walking distance, which only shrinks while the hero follows the path;
     /// choosing by straight-line distance made it flip between two goals at doorways.
@@ -62,6 +64,22 @@ namespace FiveKingdoms.Core
 
             if (TryStepTowardNearest(run, enemies, ChaseRange, blocked, out step)) return Walk(run, step);
 
+            // In a fight the party stays together: a leader with partners goes for the foes that are after them, farther
+            // off too, by the straight way. Where a partner holds that way (a corridor, a doorway) it closes up behind
+            // it, ready to take a place at the front, rather than walk off to the berries and the stairs.
+            if (run.InCombat && HasPartners(run))
+            {
+                var hunters = new List<GridPos>();
+                foreach (var actor in run.Actors)
+                    if (actor.Team != hero.Team && actor.Alerted) hunters.Add(actor.Pos);
+                if (TryStepTowardNearest(run, hunters, HeroTactics.FightSearchSteps, p => run.ActorAt(p) is Actor other && other.Team != hero.Team, out step))
+                {
+                    var next = hero.Pos + step.ToOffset();
+                    bool heldByPartner = run.ActorAt(next) is Actor ally && ally.Team == hero.Team && blocked(next);
+                    return heldByPartner ? HeroCommand.Wait : Walk(run, step);
+                }
+            }
+
             if (run.Berries < run.Config.MaxBerries)
             {
                 var berries = new List<GridPos>();
@@ -77,6 +95,13 @@ namespace FiveKingdoms.Core
                 return HeroCommand.Wait;
             int dash = HeroTactics.SkillSlot(hero, SkillEffect.Dash);
             return DashSaves(run, dash, map.Stairs, step, length, blocked) ? HeroCommand.Skill(dash, step) : Walk(run, step);
+        }
+
+        static bool HasPartners(DungeonRun run)
+        {
+            foreach (var member in run.Party)
+                if (member != run.Hero && member.IsAlive && run.FindActor(member.Id) != null) return true;
+            return false;
         }
 
         /// <summary>

@@ -9,6 +9,8 @@ namespace FiveKingdoms.Tests
     /// PROGRESSION.md, "Ranged vs melee": ranged hits are a little weaker (and weaker still at point-blank range), ranged
     /// heroes step out of melee and hang back, melee partners close in and may swap past a ranged ally, a badly hurt hero
     /// may swap back behind a healthier one ("run to safety"), nobody loops, and floors place monsters in packs.
+    /// The party stays together: partners wait behind the ally that holds a corridor instead of walking around the
+    /// floor, fight near the leader, and get past each other when a corridor would split them.
     /// </summary>
     public class FormationTests
     {
@@ -28,6 +30,18 @@ namespace FiveKingdoms.Tests
             "##########",
             "#@.......#",
             "##########",
+        };
+
+        /// <summary>A ring of corridors: from the bottom right corner, the far side of the right-hand one is a long walk around.</summary>
+        static readonly string[] Ring =
+        {
+            "######",
+            "#....#",
+            "#.##.#",
+            "#.##.#",
+            "#.##.#",
+            "#@...#",
+            "######",
         };
 
         static void HoldAll(DungeonRun run)
@@ -296,6 +310,144 @@ namespace FiveKingdoms.Tests
             var next = uzuki.Pos + command.Direction.ToOffset();
             Assert.IsTrue(run.AnyFoeInSight(next, uzuki.Team, 5), "a shot from there");
             Assert.IsFalse(run.FoeAdjacent(next, uzuki.Team), "without walking into melee");
+        }
+
+        /// <summary>Haiden up the ring's right-hand corridor with a slime in his face, the fight on, everyone else still to place.</summary>
+        static DungeonRun TankInTheRing(ActorDefinition[] members)
+        {
+            var run = Run(members, Ring);
+            Place(run.Hero, 4, 2);
+            for (int member = 1; member < run.Party.Count; member++) Place(run.Party[member], 5 - member, 1);
+            Root(Dummy(run, 4, 3));
+            HoldAll(run);
+            run.Wait(); // The fight starts.
+            Assert.IsTrue(run.InCombat);
+            foreach (var member in run.Party) run.SetTactic(member, PartyTactic.Attack);
+            return run;
+        }
+
+        [Test]
+        public void AMeleePartnerWaitsBehindTheAllyThatHoldsTheCorridor()
+        {
+            var run = TankInTheRing(new[] { ActorCatalog.Haiden, ActorCatalog.Kristela });
+            var kristela = run.Party[1];
+            Assert.AreEqual(new GridPos(4, 1), kristela.Pos, "right behind Haiden");
+
+            // The slime's far side is 11 steps around the ring: she doesn't go looking for it.
+            Assert.AreEqual(HeroCommand.Wait, PartnerBrain.Decide(run, kristela));
+            for (int i = 0; i < 4; i++) run.Wait();
+            Assert.AreEqual(new GridPos(4, 1), kristela.Pos, "still there, ready to take his place");
+        }
+
+        [Test]
+        public void ARangedPartnerStaysBehindItsAlliesRatherThanWalkAroundTheFloor()
+        {
+            var run = TankInTheRing(ActorCatalog.StartingParty);
+            var uzuki = run.Party[2];
+            Assert.AreEqual(new GridPos(3, 1), uzuki.Pos, "around the corner, behind Kristela");
+            Assert.IsFalse(run.AnyFoeInSight(uzuki.Pos, uzuki.Team, 5), "the corner hides the slime from her");
+            Assert.IsTrue(run.AnyFoeInSight(new GridPos(4, 5), uzuki.Team, 5), "the top of the ring, 9 steps around, would give her a shot");
+
+            Assert.AreEqual(HeroCommand.Wait, PartnerBrain.Decide(run, uzuki));
+            for (int i = 0; i < 4; i++) run.Wait();
+            Assert.AreEqual(new GridPos(3, 1), uzuki.Pos, "she stays with the party");
+        }
+
+        [Test]
+        public void AMeleePartnerStillWalksAroundAnAllyWhenThatIsAShortWay()
+        {
+            var run = Run(new[] { ActorCatalog.Haiden, ActorCatalog.Kristela }, Room);
+            var kristela = run.Party[1];
+            Place(run.Hero, 4, 3);
+            Place(kristela, 3, 3);
+            var slime = Dummy(run, 5, 3);
+            Root(slime);
+            HoldAll(run);
+            run.Wait();
+            Assert.IsTrue(run.InCombat);
+            run.SetTactic(kristela, PartyTactic.Attack);
+
+            run.Wait();
+            run.Wait();
+            Assert.AreEqual(1, GridPos.ChebyshevDistance(kristela.Pos, slime.Pos), "around Haiden, into the fight");
+        }
+
+        [Test]
+        public void PartnersDontLeaveTheLeaderForAFoeThatIsALongWalkAway()
+        {
+            // Two corridors side by side that meet only at the far left: the slime is two tiles from Haiden through
+            // the wall, and eleven steps' walk.
+            var run = Run(new[] { ActorCatalog.Haiden, ActorCatalog.Kristela },
+                "###########",
+                "#.........#",
+                "#.#########",
+                "#@........#",
+                "###########");
+            var kristela = run.Party[1];
+            Place(run.Hero, 6, 1);
+            Place(kristela, 5, 1);
+            Root(Dummy(run, 6, 3));
+            HoldAll(run);
+            run.Wait();
+            Assert.IsTrue(run.InCombat, "it noticed them through the wall");
+            run.SetTactic(kristela, PartyTactic.Attack);
+
+            Assert.AreEqual(HeroCommand.Wait, PartnerBrain.Decide(run, kristela), "she stays with Haiden; it can come to them");
+        }
+
+        [Test]
+        public void APartnerCutOffInACorridorGetsPastTheOneBehindItInLine()
+        {
+            var run = Run(ActorCatalog.StartingParty, Corridor); // Haiden leads, then Kristela, then Uzuki.
+            var kristela = run.Party[1];
+            var uzuki = run.Party[2];
+            Place(run.Hero, 1, 1);
+            Place(uzuki, 3, 1);
+            Place(kristela, 4, 1);
+            Assert.IsTrue(run.CanSwap(kristela, uzuki), "regroup: she comes before Uzuki in line");
+            Assert.IsFalse(run.CanSwap(uzuki, kristela), "never the later one past the earlier");
+
+            run.Wait();
+            Assert.AreEqual(new GridPos(3, 1), kristela.Pos);
+            Assert.AreEqual(new GridPos(4, 1), uzuki.Pos, "Uzuki let her by, rather than the two of them standing there for good");
+            run.Wait();
+            Assert.AreEqual(new GridPos(2, 1), kristela.Pos, "next to Haiden again");
+            Assert.AreEqual(new GridPos(3, 1), uzuki.Pos, "with Uzuki behind her");
+        }
+
+        [Test]
+        public void ARegroupSwapNeedsBothPartnersClearOfTheFoes()
+        {
+            var run = Run(ActorCatalog.StartingParty, Corridor);
+            var kristela = run.Party[1];
+            var uzuki = run.Party[2];
+            Place(run.Hero, 1, 1);
+            Place(uzuki, 3, 1);
+            Place(kristela, 4, 1);
+            Assert.IsTrue(run.IsRegroupSwap(kristela, uzuki));
+            Assert.IsFalse(run.IsRegroupSwap(kristela, run.Hero), "the leader is never moved this way");
+
+            Dummy(run, 5, 1);
+            Assert.IsFalse(run.IsRegroupSwap(kristela, uzuki), "not with a slime next to her");
+            Assert.IsFalse(run.CanSwap(kristela, uzuki), "and Uzuki's tile is no closer to it");
+        }
+
+        [Test]
+        public void TheAutoPilotWaitsBehindAPartnerThatHoldsTheCorridorInsteadOfWalkingOff()
+        {
+            var run = Run(new[] { ActorCatalog.Haiden, ActorCatalog.Kristela },
+                "##########",
+                "#>..@....#",
+                "##########");
+            var kristela = run.Party[1];
+            Place(run.Hero, 4, 1);
+            Place(kristela, 5, 1);
+            Root(Dummy(run, 6, 1));
+            run.Wait();
+            Assert.IsTrue(run.InCombat);
+            Assert.IsTrue(run.FoeAdjacent(kristela), "she holds the corridor");
+
+            Assert.AreEqual(HeroCommand.Wait, AutoPilot.Decide(run), "not off to the stairs behind him while she fights");
         }
 
         [Test]

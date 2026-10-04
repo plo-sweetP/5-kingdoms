@@ -10,7 +10,9 @@ namespace FiveKingdoms.Core
     /// deliberate (PROGRESSION.md, "Targeting and input"): every one names its target, chosen the same way by every hero
     /// (<see cref="PickTarget"/>: the marked enemy first, then the lowest HP), and nobody attacks by walking into a foe.
     /// In a fight, melee heroes close in on a foe and ranged ones find a tile to shoot from behind them ("Ranged vs
-    /// melee"). Works from a hero's skills by their effects, so new kits need no new AI.
+    /// melee"). Partners stay together doing it: they fight near the leader, and with allies in the way (a corridor, a
+    /// doorway) they take a way around only if it's short, and otherwise wait their turn right behind them.
+    /// Works from a hero's skills by their effects, so new kits need no new AI.
     /// </summary>
     public static class HeroTactics
     {
@@ -29,6 +31,15 @@ namespace FiveKingdoms.Core
 
         /// <summary>How far (in steps) a hero looks for a tile to fight from.</summary>
         public const int FightSearchSteps = 12;
+
+        /// <summary>Partners fight (and go after foes) within this many steps' walk of the leader, so the party doesn't scatter.</summary>
+        public const int LeashRange = 6;
+
+        /// <summary>
+        /// A partner walks around the allies in its way only if that's at most this many steps longer than the straight
+        /// way through them. In a corridor or a doorway the way around is a tour of the floor: there it waits behind them.
+        /// </summary>
+        public const int DetourSteps = 4;
 
         /// <summary>Slot of the hero's first skill with this effect, or -1.</summary>
         public static int SkillSlot(Actor hero, SkillEffect effect)
@@ -375,32 +386,65 @@ namespace FiveKingdoms.Core
             hero.Definition.IsRanged ? TryTakeFiringPosition(run, hero, out command) : TryEngage(run, hero, out command);
 
         /// <summary>
-        /// A melee partner heads for the nearest tile next to a foe in the fight: around allies when it can, or swapping
-        /// past a ranged one when that's the shorter way and the swap is allowed (<see cref="DungeonRun.CanSwap"/>).
+        /// A melee partner heads for the nearest tile next to a foe in the fight (near the leader): around the allies in
+        /// its way when that's a short way (<see cref="DetourSteps"/>), or swapping past a ranged one when that's shorter
+        /// and brings it closer to the foes (<see cref="DungeonRun.IsEngageSwap"/>). With no such way in (allies hold the
+        /// corridor or the doorway) it closes up behind them and waits there, ready to take a place at the front, instead
+        /// of going off to look for another way into the fight.
         /// </summary>
         public static bool TryEngage(DungeonRun run, Actor hero, out HeroCommand command)
         {
             command = HeroCommand.Wait;
-            Func<GridPos, bool> isGoal = p => IsAttackSpot(run, hero, p);
-            bool around = Pathfinder.TryFindNearest(run.Map, hero.Pos, isGoal, p => run.ActorAt(p) != null, FightSearchSteps,
+            var near = NearLeader(run, hero);
+            Func<GridPos, bool> isGoal = p => near(p) && IsAttackSpot(run, hero, p);
+
+            // The straight way to the fight, as if no ally stood in it.
+            if (!Pathfinder.TryFindNearest(run.Map, hero.Pos, isGoal, p => IsFoeAt(run, hero, p), FightSearchSteps,
+                    out var straightStep, out _, out int straightLength))
+                return false;
+            int steps = Math.Min(FightSearchSteps, straightLength + DetourSteps);
+            bool around = Pathfinder.TryFindNearest(run.Map, hero.Pos, isGoal, p => run.ActorAt(p) != null, steps,
                 out var aroundStep, out _, out int aroundLength);
 
             // Through ranged allies it isn't blocked from swapping with: when that's shorter, the first step must be an allowed swap.
             Func<GridPos, bool> blocked = p => run.ActorAt(p) is Actor other && (other.Team != hero.Team || !MaySwapThrough(hero, other));
-            bool through = Pathfinder.TryFindNearest(run.Map, hero.Pos, isGoal, blocked, FightSearchSteps,
+            bool through = Pathfinder.TryFindNearest(run.Map, hero.Pos, isGoal, blocked, steps,
                 out var throughStep, out _, out int throughLength);
             if (through && (!around || throughLength < aroundLength))
             {
                 var occupant = run.ActorAt(hero.Pos + throughStep.ToOffset());
-                if (occupant == null || run.CanSwap(hero, occupant))
+                if (occupant == null || MaySwapForward(run, hero, occupant))
                 {
                     command = HeroCommand.Move(throughStep);
                     return true;
                 }
             }
-            if (!around) return false;
-            command = HeroCommand.Move(aroundStep);
+            if (around)
+            {
+                command = HeroCommand.Move(aroundStep);
+                return true;
+            }
+            // Close up along the straight way (a ranged ally lets it by), then wait behind the melee ally that holds it.
+            var inTheWay = run.ActorAt(hero.Pos + straightStep.ToOffset());
+            if (inTheWay == null || MaySwapForward(run, hero, inTheWay)) command = HeroCommand.Move(straightStep);
             return true;
+        }
+
+        /// <summary>A swap toward the fight: only a melee hero past a ranged ally, and only closer to the foes.</summary>
+        static bool MaySwapForward(DungeonRun run, Actor hero, Actor other) => run.IsEngageSwap(hero, other) && run.CanSwap(hero, other);
+
+        static bool IsFoeAt(DungeonRun run, Actor hero, GridPos pos) => run.ActorAt(pos) is Actor other && other.Team != hero.Team;
+
+        /// <summary>
+        /// Where a partner may go to fight: the tiles within <see cref="LeashRange"/> steps' walk of the leader (a foe just
+        /// behind a wall can be a long way off). The leader itself goes where it likes.
+        /// </summary>
+        public static Func<GridPos, bool> NearLeader(DungeonRun run, Actor hero)
+        {
+            if (hero == run.Hero) return p => true;
+            var steps = Pathfinder.StepsFrom(run.Map, run.Hero.Pos, LeashRange);
+            int width = run.Map.Width;
+            return p => run.Map.InBounds(p) && steps[p.Y * width + p.X] >= 0;
         }
 
         /// <summary>The pair rules alone (a melee hero past a ranged one, not straight back): for tiles further along a path.</summary>
@@ -422,14 +466,21 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// A ranged hero with nothing to shoot heads for the nearest tile it could shoot from that isn't next to a foe, so
-        /// it hangs back while the melee heroes close in.
+        /// it hangs back while the melee heroes close in. A partner picks one near the leader. Around the allies in its
+        /// way it walks only when that's a short way (<see cref="DetourSteps"/>): if they fill the corridor between it
+        /// and the fight, it stays behind them.
         /// </summary>
         public static bool TryTakeFiringPosition(DungeonRun run, Actor hero, out HeroCommand command)
         {
             command = HeroCommand.Wait;
             int reach = Reach(hero);
-            Func<GridPos, bool> isGoal = p => !run.FoeAdjacent(p, hero.Team) && run.AnyFoeInSight(p, hero.Team, reach);
-            if (!Pathfinder.TryFindNearest(run.Map, hero.Pos, isGoal, p => run.ActorAt(p) != null, FightSearchSteps, out var step, out _, out _))
+            var near = NearLeader(run, hero);
+            Func<GridPos, bool> isGoal = p => near(p) && !run.FoeAdjacent(p, hero.Team) && run.AnyFoeInSight(p, hero.Team, reach);
+            // How far the nearest such tile is as if no ally stood in the way (or on it).
+            if (!Pathfinder.TryFindNearest(run.Map, hero.Pos, isGoal, p => IsFoeAt(run, hero, p), FightSearchSteps, out _, out _, out int straightLength))
+                return false;
+            if (!Pathfinder.TryFindNearest(run.Map, hero.Pos, isGoal, p => run.ActorAt(p) != null,
+                    Math.Min(FightSearchSteps, straightLength + DetourSteps), out var step, out _, out _))
                 return false;
             command = HeroCommand.Move(step);
             return true;

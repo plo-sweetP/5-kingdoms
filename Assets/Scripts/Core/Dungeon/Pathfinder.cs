@@ -66,6 +66,40 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>
+        /// How many steps' walk (8-way, respecting the corner rule, actors aside) every tile within
+        /// <paramref name="maxSteps"/> of <paramref name="start"/> is from it; -1 for the tiles farther off or walled
+        /// away. Indexed y * width + x.
+        /// </summary>
+        public static int[] StepsFrom(DungeonMap map, GridPos start, int maxSteps)
+        {
+            int width = map.Width;
+            var steps = new int[width * map.Height];
+            for (int i = 0; i < steps.Length; i++) steps[i] = Unvisited;
+            if (!map.InBounds(start)) return steps;
+
+            var queue = new Queue<GridPos>();
+            steps[start.Y * width + start.X] = 0;
+            queue.Enqueue(start);
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                int taken = steps[current.Y * width + current.X];
+                if (taken >= maxSteps) continue;
+
+                foreach (var dir in Directions.All)
+                {
+                    if (!map.CanStep(current, dir)) continue;
+                    var next = current + dir.ToOffset();
+                    int nextIndex = next.Y * width + next.X;
+                    if (steps[nextIndex] != Unvisited) continue;
+                    steps[nextIndex] = taken + 1;
+                    queue.Enqueue(next);
+                }
+            }
+            return steps;
+        }
+
+        /// <summary>
         /// Breadth-first search for the nearest tile (by steps) that passes <paramref name="isGoal"/>, at most
         /// <paramref name="maxSteps"/> away, never entering blocked tiles. Gives the first step toward it and the path's
         /// length, or false if none is in reach (or <paramref name="start"/> itself passes).

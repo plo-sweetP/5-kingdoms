@@ -90,14 +90,18 @@ namespace FiveKingdoms.Tests
         {
             var run = Run(UzukiLeads, Corridor);
             var leader = run.Hero;
+            var haiden = run.Party[1];
             var kristela = run.Party[2];
             Place(leader, 3, 1);
-            Place(run.Party[1], 2, 1);
+            Place(haiden, 2, 1);
             Place(kristela, 4, 1);
 
             Assert.IsTrue(run.Move(Direction8.E));
             Assert.AreEqual(new GridPos(4, 1), leader.Pos);
-            Assert.AreEqual(new GridPos(3, 1), kristela.Pos);
+            Assert.IsTrue(run.Events.OfType<SwappedEvent>().Any(e => e.ActorId == leader.Id && e.OtherId == kristela.Id));
+            // Haiden, next in line behind the leader, then gets past her the same way: the line stays in order.
+            Assert.AreEqual(new GridPos(3, 1), haiden.Pos);
+            Assert.AreEqual(new GridPos(2, 1), kristela.Pos);
         }
 
         [Test]

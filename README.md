@@ -39,7 +39,9 @@ is marked to begin with (the enemy you face, else the nearest), so a second pres
 enemies next to them; Uzuki's shots reach any enemy in sight within 5 tiles, at any angle (walls and wall corners block
 them, allies don't), for 90% of a melee hit, and less with an enemy right next to her. A stun pushes an enemy's next
 turn back instead of skipping it, and the same enemy can't be pushed back again until it has acted (the stars over its
-head). A badly hurt partner swaps back behind a healthier one.
+head). A badly hurt partner swaps back behind a healthier one. Partners stay with the leader: in a corridor or a
+doorway they wait right behind whoever is fighting instead of looking for another way around, and a partner that got
+cut off swaps past the one behind it.
 Skills can't be used two turns in a row (the button says "next turn"); Quick skills take half a turn. The gold bars on
 the party cards are the ultimates' charge: it fills as each hero acts, hits and gets hit, and carries over between
 fights. A dimmed button can't be used right now, and pressing it says why. While the auto-pilot plays you can't move

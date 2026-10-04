@@ -20,7 +20,7 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
 - Balance report: `dotnet run --project Tools/CoreTests -- -balance` (try numbers with `key=value` overrides, see
   `TuningFrom`; `seeds=600` for a steadier number; `-lead kristela` puts another hero in front); the party straight
   at the boss: `-- -boss <level>`; print a floor: `-- -map <seed>`; trace the autopilot: `-- -trace <seed> <fromAction>`
-  (solo) or `-- -party <seed> <fromAction>`
+  (solo) or `-- -party <seed> <fromAction>`; how far partners stray from the leader: `-- -spread`
 - Regenerate art: `python Tools/pixelart/make_sprites.py --preview preview.png`
 - Unity tests: `Unity.exe -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults results.xml`
 - Windows build: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildWindowsDev`
@@ -51,6 +51,11 @@ the project open; copy Assets/Packages/ProjectSettings to a scratch folder and r
   UltimateAt`); the AI must always use those (the soak tests fail on a refused command or an attack at nothing) and
   picks targets with `HeroTactics.PickTarget` (marked first, then lowest HP). The controller aims in two steps from
   `DungeonRun.AimFor` (`AimInfo`: reach, targets, the one marked first).
+- The party stays together (GAME_PLAN.md, "Party"): partners fight within `HeroTactics.LeashRange` steps' walk of
+  the leader (`NearLeader`) and never search for a long way around their own allies. Measure the way as if allies
+  weren't there, go around only when that's at most `DetourSteps` longer, otherwise close up and wait behind them
+  (`TryEngage`, `PartnerBrain.Follow`; a partner gets past one that follows it with `DungeonRun.IsRegroupSwap`). Check
+  `-spread` after changing partner movement; the soak tests fail if a partner strays more than 24 steps.
 - Shots reach any foe within range that `DungeonMap.HasLineOfSight` sees (walls and wall corners block, actors
   don't; it's symmetric). Use `DungeonRun.InShotReach / FoesInSight / ShotTargetAt`, not line walks.
 - Delays (stuns, slows, a snare under a boss) go through `DungeonRun.Delay`: capped at 50% of a turn (25% on a boss)

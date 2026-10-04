@@ -478,10 +478,11 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// Whether party AI may move <paramref name="mover"/> into <paramref name="other"/>'s tile, swapping the two
-        /// (PROGRESSION.md, "Swaps, without loops"). Two kinds: a melee hero swaps past a ranged one to get next to a foe
-        /// or strictly closer to one; and a badly hurt hero swaps with a healthier ally standing farther from the foes
-        /// ("run to safety", melee pairs included). Never straight back with the one it just swapped with. The player's
-        /// own moves always swap.
+        /// (PROGRESSION.md, "Swaps, without loops"). Three kinds: a melee hero swaps past a ranged one to get next to a foe
+        /// or strictly closer to one; a badly hurt hero swaps with a healthier ally standing farther from the foes
+        /// ("run to safety", melee pairs included); and a partner swaps past a partner that comes after it in line, away
+        /// from the foes ("regroup"). Never straight back with the one it just swapped with. The player's own moves
+        /// always swap.
         /// </summary>
         public bool CanSwap(Actor mover, Actor other)
         {
@@ -489,7 +490,12 @@ namespace FiveKingdoms.Core
             if (mover.SwappedWithId == other.Id && mover.SwapBlockTurns > 0) return false;
             if (other.SwappedWithId == mover.Id && other.SwapBlockTurns > 0) return false;
             if (GridPos.ChebyshevDistance(mover.Pos, other.Pos) != 1 || !Map.IsCornerClear(mover.Pos, Directions.Toward(mover.Pos, other.Pos))) return false;
-            if (IsSaferSwap(mover, other)) return true;
+            return IsEngageSwap(mover, other) || IsSaferSwap(mover, other) || IsRegroupSwap(mover, other);
+        }
+
+        /// <summary>A melee hero past a ranged one, to stand next to a foe or strictly closer to one.</summary>
+        public bool IsEngageSwap(Actor mover, Actor other)
+        {
             if (mover.Definition.IsRanged || !other.Definition.IsRanged) return false;
             int there = DistanceToNearestFoe(other.Pos, mover.Team);
             return there == 1 || there < DistanceToNearestFoe(mover.Pos, mover.Team);
@@ -502,6 +508,19 @@ namespace FiveKingdoms.Core
         public bool IsSaferSwap(Actor mover, Actor other) =>
             IsBadlyHurt(mover) && !IsBadlyHurt(other) &&
             DistanceToNearestFoe(other.Pos, mover.Team) > DistanceToNearestFoe(mover.Pos, mover.Team);
+
+        /// <summary>
+        /// "Regroup": two partners with no foe next to either, and <paramref name="mover"/> comes before
+        /// <paramref name="other"/> in line (the leader first, then party order). A partner held up behind one that
+        /// follows it (a corridor) gets past it this way; only ever the earlier past the later, so the line sorts itself
+        /// rather than looping. The leader is never swapped like this.
+        /// </summary>
+        public bool IsRegroupSwap(Actor mover, Actor other)
+        {
+            if (mover == Hero || other == Hero || FoeAdjacent(mover) || FoeAdjacent(other)) return false;
+            int place = party.IndexOf(mover);
+            return place >= 0 && place < party.IndexOf(other);
+        }
 
         /// <summary>Under this share of max HP a hero may swap away from the foes ("run to safety").</summary>
         public const int BadlyHurtPercent = 30;

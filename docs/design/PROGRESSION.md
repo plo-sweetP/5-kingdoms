@@ -61,7 +61,8 @@ whatever role they like.
   ultimate is ready.
 - Berries heal HP again (in 1d they restored mana).
 - **Ultimate charge carries over between fights** within a run (decided), so walking into the boss with a full
-  meter is a real strategy. *Proposed* tuning: about one ultimate per hero per normal fight, two in a boss fight.
+  meter is a real strategy. Tuning (approved 2026-10-03): about two ultimates per hero in a boss fight and one every
+  2-3 normal fights. One per normal fight would mean an ultimate every other action, since normal fights are short.
 
 **Ranged vs melee (decided).** A ranged leader shouldn't solo every fight while the melee heroes watch.
 - **Ranged reach: 5 tiles.** Ranged weapon attacks and shots deal **90%** of an equivalent melee hit (a multiplier
@@ -106,7 +107,7 @@ whatever role they like.
 | Haiden | **Heal** | Heal an adjacent ally or himself for ~20% of **Haiden's** max HP (tanky builds heal more) |
 | Haiden | **Divine Strike** | Smite (~250% ATK). Fire damage until a Light element is decided |
 | Haiden | **Shoulder Bash** | Shove 1 tile; the target must attack Haiden on its next turn (like Compelled Duel). Against a wall: +50% damage instead of moving |
-| Haiden | Ultimate: **Aura of Protection** | 3 turns: allies next to Haiden take 30% less damage, and he heals adjacent allies at the start of each of his turns |
+| Haiden | Ultimate: **Aura of Protection** | 3 turns: Haiden and the allies next to him take 30% less damage, and he heals them all (himself too) at the start of each of his turns. The aura covers its caster (decided 2026-10-03) |
 | Kristela | **Piercing Punch** | Hits the target and the enemy behind it (~220% ATK) |
 | Kristela | **Ki Heal** | Quick skill: heal herself ~25% |
 | Kristela | **Stun Strike** | ~160% ATK with a chance (Affinity vs Resist) to **stun**: the target's next turn is pushed back 50% of a turn on the timeline (bosses 25%). No skipped turns, so no stun-lock |

@@ -5,54 +5,56 @@ using UnityEngine;
 namespace FiveKingdoms.Dungeon
 {
     /// <summary>
-    /// Short-lived visual effects (slash swipes, punches, arrows and arrow rain, hit bursts, sparkles, afterimages) and the
-    /// markers that stay until removed (warning tiles, aiming highlights and reticles). Short-lived ones clean themselves up.
+    /// Short-lived visual effects (the pack's dust, explosions, fire and heal light, punches, shock rings, arrows and
+    /// arrow rain, hit bursts, sparkles, afterimages) and the markers that stay until removed (warning tiles, aiming
+    /// highlights and target brackets). Short-lived ones clean themselves up. Frame effects play at their own size:
+    /// pixel art is never scaled by fractions.
     /// </summary>
     public static class Effects
     {
         const int EffectOrder = 9500;
-        const int WarningOrder = 5; // Above floor and wall shadows, below stairs, items and actors.
+        const int GroundEffectOrder = 28; // On the ground: over tiles and markers, under shadows and actors.
+        const int WarningOrder = 5;       // Above the ground, below stairs, items and actors.
         const int HighlightOrder = 6;
-        static Sprite[] slashFrames;
 
-        /// <summary>Crescent swipe over the target tile, rotated to the attack direction.</summary>
-        public static void Slash(Transform parent, Vector3 position, Direction8 direction, Color tint)
+        /// <summary>Plays one of the art manifest's effect strips once at a position and removes it.</summary>
+        public static SpriteRenderer Play(Transform parent, string strip, Vector3 position, Color? tint = null, bool onGround = false,
+            float speed = 1f, bool flipX = false)
         {
-            slashFrames ??= new[]
-            {
-                SpriteLibrary.Get("Effects/slash_0", Color.white),
-                SpriteLibrary.Get("Effects/slash_1", Color.white),
-                SpriteLibrary.Get("Effects/slash_2", Color.white),
-            };
-            var go = new GameObject("Slash");
+            var anim = SpriteLibrary.Strip(strip);
+            var go = new GameObject(strip);
             go.transform.SetParent(parent, false);
             go.transform.position = position;
-            var offset = direction.ToOffset();
-            go.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(offset.Y, offset.X) * Mathf.Rad2Deg);
             var renderer = go.AddComponent<SpriteRenderer>();
-            renderer.sortingOrder = EffectOrder;
-            renderer.color = tint;
-            go.AddComponent<Flipbook>().Play(slashFrames, 0.045f);
+            renderer.sortingOrder = onGround ? GroundEffectOrder : EffectOrder;
+            renderer.color = tint ?? Color.white;
+            renderer.flipX = flipX;
+            go.AddComponent<Flipbook>().Play(anim.Frames, 1f / (anim.Fps * speed));
+            return renderer;
         }
 
-        /// <summary>A gauntlet blow's impact: a star that pops over the target tile and fades.</summary>
-        public static void Punch(Transform parent, Vector3 position, Color tint)
-        {
-            var go = new GameObject("Punch");
-            go.transform.SetParent(parent, false);
-            go.transform.position = position;
-            go.transform.rotation = Quaternion.Euler(0f, 0f, UnityEngine.Random.Range(-20f, 20f));
-            var renderer = go.AddComponent<SpriteRenderer>();
-            renderer.sprite = SpriteLibrary.Get("Effects/punch", Color.white);
-            renderer.sortingOrder = EffectOrder;
-            renderer.color = tint;
-            go.AddComponent<PopFade>().Init(0.5f, 1.1f, 0.16f);
-        }
+        /// <summary>A gauntlet blow's impact: a star that bursts over the target tile.</summary>
+        public static void Punch(Transform parent, Vector3 position, Color tint) =>
+            Play(parent, "Effects/punch", position, tint).transform.rotation = Quaternion.Euler(0f, 0f, 90f * Random.Range(0, 4));
+
+        /// <summary>A ring racing outward over the ground: a slam, a shove, a blow that goes through.</summary>
+        public static void Ring(Transform parent, Vector3 position, Color tint) =>
+            Play(parent, "Effects/ring", position + Vector3.down * 0.3f, tint, onGround: true);
+
+        /// <summary>The pack's heal light rising around whoever is healed.</summary>
+        public static void Heal(Transform parent, Vector3 position, Color? tint = null) => Play(parent, "Effects/heal", position, tint);
+
+        /// <summary>A puff of dust at someone's feet (a dash, a roll, a landing).</summary>
+        public static void Dust(Transform parent, Vector3 position, bool flipX = false) =>
+            Play(parent, "Effects/dust", position + Vector3.down * 0.25f, flipX: flipX);
+
+        /// <summary>Fire bursting on a target (a smite).</summary>
+        public static void Explosion(Transform parent, Vector3 position) => Play(parent, "Effects/explosion", position, speed: 1.2f);
 
         /// <summary>Arrows raining down onto a tile (Volley); returns when the last one lands.</summary>
         public static IEnumerator RainArrows(Transform parent, Vector3 tileCenter, Color tint, int count, float duration)
         {
-            var sprite = SpriteLibrary.Get("Effects/arrow", Color.white);
+            var sprite = SpriteLibrary.Still("Effects/arrow");
             var arrows = new Transform[count];
             var starts = new Vector3[count];
             var delays = new float[count];
@@ -65,10 +67,10 @@ namespace FiveKingdoms.Dungeon
                 renderer.sprite = sprite;
                 renderer.sortingOrder = EffectOrder;
                 renderer.color = tint;
-                var offset = new Vector3(UnityEngine.Random.Range(-0.3f, 0.3f), UnityEngine.Random.Range(-0.2f, 0.2f), 0f);
+                var offset = new Vector3(Random.Range(-0.3f, 0.3f), Random.Range(-0.2f, 0.2f), 0f);
                 starts[i] = tileCenter + offset;
                 delays[i] = duration * 0.5f * i / Mathf.Max(1, count - 1);
-                go.transform.position = starts[i] + Vector3.up * 3f;
+                go.transform.position = starts[i] + Vector3.up * 4f;
                 arrows[i] = go.transform;
             }
             float fall = duration * 0.5f;
@@ -77,7 +79,7 @@ namespace FiveKingdoms.Dungeon
                 for (int i = 0; i < count; i++)
                 {
                     float k = Mathf.Clamp01((t - delays[i]) / fall);
-                    arrows[i].position = starts[i] + Vector3.up * (3f * (1f - k));
+                    arrows[i].position = starts[i] + Vector3.up * (4f * (1f - k));
                 }
                 yield return null;
             }
@@ -90,7 +92,7 @@ namespace FiveKingdoms.Dungeon
             var go = new GameObject("Highlight");
             go.transform.SetParent(parent, false);
             go.transform.position = tileCenter;
-            go.transform.localScale = new Vector3(1f - 2f * SpriteLibrary.Pixel, 1f - 2f * SpriteLibrary.Pixel, 1f);
+            go.transform.localScale = new Vector3(1f - 4f * SpriteLibrary.Pixel, 1f - 4f * SpriteLibrary.Pixel, 1f);
             var renderer = go.AddComponent<SpriteRenderer>();
             renderer.sprite = SpriteLibrary.White;
             renderer.sortingOrder = HighlightOrder;
@@ -98,22 +100,25 @@ namespace FiveKingdoms.Dungeon
             return go;
         }
 
-        /// <summary>Corner brackets around a target tile; the chosen one pulses. Destroy it when aiming ends.</summary>
+        /// <summary>The pack's target brackets around a tile; the chosen one pulses. Destroy it when aiming ends.</summary>
         public static GameObject Reticle(Transform parent, Vector3 tileCenter, Color color, bool pulse)
         {
             var go = new GameObject("Reticle");
             go.transform.SetParent(parent, false);
             go.transform.position = tileCenter;
             var renderer = go.AddComponent<SpriteRenderer>();
-            renderer.sprite = SpriteLibrary.Get("Effects/reticle", Color.white);
+            renderer.sprite = SpriteLibrary.Still("Effects/reticle");
             renderer.sortingOrder = EffectOrder;
             renderer.color = color;
             if (pulse) go.AddComponent<Pulse>().Init(color, 0.55f, 1f, 8f);
             return go;
         }
 
-        /// <summary>An arrow flying from one point to another, pointing the way it flies (any angle); returns when it lands.</summary>
-        public static IEnumerator Arrow(Transform parent, Vector3 from, Vector3 to, Color tint, float duration)
+        /// <summary>
+        /// An arrow flying from one point to another, pointing the way it flies (any angle); returns when it lands. A
+        /// heavy one leaves a fading trail of itself.
+        /// </summary>
+        public static IEnumerator Arrow(Transform parent, Vector3 from, Vector3 to, Color tint, float duration, bool trail = false)
         {
             var go = new GameObject("Arrow");
             go.transform.SetParent(parent, false);
@@ -121,12 +126,18 @@ namespace FiveKingdoms.Dungeon
             var flight = to - from;
             go.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(flight.y, flight.x) * Mathf.Rad2Deg); // The art points right.
             var renderer = go.AddComponent<SpriteRenderer>();
-            renderer.sprite = SpriteLibrary.Get("Effects/arrow", Color.white);
+            renderer.sprite = SpriteLibrary.Still("Effects/arrow");
             renderer.sortingOrder = EffectOrder;
             renderer.color = tint;
+            float nextGhost = 0f;
             for (float t = 0f; t < duration; t += Time.deltaTime)
             {
                 go.transform.position = Vector3.Lerp(from, to, t / duration);
+                if (trail && t >= nextGhost)
+                {
+                    Afterimage(parent, renderer, new Color(tint.r, tint.g, tint.b, 0.5f));
+                    nextGhost += 0.02f;
+                }
                 yield return null;
             }
             Object.Destroy(go);
@@ -137,10 +148,10 @@ namespace FiveKingdoms.Dungeon
         {
             for (int i = 0; i < count; i++)
             {
-                float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
-                var velocity = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f) * UnityEngine.Random.Range(speed * 0.4f, speed)
+                float angle = Random.Range(0f, Mathf.PI * 2f);
+                var velocity = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f) * Random.Range(speed * 0.4f, speed)
                                + Vector3.up * (speed * 0.4f);
-                Spawn(parent, position, color, velocity, UnityEngine.Random.Range(0.35f, 0.6f), gravity: 7f);
+                Spawn(parent, position, color, velocity, Random.Range(0.35f, 0.6f), gravity: 7f);
             }
         }
 
@@ -161,22 +172,22 @@ namespace FiveKingdoms.Dungeon
             var go = new GameObject("Warning");
             go.transform.SetParent(parent, false);
             go.transform.position = tileCenter;
-            go.transform.localScale = new Vector3(1f - 2f * SpriteLibrary.Pixel, 1f - 2f * SpriteLibrary.Pixel, 1f);
+            go.transform.localScale = new Vector3(1f - 4f * SpriteLibrary.Pixel, 1f - 4f * SpriteLibrary.Pixel, 1f);
             var renderer = go.AddComponent<SpriteRenderer>();
             renderer.sprite = SpriteLibrary.White;
             renderer.sortingOrder = WarningOrder;
-            go.AddComponent<Pulse>().Init(new Color(1f, 0.2f, 0.15f), 0.18f, 0.42f, 9f);
+            go.AddComponent<Pulse>().Init(new Color(1f, 0.2f, 0.15f), 0.2f, 0.46f, 9f);
             return go;
         }
 
-        /// <summary>Gentle rising sparkles, for heals and level-ups.</summary>
+        /// <summary>Gentle rising sparkles, for level-ups and charged moments.</summary>
         public static void Sparkle(Transform parent, Vector3 position, Color color)
         {
             for (int i = 0; i < 10; i++)
             {
-                var start = position + new Vector3(UnityEngine.Random.Range(-0.35f, 0.35f), UnityEngine.Random.Range(-0.4f, 0.1f), 0f);
-                var velocity = new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(0.8f, 1.6f), 0f);
-                Spawn(parent, start, color, velocity, UnityEngine.Random.Range(0.5f, 0.8f), gravity: 0f);
+                var start = position + new Vector3(Random.Range(-0.35f, 0.35f), Random.Range(-0.4f, 0.1f), 0f);
+                var velocity = new Vector3(Random.Range(-0.2f, 0.2f), Random.Range(0.8f, 1.6f), 0f);
+                Spawn(parent, start, color, velocity, Random.Range(0.5f, 0.8f), gravity: 0f);
             }
         }
 
@@ -200,7 +211,7 @@ namespace FiveKingdoms.Dungeon
             var go = new GameObject("Particle");
             go.transform.SetParent(parent, false);
             go.transform.position = position;
-            float size = UnityEngine.Random.Range(2, 4) * SpriteLibrary.Pixel;
+            float size = Random.Range(2, 4) * 2f * SpriteLibrary.Pixel; // Whole art pixels: 4 or 6 across.
             go.transform.localScale = new Vector3(size, size, 1f);
             var renderer = go.AddComponent<SpriteRenderer>();
             renderer.sprite = SpriteLibrary.White;
@@ -210,6 +221,7 @@ namespace FiveKingdoms.Dungeon
         }
     }
 
+    /// <summary>Plays frames once and removes the object.</summary>
     sealed class Flipbook : MonoBehaviour
     {
         Sprite[] frames;
@@ -238,34 +250,25 @@ namespace FiveKingdoms.Dungeon
         }
     }
 
-    /// <summary>Grows from one scale to another while fading out, then removes itself.</summary>
-    sealed class PopFade : MonoBehaviour
+    /// <summary>Plays an animation over and over (the cave's eyes, swaying bushes).</summary>
+    sealed class LoopingSprite : MonoBehaviour
     {
-        float from, to, life, age;
+        SpriteAnim anim;
+        float time;
         SpriteRenderer spriteRenderer;
-        Color color;
 
-        public void Init(float startScale, float endScale, float lifetime)
+        public void Play(SpriteAnim loop, float startAt = 0f)
         {
-            from = startScale;
-            to = endScale;
-            life = lifetime;
+            anim = loop;
+            time = startAt;
             spriteRenderer = GetComponent<SpriteRenderer>();
-            color = spriteRenderer.color;
-            transform.localScale = Vector3.one * from;
+            spriteRenderer.sprite = anim.Frames[0];
         }
 
         void Update()
         {
-            age += Time.deltaTime;
-            if (age >= life)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            float k = age / life;
-            transform.localScale = Vector3.one * Mathf.Lerp(from, to, 1f - (1f - k) * (1f - k));
-            spriteRenderer.color = new Color(color.r, color.g, color.b, color.a * (k < 0.5f ? 1f : 2f * (1f - k)));
+            time += Time.deltaTime;
+            spriteRenderer.sprite = anim.Frames[(int)(time * anim.Fps) % anim.Frames.Length];
         }
     }
 

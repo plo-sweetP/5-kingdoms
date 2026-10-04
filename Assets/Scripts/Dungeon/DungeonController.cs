@@ -118,8 +118,12 @@ namespace FiveKingdoms.Dungeon
             int leader = Array.FindIndex(party, hero => hero.Definition.Id == options.Leader);
             if (leader > 0) party = party.Skip(leader).Take(1).Concat(party.Where((hero, i) => i != leader)).ToArray();
             tactics = new PartyTactic[party.Length];
+            // Every hero starts in its default look; -fk-look tries others (gear will set them from milestone 1h on).
+            HeroLooks.Clear();
+            HeroLooks.Parse(options.Looks, roster.Select(definition => definition.Id));
 
             pixelCamera = SetUpCamera();
+            if (options.View.HasValue) pixelCamera.Mode = options.View.Value;
             hud = DungeonHud.Create(pixelCamera.GetComponent<Camera>());
             hud.CommandRequested += command => buffered = command;
             hud.RestartRequested += StartNewRun;
@@ -143,11 +147,19 @@ namespace FiveKingdoms.Dungeon
         /// <summary>A tap on a map tile, as if the player had touched it there (used by tests and the autoplay smoke test).</summary>
         public void Tap(GridPos tile) => injectedTap = tile;
 
+        /// <summary>Redraws everything from the run's state (the autoplay's staged demos move actors by hand).</summary>
+        public void RefreshView()
+        {
+            EndAiming();
+            view.Rebuild(run);
+            hud.Refresh(run);
+        }
+
         void StartNewRun()
         {
             StopAllCoroutines();
             view.StopAllCoroutines();
-            int runSeed = seed != 0 ? seed : Random.Range(1, int.MaxValue);
+            int runSeed = options.Seed ?? (seed != 0 ? seed : Random.Range(1, int.MaxValue));
             var config = new DungeonRunConfig { FloorCount = options.FloorCount ?? floorCount };
             run = new DungeonRun(runSeed, config, party);
             levelsAtStart = party.Select(hero => hero.Level).ToArray();
@@ -436,7 +448,7 @@ namespace FiveKingdoms.Dungeon
                     hud.AddMessage(run.Berries == 0 ? "You have no berries." : BerryFullMessage(run.Config), DungeonHud.HintColor);
                     break;
                 case HeroCommandKind.Descend:
-                    hud.AddMessage(run.IsBossFloor ? "No stairs here. Defeat the boss!" : "There are no stairs here.", DungeonHud.HintColor);
+                    hud.AddMessage(run.IsBossFloor ? "No way down here. Defeat the boss!" : "The way down is the cave entrance.", DungeonHud.HintColor);
                     break;
                 case HeroCommandKind.Skill:
                     hud.AddMessage(SkillRefusalMessage(run, command), DungeonHud.HintColor);
@@ -677,7 +689,7 @@ namespace FiveKingdoms.Dungeon
             }
             camera.orthographic = true;
             camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color32(12, 10, 18, 255);
+            camera.backgroundColor = new Color32(22, 28, 46, 255); // The pack's outline colour; the raised ground covers it.
             return camera.TryGetComponent<PixelCamera>(out var existing) ? existing : camera.gameObject.AddComponent<PixelCamera>();
         }
     }

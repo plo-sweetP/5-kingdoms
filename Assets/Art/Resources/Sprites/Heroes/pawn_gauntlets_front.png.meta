@@ -1,0 +1,1155 @@
+fileFormatVersion: 2
+guid: e19a451a2e08a7540a9f78b583214258
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -35492574108228959
+    second: pawn_gauntlets_front_0
+  - first:
+      213: -9208648566820475411
+    second: pawn_gauntlets_front_1
+  - first:
+      213: 140389827173107193
+    second: pawn_gauntlets_front_2
+  - first:
+      213: 4999594590875293846
+    second: pawn_gauntlets_front_3
+  - first:
+      213: 6427374341591811953
+    second: pawn_gauntlets_front_4
+  - first:
+      213: 8324724943922149879
+    second: pawn_gauntlets_front_5
+  - first:
+      213: -361325865651121072
+    second: pawn_gauntlets_front_6
+  - first:
+      213: -4447275454417126399
+    second: pawn_gauntlets_front_7
+  - first:
+      213: 3739924585029678641
+    second: pawn_gauntlets_front_8
+  - first:
+      213: -1181173646512576466
+    second: pawn_gauntlets_front_9
+  - first:
+      213: 7012012231099249393
+    second: pawn_gauntlets_front_10
+  - first:
+      213: 4950590635943977991
+    second: pawn_gauntlets_front_11
+  - first:
+      213: 4061570775657365924
+    second: pawn_gauntlets_front_12
+  - first:
+      213: -6684624061681394681
+    second: pawn_gauntlets_front_13
+  - first:
+      213: -4523393254800525277
+    second: pawn_gauntlets_front_14
+  - first:
+      213: 4511019463928891951
+    second: pawn_gauntlets_front_15
+  - first:
+      213: -5239833870665150963
+    second: pawn_gauntlets_front_16
+  - first:
+      213: 5537226544425611313
+    second: pawn_gauntlets_front_17
+  - first:
+      213: 5500911597413391137
+    second: pawn_gauntlets_front_18
+  - first:
+      213: -8121521162218539930
+    second: pawn_gauntlets_front_19
+  - first:
+      213: 140888710085548443
+    second: pawn_gauntlets_front_20
+  - first:
+      213: 7957977841957425933
+    second: pawn_gauntlets_front_21
+  - first:
+      213: -8027441571438786799
+    second: pawn_gauntlets_front_22
+  - first:
+      213: 6070254087885678658
+    second: pawn_gauntlets_front_23
+  - first:
+      213: 4865476352153520843
+    second: pawn_gauntlets_front_24
+  - first:
+      213: 614248527201229810
+    second: pawn_gauntlets_front_25
+  - first:
+      213: -4185321767143679654
+    second: pawn_gauntlets_front_26
+  - first:
+      213: 3820845547163867866
+    second: pawn_gauntlets_front_27
+  - first:
+      213: -6036668905178372754
+    second: pawn_gauntlets_front_28
+  - first:
+      213: 3209828958884738773
+    second: pawn_gauntlets_front_29
+  - first:
+      213: 7039358917884893238
+    second: pawn_gauntlets_front_30
+  - first:
+      213: 6851617626790995127
+    second: pawn_gauntlets_front_31
+  - first:
+      213: 16100104376030969
+    second: pawn_gauntlets_front_32
+  - first:
+      213: 434427643019458310
+    second: pawn_gauntlets_front_33
+  - first:
+      213: 1193475979151588399
+    second: pawn_gauntlets_front_34
+  - first:
+      213: 5959855005456780338
+    second: pawn_gauntlets_front_35
+  - first:
+      213: -1302918868743741768
+    second: pawn_gauntlets_front_36
+  - first:
+      213: -6482206251918176370
+    second: pawn_gauntlets_front_37
+  - first:
+      213: 1281900503836712014
+    second: pawn_gauntlets_front_38
+  - first:
+      213: -4715363733414663248
+    second: pawn_gauntlets_front_39
+  - first:
+      213: 4207883624039634926
+    second: pawn_gauntlets_front_40
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 64
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_0
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 6
+        width: 17
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a26d1021b7e18ff0800000000000000
+      internalID: -35492574108228959
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_1
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 9
+        width: 14
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ded61410bee443080800000000000000
+      internalID: -9208648566820475411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_2
+      rect:
+        serializedVersion: 2
+        x: 94
+        y: 8
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f54bb2ddc3c2f100800000000000000
+      internalID: 140389827173107193
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_3
+      rect:
+        serializedVersion: 2
+        x: 133
+        y: 10
+        width: 14
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 698161a9ac0226540800000000000000
+      internalID: 4999594590875293846
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_4
+      rect:
+        serializedVersion: 2
+        x: 175
+        y: 12
+        width: 17
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1774a05f8ee923950800000000000000
+      internalID: 6427374341591811953
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_5
+      rect:
+        serializedVersion: 2
+        x: 212
+        y: 13
+        width: 16
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f9305fea3d578370800000000000000
+      internalID: 8324724943922149879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_6
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 10
+        width: 17
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05454b12a005cfaf0800000000000000
+      internalID: -361325865651121072
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_7
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 13
+        width: 17
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10c3721798a1842c0800000000000000
+      internalID: -4447275454417126399
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_8
+      rect:
+        serializedVersion: 2
+        x: 333
+        y: 7
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 136b1795891e6e330800000000000000
+      internalID: 3739924585029678641
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_9
+      rect:
+        serializedVersion: 2
+        x: 371
+        y: 10
+        width: 16
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e28a09d93d0ab9fe0800000000000000
+      internalID: -1181173646512576466
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_10
+      rect:
+        serializedVersion: 2
+        x: 409
+        y: 8
+        width: 17
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f27d5319fbaf4160800000000000000
+      internalID: 7012012231099249393
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_11
+      rect:
+        serializedVersion: 2
+        x: 452
+        y: 11
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 704e0db34f704b440800000000000000
+      internalID: 4950590635943977991
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_12
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 10
+        width: 17
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a14a21f9199d5830800000000000000
+      internalID: 4061570775657365924
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_13
+      rect:
+        serializedVersion: 2
+        x: 531
+        y: 14
+        width: 12
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 70c937225d17b33a0800000000000000
+      internalID: -6684624061681394681
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_14
+      rect:
+        serializedVersion: 2
+        x: 568
+        y: 8
+        width: 17
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 328773cfccda931c0800000000000000
+      internalID: -4523393254800525277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_15
+      rect:
+        serializedVersion: 2
+        x: 611
+        y: 11
+        width: 13
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2aca525d4c5a9e30800000000000000
+      internalID: 4511019463928891951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_16
+      rect:
+        serializedVersion: 2
+        x: 652
+        y: 7
+        width: 17
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0e81f04bde5847b0800000000000000
+      internalID: -5239833870665150963
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_17
+      rect:
+        serializedVersion: 2
+        x: 695
+        y: 13
+        width: 18
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1303a55643e28dc40800000000000000
+      internalID: 5537226544425611313
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_18
+      rect:
+        serializedVersion: 2
+        x: 723
+        y: 14
+        width: 18
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 12bd6a8e3f9275c40800000000000000
+      internalID: 5500911597413391137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_19
+      rect:
+        serializedVersion: 2
+        x: 776
+        y: 17
+        width: 19
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 664752a588f8a4f80800000000000000
+      internalID: -8121521162218539930
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_20
+      rect:
+        serializedVersion: 2
+        x: 806
+        y: 5
+        width: 19
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b99138d098984f100800000000000000
+      internalID: 140888710085548443
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_21
+      rect:
+        serializedVersion: 2
+        x: 854
+        y: 10
+        width: 19
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d035d402faa607e60800000000000000
+      internalID: 7957977841957425933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_22
+      rect:
+        serializedVersion: 2
+        x: 898
+        y: 6
+        width: 17
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11700370c6cc89090800000000000000
+      internalID: -8027441571438786799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_23
+      rect:
+        serializedVersion: 2
+        x: 928
+        y: 9
+        width: 15
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 248e9cc6eefdd3450800000000000000
+      internalID: 6070254087885678658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_24
+      rect:
+        serializedVersion: 2
+        x: 987
+        y: 14
+        width: 17
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bca8c21c6f4a58340800000000000000
+      internalID: 4865476352153520843
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_25
+      rect:
+        serializedVersion: 2
+        x: 1060
+        y: 5
+        width: 18
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2fbd2a3f7cf368800800000000000000
+      internalID: 614248527201229810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_26
+      rect:
+        serializedVersion: 2
+        x: 1092
+        y: 7
+        width: 14
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a59d0be0700cae5c0800000000000000
+      internalID: -4185321767143679654
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_27
+      rect:
+        serializedVersion: 2
+        x: 1127
+        y: 6
+        width: 17
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: adad55c08ce560530800000000000000
+      internalID: 3820845547163867866
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_28
+      rect:
+        serializedVersion: 2
+        x: 1177
+        y: 21
+        width: 17
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6562384d91793ca0800000000000000
+      internalID: -6036668905178372754
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_29
+      rect:
+        serializedVersion: 2
+        x: 1199
+        y: 17
+        width: 21
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d636148e6a9b8c20800000000000000
+      internalID: 3209828958884738773
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_30
+      rect:
+        serializedVersion: 2
+        x: 1281
+        y: 19
+        width: 21
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 638d103c3a3d0b160800000000000000
+      internalID: 7039358917884893238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_31
+      rect:
+        serializedVersion: 2
+        x: 1366
+        y: 7
+        width: 21
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b4aead1ee5d51f50800000000000000
+      internalID: 6851617626790995127
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_32
+      rect:
+        serializedVersion: 2
+        x: 1416
+        y: 7
+        width: 13
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f61e2aa5f2393000800000000000000
+      internalID: 16100104376030969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_33
+      rect:
+        serializedVersion: 2
+        x: 1448
+        y: 11
+        width: 18
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 607f8ceb3a5670600800000000000000
+      internalID: 434427643019458310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_34
+      rect:
+        serializedVersion: 2
+        x: 1526
+        y: 11
+        width: 18
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2cba496414109010800000000000000
+      internalID: 1193475979151588399
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_35
+      rect:
+        serializedVersion: 2
+        x: 1660
+        y: 7
+        width: 21
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23cc5110d88a5b250800000000000000
+      internalID: 5959855005456780338
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_36
+      rect:
+        serializedVersion: 2
+        x: 1740
+        y: 7
+        width: 21
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8be1069213a1bede0800000000000000
+      internalID: -1302918868743741768
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_37
+      rect:
+        serializedVersion: 2
+        x: 1250
+        y: 0
+        width: 16
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8fc99112c39a06a0800000000000000
+      internalID: -6482206251918176370
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_38
+      rect:
+        serializedVersion: 2
+        x: 1330
+        y: 8
+        width: 18
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4cd49867b93ac110800000000000000
+      internalID: 1281900503836712014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_39
+      rect:
+        serializedVersion: 2
+        x: 1805
+        y: 1
+        width: 21
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0bb2f03eaa9af8eb0800000000000000
+      internalID: -4715363733414663248
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pawn_gauntlets_front_40
+      rect:
+        serializedVersion: 2
+        x: 1857
+        y: 3
+        width: 19
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee7d01b9cd7656a30800000000000000
+      internalID: 4207883624039634926
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

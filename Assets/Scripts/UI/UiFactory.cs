@@ -1,25 +1,49 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace FiveKingdoms.UI
 {
     /// <summary>
-    /// Helpers for building uGUI from code. The prototype HUD is assembled in code so its layout can change
-    /// quickly; it can move to prefabs once it settles. Shapes are generated, so no UI art is needed yet.
+    /// Helpers for building uGUI from code. The HUD is assembled in code so its layout can change quickly; it can move
+    /// to prefabs once it settles. Its art is the Tiny Swords UI kit (Resources/Sprites/UI, listed in the art
+    /// manifest with 9-slice borders), drawn at a whole number of screen pixels per art pixel on any screen
+    /// (<see cref="UiArtScaler"/>): corners and outlines keep their pixels, only the flat middles stretch.
     /// </summary>
     public static class UiFactory
     {
         const int UiLayer = 5;
+        const float ArtPixelsPerUnit = 100f; // The canvas's reference pixels per unit: one art pixel is one canvas unit before scaling.
 
+        static readonly Dictionary<string, Sprite> Arts = new Dictionary<string, Sprite>();
         static Font font;
-        static Sprite circle;
-        static Sprite roundedRect;
-        static Sprite triangle;
 
         public static Font Font => font != null ? font : (font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
-        public static Sprite Circle => circle != null ? circle : (circle = MakeCircle(128));
-        public static Sprite RoundedRect => roundedRect != null ? roundedRect : (roundedRect = MakeRoundedRect(64, 18));
-        public static Sprite Triangle => triangle != null ? triangle : (triangle = MakeTriangle(64));
+
+        /// <summary>"Enter Play Mode" keeps statics: sprites made at run time are gone by the next session.</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void Reset() => Arts.Clear();
+
+        /// <summary>A piece of HUD art by its name in the art manifest ("frame", "tiny_blue", "panel", ...), or null.</summary>
+        public static Sprite Art(string name)
+        {
+            if (Arts.TryGetValue(name, out var sprite)) return sprite;
+            var info = ArtManifest.Current.Ui(name);
+            var texture = info != null ? Resources.Load<Texture2D>("Sprites/" + info.path) : null;
+            if (texture != null)
+            {
+                sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), ArtPixelsPerUnit, 0,
+                    SpriteMeshType.FullRect, new Vector4(info.left, info.bottom, info.right, info.top));
+            }
+            else
+            {
+                Debug.LogWarning($"Missing HUD art '{name}'.");
+            }
+            Arts[name] = sprite;
+            return sprite;
+        }
+
+        public static bool HasArt(string name) => ArtManifest.Current.Ui(name) != null;
 
         public static RectTransform CreateRect(string name, Transform parent)
         {
@@ -47,13 +71,36 @@ namespace FiveKingdoms.UI
             return rect;
         }
 
+        /// <summary>A plain image: a flat colour (no sprite) or any sprite, stretched to its rect.</summary>
         public static Image CreateImage(string name, Transform parent, Sprite sprite, Color color, bool raycast = false)
         {
             var image = CreateRect(name, parent).gameObject.AddComponent<Image>();
             image.sprite = sprite;
             image.color = color;
             image.raycastTarget = raycast;
-            if (sprite != null && sprite.border != Vector4.zero) image.type = Image.Type.Sliced;
+            return image;
+        }
+
+        /// <summary>
+        /// HUD art stretched over its rect by its 9-slice border (panels, buttons, bars, frames). Its corners stay whole
+        /// art pixels on any screen.
+        /// </summary>
+        public static Image CreatePanel(string name, Transform parent, string art, Color? tint = null, bool raycast = false)
+        {
+            var image = CreateImage(name, parent, Art(art), tint ?? Color.white, raycast);
+            image.type = Image.Type.Sliced;
+            UiArtScaler.Register(image);
+            return image;
+        }
+
+        /// <summary>
+        /// HUD art at its own size (icons, portraits, the D-pad): the rect takes the art's size in whole screen pixels per
+        /// art pixel. With <paramref name="sprite"/> the image shows that sprite instead of a named piece.
+        /// </summary>
+        public static Image CreateIcon(string name, Transform parent, string art, Color? tint = null, Sprite sprite = null)
+        {
+            var image = CreateImage(name, parent, sprite != null ? sprite : art != null ? Art(art) : null, tint ?? Color.white);
+            UiArtScaler.RegisterIcon(image);
             return image;
         }
 
@@ -69,90 +116,106 @@ namespace FiveKingdoms.UI
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.verticalOverflow = VerticalWrapMode.Overflow;
             var outline = text.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            outline.effectColor = new Color(0.086f, 0.11f, 0.18f, 0.9f); // The pack's outline colour.
             outline.effectDistance = new Vector2(2f, -2f);
             return text;
         }
 
-        static Texture2D NewTexture(int width, int height) =>
-            new Texture2D(width, height, TextureFormat.RGBA32, false)
-            {
-                filterMode = FilterMode.Bilinear,
-                wrapMode = TextureWrapMode.Clamp,
-            };
-
-        static Sprite MakeCircle(int size)
+        /// <summary>
+        /// A bar: a dark trough in the pack's outline and a fill whose width is set through its anchorMax.x. The fill is
+        /// white art tinted with <paramref name="color"/>.
+        /// </summary>
+        public static Image CreateBar(Transform parent, string name, Vector2 position, Vector2 size, Color color)
         {
-            var texture = NewTexture(size, size);
-            var pixels = new Color32[size * size];
-            float radius = size / 2f;
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float dx = x + 0.5f - radius, dy = y + 0.5f - radius;
-                    float alpha = Mathf.Clamp01(radius - Mathf.Sqrt(dx * dx + dy * dy));
-                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)(alpha * 255f));
-                }
-            }
-            texture.SetPixels32(pixels);
-            texture.Apply();
-            return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
+            var back = CreatePanel(name + "Back", parent, "bar_slim");
+            Place(back.rectTransform, new Vector2(0f, 1f), position, size, new Vector2(0f, 1f));
+            var fill = CreateImage(name + "Fill", back.transform, null, color);
+            var rect = fill.rectTransform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            UiArtScaler.RegisterInset(rect, 2); // Inside the trough's 2 px outline.
+            return fill;
+        }
+    }
+
+    /// <summary>
+    /// Keeps HUD art on whole screen pixels. The canvas scales with the screen's height, so one art pixel would cover
+    /// a fractional number of screen pixels on most screens; this picks a whole number instead (2 on a 1080p screen,
+    /// like the world's zoom) and sizes sliced borders, icons and insets to match. Sits on the HUD's canvas.
+    /// </summary>
+    public sealed class UiArtScaler : MonoBehaviour
+    {
+        const float ReferenceHeight = 1080f;
+
+        static UiArtScaler current;
+        readonly List<Image> panels = new List<Image>();
+        readonly List<Image> icons = new List<Image>();
+        readonly List<(RectTransform rect, int pixels)> insets = new List<(RectTransform, int)>();
+        int appliedHeight;
+
+        /// <summary>Canvas units one art pixel covers right now (2 on a 1080p screen; between 1.2 and 2.1 elsewhere).</summary>
+        public static float UnitsPerArtPixel { get; private set; } = 2f;
+
+        public static void Register(Image image)
+        {
+            if (current == null) return;
+            current.panels.Add(image);
+            image.pixelsPerUnitMultiplier = 1f / UnitsPerArtPixel;
         }
 
-        /// <summary>White rounded rectangle with 9-slice borders, for panels and pill buttons.</summary>
-        static Sprite MakeRoundedRect(int size, int radius)
+        public static void RegisterIcon(Image image)
         {
-            var texture = NewTexture(size, size);
-            var pixels = new Color32[size * size];
-            float half = size / 2f, inner = half - radius;
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float dx = Mathf.Max(Mathf.Abs(x + 0.5f - half) - inner, 0f);
-                    float dy = Mathf.Max(Mathf.Abs(y + 0.5f - half) - inner, 0f);
-                    float alpha = Mathf.Clamp01(radius - Mathf.Sqrt(dx * dx + dy * dy) + 0.5f);
-                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)(alpha * 255f));
-                }
-            }
-            texture.SetPixels32(pixels);
-            texture.Apply();
-            float border = radius + 1;
-            return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f, 0,
-                SpriteMeshType.FullRect, new Vector4(border, border, border, border));
+            if (current != null) current.icons.Add(image);
+            Size(image);
         }
 
-        /// <summary>Upward-pointing triangle, anti-aliased by 4x4 supersampling.</summary>
-        static Sprite MakeTriangle(int size)
+        public static void RegisterInset(RectTransform rect, int artPixels)
         {
-            var texture = NewTexture(size, size);
-            var pixels = new Color32[size * size];
-            var a = new Vector2(size * 0.5f, size * 0.88f);
-            var b = new Vector2(size * 0.12f, size * 0.18f);
-            var c = new Vector2(size * 0.88f, size * 0.18f);
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    int inside = 0;
-                    for (int sy = 0; sy < 4; sy++)
-                        for (int sx = 0; sx < 4; sx++)
-                            if (InTriangle(new Vector2(x + (sx + 0.5f) / 4f, y + (sy + 0.5f) / 4f), a, b, c)) inside++;
-                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)(inside * 255 / 16));
-                }
-            }
-            texture.SetPixels32(pixels);
-            texture.Apply();
-            return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
+            if (current != null) current.insets.Add((rect, artPixels));
+            Inset(rect, artPixels);
         }
 
-        static bool InTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
+        /// <summary>Call after swapping an icon's sprite for one of another size.</summary>
+        public static void Size(Image image)
         {
-            float Cross(Vector2 u, Vector2 v, Vector2 w) => (v.x - u.x) * (w.y - u.y) - (v.y - u.y) * (w.x - u.x);
-            float d1 = Cross(a, b, p), d2 = Cross(b, c, p), d3 = Cross(c, a, p);
-            bool hasNegative = d1 < 0 || d2 < 0 || d3 < 0, hasPositive = d1 > 0 || d2 > 0 || d3 > 0;
-            return !(hasNegative && hasPositive);
+            if (image.sprite != null) image.rectTransform.sizeDelta = image.sprite.rect.size * UnitsPerArtPixel;
+        }
+
+        static void Inset(RectTransform rect, int artPixels)
+        {
+            float inset = artPixels * UnitsPerArtPixel;
+            rect.offsetMin = new Vector2(inset, inset);
+            rect.offsetMax = new Vector2(-inset, -inset);
+        }
+
+        void Awake()
+        {
+            current = this;
+            Apply();
+        }
+
+        void OnDestroy()
+        {
+            if (current == this) current = null;
+        }
+
+        void Update()
+        {
+            if (Screen.height != appliedHeight) Apply();
+        }
+
+        void Apply()
+        {
+            appliedHeight = Screen.height;
+            float canvasScale = appliedHeight / ReferenceHeight;
+            int screenPixels = Mathf.Max(1, Mathf.FloorToInt(2f * canvasScale + 0.25f));
+            UnitsPerArtPixel = screenPixels / canvasScale;
+            panels.RemoveAll(image => image == null);
+            icons.RemoveAll(image => image == null);
+            insets.RemoveAll(entry => entry.rect == null);
+            foreach (var image in panels) image.pixelsPerUnitMultiplier = 1f / UnitsPerArtPixel;
+            foreach (var image in icons) Size(image);
+            foreach (var (rect, pixels) in insets) Inset(rect, pixels);
         }
     }
 }

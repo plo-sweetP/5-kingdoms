@@ -1,0 +1,38 @@
+# Files of the Tiny Swords packs that build_art.py reads (rewritten on every run).
+Tiny Swords (Enemy Pack)/Enemy Pack/Extra/Cave/Cave.aseprite
+Tiny Swords (Enemy Pack)/Enemy Pack/Extra/Skull decorations/Bones_01.png
+Tiny Swords (Enemy Pack)/Enemy Pack/Extra/Skull decorations/Bones_02.png
+Tiny Swords (Enemy Pack)/Enemy Pack/Extra/Skull decorations/Bones_03.png
+Tiny Swords (Enemy Pack)/Enemy Pack/Extra/Skull decorations/Skull Spike_01.png
+Tiny Swords (Enemy Pack)/Enemy Pack/Extra/Skull decorations/Skull Spike_02.png
+Tiny Swords (Enemy Pack)/Enemy Pack/Extra/Troll Dead/Troll Dead.aseprite
+Tiny Swords (Enemy Pack)/Enemy Pack/Giant Bat/Giant Bat.aseprite
+Tiny Swords (Enemy Pack)/Enemy Pack/Spider/Spider.aseprite
+Tiny Swords (Enemy Pack)/Enemy Pack/Troll/Troll.aseprite
+Tiny Swords (Free Pack)/Particle FX/Particle FX.aseprite
+Tiny Swords (Free Pack)/Terrain/Decorations/Bushes/Bushe1.png
+Tiny Swords (Free Pack)/Terrain/Decorations/Bushes/Bushe2.png
+Tiny Swords (Free Pack)/Terrain/Decorations/Bushes/Bushe3.png
+Tiny Swords (Free Pack)/Terrain/Decorations/Bushes/Bushe4.png
+Tiny Swords (Free Pack)/Terrain/Decorations/Rocks/Rock1.png
+Tiny Swords (Free Pack)/Terrain/Decorations/Rocks/Rock2.png
+Tiny Swords (Free Pack)/Terrain/Decorations/Rocks/Rock3.png
+Tiny Swords (Free Pack)/Terrain/Decorations/Rocks/Rock4.png
+Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Stump 1.png
+Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Stump 2.png
+Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Tree1.png
+Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Tree2.png
+Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Tree3.png
+Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Tree4.png
+Tiny Swords (Free Pack)/Terrain/Tileset/Tilemap_color3.png
+Tiny Swords (Free Pack)/Terrain/Tileset/Tilemap_color4.png
+Tiny Swords (Free Pack)/UI Elements/UI Elements/Buttons/SmallRedRoundButton_Pressed.png
+Tiny Swords (Free Pack)/UI Elements/UI Elements/Buttons/SmallRedRoundButton_Regular.png
+Tiny Swords (Free Pack)/UI Elements/UI Elements/Buttons/TinyRoundBlueButton.png
+Tiny Swords (Free Pack)/UI Elements/UI Elements/Cursors/Cursor_04.png
+Tiny Swords (Free Pack)/UI Elements/UI Elements/Papers/SpecialPaper.png
+Tiny Swords (Free Pack)/UI Elements/UI Elements/Ribbons/BigRibbons.png
+Tiny Swords (Free Pack)/Units/Units (aseprite in Blue only)/Archer.aseprite
+Tiny Swords (Free Pack)/Units/Units (aseprite in Blue only)/Monk.aseprite
+Tiny Swords (Free Pack)/Units/Units (aseprite in Blue only)/Pawn.aseprite
+Tiny Swords (Free Pack)/Units/Units (aseprite in Blue only)/Warrior.aseprite

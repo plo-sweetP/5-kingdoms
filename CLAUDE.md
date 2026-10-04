@@ -7,12 +7,19 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
 - `Assets/Scripts/Core/` — game rules in plain C# (asmdef `FiveKingdoms.Core`, `noEngineReferences`). No UnityEngine here.
   Rules change state and append `GameEvent`s; they never touch visuals.
 - `Assets/Scripts/` (asmdef `FiveKingdoms.Game`) — Unity side: `Dungeon/` (controller, view, animations), `UI/` (HUD built
-  in code), `Shared/` (sprites, pixel camera). Views only animate events and read state.
+  in code), `Shared/` (sprites, the art manifest, the hero composer, pixel camera). Views only animate events and read
+  state.
 - `Assets/Tests/EditMode/` — NUnit tests for Core, including an autopilot soak test.
-- `Assets/Art/Resources/Sprites/` — pixel art, 32 px = 1 tile, loaded by path via `SpriteLibrary`. Import settings are
-  enforced by `Assets/Editor/PixelArtImporter.cs`; just drop PNGs in.
-- `Tools/pixelart/make_sprites.py` — regenerates the placeholder art (Python 3, stdlib only). Replacing a PNG with
-  final art (same name and size) needs no code change.
+- `Assets/Art/Resources/` — the game's art, written by `Tools/pixelart/build_art.py` from the Tiny Swords packs
+  (docs/design/ART.md): `Sprites/` (64 px = 1 tile: Tiles, Deco, Heroes, Heads, Monsters, Effects, Icons, UI) and
+  `art_manifest.json` (frame sizes, pivots, animations, 9-slice borders, where the head sits on each frame of a hero's
+  body). Don't edit these by hand: change the script and run it. Import settings are enforced by
+  `Assets/Editor/PixelArtImporter.cs`.
+- `Tools/pixelart/` — the art build (Python 3.7, stdlib only): `build_art.py` (run this), `ase.py` (reads .aseprite),
+  `px.py` / `draw.py` (images, shapes, the pack's outline), `rigs.py` (the hero bodies and weapons), `heads.py` (the
+  heroes' heads, armor sets, cosmetic head pieces), `looks.py` (stacks a look, like `HeroComposer`), `monsters.py`,
+  `terrain.py`, `fx.py`, `ui.py`, `icons.py`, `sheets.py` (preview sheets). The packs stay outside the repo
+  (`%LOCALAPPDATA%\5Kingdoms\ArtPacks\TinySwords\`, or `--pack`): never commit their files (docs/THIRD_PARTY.md).
 - `Tools/CoreTests/` — runs the Core tests outside Unity.
 
 ## Commands (from the repo root)
@@ -21,18 +28,24 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
   `TuningFrom`; `seeds=600` for a steadier number; `-lead kristela` puts another hero in front); the party straight
   at the boss: `-- -boss <level>`; print a floor: `-- -map <seed>`; trace the autopilot: `-- -trace <seed> <fromAction>`
   (solo) or `-- -party <seed> <fromAction>`; how far partners stray from the leader: `-- -spread`
-- Regenerate art: `python Tools/pixelart/make_sprites.py --preview preview.png`
+- Rebuild the art, ~10 s: `python Tools/pixelart/build_art.py` (add `--preview <folder>` for the review sheets:
+  heroes, weapons, armor sets, head pieces, rings, animation strips, icons; `--only preview` skips writing the art)
 - Unity tests: `Unity.exe -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults results.xml`
 - Windows build: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildWindowsDev`
 - Autoplay smoke test: `Builds/Windows/5Kingdoms.exe -screen-fullscreen 0 -fk-autoplay <screenshot folder>`
   (add `-fk-floors 1 -fk-level 10` to go straight to the boss; autoplay always uses its own throwaway save, and
-  aims each targeted action once the way a player does, saving `aim_*.png`)
+  aims each targeted action once the way a player does, saving `aim_*.png`; with `-fk-demo view` it stages foes five
+  tiles up and down a corridor, then one three tiles away, and captures how the camera shows them instead)
 
 Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway save), `-fk-save PATH`,
 `-fk-input keyboard|gamepad` (start with that HUD layout, e.g. to screenshot the skill row), `-fk-leader kristela|uzuki`
-(someone other than Haiden leads). PlayMode tests set
-`DungeonController.Overrides` instead. The real save is `save.json` in `Application.persistentDataPath`
-(`SaveSystem`); never let tests or tools write to it.
+(someone other than Haiden leads), `-fk-seed N` (the same floors every launch), `-fk-view zoomout|wide|lead` (the
+camera while aiming: `zoomout` is the game's behavior, `wide` is always one zoom step out and is kept for a player
+setting later, `lead` slides to the targets however far and is for debugging only), and `-fk-look` to try other looks, e.g.
+`-fk-look "haiden=great_sword,mage_robe;uzuki=mage_staff,bare;kristela=crown;all=hawks_eye"`: per hero or `all`, any
+of a weapon, an armor set, `bare` (no head piece), a cosmetic head piece (`hair_bow`, `crown`, `headband`) and a ring
+set; the ids are in `art_manifest.json`. PlayMode tests set `DungeonController.Overrides` instead. The real save is
+`save.json` in `Application.persistentDataPath` (`SaveSystem`); never let tests or tools write to it.
 
 `Tools/CoreTests` needs `Library/` (open the project in Unity once). Unity batchmode can't run while the editor has
 the project open; copy Assets/Packages/ProjectSettings to a scratch folder and run there instead.
@@ -60,7 +73,23 @@ the project open; copy Assets/Packages/ProjectSettings to a scratch folder and r
   don't; it's symmetric). Use `DungeonRun.InShotReach / FoesInSight / ShotTargetAt`, not line walks.
 - Delays (stuns, slows, a snare under a boss) go through `DungeonRun.Delay`: capped at 50% of a turn (25% on a boss)
   and at most once per the target's own turn (`Actor.IsDelayed`). Never skip a turn.
-- "Enter Play Mode" has domain reload off: statics survive between Play sessions, so reset them on scene load.
+- "Enter Play Mode" has domain reload off: statics survive between Play sessions, so reset them on scene load
+  (the sprite caches do it with `RuntimeInitializeOnLoadMethod(SubsystemRegistration)`).
+- Art (docs/design/ART.md): 64 px = 1 tile = 1 unit, point filter, no compression. Whole-number zoom only
+  (`PixelCamera`), no fractional sprite scaling, and HUD art at a whole number of screen pixels per art pixel
+  (`UiArtScaler`; create HUD art through `UiFactory.CreatePanel / CreateIcon`, sized for 2 units per art pixel).
+  Strips are cut into frames from the manifest (`SpriteLibrary.Strip / Monster`), with the pivot on the unit's tile
+  centre. A hero is stacked from layers at run time (`HeroComposer`) from a `HeroLook`: hero, weapon (which picks the
+  body: Warrior, Archer, Monk or Pawn rig), armor set (head piece and colours), head piece on or off, cosmetic head
+  piece, ring set. Milestone 1h sets looks from equipped gear through `HeroLooks.Set`; `Tools/pixelart/looks.py`
+  must stack in the same order as `HeroComposer`. Only what the game uses goes under `Assets/Art/Resources`.
+- Animations never set the pace: `ActorView.Play(name, impactAfter)` times an attack so its impact frame lands when
+  the turn's hit does, and nothing waits for an animation to finish. A sprite taller than about 1.6 tiles turns
+  see-through while an actor stands behind it (`DungeonView.UpdateSeeThrough`).
+- The camera while aiming (`PixelCamera.Frame`, Peter's choice on 2026-10-04): every target stays in view and out
+  from under the HUD. The camera moves no further than it must; when that would slide the party out of the middle
+  third of the screen, or the targets don't fit, it steps out one whole zoom level until the aim ends. Never slide
+  the party toward the edge of the screen, and never zoom by a fraction.
 - Combat turn order lives in `Core/Run/Timeline.cs` (Honkai Star Rail-style action value). Game time is exact `AvTime`
   (BigInteger fractions): never use floats for time or turn decisions; ties go to the leader, then the lower actor id.
 - Damage follows GEAR.md's multiplicative formula (`CombatRules.RollDamage`), in integer math, never floats. Final stats

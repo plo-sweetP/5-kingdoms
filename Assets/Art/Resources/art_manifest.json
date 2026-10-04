@@ -1,0 +1,2085 @@
+{
+ "armors": [
+  {
+   "cloth": [
+    "#3f6b4a",
+    "#6fae5f"
+   ],
+   "hair": "side",
+   "id": "archers_garb",
+   "metal": [
+    "#688c8a",
+    "#9cbeaa",
+    "#d4edc2"
+   ],
+   "name": "Archer's Garb",
+   "piece": {
+    "h": 52,
+    "path": "Heads/piece_archers_garb",
+    "w": 45,
+    "x": -2,
+    "y": -2
+   },
+   "plume": {
+    "h": 18,
+    "path": "Heads/plume_archers_garb",
+    "w": 17,
+    "x": 9,
+    "y": -11
+   }
+  },
+  {
+   "cloth": [
+    "#924159",
+    "#e76161"
+   ],
+   "hair": "side",
+   "id": "light_warrior",
+   "metal": [
+    "#688c8a",
+    "#9cbeaa",
+    "#d4edc2"
+   ],
+   "name": "Light Warrior",
+   "piece": {
+    "h": 38,
+    "path": "Heads/piece_light_warrior",
+    "w": 41,
+    "x": 1,
+    "y": -5
+   },
+   "plume": {
+    "h": 0,
+    "path": "",
+    "w": 0,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "cloth": [
+    "#5c547e",
+    "#ab6e9c"
+   ],
+   "hair": "full",
+   "id": "mage_robe",
+   "metal": [
+    "#886049",
+    "#dcaa46",
+    "#fffaba"
+   ],
+   "name": "Mage Robe",
+   "piece": {
+    "h": 48,
+    "path": "Heads/piece_mage_robe",
+    "w": 53,
+    "x": -5,
+    "y": -19
+   },
+   "plume": {
+    "h": 0,
+    "path": "",
+    "w": 0,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "cloth": [
+    "#485884",
+    "#4697ac"
+   ],
+   "hair": "side",
+   "id": "heavy_armor",
+   "metal": [
+    "#688c8a",
+    "#9cbeaa",
+    "#d4edc2"
+   ],
+   "name": "Heavy Armor",
+   "piece": {
+    "h": 44,
+    "path": "Heads/piece_heavy_armor",
+    "w": 37,
+    "x": 2,
+    "y": 6
+   },
+   "plume": {
+    "h": 38,
+    "path": "Heads/plume_heavy_armor",
+    "w": 38,
+    "x": -10,
+    "y": -11
+   }
+  },
+  {
+   "cloth": [
+    "#5e5455",
+    "#977b6b"
+   ],
+   "hair": "full",
+   "id": "duelists_leathers",
+   "metal": [
+    "#947467",
+    "#cf9c71",
+    "#e8ce91"
+   ],
+   "name": "Duelist's Leathers",
+   "piece": {
+    "h": 34,
+    "path": "Heads/piece_duelists_leathers",
+    "w": 64,
+    "x": -16,
+    "y": -7
+   },
+   "plume": {
+    "h": 0,
+    "path": "",
+    "w": 0,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "cloth": [
+    "#b3a994",
+    "#e9e3d2"
+   ],
+   "hair": "bangs",
+   "id": "pilgrims_vestments",
+   "metal": [
+    "#886049",
+    "#dcaa46",
+    "#fffaba"
+   ],
+   "name": "Pilgrim's Vestments",
+   "piece": {
+    "h": 50,
+    "path": "Heads/piece_pilgrims_vestments",
+    "w": 43,
+    "x": -2,
+    "y": 2
+   },
+   "plume": {
+    "h": 0,
+    "path": "",
+    "w": 0,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "cloth": [
+    "#3d8f9f",
+    "#8fd9d2"
+   ],
+   "hair": "full",
+   "id": "windriders_cloak",
+   "metal": [
+    "#688c8a",
+    "#9cbeaa",
+    "#d4edc2"
+   ],
+   "name": "Windrider's Cloak",
+   "piece": {
+    "h": 32,
+    "path": "Heads/piece_windriders_cloak",
+    "w": 56,
+    "x": -13,
+    "y": -5
+   },
+   "plume": {
+    "h": 0,
+    "path": "",
+    "w": 0,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "cloth": [
+    "#2e2a44",
+    "#4b4468"
+   ],
+   "hair": "side",
+   "id": "shadowstalker",
+   "metal": [
+    "#5a6366",
+    "#8c9695",
+    "#b8c1c3"
+   ],
+   "name": "Shadowstalker",
+   "piece": {
+    "h": 56,
+    "path": "Heads/piece_shadowstalker",
+    "w": 46,
+    "x": -2,
+    "y": -4
+   },
+   "plume": {
+    "h": 0,
+    "path": "",
+    "w": 0,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "cloth": [
+    "#6b3f2c",
+    "#a0623c"
+   ],
+   "hair": "bangs",
+   "id": "bloodrage_hide",
+   "metal": [
+    "#947467",
+    "#cf9c71",
+    "#e8ce91"
+   ],
+   "name": "Bloodrage Hide",
+   "piece": {
+    "h": 51,
+    "path": "Heads/piece_bloodrage_hide",
+    "w": 63,
+    "x": -11,
+    "y": -10
+   },
+   "plume": {
+    "h": 0,
+    "path": "",
+    "w": 0,
+    "x": 0,
+    "y": 0
+   }
+  }
+ ],
+ "auras": [
+  {
+   "color": "#ffd84a",
+   "id": "hawks_eye",
+   "name": "Hawk's Eye"
+  },
+  {
+   "color": "#e8322c",
+   "id": "executioners_seal",
+   "name": "Executioner's Seal"
+  },
+  {
+   "color": "#c2185b",
+   "id": "bloodbond",
+   "name": "Bloodbond"
+  },
+  {
+   "color": "#6fe06a",
+   "id": "menders_band",
+   "name": "Mender's Band"
+  },
+  {
+   "color": "#8f7bff",
+   "id": "arcane_ward",
+   "name": "Arcane Ward"
+  },
+  {
+   "color": "#b9a58c",
+   "id": "stoneguard",
+   "name": "Stoneguard"
+  },
+  {
+   "color": "#3fae6b",
+   "id": "heartwood_band",
+   "name": "Heartwood Band"
+  },
+  {
+   "color": "#b8ff00",
+   "id": "venom_coil",
+   "name": "Venom Coil"
+  },
+  {
+   "color": "#4fd6ff",
+   "id": "tempo_signet",
+   "name": "Tempo Signet"
+  }
+ ],
+ "cosmetics": [
+  {
+   "hair": "full",
+   "id": "hair_bow",
+   "name": "Hair Bow",
+   "piece": {
+    "h": 26,
+    "path": "Heads/cosmetic_hair_bow",
+    "w": 27,
+    "x": -11,
+    "y": 7
+   }
+  },
+  {
+   "hair": "full",
+   "id": "crown",
+   "name": "Crown",
+   "piece": {
+    "h": 16,
+    "path": "Heads/cosmetic_crown",
+    "w": 24,
+    "x": 10,
+    "y": 2
+   }
+  },
+  {
+   "hair": "full",
+   "id": "headband",
+   "name": "Headband",
+   "piece": {
+    "h": 33,
+    "path": "Heads/cosmetic_headband",
+    "w": 63,
+    "x": -20,
+    "y": 15
+   }
+  }
+ ],
+ "heroes": [
+  {
+   "armor": "heavy_armor",
+   "id": "haiden",
+   "parts": [
+    {
+     "h": 23,
+     "name": "back",
+     "path": "Heads/haiden_back",
+     "w": 12,
+     "x": -7,
+     "y": 16
+    },
+    {
+     "h": 14,
+     "name": "bangs",
+     "path": "Heads/haiden_bangs",
+     "w": 31,
+     "x": 12,
+     "y": 17
+    },
+    {
+     "h": 44,
+     "name": "base",
+     "path": "Heads/haiden_base",
+     "w": 54,
+     "x": -4,
+     "y": 12
+    },
+    {
+     "h": 40,
+     "name": "full",
+     "path": "Heads/haiden_full",
+     "w": 52,
+     "x": -5,
+     "y": -3
+    }
+   ],
+   "skirt": false,
+   "weapon": "long_sword"
+  },
+  {
+   "armor": "light_warrior",
+   "id": "kristela",
+   "parts": [
+    {
+     "h": 51,
+     "name": "back",
+     "path": "Heads/kristela_back",
+     "w": 35,
+     "x": -13,
+     "y": 14
+    },
+    {
+     "h": 14,
+     "name": "bangs",
+     "path": "Heads/kristela_bangs",
+     "w": 31,
+     "x": 12,
+     "y": 16
+    },
+    {
+     "h": 46,
+     "name": "base",
+     "path": "Heads/kristela_base",
+     "w": 52,
+     "x": -2,
+     "y": 12
+    },
+    {
+     "h": 30,
+     "name": "full",
+     "path": "Heads/kristela_full",
+     "w": 43,
+     "x": 0,
+     "y": 8
+    }
+   ],
+   "skirt": true,
+   "weapon": "gauntlets"
+  },
+  {
+   "armor": "archers_garb",
+   "id": "uzuki",
+   "parts": [
+    {
+     "h": 23,
+     "name": "back",
+     "path": "Heads/uzuki_back",
+     "w": 13,
+     "x": -8,
+     "y": 17
+    },
+    {
+     "h": 14,
+     "name": "bangs",
+     "path": "Heads/uzuki_bangs",
+     "w": 31,
+     "x": 12,
+     "y": 17
+    },
+    {
+     "h": 44,
+     "name": "base",
+     "path": "Heads/uzuki_base",
+     "w": 55,
+     "x": -5,
+     "y": 12
+    },
+    {
+     "h": 41,
+     "name": "full",
+     "path": "Heads/uzuki_full",
+     "w": 52,
+     "x": -4,
+     "y": -4
+    }
+   ],
+   "skirt": false,
+   "weapon": "hunter_bow"
+  }
+ ],
+ "monsters": [
+  {
+   "anims": [
+    {
+     "columns": 8,
+     "count": 8,
+     "fps": 10,
+     "h": 85,
+     "impact": -1,
+     "loop": true,
+     "name": "idle",
+     "path": "Monsters/spider_idle",
+     "pivotX": 42,
+     "pivotY": 35,
+     "w": 92
+    },
+    {
+     "columns": 5,
+     "count": 5,
+     "fps": 10,
+     "h": 86,
+     "impact": -1,
+     "loop": true,
+     "name": "run",
+     "path": "Monsters/spider_run",
+     "pivotX": 44,
+     "pivotY": 36,
+     "w": 96
+    },
+    {
+     "columns": 8,
+     "count": 8,
+     "fps": 10,
+     "h": 95,
+     "impact": 4,
+     "loop": false,
+     "name": "attack",
+     "path": "Monsters/spider_attack",
+     "pivotX": 46,
+     "pivotY": 45,
+     "w": 130
+    }
+   ],
+   "id": "spider",
+   "portrait": "Monsters/spider_portrait",
+   "shadow": {
+    "columns": 1,
+    "count": 1,
+    "fps": 10,
+    "h": 24,
+    "impact": -1,
+    "loop": false,
+    "name": "shadow",
+    "path": "Monsters/spider_shadow",
+    "pivotX": 31,
+    "pivotY": -12,
+    "w": 62
+   }
+  },
+  {
+   "anims": [
+    {
+     "columns": 6,
+     "count": 6,
+     "fps": 10,
+     "h": 93,
+     "impact": -1,
+     "loop": true,
+     "name": "idle",
+     "path": "Monsters/bat_idle",
+     "pivotX": 59,
+     "pivotY": 71,
+     "w": 133
+    },
+    {
+     "columns": 4,
+     "count": 4,
+     "fps": 10,
+     "h": 72,
+     "impact": -1,
+     "loop": true,
+     "name": "run",
+     "path": "Monsters/bat_run",
+     "pivotX": 63,
+     "pivotY": 65,
+     "w": 112
+    },
+    {
+     "columns": 7,
+     "count": 7,
+     "fps": 10,
+     "h": 93,
+     "impact": 4,
+     "loop": false,
+     "name": "attack",
+     "path": "Monsters/bat_attack",
+     "pivotX": 68,
+     "pivotY": 80,
+     "w": 143
+    }
+   ],
+   "id": "bat",
+   "portrait": "Monsters/bat_portrait",
+   "shadow": {
+    "columns": 1,
+    "count": 1,
+    "fps": 10,
+    "h": 14,
+    "impact": -1,
+    "loop": false,
+    "name": "shadow",
+    "path": "Monsters/bat_shadow",
+    "pivotX": 13,
+    "pivotY": -17,
+    "w": 27
+   }
+  },
+  {
+   "anims": [
+    {
+     "columns": 12,
+     "count": 12,
+     "fps": 10,
+     "h": 196,
+     "impact": -1,
+     "loop": true,
+     "name": "idle",
+     "path": "Monsters/troll_idle",
+     "pivotX": 84,
+     "pivotY": 160,
+     "w": 170
+    },
+    {
+     "columns": 10,
+     "count": 10,
+     "fps": 10,
+     "h": 208,
+     "impact": -1,
+     "loop": true,
+     "name": "run",
+     "path": "Monsters/troll_run",
+     "pivotX": 104,
+     "pivotY": 167,
+     "w": 198
+    },
+    {
+     "columns": 5,
+     "count": 5,
+     "fps": 10,
+     "h": 190,
+     "impact": -1,
+     "loop": false,
+     "name": "windup",
+     "path": "Monsters/troll_windup",
+     "pivotX": 69,
+     "pivotY": 153,
+     "w": 166
+    },
+    {
+     "columns": 6,
+     "count": 6,
+     "fps": 10,
+     "h": 225,
+     "impact": 2,
+     "loop": false,
+     "name": "attack",
+     "path": "Monsters/troll_attack",
+     "pivotX": 152,
+     "pivotY": 168,
+     "w": 290
+    },
+    {
+     "columns": 10,
+     "count": 10,
+     "fps": 10,
+     "h": 190,
+     "impact": -1,
+     "loop": false,
+     "name": "recovery",
+     "path": "Monsters/troll_recovery",
+     "pivotX": 82,
+     "pivotY": 152,
+     "w": 180
+    },
+    {
+     "columns": 8,
+     "count": 10,
+     "fps": 10,
+     "h": 225,
+     "impact": -1,
+     "loop": false,
+     "name": "dead",
+     "path": "Monsters/troll_dead",
+     "pivotX": 153,
+     "pivotY": 160,
+     "w": 234
+    }
+   ],
+   "id": "troll",
+   "portrait": "Monsters/troll_portrait",
+   "shadow": {
+    "columns": 1,
+    "count": 1,
+    "fps": 10,
+    "h": 53,
+    "impact": -1,
+    "loop": false,
+    "name": "shadow",
+    "path": "Monsters/troll_shadow",
+    "pivotX": 67,
+    "pivotY": 2,
+    "w": 135
+   }
+  }
+ ],
+ "pixelsPerUnit": 64,
+ "rigs": [
+  {
+   "anims": [
+    {
+     "count": 8,
+     "fps": 10,
+     "impact": -1,
+     "loop": true,
+     "name": "idle",
+     "start": 0
+    },
+    {
+     "count": 6,
+     "fps": 10,
+     "impact": -1,
+     "loop": true,
+     "name": "run",
+     "start": 8
+    },
+    {
+     "count": 4,
+     "fps": 10,
+     "impact": 2,
+     "loop": false,
+     "name": "attack",
+     "start": 14
+    },
+    {
+     "count": 4,
+     "fps": 10,
+     "impact": 2,
+     "loop": false,
+     "name": "attack2",
+     "start": 18
+    },
+    {
+     "count": 6,
+     "fps": 10,
+     "impact": -1,
+     "loop": false,
+     "name": "guard",
+     "start": 22
+    }
+   ],
+   "cellH": 130,
+   "cellW": 140,
+   "handX": 96,
+   "handY": 84,
+   "headX": [
+    51,
+    51,
+    51,
+    51,
+    51,
+    51,
+    51,
+    51,
+    51,
+    52,
+    52,
+    51,
+    49,
+    49,
+    49,
+    47,
+    59,
+    59,
+    58,
+    57,
+    45,
+    45,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44
+   ],
+   "headY": [
+    33,
+    34,
+    36,
+    37,
+    37,
+    36,
+    34,
+    33,
+    35,
+    30,
+    32,
+    35,
+    31,
+    33,
+    32,
+    31,
+    36,
+    36,
+    33,
+    31,
+    35,
+    35,
+    40,
+    41,
+    42,
+    41,
+    40,
+    40
+   ],
+   "id": "warrior",
+   "layers": [
+    {
+     "columns": 28,
+     "h": 84,
+     "name": "arcane_sword_back",
+     "path": "Heroes/warrior_arcane_sword_back",
+     "w": 68,
+     "x": 55,
+     "y": 18
+    },
+    {
+     "columns": 28,
+     "h": 49,
+     "name": "arcane_sword_front",
+     "path": "Heroes/warrior_arcane_sword_front",
+     "w": 59,
+     "x": 18,
+     "y": 59
+    },
+    {
+     "columns": 17,
+     "h": 106,
+     "name": "arcane_sword_fx",
+     "path": "Heroes/warrior_arcane_sword_fx",
+     "w": 120,
+     "x": 20,
+     "y": 24
+    },
+    {
+     "columns": 28,
+     "h": 39,
+     "name": "body",
+     "path": "Heroes/warrior_body",
+     "w": 53,
+     "x": 45,
+     "y": 65
+    },
+    {
+     "columns": 28,
+     "h": 39,
+     "name": "body_skirt",
+     "path": "Heroes/warrior_body_skirt",
+     "w": 61,
+     "x": 40,
+     "y": 65
+    },
+    {
+     "columns": 21,
+     "h": 84,
+     "name": "dual_blades_back",
+     "path": "Heroes/warrior_dual_blades_back",
+     "w": 95,
+     "x": 28,
+     "y": 18
+    },
+    {
+     "columns": 25,
+     "h": 72,
+     "name": "dual_blades_front",
+     "path": "Heroes/warrior_dual_blades_front",
+     "w": 81,
+     "x": 18,
+     "y": 36
+    },
+    {
+     "columns": 17,
+     "h": 106,
+     "name": "dual_blades_fx",
+     "path": "Heroes/warrior_dual_blades_fx",
+     "w": 120,
+     "x": 20,
+     "y": 24
+    },
+    {
+     "columns": 21,
+     "h": 84,
+     "name": "great_shield_back",
+     "path": "Heroes/warrior_great_shield_back",
+     "w": 96,
+     "x": 27,
+     "y": 18
+    },
+    {
+     "columns": 22,
+     "h": 76,
+     "name": "great_shield_front",
+     "path": "Heroes/warrior_great_shield_front",
+     "w": 91,
+     "x": 18,
+     "y": 34
+    },
+    {
+     "columns": 17,
+     "h": 106,
+     "name": "great_shield_fx",
+     "path": "Heroes/warrior_dual_blades_fx",
+     "w": 120,
+     "x": 20,
+     "y": 24
+    },
+    {
+     "columns": 22,
+     "h": 106,
+     "name": "great_sword_back",
+     "path": "Heroes/warrior_great_sword_back",
+     "w": 92,
+     "x": 44,
+     "y": 0
+    },
+    {
+     "columns": 25,
+     "h": 69,
+     "name": "great_sword_front",
+     "path": "Heroes/warrior_great_sword_front",
+     "w": 81,
+     "x": 0,
+     "y": 47
+    },
+    {
+     "columns": 17,
+     "h": 106,
+     "name": "great_sword_fx",
+     "path": "Heroes/warrior_dual_blades_fx",
+     "w": 120,
+     "x": 20,
+     "y": 24
+    },
+    {
+     "columns": 22,
+     "h": 84,
+     "name": "long_sword_back",
+     "path": "Heroes/warrior_long_sword_back",
+     "w": 92,
+     "x": 31,
+     "y": 18
+    },
+    {
+     "columns": 23,
+     "h": 62,
+     "name": "long_sword_front",
+     "path": "Heroes/warrior_long_sword_front",
+     "w": 86,
+     "x": 18,
+     "y": 47
+    },
+    {
+     "columns": 17,
+     "h": 106,
+     "name": "long_sword_fx",
+     "path": "Heroes/warrior_dual_blades_fx",
+     "w": 120,
+     "x": 20,
+     "y": 24
+    },
+    {
+     "columns": 25,
+     "h": 99,
+     "name": "piercer_blade_back",
+     "path": "Heroes/warrior_piercer_blade_back",
+     "w": 81,
+     "x": 49,
+     "y": 6
+    },
+    {
+     "columns": 28,
+     "h": 58,
+     "name": "piercer_blade_front",
+     "path": "Heroes/warrior_piercer_blade_front",
+     "w": 73,
+     "x": 7,
+     "y": 51
+    },
+    {
+     "columns": 17,
+     "h": 106,
+     "name": "piercer_blade_fx",
+     "path": "Heroes/warrior_dual_blades_fx",
+     "w": 120,
+     "x": 20,
+     "y": 24
+    },
+    {
+     "columns": 28,
+     "h": 53,
+     "name": "plume_heavy_armor",
+     "path": "Heroes/warrior_plume_heavy_armor",
+     "w": 59,
+     "x": 34,
+     "y": 20
+    }
+   ],
+   "pivotX": 73,
+   "pivotY": 84,
+   "shadow": {
+    "columns": 1,
+    "count": 1,
+    "fps": 10,
+    "h": 18,
+    "impact": -1,
+    "loop": false,
+    "name": "shadow",
+    "path": "Heroes/warrior_shadow",
+    "pivotX": 21,
+    "pivotY": -9,
+    "w": 41
+   },
+   "weapons": [
+    {
+     "id": "long_sword",
+     "name": "Long Sword"
+    },
+    {
+     "id": "great_sword",
+     "name": "Great Sword"
+    },
+    {
+     "id": "arcane_sword",
+     "name": "Arcane Sword"
+    },
+    {
+     "id": "piercer_blade",
+     "name": "Piercer Blade"
+    },
+    {
+     "id": "dual_blades",
+     "name": "Dual Blades"
+    },
+    {
+     "id": "great_shield",
+     "name": "Great Shield"
+    }
+   ]
+  },
+  {
+   "anims": [
+    {
+     "count": 6,
+     "fps": 10,
+     "impact": -1,
+     "loop": true,
+     "name": "idle",
+     "start": 0
+    },
+    {
+     "count": 4,
+     "fps": 10,
+     "impact": -1,
+     "loop": true,
+     "name": "run",
+     "start": 6
+    },
+    {
+     "count": 8,
+     "fps": 10,
+     "impact": 5,
+     "loop": false,
+     "name": "attack",
+     "start": 10
+    }
+   ],
+   "cellH": 89,
+   "cellW": 100,
+   "handX": 36,
+   "handY": 75,
+   "headX": [
+    34,
+    34,
+    34,
+    34,
+    34,
+    34,
+    34,
+    35,
+    34,
+    32,
+    32,
+    29,
+    23,
+    22,
+    22,
+    20,
+    26,
+    32
+   ],
+   "headY": [
+    19,
+    19,
+    19,
+    19,
+    19,
+    19,
+    20,
+    19,
+    20,
+    19,
+    19,
+    19,
+    19,
+    20,
+    20,
+    21,
+    20,
+    20
+   ],
+   "id": "archer",
+   "layers": [
+    {
+     "columns": 18,
+     "h": 34,
+     "name": "body",
+     "path": "Heroes/archer_body",
+     "w": 43,
+     "x": 32,
+     "y": 55
+    },
+    {
+     "columns": 18,
+     "h": 34,
+     "name": "body_skirt",
+     "path": "Heroes/archer_body_skirt",
+     "w": 52,
+     "x": 28,
+     "y": 55
+    },
+    {
+     "columns": 18,
+     "h": 47,
+     "name": "hunter_bow_back",
+     "path": "Heroes/archer_hunter_bow_back",
+     "w": 77,
+     "x": 13,
+     "y": 40
+    },
+    {
+     "columns": 18,
+     "h": 66,
+     "name": "hunter_bow_front",
+     "path": "Heroes/archer_hunter_bow_front",
+     "w": 87,
+     "x": 13,
+     "y": 18
+    },
+    {
+     "columns": 18,
+     "h": 28,
+     "name": "plume_archers_garb",
+     "path": "Heroes/archer_plume_archers_garb",
+     "w": 40,
+     "x": 20,
+     "y": 6
+    }
+   ],
+   "pivotX": 56,
+   "pivotY": 70,
+   "shadow": {
+    "columns": 1,
+    "count": 1,
+    "fps": 10,
+    "h": 15,
+    "impact": -1,
+    "loop": false,
+    "name": "shadow",
+    "path": "Heroes/archer_shadow",
+    "pivotX": 18,
+    "pivotY": -11,
+    "w": 35
+   },
+   "weapons": [
+    {
+     "id": "hunter_bow",
+     "name": "Hunter Bow"
+    }
+   ]
+  },
+  {
+   "anims": [
+    {
+     "count": 6,
+     "fps": 10,
+     "impact": -1,
+     "loop": true,
+     "name": "idle",
+     "start": 0
+    },
+    {
+     "count": 4,
+     "fps": 10,
+     "impact": -1,
+     "loop": true,
+     "name": "run",
+     "start": 6
+    },
+    {
+     "count": 11,
+     "fps": 10,
+     "impact": 3,
+     "loop": false,
+     "name": "cast",
+     "start": 10
+    }
+   ],
+   "cellH": 103,
+   "cellW": 121,
+   "handX": 62,
+   "handY": 74,
+   "headX": [
+    39,
+    40,
+    39,
+    38,
+    37,
+    38,
+    37,
+    38,
+    37,
+    36,
+    39,
+    40,
+    38,
+    37,
+    37,
+    37,
+    37,
+    37,
+    37,
+    37,
+    37
+   ],
+   "headY": [
+    21,
+    22,
+    23,
+    23,
+    22,
+    21,
+    20,
+    19,
+    20,
+    19,
+    22,
+    22,
+    21,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    21,
+    22
+   ],
+   "id": "monk",
+   "layers": [
+    {
+     "columns": 21,
+     "h": 46,
+     "name": "body",
+     "path": "Heroes/monk_body",
+     "w": 61,
+     "x": 31,
+     "y": 52
+    },
+    {
+     "columns": 21,
+     "h": 89,
+     "name": "mage_staff_front",
+     "path": "Heroes/monk_mage_staff_front",
+     "w": 36,
+     "x": 73,
+     "y": 14
+    },
+    {
+     "columns": 16,
+     "h": 37,
+     "name": "mage_staff_fx",
+     "path": "Heroes/monk_mage_staff_fx",
+     "w": 121,
+     "x": 0,
+     "y": 27
+    },
+    {
+     "columns": 21,
+     "h": 38,
+     "name": "mage_staff_mid",
+     "path": "Heroes/monk_mage_staff_mid",
+     "w": 89,
+     "x": 17,
+     "y": 51
+    }
+   ],
+   "pivotX": 61,
+   "pivotY": 74,
+   "shadow": {
+    "columns": 1,
+    "count": 1,
+    "fps": 10,
+    "h": 24,
+    "impact": -1,
+    "loop": false,
+    "name": "shadow",
+    "path": "Heroes/monk_shadow",
+    "pivotX": 29,
+    "pivotY": 0,
+    "w": 58
+   },
+   "weapons": [
+    {
+     "id": "mage_staff",
+     "name": "Mage Staff"
+    }
+   ]
+  },
+  {
+   "anims": [
+    {
+     "count": 8,
+     "fps": 10,
+     "impact": -1,
+     "loop": true,
+     "name": "idle",
+     "start": 0
+    },
+    {
+     "count": 6,
+     "fps": 10,
+     "impact": -1,
+     "loop": true,
+     "name": "run",
+     "start": 8
+    },
+    {
+     "count": 4,
+     "fps": 10,
+     "impact": 1,
+     "loop": false,
+     "name": "attack",
+     "start": 14
+    },
+    {
+     "count": 6,
+     "fps": 10,
+     "impact": 2,
+     "loop": false,
+     "name": "attack2",
+     "start": 18
+    }
+   ],
+   "cellH": 97,
+   "cellW": 101,
+   "handX": 62,
+   "handY": 71,
+   "headX": [
+    25,
+    26,
+    27,
+    26,
+    25,
+    24,
+    23,
+    24,
+    28,
+    28,
+    28,
+    24,
+    23,
+    25,
+    22,
+    26,
+    27,
+    24,
+    23,
+    20,
+    36,
+    37,
+    30,
+    26
+   ],
+   "headY": [
+    24,
+    23,
+    22,
+    22,
+    24,
+    23,
+    22,
+    22,
+    21,
+    19,
+    26,
+    21,
+    19,
+    26,
+    21,
+    22,
+    23,
+    22,
+    22,
+    21,
+    27,
+    27,
+    25,
+    24
+   ],
+   "id": "pawn",
+   "layers": [
+    {
+     "columns": 24,
+     "h": 40,
+     "name": "body",
+     "path": "Heroes/pawn_body",
+     "w": 50,
+     "x": 22,
+     "y": 46
+    },
+    {
+     "columns": 24,
+     "h": 40,
+     "name": "body_skirt",
+     "path": "Heroes/pawn_body_skirt",
+     "w": 59,
+     "x": 18,
+     "y": 46
+    },
+    {
+     "columns": 24,
+     "h": 35,
+     "name": "gauntlets_front",
+     "path": "Heroes/pawn_gauntlets_front",
+     "w": 80,
+     "x": 6,
+     "y": 53
+    },
+    {
+     "columns": 21,
+     "h": 52,
+     "name": "gauntlets_fx",
+     "path": "Heroes/pawn_gauntlets_fx",
+     "w": 95,
+     "x": 6,
+     "y": 45
+    }
+   ],
+   "pivotX": 43,
+   "pivotY": 67,
+   "shadow": {
+    "columns": 1,
+    "count": 1,
+    "fps": 10,
+    "h": 17,
+    "impact": -1,
+    "loop": false,
+    "name": "shadow",
+    "path": "Heroes/pawn_shadow",
+    "pivotX": 18,
+    "pivotY": -8,
+    "w": 39
+   },
+   "weapons": [
+    {
+     "id": "gauntlets",
+     "name": "Gauntlets"
+    }
+   ]
+  }
+ ],
+ "strips": [
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 46,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/bush_1",
+   "path": "Deco/bush_1",
+   "pivotX": 33,
+   "pivotY": 46,
+   "w": 67
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 26,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/rock_1",
+   "path": "Deco/rock_1",
+   "pivotX": 16,
+   "pivotY": 26,
+   "w": 32
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 190,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/tree_1",
+   "path": "Deco/tree_1",
+   "pivotX": 59,
+   "pivotY": 190,
+   "w": 119
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 34,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/bush_2",
+   "path": "Deco/bush_2",
+   "pivotX": 23,
+   "pivotY": 34,
+   "w": 46
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 36,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/rock_2",
+   "path": "Deco/rock_2",
+   "pivotX": 25,
+   "pivotY": 36,
+   "w": 50
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 244,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/tree_2",
+   "path": "Deco/tree_2",
+   "pivotX": 53,
+   "pivotY": 244,
+   "w": 106
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 59,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/bush_3",
+   "path": "Deco/bush_3",
+   "pivotX": 39,
+   "pivotY": 59,
+   "w": 78
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 29,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/rock_3",
+   "path": "Deco/rock_3",
+   "pivotX": 19,
+   "pivotY": 29,
+   "w": 39
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 146,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/tree_3",
+   "path": "Deco/tree_3",
+   "pivotX": 45,
+   "pivotY": 146,
+   "w": 90
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 42,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/bush_4",
+   "path": "Deco/bush_4",
+   "pivotX": 23,
+   "pivotY": 42,
+   "w": 46
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 42,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/rock_4",
+   "path": "Deco/rock_4",
+   "pivotX": 29,
+   "pivotY": 42,
+   "w": 59
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 122,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/tree_4",
+   "path": "Deco/tree_4",
+   "pivotX": 40,
+   "pivotY": 122,
+   "w": 80
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 34,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/bones_1",
+   "path": "Deco/bones_1",
+   "pivotX": 19,
+   "pivotY": 34,
+   "w": 39
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 27,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/bones_2",
+   "path": "Deco/bones_2",
+   "pivotX": 14,
+   "pivotY": 27,
+   "w": 28
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 28,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/bones_3",
+   "path": "Deco/bones_3",
+   "pivotX": 18,
+   "pivotY": 28,
+   "w": 37
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 72,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/skull_spike_1",
+   "path": "Deco/skull_spike_1",
+   "pivotX": 16,
+   "pivotY": 72,
+   "w": 32
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 40,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/stump_1",
+   "path": "Deco/stump_1",
+   "pivotX": 24,
+   "pivotY": 40,
+   "w": 48
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 92,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/skull_spike_2",
+   "path": "Deco/skull_spike_2",
+   "pivotX": 17,
+   "pivotY": 92,
+   "w": 34
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 35,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/stump_2",
+   "path": "Deco/stump_2",
+   "pivotX": 21,
+   "pivotY": 35,
+   "w": 43
+  },
+  {
+   "columns": 8,
+   "count": 8,
+   "fps": 6,
+   "h": 84,
+   "impact": -1,
+   "loop": true,
+   "name": "Deco/cave",
+   "path": "Deco/cave",
+   "pivotX": 50,
+   "pivotY": 49,
+   "w": 100
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 12,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/arrow",
+   "path": "Effects/arrow",
+   "pivotX": 21,
+   "pivotY": 6,
+   "w": 43
+  },
+  {
+   "columns": 11,
+   "count": 11,
+   "fps": 16,
+   "h": 128,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/heal",
+   "path": "Effects/heal",
+   "pivotX": 49,
+   "pivotY": 92,
+   "w": 98
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 76,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/reticle",
+   "path": "Effects/reticle",
+   "pivotX": 38,
+   "pivotY": 38,
+   "w": 76
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 33,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/berry",
+   "path": "Effects/berry",
+   "pivotX": 16,
+   "pivotY": 12,
+   "w": 32
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 25,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/snare",
+   "path": "Effects/snare",
+   "pivotX": 24,
+   "pivotY": 10,
+   "w": 49
+  },
+  {
+   "columns": 3,
+   "count": 3,
+   "fps": 20,
+   "h": 64,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/punch",
+   "path": "Effects/punch",
+   "pivotX": 32,
+   "pivotY": 32,
+   "w": 64
+  },
+  {
+   "columns": 5,
+   "count": 5,
+   "fps": 18,
+   "h": 88,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/ring",
+   "path": "Effects/ring",
+   "pivotX": 72,
+   "pivotY": 44,
+   "w": 144
+  },
+  {
+   "columns": 6,
+   "count": 6,
+   "fps": 14,
+   "h": 18,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/twinkle",
+   "path": "Effects/twinkle",
+   "pivotX": 9,
+   "pivotY": 9,
+   "w": 18
+  },
+  {
+   "columns": 8,
+   "count": 8,
+   "fps": 14,
+   "h": 33,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/dust",
+   "path": "Effects/dust",
+   "pivotX": 17,
+   "pivotY": 16,
+   "w": 35
+  },
+  {
+   "columns": 8,
+   "count": 8,
+   "fps": 14,
+   "h": 64,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/explosion",
+   "path": "Effects/explosion",
+   "pivotX": 32,
+   "pivotY": 32,
+   "w": 64
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 28,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/status_mark",
+   "path": "Effects/status_mark",
+   "pivotX": 14,
+   "pivotY": 14,
+   "w": 28
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 28,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/status_rooted",
+   "path": "Effects/status_rooted",
+   "pivotX": 14,
+   "pivotY": 14,
+   "w": 28
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 28,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/status_taunt",
+   "path": "Effects/status_taunt",
+   "pivotX": 14,
+   "pivotY": 14,
+   "w": 28
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 28,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/status_stunned",
+   "path": "Effects/status_stunned",
+   "pivotX": 14,
+   "pivotY": 14,
+   "w": 28
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 28,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/status_guard",
+   "path": "Effects/status_guard",
+   "pivotX": 14,
+   "pivotY": 14,
+   "w": 28
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 28,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/status_aura",
+   "path": "Effects/status_aura",
+   "pivotX": 14,
+   "pivotY": 14,
+   "w": 28
+  }
+ ],
+ "ui": [
+  {
+   "bottom": 11,
+   "left": 9,
+   "name": "button_red",
+   "path": "UI/button_red",
+   "right": 9,
+   "top": 9
+  },
+  {
+   "bottom": 11,
+   "left": 9,
+   "name": "button_red_down",
+   "path": "UI/button_red_down",
+   "right": 9,
+   "top": 12
+  },
+  {
+   "bottom": 11,
+   "left": 9,
+   "name": "button_gold",
+   "path": "UI/button_gold",
+   "right": 9,
+   "top": 9
+  },
+  {
+   "bottom": 11,
+   "left": 9,
+   "name": "button_gold_down",
+   "path": "UI/button_gold_down",
+   "right": 9,
+   "top": 12
+  },
+  {
+   "bottom": 11,
+   "left": 9,
+   "name": "button_dark",
+   "path": "UI/button_dark",
+   "right": 9,
+   "top": 9
+  },
+  {
+   "bottom": 11,
+   "left": 9,
+   "name": "button_dark_down",
+   "path": "UI/button_dark_down",
+   "right": 9,
+   "top": 12
+  },
+  {
+   "bottom": 46,
+   "left": 43,
+   "name": "round_red",
+   "path": "UI/round_red",
+   "right": 43,
+   "top": 46
+  },
+  {
+   "bottom": 41,
+   "left": 51,
+   "name": "round_red_down",
+   "path": "UI/round_red_down",
+   "right": 51,
+   "top": 41
+  },
+  {
+   "bottom": 31,
+   "left": 31,
+   "name": "tiny_blue",
+   "path": "UI/tiny_blue",
+   "right": 31,
+   "top": 31
+  },
+  {
+   "bottom": 31,
+   "left": 31,
+   "name": "tiny_gold",
+   "path": "UI/tiny_gold",
+   "right": 31,
+   "top": 31
+  },
+  {
+   "bottom": 31,
+   "left": 31,
+   "name": "tiny_dark",
+   "path": "UI/tiny_dark",
+   "right": 31,
+   "top": 31
+  },
+  {
+   "bottom": 43,
+   "left": 55,
+   "name": "panel",
+   "path": "UI/panel",
+   "right": 55,
+   "top": 44
+  },
+  {
+   "bottom": 8,
+   "left": 7,
+   "name": "frame",
+   "path": "UI/frame",
+   "right": 7,
+   "top": 7
+  },
+  {
+   "bottom": 3,
+   "left": 3,
+   "name": "bar_slim",
+   "path": "UI/bar_slim",
+   "right": 3,
+   "top": 3
+  },
+  {
+   "bottom": 25,
+   "left": 21,
+   "name": "brackets",
+   "path": "UI/brackets",
+   "right": 21,
+   "top": 25
+  },
+  {
+   "bottom": 0,
+   "left": 98,
+   "name": "ribbon_blue",
+   "path": "UI/ribbon_blue",
+   "right": 97,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "dpad",
+   "path": "UI/dpad",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "dpad_hub",
+   "path": "UI/dpad_hub",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "dpad_arrow",
+   "path": "UI/dpad_arrow",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "dpad_arrow_diagonal",
+   "path": "UI/dpad_arrow_diagonal",
+   "right": 0,
+   "top": 0
+  }
+ ]
+}

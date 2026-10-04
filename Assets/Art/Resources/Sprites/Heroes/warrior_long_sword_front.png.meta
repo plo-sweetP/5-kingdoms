@@ -1,0 +1,830 @@
+fileFormatVersion: 2
+guid: 10a0b75c73c03d74fbbb44795153a535
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5231966152658619137
+    second: warrior_long_sword_front_0
+  - first:
+      213: 3153203712560623993
+    second: warrior_long_sword_front_1
+  - first:
+      213: 8471855018819900478
+    second: warrior_long_sword_front_2
+  - first:
+      213: -2402425792559561148
+    second: warrior_long_sword_front_3
+  - first:
+      213: 2875681493761809855
+    second: warrior_long_sword_front_4
+  - first:
+      213: 4284436887606599208
+    second: warrior_long_sword_front_5
+  - first:
+      213: 9050736860460130014
+    second: warrior_long_sword_front_6
+  - first:
+      213: 1868272799329724843
+    second: warrior_long_sword_front_7
+  - first:
+      213: -5450906754488617919
+    second: warrior_long_sword_front_8
+  - first:
+      213: -1712311410638376108
+    second: warrior_long_sword_front_9
+  - first:
+      213: -7915873011203243652
+    second: warrior_long_sword_front_10
+  - first:
+      213: -2167047267907960089
+    second: warrior_long_sword_front_11
+  - first:
+      213: -8505136836973103078
+    second: warrior_long_sword_front_12
+  - first:
+      213: 8904111794370150398
+    second: warrior_long_sword_front_13
+  - first:
+      213: -2134423757954969989
+    second: warrior_long_sword_front_14
+  - first:
+      213: -5232662679401060630
+    second: warrior_long_sword_front_15
+  - first:
+      213: -6435107380345728672
+    second: warrior_long_sword_front_16
+  - first:
+      213: -7641410660516818924
+    second: warrior_long_sword_front_17
+  - first:
+      213: -8233023492832000229
+    second: warrior_long_sword_front_18
+  - first:
+      213: -3495690820533424318
+    second: warrior_long_sword_front_19
+  - first:
+      213: -3314293679602762257
+    second: warrior_long_sword_front_20
+  - first:
+      213: 5130443023300853084
+    second: warrior_long_sword_front_21
+  - first:
+      213: -5267427459818546311
+    second: warrior_long_sword_front_22
+  - first:
+      213: 8541373704963195959
+    second: warrior_long_sword_front_23
+  - first:
+      213: 3944501422779072471
+    second: warrior_long_sword_front_24
+  - first:
+      213: -1176956865961089801
+    second: warrior_long_sword_front_25
+  - first:
+      213: -6424662925468050752
+    second: warrior_long_sword_front_26
+  - first:
+      213: 7114708548677003605
+    second: warrior_long_sword_front_27
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 64
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: warrior_long_sword_front_0
+      rect:
+        serializedVersion: 2
+        x: 20
+        y: 64
+        width: 33
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10b8516ee7dab9840800000000000000
+      internalID: 5231966152658619137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_1
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 64
+        width: 33
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9717e97f11e62cb20800000000000000
+      internalID: 3153203712560623993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_2
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 63
+        width: 33
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e34de59f043129570800000000000000
+      internalID: 8471855018819900478
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_3
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 62
+        width: 35
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4464043687ed8aed0800000000000000
+      internalID: -2402425792559561148
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_4
+      rect:
+        serializedVersion: 2
+        x: 361
+        y: 61
+        width: 35
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fbd56d2251978e720800000000000000
+      internalID: 2875681493761809855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_5
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 61
+        width: 34
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82e1f5c36a0657b30800000000000000
+      internalID: 4284436887606599208
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_6
+      rect:
+        serializedVersion: 2
+        x: 534
+        y: 62
+        width: 34
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ede9243c83daa9d70800000000000000
+      internalID: 9050736860460130014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_7
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 63
+        width: 34
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba9a29366307de910800000000000000
+      internalID: 1868272799329724843
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_8
+      rect:
+        serializedVersion: 2
+        x: 708
+        y: 63
+        width: 33
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 144bdeadf2d7a54b0800000000000000
+      internalID: -5450906754488617919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_9
+      rect:
+        serializedVersion: 2
+        x: 797
+        y: 69
+        width: 35
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4533d0028d5ac38e0800000000000000
+      internalID: -1712311410638376108
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_10
+      rect:
+        serializedVersion: 2
+        x: 883
+        y: 66
+        width: 35
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c710128bf6b252290800000000000000
+      internalID: -7915873011203243652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_11
+      rect:
+        serializedVersion: 2
+        x: 966
+        y: 62
+        width: 33
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e28dd8cdf91de1e0800000000000000
+      internalID: -2167047267907960089
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_12
+      rect:
+        serializedVersion: 2
+        x: 1043
+        y: 68
+        width: 33
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a18f022eb1fa7f980800000000000000
+      internalID: -8505136836973103078
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_13
+      rect:
+        serializedVersion: 2
+        x: 1130
+        y: 66
+        width: 34
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eff7ccf3082c19b70800000000000000
+      internalID: 8904111794370150398
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_14
+      rect:
+        serializedVersion: 2
+        x: 1219
+        y: 67
+        width: 33
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7e80fa96e00162e0800000000000000
+      internalID: -2134423757954969989
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_15
+      rect:
+        serializedVersion: 2
+        x: 1302
+        y: 70
+        width: 35
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae62bd45409d167b0800000000000000
+      internalID: -5232662679401060630
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_16
+      rect:
+        serializedVersion: 2
+        x: 1377
+        y: 62
+        width: 59
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0619ff6aee7e1b6a0800000000000000
+      internalID: -6435107380345728672
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_17
+      rect:
+        serializedVersion: 2
+        x: 1463
+        y: 62
+        width: 59
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 410130d7d7144f590800000000000000
+      internalID: -7641410660516818924
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_18
+      rect:
+        serializedVersion: 2
+        x: 1547
+        y: 71
+        width: 57
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b178d42f0cc6ebd80800000000000000
+      internalID: -8233023492832000229
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_19
+      rect:
+        serializedVersion: 2
+        x: 1633
+        y: 70
+        width: 52
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 24fe28d38bfcc7fc0800000000000000
+      internalID: -3495690820533424318
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_20
+      rect:
+        serializedVersion: 2
+        x: 1736
+        y: 65
+        width: 43
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fed74f155734102d0800000000000000
+      internalID: -3314293679602762257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_21
+      rect:
+        serializedVersion: 2
+        x: 1821
+        y: 66
+        width: 43
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c5d7a385fbef23740800000000000000
+      internalID: 5130443023300853084
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_22
+      rect:
+        serializedVersion: 2
+        x: 1939
+        y: 74
+        width: 38
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97b906122a656e6b0800000000000000
+      internalID: -5267427459818546311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_23
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 13
+        width: 38
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 734813a612e098670800000000000000
+      internalID: 8541373704963195959
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_24
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 11
+        width: 38
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7dff4c8252fadb630800000000000000
+      internalID: 3944501422779072471
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_25
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 9
+        width: 37
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f4ae6857fb9aafe0800000000000000
+      internalID: -1176956865961089801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_26
+      rect:
+        serializedVersion: 2
+        x: 305
+        y: 9
+        width: 37
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0cadaddcb1307d6a0800000000000000
+      internalID: -6424662925468050752
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_long_sword_front_27
+      rect:
+        serializedVersion: 2
+        x: 390
+        y: 11
+        width: 38
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 559e35ccab58cb260800000000000000
+      internalID: 7114708548677003605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -29,8 +29,22 @@ namespace FiveKingdoms.Dungeon
         public string Leader;
 
         /// <summary>
-        /// Flags: -fk-floors N, -fk-level N, -fk-save PATH, -fk-input touch|keyboard|gamepad, -fk-leader ID, and
-        /// -fk-autoplay FOLDER (which also uses a fresh save inside FOLDER, so smoke tests never touch the player's save).
+        /// Other looks for the heroes, to try equipment art before gear exists (<see cref="HeroLooks.Parse"/>), e.g.
+        /// "haiden=great_sword,mage_robe;uzuki=mage_staff,bare;kristela=crown;all=hawks_eye": per hero or "all", a
+        /// weapon, an armor set, "bare" for no head piece, a cosmetic head piece, a ring set.
+        /// </summary>
+        public string Looks;
+
+        /// <summary>How the camera keeps targets in view: lead (default), zoomout or wide (ART.md, "View size").</summary>
+        public ViewMode? View;
+
+        /// <summary>The run's seed, for the same floors every launch (comparing screenshots, chasing a bug).</summary>
+        public int? Seed;
+
+        /// <summary>
+        /// Flags: -fk-floors N, -fk-level N, -fk-save PATH, -fk-input touch|keyboard|gamepad, -fk-leader ID,
+        /// -fk-look LOOKS, -fk-view lead|zoomout|wide, -fk-seed N, and -fk-autoplay FOLDER (which also uses a fresh save
+        /// inside FOLDER, so smoke tests never touch the player's save).
         /// </summary>
         public static LaunchOptions FromCommandLine()
         {
@@ -42,6 +56,9 @@ namespace FiveKingdoms.Dungeon
                 SavePath = StringArg(args, "-fk-save"),
                 StartInputMode = Enum.TryParse(StringArg(args, "-fk-input"), ignoreCase: true, out InputMode mode) ? mode : (InputMode?)null,
                 Leader = StringArg(args, "-fk-leader")?.ToLowerInvariant(),
+                Looks = StringArg(args, "-fk-look"),
+                View = Enum.TryParse(StringArg(args, "-fk-view"), ignoreCase: true, out ViewMode view) ? view : (ViewMode?)null,
+                Seed = IntArg(args, "-fk-seed"),
             };
             string autoplayFolder = StringArg(args, "-fk-autoplay");
             if (autoplayFolder != null && options.SavePath == null)

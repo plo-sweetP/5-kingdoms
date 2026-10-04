@@ -1,0 +1,730 @@
+fileFormatVersion: 2
+guid: b39514572c2d25041b9578794575a568
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4288605277864999436
+    second: warrior_piercer_blade_back_0
+  - first:
+      213: -7931171461941424787
+    second: warrior_piercer_blade_back_1
+  - first:
+      213: 2337323304207760283
+    second: warrior_piercer_blade_back_2
+  - first:
+      213: -862460244316122132
+    second: warrior_piercer_blade_back_3
+  - first:
+      213: -7546881479187167292
+    second: warrior_piercer_blade_back_4
+  - first:
+      213: 1250589852303456079
+    second: warrior_piercer_blade_back_5
+  - first:
+      213: -167660236463771061
+    second: warrior_piercer_blade_back_6
+  - first:
+      213: -5373477506106027258
+    second: warrior_piercer_blade_back_7
+  - first:
+      213: 9138090418310893377
+    second: warrior_piercer_blade_back_8
+  - first:
+      213: 7594748878269930957
+    second: warrior_piercer_blade_back_9
+  - first:
+      213: -4274323817862150088
+    second: warrior_piercer_blade_back_10
+  - first:
+      213: -6200443720750831144
+    second: warrior_piercer_blade_back_11
+  - first:
+      213: -6908138301642321262
+    second: warrior_piercer_blade_back_12
+  - first:
+      213: 7870874847908201252
+    second: warrior_piercer_blade_back_13
+  - first:
+      213: 1662210457416221337
+    second: warrior_piercer_blade_back_14
+  - first:
+      213: -2777918374124613627
+    second: warrior_piercer_blade_back_15
+  - first:
+      213: -2594006916088956120
+    second: warrior_piercer_blade_back_16
+  - first:
+      213: 4165664029654794542
+    second: warrior_piercer_blade_back_17
+  - first:
+      213: -4851188974097513274
+    second: warrior_piercer_blade_back_18
+  - first:
+      213: -3396301428098954246
+    second: warrior_piercer_blade_back_19
+  - first:
+      213: -6565728720073778944
+    second: warrior_piercer_blade_back_20
+  - first:
+      213: 6398769250010739424
+    second: warrior_piercer_blade_back_21
+  - first:
+      213: 2841837326740830787
+    second: warrior_piercer_blade_back_22
+  - first:
+      213: 8179132920873092793
+    second: warrior_piercer_blade_back_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 64
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_0
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 103
+        width: 39
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f5cdf6c830db74c0800000000000000
+      internalID: -4288605277864999436
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_1
+      rect:
+        serializedVersion: 2
+        x: 118
+        y: 103
+        width: 39
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6d04469391dee190800000000000000
+      internalID: -7931171461941424787
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_2
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 102
+        width: 39
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9bbb885927df6020800000000000000
+      internalID: 2337323304207760283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_3
+      rect:
+        serializedVersion: 2
+        x: 281
+        y: 101
+        width: 37
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce314a03afce704f0800000000000000
+      internalID: -862460244316122132
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_4
+      rect:
+        serializedVersion: 2
+        x: 363
+        y: 100
+        width: 37
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c7031f9747144790800000000000000
+      internalID: -7546881479187167292
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_5
+      rect:
+        serializedVersion: 2
+        x: 444
+        y: 99
+        width: 39
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f47714248dcfa5110800000000000000
+      internalID: 1250589852303456079
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_6
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 102
+        width: 40
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b427e9a37e95cadf0800000000000000
+      internalID: -167660236463771061
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_7
+      rect:
+        serializedVersion: 2
+        x: 604
+        y: 103
+        width: 38
+        height: 68
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6039ff79da29d65b0800000000000000
+      internalID: -5373477506106027258
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_8
+      rect:
+        serializedVersion: 2
+        x: 682
+        y: 98
+        width: 39
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14f42dcd1d401de70800000000000000
+      internalID: 9138090418310893377
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_9
+      rect:
+        serializedVersion: 2
+        x: 760
+        y: 107
+        width: 35
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dcd5397bdd7f56960800000000000000
+      internalID: 7594748878269930957
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_10
+      rect:
+        serializedVersion: 2
+        x: 841
+        y: 102
+        width: 35
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 838c55d422d8ea4c0800000000000000
+      internalID: -4274323817862150088
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_11
+      rect:
+        serializedVersion: 2
+        x: 925
+        y: 99
+        width: 39
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d968de894993f9a0800000000000000
+      internalID: -6200443720750831144
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_12
+      rect:
+        serializedVersion: 2
+        x: 1007
+        y: 105
+        width: 47
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 292d657c0dc5120a0800000000000000
+      internalID: -6908138301642321262
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_13
+      rect:
+        serializedVersion: 2
+        x: 1088
+        y: 103
+        width: 42
+        height: 66
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4230025f8f6fa3d60800000000000000
+      internalID: 7870874847908201252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_14
+      rect:
+        serializedVersion: 2
+        x: 1146
+        y: 127
+        width: 38
+        height: 69
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 992cb30ba9b511710800000000000000
+      internalID: 1662210457416221337
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_15
+      rect:
+        serializedVersion: 2
+        x: 1216
+        y: 136
+        width: 50
+        height: 61
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 500954fe4f9d279d0800000000000000
+      internalID: -2777918374124613627
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_16
+      rect:
+        serializedVersion: 2
+        x: 1644
+        y: 116
+        width: 31
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82b7c95147c300cd0800000000000000
+      internalID: -2594006916088956120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_17
+      rect:
+        serializedVersion: 2
+        x: 1725
+        y: 116
+        width: 31
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2142354d596fc930800000000000000
+      internalID: 4165664029654794542
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_18
+      rect:
+        serializedVersion: 2
+        x: 1782
+        y: 128
+        width: 39
+        height: 70
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c440aca45d1dacb0800000000000000
+      internalID: -4851188974097513274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_19
+      rect:
+        serializedVersion: 2
+        x: 1862
+        y: 129
+        width: 40
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: afb820478d9edd0d0800000000000000
+      internalID: -3396301428098954246
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_20
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 125
+        width: 39
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0091c6c0488d1e4a0800000000000000
+      internalID: -6565728720073778944
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_21
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 28
+        width: 35
+        height: 70
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0e235921bbefcc850800000000000000
+      internalID: 6398769250010739424
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_22
+      rect:
+        serializedVersion: 2
+        x: 81
+        y: 28
+        width: 39
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34a35d1fdfb307720800000000000000
+      internalID: 2841837326740830787
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_piercer_blade_back_23
+      rect:
+        serializedVersion: 2
+        x: 162
+        y: 29
+        width: 39
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b6085f7e0e128170800000000000000
+      internalID: 8179132920873092793
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

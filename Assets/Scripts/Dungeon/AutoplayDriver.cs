@@ -15,12 +15,14 @@ namespace FiveKingdoms.Dungeon
     public sealed class AutoplayDriver : MonoBehaviour
     {
         const string Flag = "-fk-autoplay";
+        const string DemoFlag = "-fk-demo"; // With "view": stage far targets and capture how the camera shows them.
         const int MaxActions = 400;
         const float TimeLimit = 120f;
         static readonly int[] ShotAfterAction = { 1, 12, 30, 60, 100, 160, 240, 330 };
 
         DungeonController controller;
         string folder;
+        string demo;
 
         public static void AttachIfRequested(DungeonController controller)
         {
@@ -33,11 +35,82 @@ namespace FiveKingdoms.Dungeon
             driver.folder = index + 1 < args.Length && !args[index + 1].StartsWith("-")
                 ? args[index + 1]
                 : Path.Combine(Application.persistentDataPath, "autoplay");
+            int demoIndex = Array.IndexOf(args, DemoFlag);
+            if (demoIndex >= 0 && demoIndex + 1 < args.Length) driver.demo = args[demoIndex + 1];
+        }
+
+        /// <summary>
+        /// The view-size demo (docs/design/ART.md, "View size"): the leader in the middle of the longest straight
+        /// north-south run of floor on the map, a foe five tiles up and one five tiles down, the widest a shot's targets
+        /// can be apart. Captures the scene before and while the leader aims its weapon attack, to compare the camera's
+        /// modes (-fk-view) with the same -fk-seed; then once more with a single foe three tiles away, which a small
+        /// move of the camera shows without stepping out. Only moves actors on the autoplay's throwaway run.
+        /// </summary>
+        IEnumerator ViewDemo()
+        {
+            yield return new WaitForSeconds(2.6f); // The floor banner has gone.
+            yield return Capture("view_1_exploring");
+
+            var run = controller.Run;
+            var map = run.Map;
+            var hero = run.Hero;
+            const int reach = SkillCatalog.RangedReach;
+            GridPos? spot = null;
+            for (int y = reach; y < map.Height - reach && spot == null; y++)
+                for (int x = 0; x < map.Width && spot == null; x++)
+                {
+                    bool clear = true;
+                    for (int d = -reach; d <= reach && clear; d++) clear = map.IsWalkable(new GridPos(x, y + d));
+                    if (clear) spot = new GridPos(x, y);
+                }
+            if (!spot.HasValue)
+            {
+                Debug.Log("[Autoplay] View demo: this floor has no straight run of 11 tiles; try another -fk-seed.");
+                Application.Quit();
+                yield break;
+            }
+            var centre = spot.Value;
+            foreach (var actor in run.Actors)
+                if (actor.Team != hero.Team) actor.Pos = actor.PreviousPos = new GridPos(-50 - actor.Id, -50); // Out of the picture.
+            hero.Pos = hero.PreviousPos = centre;
+            int placed = 0;
+            foreach (var member in run.Party)
+            {
+                if (member == hero) continue;
+                var beside = new GridPos(centre.X + (placed == 0 ? -1 : 1), centre.Y);
+                member.Pos = member.PreviousPos = map.IsWalkable(beside) ? beside : new GridPos(centre.X, centre.Y - 1 - placed);
+                placed++;
+            }
+            var above = run.SpawnEnemy(new GridPos(centre.X, centre.Y + reach));
+            var below = run.SpawnEnemy(new GridPos(centre.X, centre.Y - reach));
+            controller.RefreshView();
+            yield return new WaitForSeconds(0.5f);
+            yield return Capture("view_2_foes_five_tiles_away");
+
+            controller.Submit(HeroCommand.Attack);
+            yield return new WaitForSeconds(0.8f);
+            bool aimed = controller.IsAiming;
+            yield return Capture(aimed ? "view_3_aiming" : "view_3_not_aiming");
+
+            above.Pos = above.PreviousPos = new GridPos(centre.X, centre.Y + 3);
+            below.Pos = below.PreviousPos = new GridPos(-40, -50);
+            controller.RefreshView(); // Also lets the aim go.
+            yield return new WaitForSeconds(0.5f);
+            controller.Submit(HeroCommand.Attack);
+            yield return new WaitForSeconds(0.8f);
+            yield return Capture(controller.IsAiming ? "view_4_aiming_one_foe_three_tiles_away" : "view_4_not_aiming");
+            Debug.Log($"[Autoplay] View demo captured at {centre} (aiming: {aimed}, then {controller.IsAiming}).");
+            Application.Quit();
         }
 
         IEnumerator Start()
         {
             Directory.CreateDirectory(folder);
+            if (demo == "view")
+            {
+                yield return ViewDemo();
+                yield break;
+            }
             yield return new WaitForSeconds(0.6f);
             yield return Capture("00_banner");
             yield return new WaitForSeconds(1.8f);
@@ -71,6 +144,7 @@ namespace FiveKingdoms.Dungeon
                     yield return null;
                     if (controller.IsAiming)
                     {
+                        yield return new WaitForSeconds(0.3f); // The camera moves to frame the targets.
                         yield return Capture($"aim_{AimName(run, command)}_action{actions + 1}");
                         controller.Submit(button);
                         actions++;

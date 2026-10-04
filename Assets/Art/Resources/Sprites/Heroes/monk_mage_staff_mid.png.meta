@@ -1,0 +1,955 @@
+fileFormatVersion: 2
+guid: 6dbc13e2754a4544588510039e733784
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -8035171619398408182
+    second: monk_mage_staff_mid_0
+  - first:
+      213: 4068953772194308343
+    second: monk_mage_staff_mid_1
+  - first:
+      213: -3487995463461826221
+    second: monk_mage_staff_mid_2
+  - first:
+      213: 3037328247831770274
+    second: monk_mage_staff_mid_3
+  - first:
+      213: -4173484204502642223
+    second: monk_mage_staff_mid_4
+  - first:
+      213: 6891524117623706191
+    second: monk_mage_staff_mid_5
+  - first:
+      213: -6667226216817241255
+    second: monk_mage_staff_mid_6
+  - first:
+      213: 9198671504763426202
+    second: monk_mage_staff_mid_7
+  - first:
+      213: -6985051563435321511
+    second: monk_mage_staff_mid_8
+  - first:
+      213: -1803176584540465359
+    second: monk_mage_staff_mid_9
+  - first:
+      213: -25263652318296342
+    second: monk_mage_staff_mid_10
+  - first:
+      213: -625409353796757062
+    second: monk_mage_staff_mid_11
+  - first:
+      213: 660901818246178265
+    second: monk_mage_staff_mid_12
+  - first:
+      213: 589300217883598931
+    second: monk_mage_staff_mid_13
+  - first:
+      213: -5334117102330699207
+    second: monk_mage_staff_mid_14
+  - first:
+      213: -842222327517059259
+    second: monk_mage_staff_mid_15
+  - first:
+      213: -2968627312911951921
+    second: monk_mage_staff_mid_16
+  - first:
+      213: 5848962762286322994
+    second: monk_mage_staff_mid_17
+  - first:
+      213: -3675219851101212087
+    second: monk_mage_staff_mid_18
+  - first:
+      213: -2944370127921235663
+    second: monk_mage_staff_mid_19
+  - first:
+      213: -2657942606615282723
+    second: monk_mage_staff_mid_20
+  - first:
+      213: 6155776411272351391
+    second: monk_mage_staff_mid_21
+  - first:
+      213: 7242760832095798480
+    second: monk_mage_staff_mid_22
+  - first:
+      213: -775861128570597571
+    second: monk_mage_staff_mid_23
+  - first:
+      213: -6086962106396608819
+    second: monk_mage_staff_mid_24
+  - first:
+      213: -6626007281943454538
+    second: monk_mage_staff_mid_25
+  - first:
+      213: 1640481475485555467
+    second: monk_mage_staff_mid_26
+  - first:
+      213: -6059928153597302071
+    second: monk_mage_staff_mid_27
+  - first:
+      213: 6181732308934460037
+    second: monk_mage_staff_mid_28
+  - first:
+      213: -5060212550039495913
+    second: monk_mage_staff_mid_29
+  - first:
+      213: -1094261568482841487
+    second: monk_mage_staff_mid_30
+  - first:
+      213: -9046715988055505283
+    second: monk_mage_staff_mid_31
+  - first:
+      213: -721441943090600532
+    second: monk_mage_staff_mid_32
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 64
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_0
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 2
+        width: 48
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a08257cfbf55d7090800000000000000
+      internalID: -8035171619398408182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_1
+      rect:
+        serializedVersion: 2
+        x: 110
+        y: 1
+        width: 48
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f0a027c5e3d77830800000000000000
+      internalID: 4068953772194308343
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_2
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 0
+        width: 48
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3511f2e2b96289fc0800000000000000
+      internalID: -3487995463461826221
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_3
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 0
+        width: 48
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a4b54ee2f1c62a20800000000000000
+      internalID: 3037328247831770274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_4
+      rect:
+        serializedVersion: 2
+        x: 377
+        y: 0
+        width: 48
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d19ae26a3ec416c0800000000000000
+      internalID: -4173484204502642223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_5
+      rect:
+        serializedVersion: 2
+        x: 466
+        y: 1
+        width: 48
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f429fff0cac93af50800000000000000
+      internalID: 6891524117623706191
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_6
+      rect:
+        serializedVersion: 2
+        x: 537
+        y: 8
+        width: 31
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 953df6d84114973a0800000000000000
+      internalID: -6667226216817241255
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_7
+      rect:
+        serializedVersion: 2
+        x: 590
+        y: 12
+        width: 30
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a959ee63ffe38af70800000000000000
+      internalID: 9198671504763426202
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_8
+      rect:
+        serializedVersion: 2
+        x: 625
+        y: 10
+        width: 35
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95796a78c9c101f90800000000000000
+      internalID: -6985051563435321511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_9
+      rect:
+        serializedVersion: 2
+        x: 676
+        y: 11
+        width: 33
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 137d9233374d9f6e0800000000000000
+      internalID: -1803176584540465359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_10
+      rect:
+        serializedVersion: 2
+        x: 715
+        y: 8
+        width: 31
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae6c6d197de36aff0800000000000000
+      internalID: -25263652318296342
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_11
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 12
+        width: 30
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab9dcbb91891257f0800000000000000
+      internalID: -625409353796757062
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_12
+      rect:
+        serializedVersion: 2
+        x: 804
+        y: 7
+        width: 31
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d529fbb3befb2900800000000000000
+      internalID: 660901818246178265
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_13
+      rect:
+        serializedVersion: 2
+        x: 857
+        y: 14
+        width: 31
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35023090d6d9d2800800000000000000
+      internalID: 589300217883598931
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_14
+      rect:
+        serializedVersion: 2
+        x: 910
+        y: 1
+        width: 31
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9322e3db1c869f5b0800000000000000
+      internalID: -5334117102330699207
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_15
+      rect:
+        serializedVersion: 2
+        x: 944
+        y: 2
+        width: 16
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54761726143df44f0800000000000000
+      internalID: -842222327517059259
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_16
+      rect:
+        serializedVersion: 2
+        x: 987
+        y: 7
+        width: 23
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc75c57ff215dc6d0800000000000000
+      internalID: -2968627312911951921
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_17
+      rect:
+        serializedVersion: 2
+        x: 1039
+        y: 12
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2355096a4a0bb2150800000000000000
+      internalID: 5848962762286322994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_18
+      rect:
+        serializedVersion: 2
+        x: 1067
+        y: 7
+        width: 30
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 942f5af740ffefcc0800000000000000
+      internalID: -3675219851101212087
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_19
+      rect:
+        serializedVersion: 2
+        x: 1129
+        y: 8
+        width: 57
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 139bbf5f7fe7327d0800000000000000
+      internalID: -2944370127921235663
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_20
+      rect:
+        serializedVersion: 2
+        x: 1217
+        y: 14
+        width: 29
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ddbf15b18471d1bd0800000000000000
+      internalID: -2657942606615282723
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_21
+      rect:
+        serializedVersion: 2
+        x: 1245
+        y: 7
+        width: 30
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9e0e960806bd6550800000000000000
+      internalID: 6155776411272351391
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_22
+      rect:
+        serializedVersion: 2
+        x: 1307
+        y: 8
+        width: 57
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d4ce2e5a94738460800000000000000
+      internalID: 7242760832095798480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_23
+      rect:
+        serializedVersion: 2
+        x: 1395
+        y: 14
+        width: 29
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d3f048c0a669b35f0800000000000000
+      internalID: -775861128570597571
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_24
+      rect:
+        serializedVersion: 2
+        x: 1423
+        y: 7
+        width: 30
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc677fed634c68ba0800000000000000
+      internalID: -6086962106396608819
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_25
+      rect:
+        serializedVersion: 2
+        x: 1485
+        y: 8
+        width: 57
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6bcdb90bb71bb04a0800000000000000
+      internalID: -6626007281943454538
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_26
+      rect:
+        serializedVersion: 2
+        x: 1573
+        y: 14
+        width: 29
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0bdce6d53924c610800000000000000
+      internalID: 1640481475485555467
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_27
+      rect:
+        serializedVersion: 2
+        x: 1601
+        y: 7
+        width: 30
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9caa170837fc6eba0800000000000000
+      internalID: -6059928153597302071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_28
+      rect:
+        serializedVersion: 2
+        x: 1663
+        y: 13
+        width: 29
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 582089268cce9c550800000000000000
+      internalID: 6181732308934460037
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_29
+      rect:
+        serializedVersion: 2
+        x: 1699
+        y: 7
+        width: 23
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 71b1ce2fe7386c9b0800000000000000
+      internalID: -5060212550039495913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_30
+      rect:
+        serializedVersion: 2
+        x: 1751
+        y: 12
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17ce73fa6e660d0f0800000000000000
+      internalID: -1094261568482841487
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_31
+      rect:
+        serializedVersion: 2
+        x: 1800
+        y: 1
+        width: 31
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d76ca1c8dbb937280800000000000000
+      internalID: -9046715988055505283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: monk_mage_staff_mid_32
+      rect:
+        serializedVersion: 2
+        x: 1834
+        y: 2
+        width: 16
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca56408006cecf5f0800000000000000
+      internalID: -721441943090600532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

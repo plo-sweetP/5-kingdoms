@@ -12,7 +12,7 @@ namespace FiveKingdoms.UI
     public sealed class DPad : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler, IInitializePotentialDragHandler
     {
         const float DeadZone = 0.14f; // Fraction of the pad's width around the center that means "no direction".
-        static readonly Color ArrowIdle = new Color(1f, 1f, 1f, 0.45f);
+        static readonly Color ArrowIdle = new Color(1f, 1f, 1f, 0.6f);
         static readonly Color ArrowActive = new Color(1f, 0.88f, 0.4f, 1f);
 
         readonly Image[] arrows = new Image[8];
@@ -43,28 +43,41 @@ namespace FiveKingdoms.UI
             }
         }
 
+        /// <summary>
+        /// The pad listens over a square of <paramref name="size"/>; its disc, hub and arrows are HUD art drawn at their
+        /// own size in the middle of it.
+        /// </summary>
         public static DPad Create(Transform parent, Vector2 anchor, Vector2 position, float size)
         {
-            var background = UiFactory.CreateImage("DPad", parent, UiFactory.Circle, new Color(0.04f, 0.04f, 0.09f, 0.45f), raycast: true);
-            UiFactory.Place(background.rectTransform, anchor, position, new Vector2(size, size));
-            var pad = background.gameObject.AddComponent<DPad>();
-            pad.rect = background.rectTransform;
-            pad.group = background.gameObject.AddComponent<CanvasGroup>();
+            var area = UiFactory.CreateImage("DPad", parent, null, Color.clear, raycast: true);
+            UiFactory.Place(area.rectTransform, anchor, position, new Vector2(size, size));
+            var pad = area.gameObject.AddComponent<DPad>();
+            pad.rect = area.rectTransform;
+            pad.group = area.gameObject.AddComponent<CanvasGroup>();
 
-            var hub = UiFactory.CreateImage("Hub", background.transform, UiFactory.Circle, new Color(1f, 1f, 1f, 0.08f));
-            UiFactory.Place(hub.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size * 0.36f, size * 0.36f));
+            var disc = UiFactory.CreateIcon("Disc", area.transform, "dpad");
+            Center(disc.rectTransform, Vector2.zero);
+            var hub = UiFactory.CreateIcon("Hub", area.transform, "dpad_hub");
+            Center(hub.rectTransform, Vector2.zero);
 
             for (int i = 0; i < 8; i++)
             {
                 float angle = i * 45f;
-                var offset = new Vector2(Mathf.Sin(angle * Mathf.Deg2Rad), Mathf.Cos(angle * Mathf.Deg2Rad)) * size * 0.34f;
-                float arrowSize = size * (i % 2 == 0 ? 0.17f : 0.12f);
-                var arrow = UiFactory.CreateImage("Arrow " + (Direction8)i, background.transform, UiFactory.Triangle, ArrowIdle);
-                UiFactory.Place(arrow.rectTransform, new Vector2(0.5f, 0.5f), offset, new Vector2(arrowSize, arrowSize));
-                arrow.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -angle);
+                var offset = new Vector2(Mathf.Sin(angle * Mathf.Deg2Rad), Mathf.Cos(angle * Mathf.Deg2Rad)) * size * 0.33f;
+                // Straight and diagonal arrows are two drawings, each only ever turned by quarter turns, so they stay crisp.
+                bool diagonal = i % 2 == 1;
+                var arrow = UiFactory.CreateIcon("Arrow " + (Direction8)i, area.transform, diagonal ? "dpad_arrow_diagonal" : "dpad_arrow", ArrowIdle);
+                Center(arrow.rectTransform, offset);
+                arrow.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -(diagonal ? angle - 45f : angle));
                 pad.arrows[i] = arrow;
             }
             return pad;
+        }
+
+        static void Center(RectTransform rect, Vector2 offset)
+        {
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = offset;
         }
 
         public void OnInitializePotentialDrag(PointerEventData eventData) => eventData.useDragThreshold = false;

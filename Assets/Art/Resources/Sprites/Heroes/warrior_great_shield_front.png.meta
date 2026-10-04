@@ -1,0 +1,830 @@
+fileFormatVersion: 2
+guid: 48bf61c12792bee4d89a1d05d4e1b191
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 1032336271671065814
+    second: warrior_great_shield_front_0
+  - first:
+      213: 2218925951759985952
+    second: warrior_great_shield_front_1
+  - first:
+      213: -326536773412698277
+    second: warrior_great_shield_front_2
+  - first:
+      213: 6645599682184322206
+    second: warrior_great_shield_front_3
+  - first:
+      213: 6044356127027794100
+    second: warrior_great_shield_front_4
+  - first:
+      213: -223578094585854707
+    second: warrior_great_shield_front_5
+  - first:
+      213: -234210756256496208
+    second: warrior_great_shield_front_6
+  - first:
+      213: 4489080686242939170
+    second: warrior_great_shield_front_7
+  - first:
+      213: -8295968515372903258
+    second: warrior_great_shield_front_8
+  - first:
+      213: -3678626718553934307
+    second: warrior_great_shield_front_9
+  - first:
+      213: 4104168158075990318
+    second: warrior_great_shield_front_10
+  - first:
+      213: 3612586042396219961
+    second: warrior_great_shield_front_11
+  - first:
+      213: -8618383126178736758
+    second: warrior_great_shield_front_12
+  - first:
+      213: 3335666498895556622
+    second: warrior_great_shield_front_13
+  - first:
+      213: -2739785848100321536
+    second: warrior_great_shield_front_14
+  - first:
+      213: 1672007228199239334
+    second: warrior_great_shield_front_15
+  - first:
+      213: -881798245024867280
+    second: warrior_great_shield_front_16
+  - first:
+      213: -3415387508308036768
+    second: warrior_great_shield_front_17
+  - first:
+      213: 5441614660540760742
+    second: warrior_great_shield_front_18
+  - first:
+      213: -589252817133246341
+    second: warrior_great_shield_front_19
+  - first:
+      213: -1065807186164215724
+    second: warrior_great_shield_front_20
+  - first:
+      213: 3551941607055666492
+    second: warrior_great_shield_front_21
+  - first:
+      213: 4545122889130327564
+    second: warrior_great_shield_front_22
+  - first:
+      213: 2572627824813841310
+    second: warrior_great_shield_front_23
+  - first:
+      213: 7321932176156574907
+    second: warrior_great_shield_front_24
+  - first:
+      213: -664360921314508693
+    second: warrior_great_shield_front_25
+  - first:
+      213: -3518642315826469544
+    second: warrior_great_shield_front_26
+  - first:
+      213: -1566693804835848580
+    second: warrior_great_shield_front_27
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 64
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: warrior_great_shield_front_0
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 78
+        width: 41
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6dc74b99e58935e00800000000000000
+      internalID: 1032336271671065814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_1
+      rect:
+        serializedVersion: 2
+        x: 107
+        y: 78
+        width: 41
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 02dac8195653bce10800000000000000
+      internalID: 2218925951759985952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_2
+      rect:
+        serializedVersion: 2
+        x: 198
+        y: 77
+        width: 41
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5742aed888e77bf0800000000000000
+      internalID: -326536773412698277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_3
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 76
+        width: 43
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9c9b0873b9e93c50800000000000000
+      internalID: 6645599682184322206
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_4
+      rect:
+        serializedVersion: 2
+        x: 377
+        y: 75
+        width: 43
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b092778fddd1e350800000000000000
+      internalID: 6044356127027794100
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_5
+      rect:
+        serializedVersion: 2
+        x: 469
+        y: 75
+        width: 42
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d05c6a458e0b5ecf0800000000000000
+      internalID: -223578094585854707
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_6
+      rect:
+        serializedVersion: 2
+        x: 560
+        y: 76
+        width: 42
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b581cede8aefbcf0800000000000000
+      internalID: -234210756256496208
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_7
+      rect:
+        serializedVersion: 2
+        x: 652
+        y: 77
+        width: 42
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 221c397991b6c4e30800000000000000
+      internalID: 4489080686242939170
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_8
+      rect:
+        serializedVersion: 2
+        x: 744
+        y: 77
+        width: 41
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a49f55d69ccedc80800000000000000
+      internalID: -8295968515372903258
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_9
+      rect:
+        serializedVersion: 2
+        x: 838
+        y: 83
+        width: 43
+        height: 55
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d16f45b5d74e2fcc0800000000000000
+      internalID: -3678626718553934307
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_10
+      rect:
+        serializedVersion: 2
+        x: 929
+        y: 80
+        width: 43
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e21b698e13fe4f830800000000000000
+      internalID: 4104168158075990318
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_11
+      rect:
+        serializedVersion: 2
+        x: 1017
+        y: 76
+        width: 41
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93a9f818ddb722230800000000000000
+      internalID: 3612586042396219961
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_12
+      rect:
+        serializedVersion: 2
+        x: 1099
+        y: 82
+        width: 41
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8555e9753a556880800000000000000
+      internalID: -8618383126178736758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_13
+      rect:
+        serializedVersion: 2
+        x: 1191
+        y: 80
+        width: 42
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e0037d3f10baa4e20800000000000000
+      internalID: 3335666498895556622
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_14
+      rect:
+        serializedVersion: 2
+        x: 1285
+        y: 81
+        width: 41
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 007865389435af9d0800000000000000
+      internalID: -2739785848100321536
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_15
+      rect:
+        serializedVersion: 2
+        x: 1373
+        y: 84
+        width: 43
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ae73b227b9243710800000000000000
+      internalID: 1672007228199239334
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_16
+      rect:
+        serializedVersion: 2
+        x: 1457
+        y: 77
+        width: 59
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03cdab90b2933c3f0800000000000000
+      internalID: -881798245024867280
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_17
+      rect:
+        serializedVersion: 2
+        x: 1548
+        y: 77
+        width: 59
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0633efc182b1a90d0800000000000000
+      internalID: -3415387508308036768
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_18
+      rect:
+        serializedVersion: 2
+        x: 1637
+        y: 86
+        width: 57
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a2071ee3bf748b40800000000000000
+      internalID: 5441614660540760742
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_19
+      rect:
+        serializedVersion: 2
+        x: 1728
+        y: 84
+        width: 56
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b78efdf4fad82d7f0800000000000000
+      internalID: -589252817133246341
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_20
+      rect:
+        serializedVersion: 2
+        x: 1830
+        y: 79
+        width: 55
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4509f95d20e7531f0800000000000000
+      internalID: -1065807186164215724
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_21
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 80
+        width: 55
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3dab7792180b4130800000000000000
+      internalID: 3551941607055666492
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_22
+      rect:
+        serializedVersion: 2
+        x: 42
+        y: 12
+        width: 48
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0e3c13cf25831f30800000000000000
+      internalID: 4545122889130327564
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_23
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 13
+        width: 48
+        height: 63
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9b9055506fc3b320800000000000000
+      internalID: 2572627824813841310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_24
+      rect:
+        serializedVersion: 2
+        x: 226
+        y: 11
+        width: 48
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb4c05d558abc9560800000000000000
+      internalID: 7321932176156574907
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_25
+      rect:
+        serializedVersion: 2
+        x: 316
+        y: 10
+        width: 47
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b60c5621347b7c6f0800000000000000
+      internalID: -664360921314508693
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_26
+      rect:
+        serializedVersion: 2
+        x: 406
+        y: 10
+        width: 47
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8556181d4754b2fc0800000000000000
+      internalID: -3518642315826469544
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_great_shield_front_27
+      rect:
+        serializedVersion: 2
+        x: 496
+        y: 11
+        width: 48
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7e34f2094cf14ae0800000000000000
+      internalID: -1566693804835848580
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

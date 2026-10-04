@@ -1,0 +1,830 @@
+fileFormatVersion: 2
+guid: 2459e4a7c6e0b9e47a4a185224b933cf
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7090149717059731730
+    second: warrior_dual_blades_front_0
+  - first:
+      213: -4887231837485816166
+    second: warrior_dual_blades_front_1
+  - first:
+      213: -52936992277515501
+    second: warrior_dual_blades_front_2
+  - first:
+      213: -2921822570473048732
+    second: warrior_dual_blades_front_3
+  - first:
+      213: 5414142740515564854
+    second: warrior_dual_blades_front_4
+  - first:
+      213: 6845492105825412606
+    second: warrior_dual_blades_front_5
+  - first:
+      213: -878440567649022095
+    second: warrior_dual_blades_front_6
+  - first:
+      213: -7075576859768207822
+    second: warrior_dual_blades_front_7
+  - first:
+      213: -7612027091360846447
+    second: warrior_dual_blades_front_8
+  - first:
+      213: 21956771945523120
+    second: warrior_dual_blades_front_9
+  - first:
+      213: 6257838058429700350
+    second: warrior_dual_blades_front_10
+  - first:
+      213: -989873007938023315
+    second: warrior_dual_blades_front_11
+  - first:
+      213: -8182416833157826069
+    second: warrior_dual_blades_front_12
+  - first:
+      213: -2340594173100348250
+    second: warrior_dual_blades_front_13
+  - first:
+      213: -3132671306862721923
+    second: warrior_dual_blades_front_14
+  - first:
+      213: 2376845737145647732
+    second: warrior_dual_blades_front_15
+  - first:
+      213: 4873523482642876584
+    second: warrior_dual_blades_front_16
+  - first:
+      213: -833571470270173503
+    second: warrior_dual_blades_front_17
+  - first:
+      213: -4353461635332016847
+    second: warrior_dual_blades_front_18
+  - first:
+      213: -5077042291123973888
+    second: warrior_dual_blades_front_19
+  - first:
+      213: -5139116010891782050
+    second: warrior_dual_blades_front_20
+  - first:
+      213: -4270440866979937692
+    second: warrior_dual_blades_front_21
+  - first:
+      213: -469060794717959989
+    second: warrior_dual_blades_front_22
+  - first:
+      213: 6221962350124014465
+    second: warrior_dual_blades_front_23
+  - first:
+      213: -4833306655425825229
+    second: warrior_dual_blades_front_24
+  - first:
+      213: 2120890556169491545
+    second: warrior_dual_blades_front_25
+  - first:
+      213: -3900678255169398144
+    second: warrior_dual_blades_front_26
+  - first:
+      213: -7552974821346593806
+    second: warrior_dual_blades_front_27
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 64
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_0
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 77
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eee7156c56aba9d90800000000000000
+      internalID: -7090149717059731730
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_1
+      rect:
+        serializedVersion: 2
+        x: 95
+        y: 77
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a96ada799801d2cb0800000000000000
+      internalID: -4887231837485816166
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_2
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 76
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 31332d3061ee34ff0800000000000000
+      internalID: -52936992277515501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_3
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 75
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4653c364ad99377d0800000000000000
+      internalID: -2921822570473048732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_4
+      rect:
+        serializedVersion: 2
+        x: 336
+        y: 74
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63da0bb1326e22b40800000000000000
+      internalID: 5414142740515564854
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_5
+      rect:
+        serializedVersion: 2
+        x: 417
+        y: 74
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef5e6702dc2100f50800000000000000
+      internalID: 6845492105825412606
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_6
+      rect:
+        serializedVersion: 2
+        x: 498
+        y: 75
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17fccf835f62fc3f0800000000000000
+      internalID: -878440567649022095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_7
+      rect:
+        serializedVersion: 2
+        x: 580
+        y: 76
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 236ca8485508ecd90800000000000000
+      internalID: -7075576859768207822
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_8
+      rect:
+        serializedVersion: 2
+        x: 662
+        y: 76
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 19d69cec0b5ac5690800000000000000
+      internalID: -7612027091360846447
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_9
+      rect:
+        serializedVersion: 2
+        x: 747
+        y: 80
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b72a3851910e4000800000000000000
+      internalID: 21956771945523120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_10
+      rect:
+        serializedVersion: 2
+        x: 828
+        y: 78
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef85f960f8e48d650800000000000000
+      internalID: 6257838058429700350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_11
+      rect:
+        serializedVersion: 2
+        x: 905
+        y: 75
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d605b1d6eb34342f0800000000000000
+      internalID: -989873007938023315
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_12
+      rect:
+        serializedVersion: 2
+        x: 977
+        y: 81
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be973771e37327e80800000000000000
+      internalID: -8182416833157826069
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_13
+      rect:
+        serializedVersion: 2
+        x: 1059
+        y: 79
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ac2105200a848fd0800000000000000
+      internalID: -2340594173100348250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_14
+      rect:
+        serializedVersion: 2
+        x: 1143
+        y: 80
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d7483644b048684d0800000000000000
+      internalID: -3132671306862721923
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_15
+      rect:
+        serializedVersion: 2
+        x: 1222
+        y: 83
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 472c778da904cf020800000000000000
+      internalID: 2376845737145647732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_16
+      rect:
+        serializedVersion: 2
+        x: 1297
+        y: 71
+        width: 59
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a8047359cb32a340800000000000000
+      internalID: 4873523482642876584
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_17
+      rect:
+        serializedVersion: 2
+        x: 1378
+        y: 71
+        width: 59
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ce65ab0a2f8e64f0800000000000000
+      internalID: -833571470270173503
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_18
+      rect:
+        serializedVersion: 2
+        x: 1457
+        y: 80
+        width: 57
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1357eb255b56593c0800000000000000
+      internalID: -4353461635332016847
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_19
+      rect:
+        serializedVersion: 2
+        x: 1538
+        y: 83
+        width: 52
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0019bef7fe8ba89b0800000000000000
+      internalID: -5077042291123973888
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_20
+      rect:
+        serializedVersion: 2
+        x: 1635
+        y: 74
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e58d54f57313ea8b0800000000000000
+      internalID: -5139116010891782050
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_21
+      rect:
+        serializedVersion: 2
+        x: 1715
+        y: 75
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 462895148a85cb4c0800000000000000
+      internalID: -4270440866979937692
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_22
+      rect:
+        serializedVersion: 2
+        x: 1825
+        y: 89
+        width: 37
+        height: 55
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc806c041bf8d79f0800000000000000
+      internalID: -469060794717959989
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_23
+      rect:
+        serializedVersion: 2
+        x: 1907
+        y: 89
+        width: 37
+        height: 55
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18b1ff4cac9d85650800000000000000
+      internalID: 6221962350124014465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_24
+      rect:
+        serializedVersion: 2
+        x: 1989
+        y: 88
+        width: 36
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 336ffc07435acecb0800000000000000
+      internalID: -4833306655425825229
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_25
+      rect:
+        serializedVersion: 2
+        x: 44
+        y: 14
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95496ff49baee6d10800000000000000
+      internalID: 2120890556169491545
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_26
+      rect:
+        serializedVersion: 2
+        x: 124
+        y: 14
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08a99892bc10ed9c0800000000000000
+      internalID: -3900678255169398144
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_dual_blades_front_27
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 16
+        width: 37
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f3ba28da617e2790800000000000000
+      internalID: -7552974821346593806
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

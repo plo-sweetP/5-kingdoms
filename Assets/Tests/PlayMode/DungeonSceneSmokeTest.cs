@@ -46,6 +46,45 @@ namespace FiveKingdoms.Tests
             Assert.IsTrue(controller.Run.Turn > 0);
             Assert.IsTrue(File.Exists(savePath) || controller.Run.Hero.Exp == 0 && controller.Run.Hero.Level == 1,
                 "progress is saved once EXP is earned");
+            Assert.AreEqual(0, SpriteLibrary.MissingCount, "every sprite the scene asks for exists: no placeholder squares");
+        }
+
+        [UnityTest]
+        public IEnumerator EveryHeroCanShowEveryWeaponAndArmorSet()
+        {
+            // The looks 1h's gear will set: each hero stacked from layers with each of GEAR.md's nine weapons (which pick
+            // the body) and each of its nine armor sets, with and without the head piece.
+            var manifest = ArtManifest.Current;
+            int weapons = 0;
+            foreach (var rig in manifest.rigs) weapons += rig.weapons.Length;
+            Assert.AreEqual(9, weapons, "GEAR.md's nine weapons");
+            Assert.AreEqual(9, manifest.armors.Length, "GEAR.md's nine armor sets");
+            Assert.AreEqual(3, manifest.heroes.Length);
+
+            foreach (var hero in manifest.heroes)
+            {
+                foreach (var rig in manifest.rigs)
+                    foreach (var weapon in rig.weapons)
+                        AssertLookWorks(new HeroLook { Hero = hero.id, Weapon = weapon.id, Armor = hero.armor });
+                foreach (var armor in manifest.armors)
+                {
+                    AssertLookWorks(new HeroLook { Hero = hero.id, Weapon = "gauntlets", Armor = armor.id });
+                    yield return null;
+                }
+                AssertLookWorks(new HeroLook { Hero = hero.id, Weapon = hero.weapon, Armor = hero.armor, HeadPiece = false });
+            }
+            Assert.AreEqual(0, SpriteLibrary.MissingCount, "every layer and head part exists");
+        }
+
+        static void AssertLookWorks(HeroLook look)
+        {
+            var sprites = HeroComposer.Build(look);
+            Assert.IsTrue(sprites.Has("idle") && sprites.Has("run"), $"{look.Key} stands and walks");
+            Assert.IsTrue(sprites.Has("attack") || sprites.Has("cast"), $"{look.Key} can strike or cast");
+            Assert.IsNotNull(sprites.Portrait, $"{look.Key} has a portrait");
+            Assert.IsNotNull(sprites.Shadow, $"{look.Key} has a shadow");
+            var frame = sprites.Idle.Frames[0];
+            Assert.Greater(SpriteLibrary.VisibleTop(frame), 0.5f, $"{look.Key} is drawn (its head is above its tile's centre)");
         }
 
         [UnityTest]
@@ -62,6 +101,7 @@ namespace FiveKingdoms.Tests
 
             Assert.AreEqual(RunState.Won, controller.Run.State, $"ended on turn {controller.Run.Turn} with HP {controller.Run.Hero.Hp}");
             Assert.IsNull(controller.Run.Boss);
+            Assert.AreEqual(0, SpriteLibrary.MissingCount, "the boss floor's art exists too: no placeholder squares");
         }
 
         [UnityTest]

@@ -1,0 +1,830 @@
+fileFormatVersion: 2
+guid: c5d4ff2a4f2ae2f46bffd880c3cb0b4d
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6931332069605973892
+    second: warrior_plume_heavy_armor_0
+  - first:
+      213: -3065701372591775920
+    second: warrior_plume_heavy_armor_1
+  - first:
+      213: 4667690538088532204
+    second: warrior_plume_heavy_armor_2
+  - first:
+      213: -3480172338059351757
+    second: warrior_plume_heavy_armor_3
+  - first:
+      213: -1533812301254671405
+    second: warrior_plume_heavy_armor_4
+  - first:
+      213: -2802766039765318115
+    second: warrior_plume_heavy_armor_5
+  - first:
+      213: 6901900719897778460
+    second: warrior_plume_heavy_armor_6
+  - first:
+      213: -3720326182052153932
+    second: warrior_plume_heavy_armor_7
+  - first:
+      213: 5031322912581394396
+    second: warrior_plume_heavy_armor_8
+  - first:
+      213: -5849132059058619218
+    second: warrior_plume_heavy_armor_9
+  - first:
+      213: -6121533959534684764
+    second: warrior_plume_heavy_armor_10
+  - first:
+      213: 4539266010847334424
+    second: warrior_plume_heavy_armor_11
+  - first:
+      213: 1554258928441987905
+    second: warrior_plume_heavy_armor_12
+  - first:
+      213: -8963467859143702610
+    second: warrior_plume_heavy_armor_13
+  - first:
+      213: -815442869336286645
+    second: warrior_plume_heavy_armor_14
+  - first:
+      213: 5265122183496338804
+    second: warrior_plume_heavy_armor_15
+  - first:
+      213: -3421003838891081050
+    second: warrior_plume_heavy_armor_16
+  - first:
+      213: 2945731346426244795
+    second: warrior_plume_heavy_armor_17
+  - first:
+      213: 1000755334134367087
+    second: warrior_plume_heavy_armor_18
+  - first:
+      213: 6247091830847232843
+    second: warrior_plume_heavy_armor_19
+  - first:
+      213: -7089358750907349323
+    second: warrior_plume_heavy_armor_20
+  - first:
+      213: 6617153560296601749
+    second: warrior_plume_heavy_armor_21
+  - first:
+      213: 5612312725920124896
+    second: warrior_plume_heavy_armor_22
+  - first:
+      213: 3222354040480599522
+    second: warrior_plume_heavy_armor_23
+  - first:
+      213: 1424702589105399534
+    second: warrior_plume_heavy_armor_24
+  - first:
+      213: -976207891503799609
+    second: warrior_plume_heavy_armor_25
+  - first:
+      213: 5719623410683708887
+    second: warrior_plume_heavy_armor_26
+  - first:
+      213: -8151309339342982204
+    second: warrior_plume_heavy_armor_27
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 64
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_0
+      rect:
+        serializedVersion: 2
+        x: 6
+        y: 12
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c70ecdad436fecf90800000000000000
+      internalID: -6931332069605973892
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_1
+      rect:
+        serializedVersion: 2
+        x: 65
+        y: 11
+        width: 40
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05f5d3b28d07475d0800000000000000
+      internalID: -3065701372591775920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_2
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 9
+        width: 39
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce8083c50d7f6c040800000000000000
+      internalID: 4667690538088532204
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_3
+      rect:
+        serializedVersion: 2
+        x: 184
+        y: 8
+        width: 39
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 339e4d082b1f3bfc0800000000000000
+      internalID: -3480172338059351757
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_4
+      rect:
+        serializedVersion: 2
+        x: 243
+        y: 8
+        width: 41
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d34797a6ddc6bae0800000000000000
+      internalID: -1533812301254671405
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_5
+      rect:
+        serializedVersion: 2
+        x: 302
+        y: 8
+        width: 41
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d168243f2239a19d0800000000000000
+      internalID: -2802766039765318115
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_6
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 8
+        width: 41
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c19158c032a78cf50800000000000000
+      internalID: 6901900719897778460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_7
+      rect:
+        serializedVersion: 2
+        x: 419
+        y: 11
+        width: 41
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b5323e6c0fbe5cc0800000000000000
+      internalID: -3720326182052153932
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_8
+      rect:
+        serializedVersion: 2
+        x: 478
+        y: 8
+        width: 42
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cdf92ba2889d2d540800000000000000
+      internalID: 5031322912581394396
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_9
+      rect:
+        serializedVersion: 2
+        x: 540
+        y: 13
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eac367fd165b3dea0800000000000000
+      internalID: -5849132059058619218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_10
+      rect:
+        serializedVersion: 2
+        x: 600
+        y: 13
+        width: 38
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a5d17d0c41fb0ba0800000000000000
+      internalID: -6121533959534684764
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_11
+      rect:
+        serializedVersion: 2
+        x: 659
+        y: 10
+        width: 39
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8105f850366befe30800000000000000
+      internalID: 4539266010847334424
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_12
+      rect:
+        serializedVersion: 2
+        x: 717
+        y: 10
+        width: 35
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14393c6b246d19510800000000000000
+      internalID: 1554258928441987905
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_13
+      rect:
+        serializedVersion: 2
+        x: 771
+        y: 12
+        width: 38
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea7cb1cf87d5b9380800000000000000
+      internalID: -8963467859143702610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_14
+      rect:
+        serializedVersion: 2
+        x: 831
+        y: 10
+        width: 39
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4ad59ed707fea4f0800000000000000
+      internalID: -815442869336286645
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_15
+      rect:
+        serializedVersion: 2
+        x: 885
+        y: 10
+        width: 43
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47d0456eab8711940800000000000000
+      internalID: 5265122183496338804
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_16
+      rect:
+        serializedVersion: 2
+        x: 949
+        y: 12
+        width: 46
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a246af32272680d0800000000000000
+      internalID: -3421003838891081050
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_17
+      rect:
+        serializedVersion: 2
+        x: 1023
+        y: 8
+        width: 40
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bbe287b6d0751e820800000000000000
+      internalID: 2945731346426244795
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_18
+      rect:
+        serializedVersion: 2
+        x: 1076
+        y: 11
+        width: 40
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f6308269ca563ed00800000000000000
+      internalID: 1000755334134367087
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_19
+      rect:
+        serializedVersion: 2
+        x: 1137
+        y: 12
+        width: 35
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4bd4e0fbe022b650800000000000000
+      internalID: 6247091830847232843
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_20
+      rect:
+        serializedVersion: 2
+        x: 1193
+        y: 22
+        width: 37
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b64cdee6c98d9d90800000000000000
+      internalID: -7089358750907349323
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_21
+      rect:
+        serializedVersion: 2
+        x: 1247
+        y: 12
+        width: 37
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 598b0b99a1ad4db50800000000000000
+      internalID: 6617153560296601749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_22
+      rect:
+        serializedVersion: 2
+        x: 1297
+        y: 1
+        width: 37
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ef8fdc50b0f2ed40800000000000000
+      internalID: 5612312725920124896
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_23
+      rect:
+        serializedVersion: 2
+        x: 1356
+        y: 0
+        width: 37
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ed04635de918bc20800000000000000
+      internalID: 3222354040480599522
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_24
+      rect:
+        serializedVersion: 2
+        x: 1415
+        y: 0
+        width: 37
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee6e436d47f85c310800000000000000
+      internalID: 1424702589105399534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_25
+      rect:
+        serializedVersion: 2
+        x: 1475
+        y: 0
+        width: 37
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c2abf74810d372f0800000000000000
+      internalID: -976207891503799609
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_26
+      rect:
+        serializedVersion: 2
+        x: 1533
+        y: 1
+        width: 39
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d58fca203f206f40800000000000000
+      internalID: 5719623410683708887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: warrior_plume_heavy_armor_27
+      rect:
+        serializedVersion: 2
+        x: 1592
+        y: 1
+        width: 37
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c33326e75bb0ee80800000000000000
+      internalID: -8151309339342982204
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

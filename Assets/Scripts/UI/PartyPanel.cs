@@ -10,20 +10,23 @@ namespace FiveKingdoms.UI
     /// The party's status cards (top-left): portrait, name and level, HP, the ultimate's charge and EXP for each hero.
     /// The hero the player controls gets a gold card; partners get a tactic badge (Attack, Follow, Hold). Tapping a card
     /// takes control of that hero, tapping a badge cycles its tactic. Fallen heroes stay listed, dimmed. Built in code
-    /// like the rest of the HUD, in 1920x1080 reference pixels.
+    /// like the rest of the HUD, in 1920x1080 reference pixels, from the HUD art's frames and bars; the portrait is the
+    /// hero's own head in its current look.
     /// </summary>
     public sealed class PartyPanel : MonoBehaviour
     {
         public const float CardWidth = 470f;
-        public const float CardHeight = 74f;
+        public const float CardHeight = 76f;
         public const float CardGap = 6f;
+        const float PortraitBox = 64f;
 
-        static readonly Color CardColor = new Color(0.06f, 0.05f, 0.1f, 0.72f);
-        static readonly Color LeaderColor = new Color(0.3f, 0.22f, 0.05f, 0.88f);
-        static readonly Color TacticColor = new Color(0.18f, 0.2f, 0.3f, 0.92f);
-        static readonly Color LeadTextColor = new Color(1f, 0.85f, 0.3f);
+        static readonly Color CardColor = new Color(0.3f, 0.33f, 0.42f, 0.92f);
+        static readonly Color LeaderColor = new Color(0.82f, 0.62f, 0.26f, 0.96f);
+        static readonly Color TacticColor = new Color(0.42f, 0.5f, 0.66f, 1f);
+        static readonly Color LeadTextColor = new Color(1f, 0.92f, 0.55f);
         static readonly Color ChargeColor = new Color(0.95f, 0.72f, 0.2f);
         static readonly Color ChargeReadyColor = new Color(1f, 0.92f, 0.45f);
+        static readonly Color TroughColor = new Color(0.086f, 0.11f, 0.18f, 0.85f);
 
         /// <summary>A card was tapped: take control of this party member (party index).</summary>
         public event Action<int> MemberTapped;
@@ -56,6 +59,25 @@ namespace FiveKingdoms.UI
         /// <summary>Bottom edge of the panel for a party of this size, from the top of its parent.</summary>
         public static float Height(int members) => members * CardHeight + Mathf.Max(0, members - 1) * CardGap;
 
+        /// <summary>An actor's small portrait: a hero's own head in its current look, a monster's face.</summary>
+        public static Sprite PortraitOf(Actor actor) =>
+            actor.Team == Team.Hero ? HeroLooks.Sprites(actor.Definition.Id).Portrait : SpriteLibrary.Monster(actor.Definition.Id).Portrait;
+
+        /// <summary>
+        /// A square window showing the middle of a portrait at the HUD art's scale (whole pixels), cut off at its edges.
+        /// Returns the image to give a sprite to (then call <see cref="UiArtScaler.Size"/>).
+        /// </summary>
+        public static Image CreatePortrait(Transform parent, Vector2 anchor, Vector2 position, float box, Vector2 pivot)
+        {
+            var window = UiFactory.CreateRect("Portrait", parent);
+            UiFactory.Place(window, anchor, position, new Vector2(box, box), pivot);
+            window.gameObject.AddComponent<RectMask2D>();
+            var image = UiFactory.CreateIcon("Face", window, null);
+            image.rectTransform.anchorMin = image.rectTransform.anchorMax = image.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            image.rectTransform.anchoredPosition = Vector2.zero;
+            return image;
+        }
+
         public void Refresh(DungeonRun run)
         {
             var party = run.Party;
@@ -70,9 +92,11 @@ namespace FiveKingdoms.UI
                 var member = party[i];
                 bool leader = member == run.Hero;
                 card.ActorId = member.Id;
-                card.Portrait.sprite = SpriteLibrary.Get("Characters/" + member.Definition.Id, Color.gray);
+                card.Portrait.sprite = PortraitOf(member);
+                card.Portrait.enabled = card.Portrait.sprite != null;
+                UiArtScaler.Size(card.Portrait);
                 card.Name.text = $"{member.Name}   Lv {member.Level}";
-                card.Button.SetColor(leader ? LeaderColor : CardColor);
+                card.Button.SetTint(leader ? LeaderColor : CardColor);
                 card.Button.Interactable = member.IsAlive;
                 SetBar(card.HpFill, member.Hp, member.MaxHp);
                 card.HpFill.color = HpColor(member.Hp, member.MaxHp);
@@ -130,48 +154,42 @@ namespace FiveKingdoms.UI
             var card = new Card();
             var button = HoldButton.Create(root, $"Member {index + 1}", "", new Vector2(0f, 1f),
                 new Vector2(CardWidth / 2f, -CardHeight / 2f - index * (CardHeight + CardGap)), new Vector2(CardWidth, CardHeight),
-                CardColor, 20, round: false);
+                "frame", 20, CardColor);
             button.Pressed += () => MemberTapped?.Invoke(index);
             card.Button = button;
             var t = button.transform;
 
-            card.Portrait = UiFactory.CreateImage("Portrait", t, null, Color.white);
-            card.Portrait.preserveAspect = true;
-            UiFactory.Place(card.Portrait.rectTransform, new Vector2(0f, 0.5f), new Vector2(8f, 0f), new Vector2(58f, 58f), new Vector2(0f, 0.5f));
+            card.Portrait = CreatePortrait(t, new Vector2(0f, 0.5f), new Vector2(8f, 1f), PortraitBox, new Vector2(0f, 0.5f));
 
             card.Name = UiFactory.CreateText("Name", t, "", 24, TextAnchor.UpperLeft, DungeonHud.TextColor);
-            UiFactory.Place(card.Name.rectTransform, new Vector2(0f, 1f), new Vector2(74f, -4f), new Vector2(260f, 28f), new Vector2(0f, 1f));
+            UiFactory.Place(card.Name.rectTransform, new Vector2(0f, 1f), new Vector2(80f, -4f), new Vector2(260f, 28f), new Vector2(0f, 1f));
 
-            card.HpFill = CreateBar(t, "Hp", new Vector2(74f, -32f), new Vector2(232f, 16f), Color.green);
+            card.HpFill = UiFactory.CreateBar(t, "Hp", new Vector2(80f, -32f), new Vector2(226f, 16f), Color.green);
             card.Hp = UiFactory.CreateText("HpText", t, "", 20, TextAnchor.MiddleLeft, DungeonHud.TextColor);
             UiFactory.Place(card.Hp.rectTransform, new Vector2(0f, 1f), new Vector2(312f, -40f), new Vector2(110f, 24f), new Vector2(0f, 0.5f));
 
-            card.ChargeFill = CreateBar(t, "Charge", new Vector2(74f, -51f), new Vector2(232f, 9f), ChargeColor);
+            card.ChargeFill = CreateStrip(t, "Charge", new Vector2(80f, -52f), new Vector2(226f, 8f), ChargeColor);
             card.Charge = UiFactory.CreateText("ChargeText", t, "", 17, TextAnchor.MiddleLeft, ChargeColor);
-            UiFactory.Place(card.Charge.rectTransform, new Vector2(0f, 1f), new Vector2(312f, -56f), new Vector2(90f, 20f), new Vector2(0f, 0.5f));
+            UiFactory.Place(card.Charge.rectTransform, new Vector2(0f, 1f), new Vector2(312f, -57f), new Vector2(90f, 20f), new Vector2(0f, 0.5f));
 
-            card.ExpFill = CreateBar(t, "Exp", new Vector2(74f, -63f), new Vector2(232f, 5f), new Color(0.78f, 0.62f, 1f));
+            card.ExpFill = CreateStrip(t, "Exp", new Vector2(80f, -63f), new Vector2(226f, 4f), new Color(0.78f, 0.62f, 1f));
 
             card.Lead = UiFactory.CreateText("Lead", t, "LEAD", 20, TextAnchor.MiddleCenter, LeadTextColor);
             UiFactory.Place(card.Lead.rectTransform, new Vector2(1f, 0.5f), new Vector2(-40f, 0f), new Vector2(70f, 30f));
 
-            card.Tactic = HoldButton.Create(t, "Tactic", "Attack", new Vector2(1f, 0.5f), new Vector2(-42f, 0f), new Vector2(74f, 40f),
-                TacticColor, 18, round: false);
+            card.Tactic = HoldButton.Create(t, "Tactic", "Attack", new Vector2(1f, 0.5f), new Vector2(-44f, 0f), new Vector2(76f, 42f),
+                "frame", 18, TacticColor);
             card.Tactic.Pressed += () => TacticTapped?.Invoke(index);
             return card;
         }
 
-        static Image CreateBar(Transform parent, string name, Vector2 position, Vector2 size, Color color)
+        /// <summary>A thin meter without a frame (charge, EXP): a dark strip and a coloured one over it.</summary>
+        static Image CreateStrip(Transform parent, string name, Vector2 position, Vector2 size, Color color)
         {
-            var back = UiFactory.CreateImage(name + "Back", parent, UiFactory.RoundedRect, new Color(0f, 0f, 0f, 0.65f));
+            var back = UiFactory.CreateImage(name + "Back", parent, null, TroughColor);
             UiFactory.Place(back.rectTransform, new Vector2(0f, 1f), position, size, new Vector2(0f, 1f));
-            var fill = UiFactory.CreateImage(name + "Fill", back.transform, UiFactory.RoundedRect, color);
-            var rect = fill.rectTransform;
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            float inset = Mathf.Min(3f, size.y / 4f);
-            rect.offsetMin = new Vector2(inset, inset);
-            rect.offsetMax = new Vector2(-inset, -inset);
+            var fill = UiFactory.CreateImage(name + "Fill", back.transform, null, color);
+            UiFactory.Stretch(fill.rectTransform);
             return fill;
         }
 

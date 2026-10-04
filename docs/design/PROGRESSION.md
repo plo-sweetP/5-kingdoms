@@ -161,8 +161,8 @@ whatever role they like.
   (ART.md, "Later"). Agreed with it: a hero starts at tier 1 of their class; speeds stay as they are today; respec is
   free below level 20, and the tea and the class masters come later.
   *Proposed, not yet confirmed:* an option that upgrades a skill the hero doesn't know teaches the base skill
-  instead; skills are tied to a weapon type (bow, sword, fists, or none); until the farm exists, a profession's
-  options are "fight or farm", where the farm ones do nothing yet. The drafts are under "Starting class content".
+  instead; skills are tied to a weapon type (bow, sword, fists, or none). The drafts are under "Starting class
+  content" and "Starting profession content".
 - **Every tier** (milestones too) also grants a small class stat bump. **Never SPD.** Budget per class at tier 25, 1-2
   stats each: HP/ATK/DEF up to +15%, Crit Rate up to +6%, Crit DMG up to +12%, Affinity/Resist/healing up to +12%.
 - Milestone skills can **upgrade** an existing skill (numbers or effects), **add** a skill to the hero's pool, or
@@ -227,12 +227,13 @@ Every tier: +0.4% ATK and +0.4% Crit DMG (+10% each at tier 25).
 | 20 | **Thousand Fists:** Flurry of Blows is 7 hits (was 5) | **Wind Dance** (alternate ultimate): for 3 of her turns everything she does takes 25% less time | **Quivering Palm** (alternate ultimate): one strike for 500% that always pushes the target's next turn back (50%, bosses 25%) |
 | 25 | **Master Striker:** Monk strikes deal +15%, and her multi-hit skills gain +10% Crit Rate | **Master Windwalker:** her first turn in a fight comes 30% sooner, and she may carry two Quick skills (*proposed change*: the approved draft said "Quick skills no longer sit out a turn", which clashes with one Quick skill per hero) | **Master Mystic:** her stuns always land, and Ki Heal also heals the allies next to her for half |
 
-## Starting profession content (drafts, 2026-10-03): *proposed*, not yet seen by Peter
-Each profession has a fight path, a support path and a farm path. *Proposed:* the farm path's spheres are shown but
-stay locked until the farm exists (the Blacksmith's and the Alchemist's also need gear), so for now a profession
-offers two options per tier. Profession skills join the hero's pool for the 3 skills + 1 ultimate loadout.
+## Starting profession content (drafts): approved by Peter as a starting point (2026-10-04)
+Peter: "We can fine tune them later after we get the game going and farm tested." Each profession has a fight path,
+a support path and a farm path. **The farm path's spheres are shown but stay locked until the farm exists**
+(decided 2026-10-04; the Blacksmith's and the Alchemist's also need gear), so for now a profession offers two
+options per tier. Profession skills join the hero's pool for the 3 skills + 1 ultimate loadout.
 
-Rules these drafts lean on (*proposed*):
+Rules these drafts lean on (Peter has seen them and raised no objection):
 - Four building blocks that later classes reuse: a foe **takes more damage**, a foe **deals less damage**, an ally
   **deals more damage**, an ally **takes less damage**, each for a number of the target's own turns. Two effects of
   the same kind don't stack: the stronger one applies.

@@ -63,7 +63,7 @@ energy) and [docs/design/GEAR.md](docs/design/GEAR.md) (damage formula, stats, g
   |---|---|---|---|---|---|
   | Uzuki | Medieval Realm | Archer (later specs into Ice Mage) | Utility DPS: ranged, slows, control and support shots | Alchemist (team potions) | 95 |
   | Haiden (boy) | Dynasty Nation | Paladin (later Rune Warrior, toward Runegod Fire Blade) | Tank first, with some healing | Blacksmith (equipment) | 90 |
-  | Kristela (girl, a princess) | Medieval Realm | Monk | Melee DPS, speed build | Chef (food buffs and heals) | 100 |
+  | Kristela (girl, a princess) | Medieval Realm | Monk | Melee DPS, speed build | Chef (meals that buff the party between fights) | 100 |
 
   Weapons: Uzuki a **Hunter Bow**, Haiden a **Long Sword**, Kristela **Gauntlets** (stats only for the first playtest,
   except the Hunter Bow's Multishot).

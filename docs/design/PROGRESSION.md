@@ -35,7 +35,7 @@ Classes, Traces and professions are for **heroes only**. Monsters get their iden
 |---|---|---|---|---|
 | Uzuki | Archer, speccing into Mage (Ice) toward Crystal Ice Legion Hunter | **Utility DPS** (ranged; traps, slows and control) | Alchemist (potions for the team) | 95 |
 | Haiden | Paladin (later Rune Warrior, toward Runegod Fire Blade) | **Tank first, with some healing** (frontliner; fire runes that guard, mend and hit back) | Blacksmith (equipment) | 90 |
-| Kristela | Monk | **Melee DPS** (speed build) | Chef (food buffs and heals) | 100 |
+| Kristela | Monk | **Melee DPS** (speed build) | Chef (meals that buff the party between fights) | 100 |
 
 Together they cover tank (with some healing), melee DPS and utility DPS, so the player's own character can fill
 whatever role they like.
@@ -240,7 +240,7 @@ profession**; it has to make sense for the one that has it. How the starting set
 |---|---|---|
 | Alchemist | debuffs by flask, item support | none (it makes the party's berries better) |
 | Blacksmith | armor-breaking debuffs, enhancing himself, later his allies | none |
-| Chef | healing by food, buffs by food, later treats for monster companions | yes: the healing profession of the three |
+| Chef | buffs by meals eaten between fights, item support (her stock of meals), later treats for monster companions | none: meals never heal |
 | Paladin (class) | protection, taunts, smites | yes: allies and himself |
 | Monk (class) | strikes, tempo, stuns | herself only (Ki Heal) |
 | Archer (class) | marks, traps, shots at several targets | none |
@@ -283,16 +283,29 @@ Every tier: +0.4% ATK and +0.4% DEF (+10% each at tier 25).
 | 20 | **Armor Shatter** (alternate ultimate): 500%, and the target takes +40% damage for 3 turns (a boss +20%) | **Battle Forge** (alternate ultimate): for 3 turns every ally deals +25% damage and takes 15% less | Once a day, a masterwork: a crafted piece with a third substat of your choice |
 | 25 | **Master Hammer:** his strikes deal +15%, and sundered foes also deal 15% less damage | **Master Temperer:** his enhancements are a quarter stronger and last a turn longer | A third substat choice costs nothing extra |
 
-### Chef (Kristela's profession): healing and buffs by food
-Every tier: +0.4% HP and +0.4% healing done (+10% each at tier 25).
+### Chef (Kristela's profession): meals that buff the party, eaten between fights
+Peter, 2026-10-04: "The field cook can bring meals as potion replacement. But not during mid combat. Meals can give
+buffs but should not heal or replacement to full potions." So:
+- **Meals are items** she brings into a run: 3 per run for now (later they're cooked on the farm from ingredients).
+  They don't take a skill slot.
+- A meal is **eaten outside a fight only**, by the whole party, and its buff lasts **through the next fight**. One
+  meal buff at a time: a new meal replaces the old one.
+- **Meals never heal**, and they don't do what potions do; potions are the Alchemist's.
+- She knows one plain dish from tier 1 (Trail Mix: +5% damage in the next fight), so every option below is useful on
+  its own.
 
-| Tier | Field Cook (healing) | Spice Rack (buffs) | Gourmet (farm, locked for now) |
+Every tier: +0.6% HP (+15% at tier 25).
+
+| Tier | Field Cook (dishes: what a meal gives) | Provisions (item support: her stock of meals) | Gourmet (farm, locked for now) |
 |---|---|---|---|
-| 5 | **Trail Snack** (new skill): an ally next to her, or herself, heals 20% of max HP | **Spicy Skewer** (new skill): an ally next to her, or herself, deals +20% damage for 3 turns | A meal at home gives the party +10% max HP for the next run |
-| 10 | **Hearty Stew** (new skill): every ally within 2 tiles heals 6% of max HP at the start of each of their next 3 turns | **Strong Brew** (new skill): an ally next to her takes their next turn 30% sooner | One more food item can be taken into a run |
-| 15 | **Second Helping:** her food reaches allies 3 tiles away, and Trail Snack heals 30% | **Family Recipe:** her buffs reach every ally within 2 tiles of the one she feeds | Treats that strengthen monster companions (when they join the party) |
-| 20 | **Feast** (alternate ultimate): heals every ally for 40% of max HP | **Banquet** (alternate ultimate): for 3 turns every ally deals +25% damage with +20% Crit Rate | Once a day, a banquet with a large buff for a whole run |
-| 25 | **Master Cook:** her food heals 25% more | **Master of Spice:** her buffs are a quarter stronger and last a turn longer | Meals cost half the ingredients |
+| 5 | **Grilled Skewers:** every hero deals +15% damage in the next fight | **Extra Portions:** she brings 5 meals a run (was 3) | A meal at home gives the party +10% max HP for the next run |
+| 10 | **Hearty Stew:** every hero takes 15% less damage in the next fight | **Butcher:** each floor's first pack of monsters, and every boss, leaves an ingredient: one more meal | One more food item can be taken into a run |
+| 15 | **Strong Tea:** every hero's first turn in the next fight comes 30% sooner | **Leftovers:** when a meal's fight ends, half of its buff stays for the fight after | Treats that strengthen monster companions (when they join the party) |
+| 20 | **Banquet:** once per run, a meal that gives all her dishes at once | **Lunchboxes:** each hero carries one dish of their own, eaten outside a fight, on top of the party's meal | Once a day, a banquet with a large buff for a whole run |
+| 25 | **Master Cook:** her dishes are a third stronger | **Master of Provisions:** meals last two fights | Meals cost half the ingredients |
+
+Open: with meals not healing, should the Alchemist's Brewer path brew **healing potions** that can be used in a
+fight (making it the one starting profession with healing), instead of the berry upgrades drafted above?
 
 ## Class list (first draft)
 Each kingdom's classes match its flavor, so players know what style they're building toward. Prerequisites marked
@@ -405,8 +418,8 @@ Each kingdom's classes match its flavor, so players know what style they're buil
   skills. Fighters with 4 classes can still help at home, and benched heroes become natural crafters, so every hero
   you own is useful.
 - **Same shape as classes:** tiers 1-25, a small stat bump every tier, a skill pick or upgrade at tiers 5, 10 and 15,
-  **an ultimate at tier 20** (a new one, an upgrade or an alternate, exactly like classes: e.g. a Chef's feast that
-  heals the party, a Blacksmith's armor-shattering strike), and a major boost at tier 25.
+  **an ultimate at tier 20** (a new one, an upgrade or an alternate, exactly like classes: e.g. a Chef's banquet
+  that buffs the party, a Blacksmith's armor-shattering strike), and a major boost at tier 25.
 - **Milestone picks can be combat or farm skills** (e.g. a Blacksmith chooses between a sundering strike and a better
   forging rate), so every profession asks "fight or farm?". Combat picks and profession ultimates join the hero's
   pool for the 3 skills + 1 ultimate loadout.
@@ -423,7 +436,7 @@ Each kingdom's classes match its flavor, so players know what style they're buil
 
 | Profession | Job |
 |---|---|
-| **Chef** | Food buffs and heals for dungeon runs |
+| **Chef** | Meals that buff the party in dungeon runs, eaten between fights (they don't heal) |
 | **Blacksmith** | Forges metal armor and weapons |
 | **Seamstress** | Makes cloth and leather armor |
 | **Alchemist** | Potions; transmutes gear (*proposed*: reroll one substat for materials; the tier stays) and makes Tuning Stones |

@@ -229,18 +229,19 @@ Every tier: +0.4% ATK and +0.4% Crit DMG (+10% each at tier 25).
 
 ## Starting profession content (drafts)
 Peter approved the first drafts as a starting point on 2026-10-04 ("We can fine tune them later after we get the
-game going and farm tested") and then asked for more variety. **This is the revision after that; he hasn't
-reviewed it yet.**
+game going and farm tested") and then asked for more variety and set the healing rules below. **This is the revision
+after that; he hasn't reviewed it as a whole yet.**
 
 **Variety rule (Peter, 2026-10-04):** professions should differ in what they bring: buffs, debuffs, utility, item
 support, companion support, traps, enhancing oneself, healing. **Healing is not handed to every class or
-profession**; it has to make sense for the one that has it. How the starting set is split:
+profession**; it has to make sense for the one that has it. **Potions always heal better than food** (Peter:
+"bc of magic stuff"): a meal may heal, but less than what a potion gives. How the starting set is split:
 
 | | Brings | Healing |
 |---|---|---|
-| Alchemist | debuffs by flask, item support | none (it makes the party's berries better) |
+| Alchemist | debuffs by flask, potions (item support) | yes: healing potions, the strongest healing a profession gives, usable in a fight |
 | Blacksmith | armor-breaking debuffs, enhancing himself, later his allies | none |
-| Chef | buffs by meals eaten between fights, item support (her stock of meals), later treats for monster companions | none: meals never heal |
+| Chef | buffs by meals eaten between fights, item support (her stock of meals), later treats for monster companions | a little, when a meal is eaten between fights; always less than a potion |
 | Paladin (class) | protection, taunts, smites | yes: allies and himself |
 | Monk (class) | strikes, tempo, stuns | herself only (Ki Heal) |
 | Archer (class) | marks, traps, shots at several targets | none |
@@ -259,18 +260,25 @@ Rules these drafts lean on (Peter has seen them and raised no objection):
   the same kind don't stack: the stronger one applies.
 - "At most one Quick skill per hero" is read as one in the loadout. Profession skills take a full turn.
 
-### Alchemist (Uzuki's profession): debuffs and item support
-Every tier: +0.4% Affinity and +0.4% Resist (+10% each at tier 25).
+### Alchemist (Uzuki's profession): debuffs and potions
+Every tier: +0.4% Affinity and +0.4% healing done (+10% each at tier 25).
 
-| Tier | Bomber (debuffs) | Brewer (item support) | Transmuter (farm, locked for now) |
+**Potions are items** he makes and the party carries (Peter, 2026-10-04: "Allow alchemist to new potions to
+carry"): 3 per run for now (later they're brewed on the farm). A potion can be drunk or thrown to an ally within
+4 tiles **in a fight**, which takes a turn. Each time one is used he picks a recipe he knows. They don't take a
+skill slot.
+
+| Tier | Bomber (debuffs) | Brewer (potions) | Transmuter (farm, locked for now) |
 |---|---|---|---|
-| 5 | **Acid Flask** (new skill): thrown at a foe within 4 tiles: 120%, and it takes +20% damage from everyone for 2 turns | **Berry Tonic:** berries heal 50% more, and he can throw one to an ally within 4 tiles | Potions brew 20% faster |
-| 10 | **Frost Flask** (new skill): every foe in a 3 x 3 area within 4 tiles takes 100%, and their next turn comes 30% later | **Forager:** the party finds an extra berry on every floor | A 15% chance of a second potion |
-| 15 | **Smoke Bomb** (new skill): every foe in a 3 x 3 area within 4 tiles deals 25% less damage for 2 turns | **Berry Bomb** (new skill): turns a berry into a bomb: thrown up to 4 tiles, 250% to every foe in a 3 x 3 area | Reroll one substat of a gear piece for materials |
-| 20 | **Philosopher's Fire** (alternate ultimate): a 5 x 5 blast within 4 tiles, 300% to every foe in it | **Transmute** (alternate ultimate): a foe within 4 tiles that is below 30% HP, and not a boss, turns into a berry | Craft Tuning Stones |
-| 25 | **Master Bomber:** his flasks reach 5 tiles and their effects last a turn longer | **Master Brewer:** berries heal twice as much, and eating or throwing one takes half a turn | Once a day, a double batch |
+| 5 | **Acid Flask** (new skill): thrown at a foe within 4 tiles: 120%, and it takes +20% damage from everyone for 2 turns | **Healing Potion** (recipe): heals 35% of the drinker's max HP | Potions brew 20% faster |
+| 10 | **Frost Flask** (new skill): every foe in a 3 x 3 area within 4 tiles takes 100%, and their next turn comes 30% later | **Field Brewing:** outside a fight he can brew a berry into a new potion, and the party can carry 5 (was 3) | A 15% chance of a second potion |
+| 15 | **Smoke Bomb** (new skill): every foe in a 3 x 3 area within 4 tiles deals 25% less damage for 2 turns | **Vigor Potion** (recipe): the drinker deals +25% damage for 3 turns | Reroll one substat of a gear piece for materials |
+| 20 | **Philosopher's Fire** (alternate ultimate): a 5 x 5 blast within 4 tiles, 300% to every foe in it | **Elixir of Life** (alternate ultimate): heals every ally in sight for 40% of their max HP (later it can also revive a fallen ally) | Craft Tuning Stones |
+| 25 | **Master Bomber:** his flasks reach 5 tiles and their effects last a turn longer | **Master Brewer:** his potions are a quarter stronger, and drinking or throwing one takes half a turn | Once a day, a double batch |
 
-The Brewer path grows once potions exist as items (brewed on the farm and taken into runs).
+He knows a weak healing recipe from tier 1 (heals 20%, still more than a meal), so every option is useful on its own. An earlier draft had
+berry upgrades here (stronger berries, a berry bomb, turning a weak foe into a berry); they can come back as options
+if potions alone feel thin.
 
 ### Blacksmith (Haiden's profession): armor breaking and enhancement
 Every tier: +0.4% ATK and +0.4% DEF (+10% each at tier 25).
@@ -290,7 +298,10 @@ buffs but should not heal or replacement to full potions." So:
   They don't take a skill slot.
 - A meal is **eaten outside a fight only**, by the whole party, and its buff lasts **through the next fight**. One
   meal buff at a time: a new meal replaces the old one.
-- **Meals never heal**, and they don't do what potions do; potions are the Alchemist's.
+- **A meal heals a little**: each hero recovers 15% of max HP when it's eaten. Peter, later the same day: "You can
+  add healing to it. I really just meant that the healing should be less than what potions provide. Potions healing
+  should always be better than food healing bc of magic stuff." A meal never heals as much as a potion of the same
+  tier, and it can't be used in a fight; potions are the Alchemist's.
 - She knows one plain dish from tier 1 (Trail Mix: +5% damage in the next fight), so every option below is useful on
   its own.
 
@@ -303,9 +314,6 @@ Every tier: +0.6% HP (+15% at tier 25).
 | 15 | **Strong Tea:** every hero's first turn in the next fight comes 30% sooner | **Leftovers:** when a meal's fight ends, half of its buff stays for the fight after | Treats that strengthen monster companions (when they join the party) |
 | 20 | **Banquet:** once per run, a meal that gives all her dishes at once | **Lunchboxes:** each hero carries one dish of their own, eaten outside a fight, on top of the party's meal | Once a day, a banquet with a large buff for a whole run |
 | 25 | **Master Cook:** her dishes are a third stronger | **Master of Provisions:** meals last two fights | Meals cost half the ingredients |
-
-Open: with meals not healing, should the Alchemist's Brewer path brew **healing potions** that can be used in a
-fight (making it the one starting profession with healing), instead of the berry upgrades drafted above?
 
 ## Class list (first draft)
 Each kingdom's classes match its flavor, so players know what style they're building toward. Prerequisites marked
@@ -436,7 +444,7 @@ Each kingdom's classes match its flavor, so players know what style they're buil
 
 | Profession | Job |
 |---|---|
-| **Chef** | Meals that buff the party in dungeon runs, eaten between fights (they don't heal) |
+| **Chef** | Meals that buff the party in dungeon runs, eaten between fights; they heal a little, always less than a potion |
 | **Blacksmith** | Forges metal armor and weapons |
 | **Seamstress** | Makes cloth and leather armor |
 | **Alchemist** | Potions; transmutes gear (*proposed*: reroll one substat for materials; the tier stays) and makes Tuning Stones |

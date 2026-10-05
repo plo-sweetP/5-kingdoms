@@ -46,7 +46,10 @@ them, allies don't), for 90% of a melee hit, and less with an enemy right next t
 turn back instead of skipping it, and the same enemy can't be pushed back again until it has acted (the stars over its
 head). A badly hurt partner swaps back behind a healthier one. Partners stay with the leader: in a corridor or a
 doorway they wait right behind whoever is fighting instead of looking for another way around, and a partner that got
-cut off swaps past the one behind it.
+cut off swaps past the one behind it. They use the doorways: a partner in front waits in a doorway for a pack to come
+to it one at a time rather than step out among it, a partner in a corridor's mouth steps aside so the one behind can
+come out and fight, and a fresh melee partner takes the place of a hurt one that holds a corridor (never yours: walk
+into a partner to trade places yourself). The auto-pilot plays your hero the same way.
 Skills can't be used two turns in a row (the button says "next turn"); Quick skills take half a turn. The gold bars on
 the party cards are the ultimates' charge: it fills as each hero acts, hits and gets hit, and carries over between
 fights. A dimmed button can't be used right now, and pressing it says why. While the auto-pilot plays you can't move

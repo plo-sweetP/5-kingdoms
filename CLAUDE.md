@@ -27,15 +27,17 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
 - Balance report: `dotnet run --project Tools/CoreTests -- -balance` (try numbers with `key=value` overrides, see
   `TuningFrom`; `seeds=600` for a steadier number; `-lead kristela` puts another hero in front); the party straight
   at the boss: `-- -boss <level>`; print a floor: `-- -map <seed>`; trace the autopilot: `-- -trace <seed> <fromAction>`
-  (solo) or `-- -party <seed> <fromAction>`; how far partners stray from the leader: `-- -spread`
+  (solo) or `-- -party <seed> <fromAction>` (add `map=N` to draw the floor around the leader for N actions, and
+  `key=value` overrides as for `-balance`); how far partners stray from the leader: `-- -spread`
 - Rebuild the art, ~10 s: `python Tools/pixelart/build_art.py` (add `--preview <folder>` for the review sheets:
   heroes, weapons, armor sets, head pieces, rings, animation strips, icons; `--only preview` skips writing the art)
 - Unity tests: `Unity.exe -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults results.xml`
 - Windows build: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildWindowsDev`
 - Autoplay smoke test: `Builds/Windows/5Kingdoms.exe -screen-fullscreen 0 -fk-autoplay <screenshot folder>`
   (add `-fk-floors 1 -fk-level 10` to go straight to the boss; autoplay always uses its own throwaway save, and
-  aims each targeted action once the way a player does, saving `aim_*.png`; with `-fk-demo view` it stages foes five
-  tiles up and down a corridor, then one three tiles away, and captures how the camera shows them instead)
+  aims each targeted action once the way a player does, saving `aim_*.png`; it saves `door_*.png` the first times
+  the leader holds a doorway or the front rotates; with `-fk-demo view` it stages foes five tiles up and down a
+  corridor, then one three tiles away, and captures how the camera shows them instead)
 
 Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway save), `-fk-save PATH`,
 `-fk-input keyboard|gamepad` (start with that HUD layout, e.g. to screenshot the skill row), `-fk-leader kristela|uzuki`
@@ -55,8 +57,10 @@ the project open; copy Assets/Packages/ProjectSettings to a scratch folder and r
 - Unity's C# is 9.0: no file-scoped namespaces, global usings or records.
 - Balance numbers live in `DungeonRunConfig`, `ActorCatalog`, `SkillCatalog`, `CombatRules` (damage, the ranged cuts,
   the ultimate's charge rates) and `EnemyBrain` (boss moves); check `-balance` after changing them (it reports fresh
-  runs, ultimates per fight and a campaign with levels kept between runs). The autopilot and the partners' AI
-  (`HeroTactics`) are the balance report's players, so a new skill or item needs AI rules too.
+  runs, ultimates per fight, the heroes that fall before the boss, what each hero does with its turns in fights, and
+  a campaign with levels kept between runs). The targets: about 2-5% of fresh level-1 runs win, and with levels kept
+  the first clear comes around the third attempt at Lv 9-10. The autopilot and the partners' AI (`HeroTactics`) are
+  the balance report's players, so a new skill or item needs AI rules too.
 - There is no mana (PROGRESSION.md, "Skill resources"): skills sit out the hero's next turn, each hero has an
   always-ready weapon attack, and ultimates need a full charge meter (`Actor.Charge`).
 - Attacks are deliberate (PROGRESSION.md, "Targeting and input"): moving into an enemy never attacks (it only turns
@@ -69,6 +73,15 @@ the project open; copy Assets/Packages/ProjectSettings to a scratch folder and r
   weren't there, go around only when that's at most `DetourSteps` longer, otherwise close up and wait behind them
   (`TryEngage`, `PartnerBrain.Follow`; a partner gets past one that follows it with `DungeonRun.IsRegroupSwap`). Check
   `-spread` after changing partner movement; the soak tests fail if a partner strays more than 24 steps.
+- Doorways and corridors (PROGRESSION.md, "Doorways and corridors"; AI only): a corridor tile or a doorway is
+  `DungeonMap.IsNarrow` (at most two ways in or out, so the corner rule lets only the tile straight ahead reach a
+  hero there). The hero in front holds a doorway instead of stepping out among more than `SafeCrowd` foes within
+  sight range beyond it (`HeroTactics.HoldsTheDoor`; against that many or fewer it goes in only when fit, with a
+  melee hero to bring). The wait is `HeroCommand.HoldTheDoor`, counted in `Actor.HeldTurns` and given up after
+  `DoorPatience`. Where one hero holds the way, the hurt one and the fresh melee hero behind trade places
+  (`DungeonRun.IsFrontRotation`), and the one behind heals; a hero fighting in a corridor's mouth makes way
+  (`TryMakeWay`). A partner never moves the leader this way (`IsRotateSwap`). Any step of the party's AI toward the
+  foes goes through `AutoPilot.Advance` or `HeroTactics.TryEngage`, which ask `HoldsTheDoor` first.
 - Shots reach any foe within range that `DungeonMap.HasLineOfSight` sees (walls and wall corners block, actors
   don't; it's symmetric). Use `DungeonRun.InShotReach / FoesInSight / ShotTargetAt`, not line walks.
 - Delays (stuns, slows, a snare under a boss) go through `DungeonRun.Delay`: capped at 50% of a turn (25% on a boss)

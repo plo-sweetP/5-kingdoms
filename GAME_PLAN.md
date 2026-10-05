@@ -128,6 +128,13 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
   otherwise they close up and wait right behind them, ready to take a place at the front, and Uzuki stays behind the
   line when it hides his target. A partner that got cut off swaps past the one that follows it in line ("regroup").
   On Auto, the leader doesn't walk off to the stairs while its partners fight.
+- **Doorways and corridors (Peter's playtest note, built 2026-10-04):** the hero in front holds a doorway against
+  more than two foes close beyond it (within their sight range: 4 tiles into the room) instead of stepping out among
+  them: only the tile straight ahead reaches him there, and Uzuki shoots past him. Against one or two the party goes
+  in, if he has at least 90% of his HP and a melee hero to bring along; in the corridor's mouth he then steps aside so
+  she can come out and fight beside him. Where one hero holds the way, he trades places under half HP with the melee
+  hero behind who has clearly more HP left: the fresh one fights, the hurt one heals behind. Partners do all of this
+  for themselves and never move the hero the player controls; the autopilot's leader does it too.
 - Defeat (decided 2026-10-03): the run ends when the whole party has fallen; when the leader falls, the next hero
   in line takes the lead. Resurrection may come later, as an ultimate, a weapon ability or a craftable item.
 - Enemies and bosses can target any party member; area attacks hit everyone in range.
@@ -197,7 +204,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 1e | Combat math (GEAR.md step 1-3): multiplicative damage formula, 10x HP/ATK/DEF rescale, Crit Rate/Crit DMG stats (5%/50%), per-actor stat sheet, skill tags; difficulty re-tuned to match 1d | **Done** |
 | 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, packs; shots at anything in sight, deliberate two-step attacks, stuns as timeline delays | **Done** (parts 1 and 2, and Peter's answers at the first playtest checkpoint) |
 | A1 | Art pass 1 ([docs/design/ART.md](docs/design/ART.md)): the current game on the Tiny Swords art (heroes built from layers with their own faces and hair under the helmets, equipment looks for GEAR.md's weapons and armor sets, ring auras, skill animations, monsters from the Enemy Pack, the outdoor dungeon, the HUD) | **Done** (2026-10-04; new bosses and creatures come with row 7) |
-| C1 | Corridor tactics for the party's AI (PROGRESSION.md, "Doorways and corridors"): hold the door, rotate the front, enter a room when it's safe or there's room; then a balance re-check | **Next** (Peter, 2026-10-04) |
+| C1 | Corridor tactics for the party's AI (PROGRESSION.md, "Doorways and corridors"): hold the door, rotate the front, enter a room when it's safe or there's room; then a balance re-check | **Done** (2026-10-04; the Troll went from 16000 to 24000 HP) |
 | 1g | Classes and professions core (PROGRESSION.md): points, tiers 1-25, milestones with three options each, stat bumps, prerequisites and kingdom locks, loadout, respec, a skill-tree screen of spheres; real content for the starting 3 classes and 3 professions | After C1 (Peter's go, 2026-10-03; the content for three classes and three professions is drafted in PROGRESSION.md) |
 | 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
 | 1i | Hero screen between runs: equipment, class and profession tiers, loadout (until the farm exists) | |
@@ -434,6 +441,64 @@ entrance.
   error or a placeholder square.
 - **Open:** Peter's OK on the monsters' and the dungeon's names; where menu frames with gold trim and a pixel font
   come from (ART.md's open questions); new bosses and creatures (roadmap row 7).
+
+**Corridor tactics (2026-10-04, roadmap row C1).** Peter's playtest note: a melee hero who steps through a room's
+entrance is surrounded and falls while the two behind him can't do anything useful. The party's AI (the partners and
+the autopilot's leader) now uses the corridors. The rules are under "Party" above and in PROGRESSION.md, "Doorways
+and corridors"; they are AI only, so nothing changes for what the player may do.
+- **Measured first.** `-balance` now also reports the heroes that fall before the boss floor (and how many of them
+  fell with a fresh melee ally idle within two tiles), what each hero does with its turns in fights, and how often a
+  hero is hit by three or more enemies in one round. Before (autopilot, Haiden leading, 200 seeds): 162 heroes fell
+  before the boss floor, all but 4 of them out of the corridor, with one to three spiders on them, and 70 with a
+  fresh melee ally idle within two tiles. Haiden reached the boss floor standing in 53% of runs, Kristela in 66%.
+  In the rounds of a fight where blows were exchanged, Kristela attacked or used a skill in 14% of her turns and
+  waited in 54%. Three enemies hitting one hero in a round was rare (0.7% of rounds): two at a room's entrance were
+  enough.
+- **Hold the door.** A corridor tile or a doorway has at most two ways in or out (`DungeonMap.IsNarrow`), so the
+  corner rule lets only the tile straight ahead reach a hero there. With more than two foes close beyond the doorway
+  the hero in front waits for them there, for up to 5 turns if nobody comes (foes that are after someone they can't
+  reach only mill about); then he goes in after all. Not against a boss: a slam is dodged in the open.
+- **Rotate the front.** Under half HP, the hero that holds a corridor or a doorway trades places with the melee
+  hero behind him if she has 20 points more of her HP left, in the fight or just before it reaches them; in a
+  corridor's mouth only with one or two foes on him (a fresh hero isn't fed to a crowd). The one behind then heals
+  whenever none of the heal is wasted. The pair can't trade back for 3 turns, as with every swap. A partner behind
+  the leader never takes his place: the autopilot's leader steps back himself, and by hand that is the player's move.
+- **Enter when it's safe.** Against one or two close foes the party goes in, so that the second melee hero gets to
+  fight, but only if the hero in front has at least 90% of his HP and there is a melee hero to bring; hurt, or with
+  nobody to bring, he goes in against one foe only. Fighting in the corridor's mouth with the other still behind
+  him and two or more foes near, he gives up a turn to step aside to another tile he can fight from, and she comes
+  out.
+- **The numbers come from the run simulations**, as Peter asked. "Close" is the foes' sight range, 5 steps from the
+  hero (4 tiles into the room): a foe that near has noticed him and is on its way, so the wait is never in vain. In
+  an earlier state of the rules, 4, 5 and 6 steps left 167, 131 and 93 heroes fallen before the boss in 600 runs (519
+  with no rules); at 6 he also waits for foes that haven't noticed him, and Kristela fights less. The 90% came last:
+  without it 76 heroes fell in 400 runs, with it 37, and a lower bar does little (at 60% nine in ten of those still
+  fell; from 85% up it makes no difference). Tried and dropped: waiting for a crowd out in the open as well, and the
+  Auto leader walking around his partners to get to the front (no gain); holding the door whenever any foe stands
+  right outside it (as safe as the 90% rule, but then Kristela fights no more than she did before).
+- **After** (same 200 seeds): 15 heroes fall before the boss floor (was 162), 3 of them next to an idle fresh ally
+  (was 70); Haiden reaches it standing in 97% of runs (53%) and Kristela in 95% (66%). On average the leader holds a
+  doorway for 1.8 turns a run and the front rotates 1.2 times. Kristela attacks or uses a skill in 18% of her fight
+  turns (14%) and waits in 46% (54%): in a corridor only one hero can fight, and this dungeon is mostly corridors.
+  The partners still stay together: more than 4 steps from the leader 5.2% of the time in fights (3.8% before), at
+  most 11.
+- **Re-tune.** With all three usually alive at the boss, 30 of 200 fresh level-1 runs won (15%) and the first clear
+  came on attempt 2.5 at Lv 8.8. The packs can't make up for that (bigger packs or harder spiders only mean more EXP),
+  so, as before, the Troll has more HP: **24000** (was 16000). Now 9 of 200 fresh runs win (4.5%; 28 of 600), and
+  with levels kept the first clear comes on attempt 3.1 at Lv 9.7 (3.0 at Lv 9.6 over 300 parties). A Lv 9 party
+  sent straight to the boss wins 187 of 200 (198 before) in 54 of the leader's turns (41 before), a Lv 12 one always.
+  Ultimates in pack fights are where they were (one every 2.4 fights); in the boss fight the report shows 2.95 per
+  hero (2.26 before) because all three now get there: per hero that arrives it is about 3.0, as before. A winning
+  boss fight is longer, though: a Lv 9 party uses 4.6 ultimates per hero in it (3.0 before).
+- **Not built** (Peter: not now): pulling a pack to the door with a shot, walking in and backing out to drag enemies
+  along, wider corridors.
+- **Checks:** 219 Core tests (24 new in `DoorTacticsTests`: the corner rule at a doorway, each rule and its limits,
+  a crowd coming to the door one at a time). The soak tests also fail if no doorway is ever held or the front never
+  rotates. The golden replay was re-recorded: its lone hero now holds a doorway against two or more foes. The party
+  trace takes `map=N` to draw the floor around the leader.
+- **Open:** with Kristela leading (`-lead kristela`) she still falls before the boss in about one run in five: out
+  in a room she walks up to the pack like a tank. And nothing on screen says why a hero waits at a door; a line in
+  the log would be easy to add.
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

@@ -123,6 +123,23 @@ namespace FiveKingdoms.Dungeon
             yield return Capture("01_auto_on");
             controller.AutoPilotEnabled = false;
             while (controller.IsAnimating) yield return null;
+            // The pause menu's pages: the main one, a hero's stats, the settings, and a question before a restart.
+            var menu = FindFirstObjectByType<FiveKingdoms.UI.DungeonHud>().PauseMenu;
+            controller.Paused = true;
+            yield return Capture("01_pause_menu");
+            menu.Move(3);
+            menu.Activate();
+            yield return Capture("01_pause_hero_stats");
+            menu.Back();
+            menu.Move(2);
+            menu.Activate();
+            yield return Capture("01_pause_settings");
+            menu.Back();
+            menu.Move(1);
+            menu.Activate();
+            yield return Capture("01_pause_restart_question");
+            menu.Back();
+            menu.Back();
 
             int actions = 0, shot = 0, attackShots = 0, chargeShots = 0, holdShots = 0, rotateShots = 0, restShots = 0;
             var skillsShown = new System.Collections.Generic.HashSet<SkillEffect>();

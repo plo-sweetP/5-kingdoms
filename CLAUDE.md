@@ -109,6 +109,16 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   and the rest of its points free. Loading relearns a build tier by tier (`HeroProgress.Restore`), so what the
   rules no longer allow is dropped and its points stay free. A change to what is saved needs a new version and a
   migration test in `SaveSystemTests`.
+- The HUD (docs/design/HUD.md; `DungeonHud`, `PauseMenu`): Wait, Berry, Auto and Pause in a row top-right, and for
+  touch the ultimate, skills 3-2-1 and the attack in a row along the bottom (`LayoutBottom` moves the log, the
+  aiming prompt and Descend where a narrow screen leaves no room beside the row). While Auto plays, the D-pad is
+  hidden and the leader's buttons are greyed out: only `SwitchLeader` gets past `DungeonController.ChooseCommand`.
+  The pause menu (the Pause button, Esc, the gamepad's Start; "Go down" is R3) stops everything, Auto included; its
+  Exit ends the run as `RunState.Left` (`DungeonRun.Leave`), and its Reset level (testing) writes level 1 to the
+  save: the player's own action, while tests and tools keep to their own save file. Its settings are kept in
+  PlayerPrefs, read and written only with the real save (`UsesRealSave`). The hero stats page writes each skill's
+  description from the hero's own copy (`SkillText.Describe`): a new `SkillEffect` or skill field needs its
+  sentence there.
 - Attacks are deliberate (PROGRESSION.md, "Targeting and input"): moving into an enemy never attacks (it only turns
   the hero, no turn used). Attacks, skills and ultimates on a foe carry its tile (`HeroCommand.AttackAt / SkillAt /
   UltimateAt`); the AI must always use those (the soak tests fail on a refused command or an attack at nothing) and

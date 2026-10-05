@@ -54,6 +54,10 @@ namespace FiveKingdoms.Dungeon
         float directionHeldFor;
         bool autoPilot;
         bool paused;
+        Vector2Int menuStick;
+
+        /// <summary>The settings page's choice for the camera while aiming, kept on this device (not in the save).</summary>
+        const string WideViewKey = "fk.view.wide";
         InputMode inputMode = InputMode.Touch;
 
         /// <summary>The action being aimed, or null.</summary>
@@ -97,6 +101,16 @@ namespace FiveKingdoms.Dungeon
         /// <summary>True while an attack, skill or ultimate waits for the player to pick its target.</summary>
         public bool IsAiming => aiming != null;
 
+        /// <summary>The pause menu is open: nothing acts, the auto-pilot included.</summary>
+        public bool Paused
+        {
+            get => paused;
+            set => SetPaused(value);
+        }
+
+        /// <summary>Tests, autoplay and debug launches use their own save file and never touch the player's settings either.</summary>
+        bool UsesRealSave => options.SavePath == null;
+
         /// <summary>The Auto button: the hero plays itself until the player turns this off.</summary>
         public bool AutoPilotEnabled
         {
@@ -130,6 +144,12 @@ namespace FiveKingdoms.Dungeon
             hud.RestartRequested += StartNewRun;
             hud.AutoPilotToggled += () => SetAutoPilot(!autoPilot);
             hud.PauseRequested += () => SetPaused(!paused);
+            hud.PauseMenu.ResumeRequested += () => SetPaused(false);
+            hud.PauseMenu.RestartConfirmed += RestartRun;
+            hud.PauseMenu.ExitConfirmed += LeaveRun;
+            hud.PauseMenu.ResetLevelConfirmed += ResetLevels;
+            hud.PauseMenu.WideViewChanged += SetWideView;
+            if (!options.View.HasValue && UsesRealSave && PlayerPrefs.GetInt(WideViewKey, 0) == 1) pixelCamera.Mode = ViewMode.Wide;
             hud.TacticCycleRequested += CycleTactic;
             if (options.StartInputMode.HasValue)
             {
@@ -201,6 +221,7 @@ namespace FiveKingdoms.Dungeon
                 // Nothing acts, the auto-pilot included; what was pressed meanwhile is dropped, not kept for later.
                 buffered = null;
                 injectedTap = null;
+                ReadMenuInput(keyboard, gamepad);
                 return;
             }
 
@@ -422,13 +443,92 @@ namespace FiveKingdoms.Dungeon
             hud.AddMessage(on ? "Auto-pilot on. Press Auto again to take over." : "Auto-pilot off.", DungeonHud.HintColor);
         }
 
-        /// <summary>The Pause button: while the game is paused no command is taken, from the player or the auto-pilot.</summary>
+        /// <summary>
+        /// The Pause button, Esc or Start: the pause menu opens, and while it is open no command is taken, from the
+        /// player or the auto-pilot. Only a run that is still going can be paused.
+        /// </summary>
         void SetPaused(bool on)
         {
-            if (paused == on) return;
+            if (paused == on || on && (run == null || run.State != RunState.InProgress)) return;
             paused = on;
             if (on) EndAiming();
             hud.SetPaused(on);
+            if (on) hud.PauseMenu.Open(run, party, pixelCamera.Mode == ViewMode.Wide);
+            else hud.PauseMenu.Close();
+        }
+
+        /// <summary>The pause menu's Restart: the run starts again on the first floor. What the party earned is kept, as after a defeat.</summary>
+        public void RestartRun()
+        {
+            SaveSystem.SaveParty(party);
+            StartNewRun();
+        }
+
+        /// <summary>The pause menu's Exit: the run ends here with the usual end panel ("Return to the farm?" once there is one).</summary>
+        public void LeaveRun()
+        {
+            SetPaused(false);
+            if (run.State != RunState.InProgress) return;
+            run.Leave();
+            SaveSystem.SaveParty(party);
+            hud.Refresh(run);
+            hud.ShowRunEnd(run, levelsAtStart);
+        }
+
+        /// <summary>
+        /// The pause menu's Reset level, for testing: every hero goes back to level 1 with no EXP and its starting build,
+        /// the save is written, and the run starts again. This is the player's own action on their save; tests and tools
+        /// run with a save file of their own.
+        /// </summary>
+        public void ResetLevels()
+        {
+            party = party.Select(hero => new HeroProgress(hero.Definition)).ToArray();
+            SaveSystem.SaveParty(party);
+            StartNewRun();
+            hud.AddMessage("Testing: every hero is back at level 1.", DungeonHud.HintColor);
+        }
+
+        void SetWideView(bool wide)
+        {
+            pixelCamera.Mode = wide ? ViewMode.Wide : ViewMode.ZoomOut;
+            if (!UsesRealSave) return;
+            PlayerPrefs.SetInt(WideViewKey, wide ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>The pause menu with keys or a controller: up and down mark a button, Enter, Space or A press it, Esc, B or Start go back.</summary>
+        void ReadMenuInput(Keyboard keyboard, Gamepad gamepad)
+        {
+            var menu = hud.PauseMenu;
+            int dx = 0, dy = 0;
+            if (keyboard != null)
+            {
+                if (keyboard.upArrowKey.wasPressedThisFrame || keyboard.wKey.wasPressedThisFrame) dy--;
+                if (keyboard.downArrowKey.wasPressedThisFrame || keyboard.sKey.wasPressedThisFrame) dy++;
+                if (keyboard.leftArrowKey.wasPressedThisFrame || keyboard.aKey.wasPressedThisFrame) dx--;
+                if (keyboard.rightArrowKey.wasPressedThisFrame || keyboard.dKey.wasPressedThisFrame) dx++;
+            }
+            if (gamepad != null)
+            {
+                if (gamepad.dpad.up.wasPressedThisFrame) dy--;
+                if (gamepad.dpad.down.wasPressedThisFrame) dy++;
+                if (gamepad.dpad.left.wasPressedThisFrame) dx--;
+                if (gamepad.dpad.right.wasPressedThisFrame) dx++;
+                // The stick counts once each time it is pushed over.
+                var stick = gamepad.leftStick.ReadValue();
+                var pushed = new Vector2Int(stick.x > 0.6f ? 1 : stick.x < -0.6f ? -1 : 0, stick.y > 0.6f ? -1 : stick.y < -0.6f ? 1 : 0);
+                if (pushed.x != menuStick.x) dx += pushed.x;
+                if (pushed.y != menuStick.y) dy += pushed.y;
+                menuStick = pushed;
+            }
+            if (dy != 0) menu.Move(dy);
+            if (dx != 0) menu.Side(dx);
+            if (keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame) ||
+                gamepad != null && gamepad.buttonSouth.wasPressedThisFrame)
+                menu.Activate();
+            else if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame ||
+                     gamepad != null && (gamepad.buttonEast.wasPressedThisFrame || gamepad.startButton.wasPressedThisFrame))
+                menu.Back();
         }
 
         IEnumerator Execute(HeroCommand command)
@@ -606,7 +706,7 @@ namespace FiveKingdoms.Dungeon
             gamepad.rightShoulder.wasPressedThisFrame || gamepad.leftShoulder.wasPressedThisFrame ||
             gamepad.leftTrigger.wasPressedThisFrame || gamepad.rightTrigger.wasPressedThisFrame ||
             gamepad.startButton.wasPressedThisFrame || gamepad.selectButton.wasPressedThisFrame ||
-            gamepad.buttonEast.wasPressedThisFrame || gamepad.leftStickButton.wasPressedThisFrame;
+            gamepad.buttonEast.wasPressedThisFrame || gamepad.leftStickButton.wasPressedThisFrame || gamepad.rightStickButton.wasPressedThisFrame;
 
         static bool PointerPressed() =>
             Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame ||
@@ -616,6 +716,12 @@ namespace FiveKingdoms.Dungeon
         {
             if (keyboard != null && keyboard.tKey.wasPressedThisFrame || gamepad != null && gamepad.selectButton.wasPressedThisFrame)
                 SetAutoPilot(!autoPilot);
+            // Esc opens the pause menu unless it is letting go of an aim; Start always does.
+            if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame && aiming == null || gamepad != null && gamepad.startButton.wasPressedThisFrame)
+            {
+                SetPaused(true);
+                return;
+            }
 
             if (aiming != null)
             {
@@ -650,7 +756,7 @@ namespace FiveKingdoms.Dungeon
                 else if (gamepad.rightShoulder.wasPressedThisFrame) buffered = HeroCommand.UltimateFacing;
                 else if (gamepad.buttonNorth.wasPressedThisFrame) buffered = HeroCommand.Wait;
                 else if (gamepad.buttonWest.wasPressedThisFrame) buffered = HeroCommand.UseBerry;
-                else if (gamepad.startButton.wasPressedThisFrame) buffered = HeroCommand.Descend;
+                else if (gamepad.rightStickButton.wasPressedThisFrame) buffered = HeroCommand.Descend;
                 else if (gamepad.buttonEast.wasPressedThisFrame) buffered = HeroCommand.SwitchLeader(NextLeaderIndex());
                 else if (gamepad.leftStickButton.wasPressedThisFrame) CycleAllTactics();
             }

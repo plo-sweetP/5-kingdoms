@@ -3,7 +3,8 @@ using System.Collections.Generic;
 
 namespace FiveKingdoms.Core
 {
-    public enum RunState { InProgress, Won, Lost }
+    /// <summary>Left: the player walked out through the pause menu (<see cref="DungeonRun.Leave"/>), neither won nor lost.</summary>
+    public enum RunState { InProgress, Won, Lost, Left }
 
     /// <summary>Whether a skill can be used right now, and if not, why (for button states and messages).</summary>
     public enum SkillCheck { Ready, NoSkill, OnCooldown, NotCharged, NoTarget, NotNeeded, Blocked }
@@ -1857,6 +1858,18 @@ namespace FiveKingdoms.Core
                     if (actor.Team == Team.Hero) count++;
                 return count;
             }
+        }
+
+        /// <summary>
+        /// The player leaves the dungeon (the pause menu's Exit, HUD.md): the run ends where it stands, neither won nor
+        /// lost. What the party earned so far is kept, as after a defeat.
+        /// </summary>
+        public void Leave()
+        {
+            if (State != RunState.InProgress) return;
+            events.Clear();
+            State = RunState.Left;
+            events.Add(new RunEndedEvent(false));
         }
 
         void EndRun(bool won)

@@ -116,6 +116,12 @@ namespace FiveKingdoms.UI
         {
             pointers.Add(eventData.pointerId);
             Refresh();
+            Press();
+        }
+
+        /// <summary>What a finger going down does, for a key or a controller button that stands for it (the pause menu).</summary>
+        public void Press()
+        {
             if (interactable) Pressed?.Invoke();
             else DisabledPressed?.Invoke();
         }

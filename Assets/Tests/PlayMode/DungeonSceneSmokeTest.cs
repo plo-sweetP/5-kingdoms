@@ -2,6 +2,7 @@ using System.Collections;
 using System.IO;
 using FiveKingdoms.Core;
 using FiveKingdoms.Dungeon;
+using FiveKingdoms.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -128,6 +129,58 @@ namespace FiveKingdoms.Tests
             int turn = controller.Run.Turn;
             for (int i = 0; i < 30; i++) yield return null;
             Assert.AreEqual(turn, controller.Run.Turn, "with auto-pilot off, nothing happens without input");
+        }
+
+        [UnityTest]
+        public IEnumerator ThePauseMenuStopsEverythingAndItsChoicesWork()
+        {
+            DungeonController.Overrides = new LaunchOptions { SavePath = savePath, FreshSave = true, StartLevel = 5 };
+            yield return LoadDungeon();
+            var controller = Object.FindFirstObjectByType<DungeonController>();
+            var menu = Object.FindFirstObjectByType<DungeonHud>().PauseMenu;
+            Time.timeScale = 4f;
+
+            // Nothing acts while the menu is open, the auto-pilot included.
+            controller.AutoPilotEnabled = true;
+            float deadline = Time.realtimeSinceStartup + 60f;
+            while (controller.Run.Turn < 5 && Time.realtimeSinceStartup < deadline) yield return null;
+            controller.Paused = true;
+            Assert.IsTrue(menu.IsOpen);
+            while (controller.IsAnimating) yield return null;
+            int turn = controller.Run.Turn;
+            for (int i = 0; i < 30; i++) yield return null;
+            Assert.AreEqual(turn, controller.Run.Turn, "paused: the auto-pilot waits too");
+
+            // Every page opens and reads the party without an error; Back from the main page resumes.
+            menu.Move(3);       // Hero stats.
+            menu.Activate();
+            menu.Side(1);
+            menu.Side(1);
+            menu.Back();
+            menu.Move(2);       // Settings.
+            menu.Activate();
+            menu.Back();
+            menu.Back();
+            Assert.IsFalse(controller.Paused, "Back on the main page resumes");
+            Assert.IsFalse(menu.IsOpen);
+            deadline = Time.realtimeSinceStartup + 30f;
+            while (controller.Run.Turn == turn && controller.Run.State == RunState.InProgress && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.AreNotEqual(turn, controller.Run.Turn, "resumed: the auto-pilot plays on");
+            controller.AutoPilotEnabled = false;
+
+            // Reset level (testing): everyone back to level 1, written to the save, and the run starts again.
+            Assert.Greater(controller.Run.Hero.Level, 1);
+            controller.ResetLevels();
+            Assert.AreEqual(0, controller.Run.Turn);
+            Assert.AreEqual(1, controller.Run.Floor);
+            foreach (var hero in controller.Run.Party) Assert.AreEqual(1, hero.Level, hero.Name);
+            foreach (var saved in SaveSystem.LoadParty(ActorCatalog.StartingParty)) Assert.AreEqual(1, saved.Level, saved.Definition.Name);
+
+            // Exit: the run ends, neither won nor lost.
+            controller.LeaveRun();
+            Assert.AreEqual(RunState.Left, controller.Run.State);
+            controller.Paused = true;
+            Assert.IsFalse(controller.Paused, "a run that is over can't be paused");
         }
 
         [UnityTest]

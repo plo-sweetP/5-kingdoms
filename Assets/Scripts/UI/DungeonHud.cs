@@ -54,9 +54,9 @@ namespace FiveKingdoms.UI
         static readonly float KeysTop = -24f - PartyPanel.Height(3) - 8f;
 
         const string KeyboardHint = "Move: WASD/arrows + QEZC   Attack: Space, then a target   Skills: 1 2 3   Ultimate: 4   Switch hero: Tab   Tactics: G\n" +
-                                    "Wait: X   Berry: B   Go down: Enter   Auto: T   Aim: arrows pick, Space fires, Esc cancels (or click the enemy)";
+                                    "Wait: X   Berry: B   Go down: Enter   Auto: T   Pause: Esc   Aim: arrows pick, Space fires, Esc cancels (or click the enemy)";
         const string GamepadHint = "Move: stick/D-pad   Attack: A, then a target   Skills: LB LT RT   Ultimate: RB   Switch hero: B   Tactics: L3\n" +
-                                   "Wait: Y   Berry: X   Go down: Start   Auto: View   Aim: stick picks, A fires, B cancels";
+                                   "Wait: Y   Berry: X   Go down: R3   Auto: View   Pause: Start   Aim: stick picks, A fires, B cancels";
         static readonly string[] KeyboardSkillKeys = { "1", "2", "3", "4" };
         static readonly string[] GamepadSkillKeys = { "LB", "LT", "RT", "RB" };
 
@@ -94,6 +94,9 @@ namespace FiveKingdoms.UI
 
         public DPad DPad { get; private set; }
 
+        /// <summary>Opened and closed by the controller, which also does what is chosen in it.</summary>
+        public PauseMenu PauseMenu { get; private set; }
+
         readonly List<LogLine> log = new List<LogLine>();
         readonly List<FloatingText> floating = new List<FloatingText>();
         readonly List<GameObject> timelineRows = new List<GameObject>();
@@ -101,7 +104,7 @@ namespace FiveKingdoms.UI
         Text timelineHeader;
         Camera worldCamera;
         RectTransform canvasRect, safeArea, floatingLayer, logRoot, touchControls;
-        Text floorText, bossName, keysText, bannerTitle, bannerSubtitle, endTitle, endDetail, aimPrompt, pausedLabel;
+        Text floorText, bossName, keysText, bannerTitle, bannerSubtitle, endTitle, endDetail, aimPrompt;
         Image bossFill;
         PartyPanel party;
         GameObject bossPanel;
@@ -334,12 +337,8 @@ namespace FiveKingdoms.UI
             for (int i = 0; i < skillButtons.Length; i++) skillButtons[i].Interactable = free && skillUsable[i];
         }
 
-        /// <summary>The game stands still: the Pause button is lit, and nothing acts until it is pressed again.</summary>
-        public void SetPaused(bool on)
-        {
-            pauseButton.SetArt(on ? ActiveArt : ActionArt);
-            pausedLabel.gameObject.SetActive(on);
-        }
+        /// <summary>The game stands still under the pause menu: the Pause button is lit.</summary>
+        public void SetPaused(bool on) => pauseButton.SetArt(on ? ActiveArt : ActionArt);
 
         /// <summary>The player tried to move or act while the auto-pilot plays (shown at most every couple of seconds).</summary>
         public void ShowAutoPilotBlocked()
@@ -368,7 +367,7 @@ namespace FiveKingdoms.UI
             }
             bool desktop = !Application.isMobilePlatform;
             keysText.text = mode == InputMode.Gamepad ? GamepadHint : desktop || mode == InputMode.Keyboard ? KeyboardHint : "";
-            descendButton.SetLabel(mode == InputMode.Gamepad ? "Descend (RB)" : mode == InputMode.Keyboard ? "Descend (Enter)" : "Descend");
+            descendButton.SetLabel(mode == InputMode.Gamepad ? "Descend (R3)" : mode == InputMode.Keyboard ? "Descend (Enter)" : "Descend");
             againButton.SetLabel(mode == InputMode.Gamepad ? "Try Again (A)" : mode == InputMode.Keyboard ? "Try Again (R)" : "Try Again");
         }
 
@@ -460,8 +459,9 @@ namespace FiveKingdoms.UI
         public void ShowRunEnd(DungeonRun run, IReadOnlyList<int> levelsAtStart)
         {
             bool won = run.State == RunState.Won;
-            endTitle.text = won ? "Dungeon Cleared!" : run.Party.Count > 1 ? "The party fell..." : $"{run.Hero.Name} fainted...";
-            endTitle.color = won ? new Color(1f, 0.85f, 0.3f) : new Color(1f, 0.55f, 0.5f);
+            bool left = run.State == RunState.Left; // The pause menu's Exit; "Return to the farm?" once there is one.
+            endTitle.text = won ? "Dungeon Cleared!" : left ? "You left the dungeon." : run.Party.Count > 1 ? "The party fell..." : $"{run.Hero.Name} fainted...";
+            endTitle.color = won ? new Color(1f, 0.85f, 0.3f) : left ? TextColor : new Color(1f, 0.55f, 0.5f);
             string result = !won ? $"Reached B{run.Floor}F of {run.Config.Name}."
                 : run.Config.Boss != null ? $"Defeated the {run.Config.Boss.Name} and cleared {run.Config.Name} in {run.Turn} turns."
                 : $"Cleared all {run.Config.FloorCount} floors of {run.Config.Name} in {run.Turn} turns.";
@@ -702,9 +702,7 @@ namespace FiveKingdoms.UI
             bannerSubtitle = UiFactory.CreateText("Subtitle", bannerRect, "", 52, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.3f));
             UiFactory.Place(bannerSubtitle.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -100f), new Vector2(900f, 70f));
 
-            pausedLabel = UiFactory.CreateText("Paused", canvasRect, "Paused", 68, TextAnchor.MiddleCenter, TextColor);
-            UiFactory.Place(pausedLabel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 200f), new Vector2(900f, 90f));
-            pausedLabel.gameObject.SetActive(false);
+            PauseMenu = PauseMenu.Create(canvasRect);
 
             var end = UiFactory.CreatePanel("RunEnd", canvasRect, "panel", raycast: true);
             UiFactory.Place(end.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(880f, 480f));

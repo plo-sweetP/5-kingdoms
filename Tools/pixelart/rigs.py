@@ -188,10 +188,11 @@ def centroid(image, colors=None):
     return (sx / n + 0.5, sy / n + 0.5) if n else None
 
 
-def reshape(image, origin, angle, along, across, recolors=None):
+def reshape(image, origin, angle, along, across, recolors=None, extra=None):
     """
     Stretch a drawn piece about `origin`: `along` times along the direction `angle` (radians), `across` times across
     it. The outline comes off first and goes back on afterwards, so it keeps the pack's thickness at any size.
+    `extra(image)` may draw more on the stretched piece before the outline goes back on.
     """
     fill = peel_outline(image)
     if recolors:
@@ -213,6 +214,8 @@ def reshape(image, origin, angle, along, across, recolors=None):
                 p = fill.px[sy * w + sx]
                 if p >> 24:
                     out.px[y * w + x] = p
+    if extra:
+        extra(out)
     return _outline_in_place(out)
 
 
@@ -238,6 +241,42 @@ ARCANE = {P.METAL_LIGHT: hexc('#f0e2ff'), P.METAL: hexc('#b99cf2'), P.METAL_DARK
 ARCANE_FX = {P.METAL_LIGHT: hexc('#e6d2ff'), P.METAL: hexc('#b99cf2'), hexc('#a2beaf'): hexc('#b99cf2')}
 SILVER = {P.METAL_LIGHT: hexc('#ffffff'), P.METAL: hexc('#cfdde4'), P.METAL_DARK: hexc('#8fa3b4'),
           P.CLOTH_LIGHT: hexc('#e76161'), P.CLOTH_DARK: hexc('#924159')}
+
+
+GUARD_GOLD = (hexc('#f3d34a'), hexc('#c9972a'))
+PIERCER_WIDTH = 0.5
+
+
+def piercer(image, origin, angle, along=1.22):
+    """
+    The pack's sword as the Piercer Blade (Peter, 2026-10-05: "closer to a fencer blade than a long sword. So thinner
+    and change the hilt to look rounder and more like a sabre"): the blade a little longer and half as wide, a round
+    gold shell where it begins, and a knuckle bow curving from the shell around the hand to the pommel.
+    """
+    ux, uy = math.cos(angle), math.sin(angle)
+    ox, oy = origin
+    w = image.w
+    along_of = lambda i: (i % w + 0.5 - ox) * ux + (i // w + 0.5 - oy) * uy
+    hilt = [along_of(i) for i, p in enumerate(image.px) if p in GUARD_COLORS]
+    blade = [along_of(i) for i, p in enumerate(image.px) if p in BLADE_COLORS]
+    if not hilt or not blade:
+        return reshape(image, origin, angle, along, PIERCER_WIDTH, SILVER)
+    pommel, shell = min(hilt) * along, min(blade) * along + 0.5
+    middle, reach = (pommel + shell) / 2.0, max(3.0, (shell - pommel) / 2.0 + 0.5)
+    light, dark = GUARD_GOLD
+
+    def guard(out):
+        for y in range(int(oy) - 14, int(oy) + 15):
+            for x in range(int(ox) - 14, int(ox) + 15):
+                if not out.inside(x, y):
+                    continue
+                vx, vy = x + 0.5 - ox, y + 0.5 - oy
+                t, s = vx * ux + vy * uy, -vx * uy + vy * ux
+                if ((t - shell) / 1.7) ** 2 + (s / 3.6) ** 2 <= 1.0:                       # The shell, seen from the side.
+                    out.px[y * out.w + x] = light if s <= 0.3 else dark
+                elif s > 0.8 and 0.6 <= math.hypot((t - middle) / reach, s / 4.6) <= 1.0:   # The bow, on the knuckle side.
+                    out.px[y * out.w + x] = dark
+    return reshape(image, origin, angle, along, PIERCER_WIDTH, SILVER, extra=guard)
 
 
 def _sword_axes(sword_frames):
@@ -305,8 +344,13 @@ def warrior(pack):
     rig.weapons.append(Weapon('arcane_sword', 'Arcane Sword', back=recolored(sword_back, ARCANE),
                               front=recolored(sword_front, ARCANE), fx=recolored(fx, ARCANE_FX)))
 
-    thin_back, thin_front = _reshaped_sword(rig, 1.22, 0.62, SILVER)
-    rig.weapons.append(Weapon('piercer_blade', 'Piercer Blade', back=thin_back, front=thin_front, fx=fx))
+    # The Piercer Blade: thin, with a sabre's rounded guard. A fencer stabs, so the swing's arcs are left out (the game
+    # draws a thrust's streak instead).
+    axes = _sword_axes(rig.layer('Sword', 'Sword (Front)'))
+    thin = lambda frames: [Image(i.w, i.h) if axis is None or i.bbox() is None else piercer(i, axis[0], axis[1])
+                           for i, axis in zip(frames, axes)]
+    rig.weapons.append(Weapon('piercer_blade', 'Piercer Blade', back=thin(sword_back), front=thin(sword_front),
+                              fx=[Image(i.w, i.h) for i in fx]))
 
     # Dual Blades: a second blade where the shield is, held the other way round.
     second = sword_back[0].flipped_x()

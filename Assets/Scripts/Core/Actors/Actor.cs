@@ -47,7 +47,7 @@ namespace FiveKingdoms.Core
         /// <summary>Used when the charge meter is full; null for monsters.</summary>
         public SkillDefinition Ultimate => Kit.Ultimate;
 
-        /// <summary>The always-ready weapon attack's name (Uzuki's Quick Shot, Haiden's Sword Slash, Kristela's Jab).</summary>
+        /// <summary>The always-ready weapon attack's name (Uzuki's Quick Shot, Haiden's Sword Slash, Kristela's Thrust).</summary>
         public string AttackName => Kit.WeaponAttack.Name;
         public Team Team { get; }
         public GridPos Pos { get; set; }
@@ -59,7 +59,7 @@ namespace FiveKingdoms.Core
         /// <summary>For party members the leader isn't controlling.</summary>
         public PartyTactic Tactic { get; set; }
 
-        /// <summary>Active status effects (guard, taunt, mark, root, aura).</summary>
+        /// <summary>Active status effects (guard, taunt, mark, root, aura, a counter stance).</summary>
         public List<StatusEffect> Statuses { get; } = new List<StatusEffect>();
 
         public StatusEffect FindStatus(StatusKind kind)

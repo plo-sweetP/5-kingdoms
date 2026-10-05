@@ -59,7 +59,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void AnUltimateNeedsAFullMeterAndEmptiesIt()
         {
-            var run = Run(Only(ActorCatalog.Kristela), Corridor);
+            var run = Run(Only(TestHeroes.Monk), Corridor);
             Dummy(run, 2, 1);
             Assert.AreEqual(SkillCheck.NotCharged, run.CheckUltimate(Direction8.E));
             Assert.IsFalse(run.UseUltimate(Direction8.E));
@@ -87,7 +87,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void FlurryOfBlowsStrikesFiveTimesAndHerNextTurnComesSooner()
         {
-            var run = Run(Only(ActorCatalog.Kristela), Corridor);
+            var run = Run(Only(TestHeroes.Monk), Corridor);
             var spider = Dummy(run, 2, 1);
             run.Wait(); // The fight starts; Kristela (100) is up at 100 AV.
             Assert.IsTrue(run.InCombat);
@@ -101,7 +101,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void FlurryOfBlowsMovesOnWhenItsTargetFalls()
         {
-            var run = Run(Only(ActorCatalog.Kristela), Room);
+            var run = Run(Only(TestHeroes.Monk), Room);
             var weak = Dummy(run, 2, 3, hp: 1);
             var other = Dummy(run, 2, 4);
             run.Hero.Charge = CombatRules.MaxCharge;

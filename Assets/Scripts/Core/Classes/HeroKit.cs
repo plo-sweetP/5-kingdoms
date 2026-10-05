@@ -35,7 +35,7 @@ namespace FiveKingdoms.Core
         public SkillDefinition Ultimate { get; }
 
         /// <summary>
-        /// The always-ready weapon attack (Quick Shot, Sword Slash, Jab): its name, how hard it hits and how often. A
+        /// The always-ready weapon attack (Quick Shot, Sword Slash, Thrust): its name, how hard it hits and how often. A
         /// class option can change it for one weapon family.
         /// </summary>
         public SkillDefinition WeaponAttack { get; }

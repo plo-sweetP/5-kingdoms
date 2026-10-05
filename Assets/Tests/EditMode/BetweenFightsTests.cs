@@ -55,7 +55,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void BetweenFightsAHeroHealsWhateverIsWorthAHeal()
         {
-            var run = Run(new[] { ActorCatalog.Haiden, ActorCatalog.Kristela }, Room);
+            var run = Run(new[] { ActorCatalog.Haiden, TestHeroes.Monk }, Room);
             var kristela = run.Party[1];
             Hurt(kristela, 80);
             NoHealing(run.Hero);
@@ -106,7 +106,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void TheAutoPilotsLeaderWaitsWhileAPartnerHealsUp()
         {
-            var run = Run(new[] { ActorCatalog.Haiden, ActorCatalog.Kristela }, Room);
+            var run = Run(new[] { ActorCatalog.Haiden, TestHeroes.Monk }, Room);
             var kristela = run.Party[1];
             Place(run.Hero, 3, 3);
             Place(kristela, 3, 1); // Not next to him: his own heal doesn't reach her.
@@ -152,8 +152,8 @@ namespace FiveKingdoms.Tests
         [Test]
         public void AHeroWithAHealOfItsOwnDoesNotGoLookingForOne()
         {
-            var run = Run(ActorCatalog.StartingParty, Room);
-            var kristela = Member(run, ActorCatalog.Kristela);
+            var run = Run(new[] { ActorCatalog.Haiden, TestHeroes.Monk, ActorCatalog.Uzuki }, Room);
+            var kristela = Member(run, TestHeroes.Monk);
             Place(run.Hero, 2, 3);
             Place(kristela, 6, 3);
             Place(Member(run, ActorCatalog.Uzuki), 2, 4);
@@ -189,7 +189,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void APlayersLeaderIsNotMadeToWait()
         {
-            var run = Run(new[] { ActorCatalog.Haiden, ActorCatalog.Kristela }, Room);
+            var run = Run(new[] { ActorCatalog.Haiden, TestHeroes.Monk }, Room);
             var kristela = run.Party[1];
             Hurt(kristela, 30);
             Assert.IsTrue(HeroTactics.IsToppingUp(run));

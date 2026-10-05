@@ -8,7 +8,8 @@ namespace FiveKingdoms.Tests
 {
     /// <summary>
     /// The starting kits approved in PROGRESSION.md: Uzuki the Archer (traps), Haiden the Paladin (tank first, some
-    /// healing), Kristela the Monk (speed melee). Milestone 1f.
+    /// healing), Kristela the Fencer (speed melee; her kit has its own tests, and the Monk's kit she had until
+    /// 2026-10-05 is tested here on <see cref="TestHeroes.Monk"/>). Milestone 1f.
     /// </summary>
     public class PartyKitTests
     {
@@ -56,7 +57,8 @@ namespace FiveKingdoms.Tests
             string Ids(ActorDefinition hero) => string.Join(",", hero.Skills.Select(skill => skill.Id)) + " / " + hero.Ultimate.Id;
             Assert.AreEqual("hunters_mark,power_shot,rolling_shot / volley", Ids(ActorCatalog.Uzuki));
             Assert.AreEqual("paladin_heal,divine_strike,shoulder_bash / aura_of_protection", Ids(ActorCatalog.Haiden));
-            Assert.AreEqual("piercing_punch,ki_heal,stun_strike / flurry_of_blows", Ids(ActorCatalog.Kristela));
+            Assert.AreEqual("triple_thrust,lunge,riposte / blade_dance", Ids(ActorCatalog.Kristela));
+            Assert.AreEqual("piercing_punch,ki_heal,stun_strike / flurry_of_blows", Ids(TestHeroes.Monk), "the Monk's base kit, hers until 2026-10-05");
         }
 
         [Test]
@@ -95,7 +97,8 @@ namespace FiveKingdoms.Tests
         {
             Assert.AreEqual(WeaponType.Bow, ActorCatalog.Uzuki.Weapon.Type);
             Assert.AreEqual(WeaponType.LongSword, ActorCatalog.Haiden.Weapon.Type);
-            Assert.AreEqual(WeaponType.Gauntlets, ActorCatalog.Kristela.Weapon.Type);
+            Assert.AreEqual(WeaponType.PiercerBlade, ActorCatalog.Kristela.Weapon.Type);
+            Assert.AreEqual(WeaponFamily.Sword, ActorCatalog.Kristela.Weapon.Family, "a sword, to the skills that need one");
         }
 
         // ---- Uzuki ----
@@ -105,7 +108,7 @@ namespace FiveKingdoms.Tests
         {
             Assert.AreEqual("Quick Shot", ActorCatalog.Uzuki.AttackName);
             Assert.AreEqual("Sword Slash", ActorCatalog.Haiden.AttackName);
-            Assert.AreEqual("Jab", ActorCatalog.Kristela.AttackName);
+            Assert.AreEqual("Thrust", ActorCatalog.Kristela.AttackName);
         }
 
         [Test]
@@ -333,12 +336,12 @@ namespace FiveKingdoms.Tests
             Assert.Less(spider.Hp, spider.MaxHp);
         }
 
-        // ---- Kristela ----
+        // ---- The Monk (Kristela's kit until 2026-10-05) ----
 
         [Test]
         public void PiercingPunchAlsoHitsTheEnemyBehind()
         {
-            var run = Run(Only(ActorCatalog.Kristela), Corridor);
+            var run = Run(Only(TestHeroes.Monk), Corridor);
             var front = Dummy(run, 2, 1);
             var back = Dummy(run, 3, 1);
             Assert.IsTrue(run.UseSkill(Slot(run.Hero, SkillCatalog.PiercingPunch), Direction8.E));
@@ -349,7 +352,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void KiHealIsAQuickSelfHeal()
         {
-            var run = Run(Only(ActorCatalog.Kristela), Corridor);
+            var run = Run(Only(TestHeroes.Monk), Corridor);
             Dummy(run, 3, 1);
             run.Wait(); // The fight starts; Kristela (100) is up at 100 AV.
             var kristela = run.Hero;
@@ -362,7 +365,7 @@ namespace FiveKingdoms.Tests
         /// <summary>Kristela alone next to a foe, the fight already on and her stun a sure thing (her 60% isn't under test).</summary>
         static DungeonRun StunDuel(out Actor foe, ActorDefinition foeDefinition = null, int foeSpeed = 0)
         {
-            var run = Run(Only(ActorCatalog.Kristela), Corridor);
+            var run = Run(Only(TestHeroes.Monk), Corridor);
             run.Hero.MaxHp = run.Hero.Hp = 100000;
             foe = run.SpawnEnemy(new GridPos(2, 1), foeDefinition);
             foe.MaxHp = foe.Hp = 100000;
@@ -390,7 +393,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void AStunOutsideAFightDoesNothing()
         {
-            var run = Run(Only(ActorCatalog.Kristela), Corridor);
+            var run = Run(Only(TestHeroes.Monk), Corridor);
             var spider = Dummy(run, 2, 1);
             run.Hero.Affinity = 100000;
             Assert.IsTrue(run.UseSkillAt(Slot(run.Hero, SkillCatalog.StunStrike), spider.Pos)); // Exploring: everyone acts once anyway.

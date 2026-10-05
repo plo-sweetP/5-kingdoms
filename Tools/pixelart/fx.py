@@ -150,6 +150,57 @@ def twinkle():
     return Strip('twinkle', frames, (size // 2, size // 2), loop=False, fps=14)
 
 
+THRUST = ((4, 34, 3.0, 255), (4, 66, 2.4, 255), (34, 68, 1.3, 170))
+
+
+def thrust_frames():
+    """
+    A stab's streak (the Piercer Blade): a thin lance of light pointing right, which the game turns the way the blade
+    goes and tints. Three frames: it shoots out, reaches the target, and its tail catches up.
+    """
+    w, h = 72, 14
+    frames = []
+    for x0, x1, half, alpha in THRUST:
+        image = Image(w, h)
+        for y in range(h):
+            for x in range(x0, x1):
+                t = (x + 0.5 - x0) / (x1 - x0)
+                width = half * (t / 0.75 if t < 0.75 else (1.0 - t) / 0.25)   # A lance: widest near the point.
+                d = abs(y + 0.5 - h / 2.0)
+                if d <= max(0.5, width):
+                    core = d <= max(0.5, width * 0.45)
+                    image.px[y * w + x] = with_alpha(WHITE if core else hexc('#fffaba'), int(alpha * min(1.0, 0.3 + t)))
+        frames.append(image)
+    return frames
+
+
+def thrust():
+    return Strip('thrust', thrust_frames(), (4, 7), loop=False, fps=24)
+
+
+def slash_frames():
+    """A blade's cut across a target (Blade Dance, a counter): a thin crescent, white, tinted in the game. It sweeps, then fades."""
+    size = 64
+    frames = []
+    for sweep, thick, alpha in ((0.5, 6.0, 255), (1.0, 5.0, 255), (1.0, 2.4, 150)):
+        image = Image(size, size)
+        for y in range(size):
+            for x in range(size):
+                dx, dy = x + 0.5 - 18, y + 0.5 - 46          # The arc's centre: the cut runs from the top left to the right.
+                k = (105.0 - math.degrees(math.atan2(-dy, dx))) / 130.0   # 0 where the cut begins, 1 where it ends.
+                if not 0.0 <= k <= sweep:
+                    continue
+                taper = math.sin(math.pi * k)
+                if abs(math.hypot(dx, dy) - 30.0) <= thick * taper / 2.0 + 0.2:
+                    image.px[y * size + x] = with_alpha(WHITE, alpha)
+        frames.append(image)
+    return frames
+
+
+def slash():
+    return Strip('slash', slash_frames(), (32, 32), loop=False, fps=22)
+
+
 # ---- status icons: 24 px, outlined ----
 
 def _icon(draw):
@@ -219,16 +270,27 @@ def _aura(c):
         c.rect(12 + dx - 1, 12 + dy - 1, 2, 2, gold)
 
 
+def _riposte(c):
+    """A counter stance: a thin blade held ready, its round gold guard, and a glint at its point."""
+    steel, gold, dark = hexc('#cfdde4'), hexc('#f3d34a'), hexc('#c9972a')
+    c.line(8, 16, 19, 5, steel, 2)
+    c.line(8, 15, 18, 5, WHITE, 1)
+    c.line(3, 21, 6, 18, dark, 2)
+    c.ellipse(7, 17, 3.2, 3.2, gold)
+    c.rect(19, 1, 2, 8, WHITE)
+    c.rect(16, 4, 8, 2, WHITE)
+
+
 def status_icons():
     return {'mark': _icon(_mark), 'rooted': _icon(_rooted), 'taunt': _icon(_taunt), 'stunned': _icon(_stunned),
-            'guard': _icon(_guard), 'aura': _icon(_aura)}
+            'guard': _icon(_guard), 'aura': _icon(_aura), 'riposte': _icon(_riposte)}
 
 
 def build(pack):
     """Every effect strip, by name."""
     # Of the pack's particle effects the game uses the first dust puff and the first explosion; the file also has a
     # second of each (frames 8-17 and 26-35), three fires (36-65) and a water splash (66-74).
-    strips = [arrow(pack), heal(pack), reticle(pack), berry(), snare(), punch(), ring(), twinkle(),
+    strips = [arrow(pack), heal(pack), reticle(pack), berry(), snare(), punch(), ring(), twinkle(), thrust(), slash(),
               particle(pack, 'dust', 0, 7), particle(pack, 'explosion', 18, 25)]
     for name, image in status_icons().items():
         strips.append(Strip('status_' + name, [image], (image.w // 2, image.h // 2), loop=False))

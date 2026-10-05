@@ -288,7 +288,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void TheHurtOneHealsBehind()
         {
-            var run = HurtFront(UzukiLeads, ActorCatalog.Kristela, ActorCatalog.Haiden, out var kristela, out var haiden);
+            var run = HurtFront(new[] { ActorCatalog.Uzuki, ActorCatalog.Haiden, TestHeroes.Monk }, TestHeroes.Monk, ActorCatalog.Haiden, out var kristela, out var haiden);
             run.Wait(); // Haiden takes the front.
             Assert.AreEqual(new GridPos(4, 1), haiden.Pos);
             kristela.Hp = kristela.MaxHp * 70 / 100;

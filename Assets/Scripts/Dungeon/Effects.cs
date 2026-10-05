@@ -37,6 +37,20 @@ namespace FiveKingdoms.Dungeon
         public static void Punch(Transform parent, Vector3 position, Color tint) =>
             Play(parent, "Effects/punch", position, tint).transform.rotation = Quaternion.Euler(0f, 0f, 90f * Random.Range(0, 4));
 
+        /// <summary>A stab's streak from <paramref name="from"/> toward <paramref name="to"/> (the Piercer Blade); the art points right and is turned that way.</summary>
+        public static void Thrust(Transform parent, Vector3 from, Vector3 to, Color tint)
+        {
+            var way = to - from;
+            Play(parent, "Effects/thrust", from, tint).transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(way.y, way.x) * Mathf.Rad2Deg);
+        }
+
+        /// <summary>A blade's cut across a target (Blade Dance, a Riposte's counter).</summary>
+        public static void Slash(Transform parent, Vector3 position, Color tint, bool flipX = false) =>
+            Play(parent, "Effects/slash", position, tint, flipX: flipX);
+
+        /// <summary>A glint that opens and closes (the rings' twinkle), e.g. on a blade held ready.</summary>
+        public static void Glint(Transform parent, Vector3 position, Color tint) => Play(parent, "Effects/twinkle", position, tint);
+
         /// <summary>A ring racing outward over the ground: a slam, a shove, a blow that goes through.</summary>
         public static void Ring(Transform parent, Vector3 position, Color tint) =>
             Play(parent, "Effects/ring", position + Vector3.down * 0.3f, tint, onGround: true);
@@ -191,19 +205,22 @@ namespace FiveKingdoms.Dungeon
             }
         }
 
-        /// <summary>A still, tinted copy of a sprite that fades out where it stands, just behind the original.</summary>
-        public static void Afterimage(Transform parent, SpriteRenderer source, Color tint)
+        /// <summary>
+        /// A still, tinted copy of a sprite that fades out where it stands, just behind the original; or, with
+        /// <paramref name="at"/>, somewhere else (a hero flickering to a foe and back).
+        /// </summary>
+        public static void Afterimage(Transform parent, SpriteRenderer source, Color tint, Vector3? at = null, float life = 0.22f)
         {
             var go = new GameObject("Afterimage");
             go.transform.SetParent(parent, false);
-            go.transform.SetPositionAndRotation(source.transform.position, source.transform.rotation);
+            go.transform.SetPositionAndRotation(at ?? source.transform.position, source.transform.rotation);
             go.transform.localScale = source.transform.lossyScale;
             var renderer = go.AddComponent<SpriteRenderer>();
             renderer.sprite = source.sprite;
             renderer.flipX = source.flipX;
             renderer.color = tint;
             renderer.sortingOrder = source.sortingOrder - 1;
-            go.AddComponent<Particle>().Init(Vector3.zero, 0.22f, 0f);
+            go.AddComponent<Particle>().Init(Vector3.zero, life, 0f);
         }
 
         static void Spawn(Transform parent, Vector3 position, Color color, Vector3 velocity, float life, float gravity)

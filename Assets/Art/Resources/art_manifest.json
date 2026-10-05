@@ -417,7 +417,7 @@
     }
    ],
    "skirt": true,
-   "weapon": "gauntlets"
+   "weapon": "piercer_blade"
   },
   {
    "armor": "archers_garb",
@@ -941,30 +941,21 @@
     },
     {
      "columns": 25,
-     "h": 99,
+     "h": 98,
      "name": "piercer_blade_back",
      "path": "Heroes/warrior_piercer_blade_back",
      "w": 81,
      "x": 49,
-     "y": 6
+     "y": 7
     },
     {
      "columns": 28,
      "h": 58,
      "name": "piercer_blade_front",
      "path": "Heroes/warrior_piercer_blade_front",
-     "w": 73,
-     "x": 7,
+     "w": 72,
+     "x": 8,
      "y": 51
-    },
-    {
-     "columns": 17,
-     "h": 106,
-     "name": "piercer_blade_fx",
-     "path": "Heroes/warrior_dual_blades_fx",
-     "w": 120,
-     "x": 20,
-     "y": 24
     },
     {
      "columns": 28,
@@ -1816,6 +1807,32 @@
    "w": 18
   },
   {
+   "columns": 3,
+   "count": 3,
+   "fps": 24,
+   "h": 14,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/thrust",
+   "path": "Effects/thrust",
+   "pivotX": 4,
+   "pivotY": 7,
+   "w": 72
+  },
+  {
+   "columns": 3,
+   "count": 3,
+   "fps": 22,
+   "h": 64,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/slash",
+   "path": "Effects/slash",
+   "pivotX": 32,
+   "pivotY": 32,
+   "w": 64
+  },
+  {
    "columns": 8,
    "count": 8,
    "fps": 14,
@@ -1915,6 +1932,19 @@
    "loop": false,
    "name": "Effects/status_aura",
    "path": "Effects/status_aura",
+   "pivotX": 14,
+   "pivotY": 14,
+   "w": 28
+  },
+  {
+   "columns": 1,
+   "count": 1,
+   "fps": 10,
+   "h": 28,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/status_riposte",
+   "path": "Effects/status_riposte",
    "pivotX": 14,
    "pivotY": 14,
    "w": 28

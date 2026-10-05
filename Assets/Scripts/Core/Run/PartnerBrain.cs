@@ -5,9 +5,10 @@ namespace FiveKingdoms.Core
     /// <summary>
     /// AI for the party members the player isn't controlling (GAME_PLAN.md, Party). Each turn a partner gets out of a
     /// boss's wind-up, uses its ultimate when it's worth it, heals or guards when the party needs it, gets out of melee if
-    /// it's a ranged hero, swaps back behind a healthier ally if it's badly hurt, and attacks a foe in reach (the marked
-    /// enemy first, then the lowest HP; <see cref="HeroTactics"/>). Otherwise it moves: in a fight, melee partners close
-    /// in on a foe and ranged ones find a tile to shoot from (PROGRESSION.md, "Battle formation"); while exploring, its
+    /// it's a ranged hero, swaps back behind a healthier ally if it's badly hurt, takes a counter stance when a foe is
+    /// about to hit it, and attacks a foe in reach (the marked enemy first, then the lowest HP; <see cref="HeroTactics"/>).
+    /// Otherwise it moves: in a fight, melee partners close in on a foe, with a Lunge where that gets there at once,
+    /// and ranged ones find a tile to shoot from (PROGRESSION.md, "Battle formation"); while exploring, its
     /// <see cref="PartyTactic"/> decides: Attack goes after foes it can see while staying near the leader, Follow keeps
     /// in line behind the member ahead of it. Hold stays where it is, even in a fight. The party stays together: a
     /// partner whose way is held by its own allies queues up behind them rather than walking around the floor.
@@ -37,6 +38,7 @@ namespace FiveKingdoms.Core
             if (HeroTactics.TryRunToSafety(run, partner, out command)) return command;
             if (HeroTactics.TryMark(run, partner, out command)) return command;
             if (!holds && HeroTactics.TryMakeWay(run, partner, out command)) return command;
+            if (HeroTactics.TryRiposte(run, partner, out command)) return command;
             if (HeroTactics.TryAttack(run, partner, out command)) return command;
 
             if (holds) return HeroCommand.Wait;
@@ -67,7 +69,7 @@ namespace FiveKingdoms.Core
                 }
             }
             if (best == int.MaxValue) return false;
-            if (HeroTactics.HoldsTheDoor(run, partner, partner.Pos + command.Direction.ToOffset())) command = HeroCommand.HoldTheDoor;
+            command = HeroTactics.StepToward(run, partner, command.Direction);
             return true;
         }
 

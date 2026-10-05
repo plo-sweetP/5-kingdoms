@@ -178,31 +178,37 @@ namespace FiveKingdoms.Core
 
     /// <summary>
     /// The classes heroes can learn. Part 1 of milestone 1g has the starting party's three and the Monk (PROGRESSION.md,
-    /// "Starting class content"); the other base classes, the advanced and the inherited ones come later.
+    /// "Starting class content"); the other base classes, the advanced and the inherited ones come later. Each has
+    /// its "Every tier" stat bumps (in tenths of a percent a tier, so 4 is +10% at tier 25; never SPD); the
+    /// milestones' options are not written yet, so a class stops at tier 4 for now.
     /// </summary>
     public static class ClassCatalog
     {
         /// <summary>Uzuki's class: ranged physical damage, traps and control. A light, quick class.</summary>
         public static readonly ClassDefinition Archer = new ClassDefinition("archer", "Archer", WeaponFamily.Bow, speedModifier: 5,
-            paths: new[] { "Marksman", "Hunter", "Trickshot" });
+            paths: new[] { "Marksman", "Hunter", "Trickshot" },
+            bumps: new[] { new StatBump(StatKind.Atk, 4), new StatBump(StatKind.CritRate, 2) });
 
         /// <summary>Haiden's class: a holy warrior in armor, protection and some healing. A heavy, slower class.</summary>
         public static readonly ClassDefinition Paladin = new ClassDefinition("paladin", "Paladin", WeaponFamily.Sword, speedModifier: -5,
-            paths: new[] { "Guardian", "Devotion", "Crusader" });
+            paths: new[] { "Guardian", "Devotion", "Crusader" },
+            bumps: new[] { new StatBump(StatKind.Hp, 4), new StatBump(StatKind.Def, 4) });
 
         /// <summary>
         /// Kristela's class since 2026-10-05 (Peter: "I'm not feeling the monk abilities for her"): a light blade,
         /// flurries, lunges and counters. A quick class, like the Monk she was until then.
         /// </summary>
         public static readonly ClassDefinition Fencer = new ClassDefinition("fencer", "Fencer", WeaponFamily.Sword, speedModifier: 5,
-            paths: new[] { "Duelist", "Footwork", "En Garde" });
+            paths: new[] { "Duelist", "Footwork", "En Garde" },
+            bumps: new[] { new StatBump(StatKind.CritRate, 2), new StatBump(StatKind.CritDmg, 4) });
 
         /// <summary>
         /// Fast unarmed martial arts, many hits. A quick class. No starting hero has it since Kristela became a Fencer;
         /// its tiers are built when a hero or a weapon brings it into play.
         /// </summary>
         public static readonly ClassDefinition Monk = new ClassDefinition("monk", "Monk", WeaponFamily.Fists, speedModifier: 5,
-            paths: new[] { "Striker", "Windwalker", "Mystic" });
+            paths: new[] { "Striker", "Windwalker", "Mystic" },
+            bumps: new[] { new StatBump(StatKind.Atk, 4), new StatBump(StatKind.CritDmg, 4) });
 
         /// <summary>Every class, in the order the tree lists them.</summary>
         public static readonly ClassDefinition[] All = { Archer, Paladin, Fencer, Monk };

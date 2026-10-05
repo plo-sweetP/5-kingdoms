@@ -25,7 +25,7 @@ namespace FiveKingdoms.Tests
             Assert.AreEqual(400 + bow.Hp, uzuki.MaxHp, "the bow's stats count as base");
             Assert.AreEqual(60 + bow.Atk, uzuki.Attack);
             Assert.AreEqual(30 + bow.Def, uzuki.Defense);
-            Assert.AreEqual(50, uzuki.CritRate, "5% Crit Rate, in tenths of a percent");
+            Assert.AreEqual(50 + 2, uzuki.CritRate, "5% Crit Rate, in tenths of a percent, and the Archer's 0.2% at tier 1");
             Assert.AreEqual(500, uzuki.CritDmg, "+50% Crit DMG");
         }
 

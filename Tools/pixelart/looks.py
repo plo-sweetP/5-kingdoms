@@ -14,7 +14,7 @@ from px import Image
 # Default looks until gear exists (milestone 1h sets them from the equipped items).
 DEFAULT_LOOKS = {
     'haiden': ('long_sword', 'heavy_armor'),
-    'kristela': ('gauntlets', 'light_warrior'),
+    'kristela': ('piercer_blade', 'light_warrior'),   # A Fencer since 2026-10-05 (the Gauntlets were hers as a Monk).
     'uzuki': ('hunter_bow', 'archers_garb'),
 }
 

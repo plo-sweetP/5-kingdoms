@@ -298,6 +298,8 @@ namespace FiveKingdoms.CoreTests
             int reachedBoss = 0;
             int holds = 0, frontSwaps = 0, fallenEarly = 0, fallenBesideHelp = 0;
             int rests = 0, restHeals = 0;
+            var skillUses = new Dictionary<string, int>();
+            int counters = 0;
             var hpAtFightStart = new long[Party.Length];
             var hpAtBossStart = new long[Party.Length];
             var packFights = new FightStats(Party.Length);
@@ -342,6 +344,14 @@ namespace FiveKingdoms.CoreTests
                         reachedBoss++;
                         for (int member = 0; member < run.Party.Count; member++)
                             if (run.Party[member].IsAlive) standingAtBoss[member]++;
+                    }
+                    // What the heroes use: every skill and ultimate by name, and how often a counter stance is answered.
+                    foreach (var e in run.Events)
+                    {
+                        if (e is CounterEvent) counters++;
+                        if (!(e is SkillUsedEvent any)) continue;
+                        skillUses.TryGetValue(any.Skill.Name, out int uses);
+                        skillUses[any.Skill.Name] = uses + 1;
                     }
                     foreach (var e in run.Events)
                     {
@@ -404,6 +414,9 @@ namespace FiveKingdoms.CoreTests
                               string.Join(", ", Party.Select((definition, member) => $"{definition.Name} {hpAtFightStart[member] / Math.Max(1, fights)}%")) +
                               "; into the boss fight: " +
                               string.Join(", ", Party.Select((definition, member) => $"{definition.Name} {hpAtBossStart[member] / Math.Max(1, bossFights)}%")));
+            Console.WriteLine("Skills used a run: " +
+                              string.Join(", ", skillUses.OrderByDescending(pair => pair.Value).Select(pair => $"{pair.Key} {pair.Value / (float)seeds:0.0}")) +
+                              $"; a counter stance was answered {counters / (float)seeds:0.0} times a run");
             Console.WriteLine("In the fights before the boss (a round is one action of the leader's in which blows were exchanged):");
             packFights.Print(Party);
             Console.WriteLine("In the boss fight:");

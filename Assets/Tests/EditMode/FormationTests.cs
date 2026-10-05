@@ -257,7 +257,7 @@ namespace FiveKingdoms.Tests
         public void AHurtHeroHealsRatherThanRunsWhenItCan()
         {
             // In a room: in a corridor she would give Haiden the front and heal behind him (DoorTacticsTests).
-            var run = Run(new[] { ActorCatalog.Kristela, ActorCatalog.Haiden }, Room);
+            var run = Run(new[] { TestHeroes.Monk, ActorCatalog.Haiden }, Room);
             var kristela = run.Hero;
             var haiden = run.Party[1];
             Place(kristela, 3, 3);

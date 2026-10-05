@@ -234,8 +234,10 @@ def build(wardrobe, folder):
     strips = [('Haiden: Sword Slash', looks.Look('haiden', 'long_sword', 'heavy_armor'), 'attack'),
               ('Haiden: guard (Shoulder Bash, Aura)', looks.Look('haiden', 'long_sword', 'heavy_armor'), 'guard'),
               ('Uzuki: shot', looks.Look('uzuki', 'hunter_bow', 'archers_garb'), 'attack'),
-              ('Kristela: Jab', looks.Look('kristela', 'gauntlets', 'light_warrior'), 'attack'),
-              ('Kristela: heavy blow', looks.Look('kristela', 'gauntlets', 'light_warrior'), 'attack2'),
+              ('Kristela: Thrust', looks.Look('kristela', 'piercer_blade', 'light_warrior'), 'attack'),
+              ("Kristela: a lunge's stab", looks.Look('kristela', 'piercer_blade', 'light_warrior'), 'attack2'),
+              ("Kristela: Riposte's stance", looks.Look('kristela', 'piercer_blade', 'light_warrior'), 'guard'),
+              ('The Monk: Jab (the Gauntlets)', looks.Look('kristela', 'gauntlets', 'light_warrior'), 'attack'),
               ('Kristela with the Arcane Sword', looks.Look('kristela', 'arcane_sword', 'mage_robe'), 'attack2'),
               ('Uzuki with the Mage Staff: casting', looks.Look('uzuki', 'mage_staff', 'mage_robe'), 'cast')]
     for label, look, anim in strips:
@@ -260,4 +262,18 @@ def build(wardrobe, folder):
     for i in range(0, len(rings), 3):
         sheet.row(rings[i:i + 3], 'Ring sets' if i == 0 else None)
     save(sheet, '07-icons.png')
+
+    # 8. Kristela's Fencer kit: the skill icons, the icon over her head in the stance, and the effects.
+    import fx
+    glyphs = icons.skill_icons()
+    big = lambda image, k=4: cell(image, (0, 0, image.w, image.h), k, PAPER_LIGHT)
+    sheet = Sheet("KRISTELA'S FENCER KIT", 'Skill icons: 24 px white glyphs for round buttons and the skill tree, shown 4 times their size.')
+    sheet.row([(big(glyphs[key]), name) for key, name in icons.FENCER_ICONS], 'Skill icons')
+    sheet.row([(big(drawn['Icons/weapon_piercer_blade'], 3), 'Piercer Blade'), (big(fx.status_icons()['riposte']), 'Riposte stance')] +
+              [(big(image, 2), 'Thrust %d' % (i + 1)) for i, image in enumerate(fx.thrust_frames())], 'Her blade, the stance over her head, a stab')
+    sheet.row([(big(image, 2), 'Slash %d' % (i + 1)) for i, image in enumerate(fx.slash_frames())], 'A cut (Blade Dance, the counter)')
+    start, count = anim_start(w.rig_of(looks.Look('kristela', 'piercer_blade', 'light_warrior')), 'idle')
+    sheet.row([(frame(looks.Look('kristela', 'piercer_blade', 'light_warrior'), start, wide, 3), 'Kristela with the Piercer Blade')] +
+              [(frame(looks.Look('haiden', 'piercer_blade', 'heavy_armor'), start, wide, 3), 'On Haiden')], 'In the dungeon')
+    save(sheet, '08-fencer-kit.png')
     return paths

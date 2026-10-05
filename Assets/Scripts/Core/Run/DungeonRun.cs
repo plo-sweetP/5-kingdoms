@@ -322,7 +322,9 @@ namespace FiveKingdoms.Core
         {
             switch (skill.Effect)
             {
-                case SkillEffect.Strike: return StrikeTarget(user, aim, out _) != null ? SkillCheck.Ready : SkillCheck.NoTarget;
+                case SkillEffect.Strike:
+                case SkillEffect.SharedStrikes:
+                    return StrikeTarget(user, aim, out _, skill.DashTiles) != null ? SkillCheck.Ready : SkillCheck.NoTarget;
                 case SkillEffect.Shot when skill.RollTiles > 0:
                     return DashDestination(user, skill.RollTiles, DirectionOf(user, aim)) != user.Pos ? SkillCheck.Ready : SkillCheck.Blocked;
                 case SkillEffect.Shot:
@@ -342,12 +344,15 @@ namespace FiveKingdoms.Core
         Actor ShotTarget(Actor user, AimAt aim, int range) =>
             aim.Target.HasValue ? ShotTargetAt(user, aim.Target.Value, range) : FindShotTarget(user, aim.Direction, range);
 
-        /// <summary>The foe a strike aimed that way would hit: the one on the target tile, or by direction (<see cref="FindStrikeTarget"/>).</summary>
-        Actor StrikeTarget(Actor user, AimAt aim, out Direction8 direction)
+        /// <summary>
+        /// The foe a strike aimed that way would hit: the one on the target tile, or by direction (<see cref="FindStrikeTarget"/>).
+        /// A strike that dashes first (<paramref name="dashTiles"/>) reaches that much further along the 8 lines.
+        /// </summary>
+        Actor StrikeTarget(Actor user, AimAt aim, out Direction8 direction, int dashTiles = 0)
         {
-            if (!aim.Target.HasValue) return FindStrikeTarget(user, aim.Direction, out direction);
+            if (!aim.Target.HasValue) return FindStrikeTarget(user, aim.Direction, out direction, dashTiles);
             direction = Directions.Toward(user.Pos, aim.Target.Value);
-            return StrikeTargetAt(user, aim.Target.Value);
+            return StrikeTargetAt(user, aim.Target.Value, dashTiles);
         }
 
         /// <summary>The foe on <paramref name="tile"/> if a melee blow from <paramref name="user"/> reaches it (next to it, corner allowing), else null.</summary>
@@ -356,6 +361,53 @@ namespace FiveKingdoms.Core
             var foe = ActorAt(tile);
             if (foe == null || foe.Team == user.Team || GridPos.ChebyshevDistance(user.Pos, tile) != 1) return null;
             return Map.IsCornerClear(user.Pos, Directions.Toward(user.Pos, tile)) ? foe : null;
+        }
+
+        /// <summary>
+        /// The foe on <paramref name="tile"/> if a strike that first dashes up to <paramref name="dashTiles"/> tiles
+        /// reaches it (Lunge): on one of the 8 lines from <paramref name="user"/>, at most that many tiles past the
+        /// next one, with nobody standing between and no wall corner cut on the way. Else null.
+        /// </summary>
+        public Actor StrikeTargetAt(Actor user, GridPos tile, int dashTiles)
+        {
+            if (dashTiles <= 0) return StrikeTargetAt(user, tile);
+            int dx = tile.X - user.Pos.X, dy = tile.Y - user.Pos.Y;
+            if (dx == 0 && dy == 0 || dx != 0 && dy != 0 && Math.Abs(dx) != Math.Abs(dy)) return null; // Off the 8 lines.
+            var foe = FirstFoeAlong(user, Directions.Toward(user.Pos, tile), dashTiles);
+            return foe != null && foe.Pos == tile ? foe : null;
+        }
+
+        /// <summary>
+        /// The first foe <paramref name="direction"/> of <paramref name="user"/> that a strike reaches: on the next tile
+        /// (corner allowing), or up to <paramref name="dashTiles"/> tiles further when every tile on the way is free
+        /// and a step the user could take. Null when a wall, a corner or an ally comes first.
+        /// </summary>
+        Actor FirstFoeAlong(Actor user, Direction8 direction, int dashTiles)
+        {
+            var pos = user.Pos;
+            for (int tile = 0; tile <= dashTiles; tile++)
+            {
+                if (!Map.IsCornerClear(pos, direction)) return null;
+                pos += direction.ToOffset();
+                var occupant = ActorAt(pos);
+                if (occupant != null) return occupant.Team != user.Team ? occupant : null;
+                if (!Map.IsWalkable(pos)) return null;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Whether <paramref name="foe"/>'s turn comes before <paramref name="hero"/>'s next one, if the hero now takes
+        /// an action costing <paramref name="costPercent"/> of a turn (the AI asks before a stance that lasts until
+        /// then). Outside a fight everyone moves once a round, so it does.
+        /// </summary>
+        public bool ActsBefore(Actor foe, Actor hero, int costPercent = 100)
+        {
+            if (!InCombat || !timeline.Contains(foe.Id) || !timeline.Contains(hero.Id)) return true;
+            var heroNext = timeline.Now + Timeline.TurnLength(hero.Speed, costPercent);
+            var foeNext = timeline.NextTurnOf(foe.Id);
+            // Ties go to the leader, then to the lower actor id (Timeline).
+            return foeNext < heroNext || foeNext == heroNext && hero != Hero && foe.Id < hero.Id;
         }
 
         /// <summary>
@@ -654,9 +706,10 @@ namespace FiveKingdoms.Core
             if (!info.NeedsAim) return info;
 
             bool moves = skill != null && (skill.Effect == SkillEffect.Dash || skill.RollTiles > 0);
-            bool shot = skill == null ? user.Definition.IsRanged : skill.Effect != SkillEffect.Strike && !moves;
+            bool strikes = skill != null && (skill.Effect == SkillEffect.Strike || skill.Effect == SkillEffect.SharedStrikes);
+            bool shot = skill == null ? user.Definition.IsRanged : !strikes && !moves;
             int range = skill == null ? user.Definition.AttackRange : moves ? (skill.RollTiles > 0 ? skill.RollTiles : skill.Power) : skill.Range;
-            info.AreaRadius = skill != null && skill.Effect == SkillEffect.Area ? skill.Radius : 0;
+            info.AreaRadius = skill != null && (skill.Effect == SkillEffect.Area || skill.Effect == SkillEffect.SharedStrikes) ? skill.Radius : 0;
             info.PicksTile = moves;
 
             if (shot)
@@ -691,11 +744,18 @@ namespace FiveKingdoms.Core
                     }
                     else
                     {
-                        var pos = user.Pos + dir.ToOffset();
-                        if (!Map.IsWalkable(pos) || !Map.IsCornerClear(user.Pos, dir)) continue;
-                        info.AddReach(pos);
-                        var occupant = ActorAt(pos);
-                        if (occupant != null && occupant.Team != user.Team) info.AddOption(new AimOption(pos, dir, occupant, 1));
+                        // The next tile, or for a strike that dashes first (Lunge) the line up to the first one standing on it.
+                        int reach = strikes ? skill.StrikeReach : 1;
+                        var pos = user.Pos;
+                        for (int distance = 1; distance <= reach && Map.CanStep(pos, dir); distance++)
+                        {
+                            pos += dir.ToOffset();
+                            info.AddReach(pos);
+                            var occupant = ActorAt(pos);
+                            if (occupant == null) continue;
+                            if (occupant.Team != user.Team) info.AddOption(new AimOption(pos, dir, occupant, distance));
+                            break;
+                        }
                     }
                 }
             }
@@ -967,7 +1027,7 @@ namespace FiveKingdoms.Core
                     kind = ActionKind.Special;
                     break;
             }
-            EndOwnTurn(enemy);
+            if (enemy.IsAlive) EndOwnTurn(enemy); // A counter can fell it on its own turn.
             return Config.Costs.PercentFor(kind);
         }
 
@@ -1043,10 +1103,12 @@ namespace FiveKingdoms.Core
         /// <summary>
         /// A weapon attack (always ready): a melee blow on a foe next to the attacker, or for heroes with reach (Uzuki's bow)
         /// a shot at any foe in sight, which deals less, and less again at point-blank range. With no foe to hit it's a
-        /// miss. A hero's attack charges its ultimate.
+        /// miss. How hard and how often it hits is the attacker's own (<see cref="HeroKit.WeaponAttack"/>: 200% once,
+        /// until a class option changes it). A hero's attack charges its ultimate.
         /// </summary>
         void ResolveAttack(Actor attacker, AimAt aim)
         {
+            var attack = attacker.Kit.WeaponAttack;
             int range = attacker.Definition.AttackRange;
             bool ranged = attacker.Definition.IsRanged;
             var dir = DirectionOf(attacker, aim);
@@ -1060,8 +1122,14 @@ namespace FiveKingdoms.Core
             attacker.Facing = dir;
             var offset = dir.ToOffset();
             var lands = target?.Pos ?? attacker.Pos + new GridPos(offset.X * distance, offset.Y * distance);
-            events.Add(new AttackEvent(attacker.Id, target?.Id ?? -1, dir, lands, ranged: ranged, distance: distance));
-            if (target != null) ApplyDamage(attacker, target, CombatRules.RollBasicAttack(attacker, target, Random, ReachPercent(attacker, ranged)));
+            for (int hit = 0; hit < attack.Hits && State == RunState.InProgress && attacker.IsAlive; hit++)
+            {
+                if (hit > 0 && (target == null || !target.IsAlive)) break;
+                events.Add(new AttackEvent(attacker.Id, target?.Id ?? -1, dir, lands, ranged: ranged, distance: distance));
+                if (target != null)
+                    ApplyDamage(attacker, target, CombatRules.RollDamage(attacker, target, Random, attack.Power, element: attack.Element,
+                        reachPercent: ReachPercent(attacker, ranged)));
+            }
             if (attacker.Team == Team.Hero) Acted(attacker);
         }
 
@@ -1140,6 +1208,13 @@ namespace FiveKingdoms.Core
                 case SkillEffect.Area:
                     ResolveArea(user, skill, aim);
                     break;
+                case SkillEffect.SharedStrikes:
+                    ResolveSharedStrikes(user, skill, aim);
+                    break;
+                case SkillEffect.Counter:
+                    AddStatus(user, StatusKind.Riposte, user, skill.StatusPower, turns: 0, endsOnSourceTurn: true,
+                        bossPower: skill.BossStatusPower, counterPercent: skill.Power);
+                    break;
                 case SkillEffect.Aura:
                     AddStatus(user, StatusKind.Aura, user, skill.StatusPower, skill.StatusTurns, endsOnSourceTurn: false, healPercent: skill.Power);
                     break;
@@ -1174,14 +1249,16 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>
-        /// A strike skill: its hits on the target (more with a wall behind a shove; a flurry moves on to another foe next to
-        /// the user when the target falls), then the shove itself, the enemy behind for a piercing blow, and any slow,
-        /// stun or status.
+        /// A strike skill: a dash up to the target first for one that lunges, its hits on the target (more with a wall
+        /// behind a shove; a flurry moves on to another foe next to the user when the target falls, other strikes lose
+        /// the hits that are left), then the shove itself, the enemy behind for a piercing blow, and any slow, stun or
+        /// status.
         /// </summary>
         void ResolveStrike(Actor user, SkillDefinition skill, AimAt aim)
         {
-            var target = StrikeTarget(user, aim, out var dir);
+            var target = StrikeTarget(user, aim, out var dir, skill.DashTiles);
             user.Facing = dir;
+            if (skill.DashTiles > 0) DashUpTo(user, target, dir);
             var behind = target.Pos + dir.ToOffset();
             bool pinned = skill.Shove && !CanPush(target, dir);
             int percent = pinned ? skill.Power * (100 + skill.WallBonusPercent) / 100 : skill.Power;
@@ -1191,6 +1268,7 @@ namespace FiveKingdoms.Core
             {
                 if (!victim.IsAlive)
                 {
+                    if (!skill.MovesOn) break;
                     victim = FindStrikeTarget(user, victimDir, out victimDir);
                     if (victim == null) break;
                     user.Facing = victimDir;
@@ -1206,6 +1284,63 @@ namespace FiveKingdoms.Core
             if (second == null || second.Team == user.Team || second == target) return;
             events.Add(new AttackEvent(user.Id, second.Id, dir, second.Pos, distance: 2));
             ApplyDamage(user, second, CombatRules.RollDamage(user, second, Random, skill.Power, element: skill.Element));
+        }
+
+        /// <summary>
+        /// A strike that dashes first (Lunge): the user ends on the tile in front of <paramref name="target"/>, coming
+        /// along <paramref name="dir"/>. It stays where it is when that's where it stands already.
+        /// </summary>
+        void DashUpTo(Actor user, Actor target, Direction8 dir)
+        {
+            var from = user.Pos;
+            var landing = target.Pos - dir.ToOffset();
+            if (landing == from) return;
+            user.PreviousPos = from;
+            user.Pos = landing;
+            events.Add(new DashedEvent(user.Id, from, landing, dir));
+            PickUpItemUnder(user);
+        }
+
+        /// <summary>
+        /// Shared strikes (Blade Dance): the area is everything within the skill's Radius of the foe aimed at, next to
+        /// the user. Each strike in turn goes to the living foe there that this skill has hit the fewest times; among
+        /// those a boss first, then the foe aimed at, then the highest ATK, then the lowest id. So a boss alone takes
+        /// every strike, and a boss with two minions the 1st and the 4th. The user doesn't move.
+        /// </summary>
+        void ResolveSharedStrikes(Actor user, SkillDefinition skill, AimAt aim)
+        {
+            var aimed = StrikeTarget(user, aim, out var dir);
+            user.Facing = dir;
+            var center = aimed.Pos;
+            events.Add(new AreaAttackEvent(user.Id, center, skill.Radius));
+            var struck = new Dictionary<int, int>();
+            for (int strike = 0; strike < skill.Hits && State == RunState.InProgress; strike++)
+            {
+                Actor victim = null;
+                int fewest = 0;
+                foreach (var actor in actors)
+                {
+                    if (actor.Team == user.Team || GridPos.ChebyshevDistance(actor.Pos, center) > skill.Radius) continue;
+                    struck.TryGetValue(actor.Id, out int times);
+                    if (victim != null && (times > fewest || times == fewest && !IsHigherThreat(actor, victim, aimed))) continue;
+                    victim = actor;
+                    fewest = times;
+                }
+                if (victim == null) break;
+                struck[victim.Id] = fewest + 1;
+                events.Add(new AttackEvent(user.Id, victim.Id, Directions.Approximate(user.Pos, victim.Pos), victim.Pos,
+                    distance: GridPos.ChebyshevDistance(user.Pos, victim.Pos)));
+                ApplyDamage(user, victim, CombatRules.RollDamage(user, victim, Random, skill.Power, element: skill.Element));
+            }
+        }
+
+        /// <summary>Which of two foes shared strikes go to first: a boss, then the one aimed at, then the higher ATK, then the lower id.</summary>
+        static bool IsHigherThreat(Actor a, Actor b, Actor aimed)
+        {
+            if (a.Definition.IsBoss != b.Definition.IsBoss) return a.Definition.IsBoss;
+            if ((a == aimed) != (b == aimed)) return a == aimed;
+            if (a.Attack != b.Attack) return a.Attack > b.Attack;
+            return a.Id < b.Id;
         }
 
         /// <summary>
@@ -1405,20 +1540,26 @@ namespace FiveKingdoms.Core
             return true;
         }
 
-        /// <summary>The enemy in the <paramref name="preferred"/> direction (if the corner allows), otherwise the first adjacent one; null if none.</summary>
-        Actor FindStrikeTarget(Actor user, Direction8 preferred, out Direction8 direction)
+        /// <summary>
+        /// The enemy in the <paramref name="preferred"/> direction (if the corner allows), otherwise the first adjacent
+        /// one; null if none. A strike that dashes first (<paramref name="dashTiles"/>) looks that much further along
+        /// each line, and takes the nearest when none lies the preferred way.
+        /// </summary>
+        Actor FindStrikeTarget(Actor user, Direction8 preferred, out Direction8 direction, int dashTiles = 0)
         {
             direction = preferred;
-            var faced = Map.IsCornerClear(user.Pos, direction) ? ActorAt(user.Pos + direction.ToOffset()) : null;
-            if (faced != null && faced.Team != user.Team) return faced;
+            var faced = FirstFoeAlong(user, preferred, dashTiles);
+            if (faced != null) return faced;
+            Actor nearest = null;
             foreach (var dir in Directions.All)
             {
-                var other = ActorAt(user.Pos + dir.ToOffset());
-                if (other == null || other.Team == user.Team || !Map.IsCornerClear(user.Pos, dir)) continue;
+                var other = FirstFoeAlong(user, dir, dashTiles);
+                if (other == null) continue;
+                if (nearest != null && GridPos.ChebyshevDistance(user.Pos, other.Pos) >= GridPos.ChebyshevDistance(user.Pos, nearest.Pos)) continue;
+                nearest = other;
                 direction = dir;
-                return other;
             }
-            return null;
+            return nearest;
         }
 
         /// <summary>The user and living allies within <paramref name="radius"/> tiles of it.</summary>
@@ -1451,10 +1592,11 @@ namespace FiveKingdoms.Core
         // ---- Statuses ----
 
         /// <summary>Puts a status on <paramref name="target"/>, replacing one of the same kind.</summary>
-        void AddStatus(Actor target, StatusKind kind, Actor source, int power, int turns, bool endsOnSourceTurn, int healPercent = 0)
+        void AddStatus(Actor target, StatusKind kind, Actor source, int power, int turns, bool endsOnSourceTurn, int healPercent = 0,
+            int bossPower = 0, int counterPercent = 0)
         {
             target.Statuses.RemoveAll(status => status.Kind == kind);
-            target.Statuses.Add(new StatusEffect(kind, source.Id, power, turns, endsOnSourceTurn, healPercent));
+            target.Statuses.Add(new StatusEffect(kind, source.Id, power, turns, endsOnSourceTurn, healPercent, bossPower, counterPercent));
             events.Add(new StatusAppliedEvent(target.Id, kind, source.Id));
         }
 
@@ -1489,9 +1631,9 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>
-        /// How much of a hit from <paramref name="attacker"/> this actor takes, in percent: a guard cuts it, and so does an
-        /// aura covering it (its own, or an ally's next to it); a mark raises it (only for the hunter who placed it; with
-        /// no attacker given, any mark counts).
+        /// How much of a hit from <paramref name="attacker"/> this actor takes, in percent: a guard cuts it, and so do a
+        /// counter stance (less of a boss's hit) and an aura covering it (its own, or an ally's next to it); a mark
+        /// raises it (only for the hunter who placed it; with no attacker given, any mark counts). The cuts add up.
         /// </summary>
         public int DamageTakenPercent(Actor target, Actor attacker = null)
         {
@@ -1500,6 +1642,8 @@ namespace FiveKingdoms.Core
             if (mark != null && (attacker == null || mark.SourceId == attacker.Id)) percent += mark.Power;
             var guard = target.FindStatus(StatusKind.Guard);
             if (guard != null) percent -= guard.Power;
+            var stance = target.FindStatus(StatusKind.Riposte);
+            if (stance != null) percent -= attacker != null && attacker.Definition.IsBoss ? stance.BossPower : stance.Power;
             var aura = AuraProtecting(target);
             if (aura != null) percent -= aura.Power;
             return percent;
@@ -1540,7 +1684,7 @@ namespace FiveKingdoms.Core
                 if (target.Team == boss.Team || !target.IsAlive) continue;
                 if (GridPos.ChebyshevDistance(boss.Pos, target.Pos) > EnemyBrain.SlamRadius) continue;
                 ApplyDamage(boss, target, CombatRules.RollDamage(boss, target, Random, EnemyBrain.SlamDamagePercent));
-                if (State != RunState.InProgress) return;
+                if (State != RunState.InProgress || !boss.IsAlive) return; // A counter can fell it mid-slam.
             }
         }
 
@@ -1561,7 +1705,10 @@ namespace FiveKingdoms.Core
             }
         }
 
-        /// <summary>Lands a hit. A hero charges its ultimate for each hit it lands and each hit it takes and survives.</summary>
+        /// <summary>
+        /// Lands a hit. A hero charges its ultimate for each hit it lands and each hit it takes and survives. A target in
+        /// a counter stance that is still standing answers the hit (<see cref="Counter"/>).
+        /// </summary>
         void ApplyDamage(Actor attacker, Actor target, DamageRoll roll)
         {
             int amount = AdjustForStatuses(target, attacker, roll.Amount);
@@ -1571,6 +1718,25 @@ namespace FiveKingdoms.Core
             if (State != RunState.InProgress) return;
             if (attacker.Team == Team.Hero && attacker.IsAlive) GainCharge(attacker, CombatRules.ChargePerHitDealt);
             if (target.Team == Team.Hero && target.IsAlive) GainCharge(target, CombatRules.ChargePerHitTaken);
+            if (target.IsAlive && attacker.IsAlive) Counter(target, attacker);
+        }
+
+        /// <summary>
+        /// Riposte: <paramref name="holder"/> was just hit by <paramref name="attacker"/>. In a counter stance that
+        /// hasn't answered yet, with the attacker on the next tile (corner allowing), it strikes back at once: a hit
+        /// like any other (it can crit, it charges the meter). One counter per stance; the damage cut stays.
+        /// </summary>
+        void Counter(Actor holder, Actor attacker)
+        {
+            var stance = holder.FindStatus(StatusKind.Riposte);
+            if (stance == null || stance.CounterPercent <= 0 || StrikeTargetAt(holder, attacker.Pos) == null) return;
+            int percent = stance.CounterPercent;
+            stance.CounterPercent = 0;
+            var dir = Directions.Toward(holder.Pos, attacker.Pos);
+            holder.Facing = dir;
+            events.Add(new CounterEvent(holder.Id, attacker.Id));
+            events.Add(new AttackEvent(holder.Id, attacker.Id, dir, attacker.Pos));
+            ApplyDamage(holder, attacker, CombatRules.RollDamage(holder, attacker, Random, percent));
         }
 
         void Kill(Actor victim, Actor killer)

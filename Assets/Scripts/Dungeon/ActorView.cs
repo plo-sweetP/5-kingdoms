@@ -231,18 +231,44 @@ namespace FiveKingdoms.Dungeon
         /// </summary>
         public void SetStatuses(IReadOnlyList<StatusEffect> statuses, bool delayed)
         {
-            int statusCount = statuses?.Count ?? 0;
-            int count = statusCount + (delayed ? 1 : 0);
+            // A counter stance isn't in the row: it is over before its turn's last event, so its icon follows the events (SetStance).
+            shownStatuses.Clear();
+            if (statuses != null)
+                foreach (var status in statuses)
+                    if (status.Kind != StatusKind.Riposte) shownStatuses.Add(status.Kind.ToString().ToLowerInvariant());
+            if (delayed) shownStatuses.Add("stunned");
+            int count = shownStatuses.Count;
             while (statusIcons.Count < count) statusIcons.Add(NewRenderer("Icon", statusRow, null, HpBarOrder + 2));
             for (int i = 0; i < statusIcons.Count; i++)
             {
                 var icon = statusIcons[i];
                 icon.gameObject.SetActive(i < count);
                 if (i >= count) continue;
-                string name = i < statusCount ? statuses[i].Kind.ToString().ToLowerInvariant() : "stunned";
-                icon.sprite = SpriteLibrary.Still("Effects/status_" + name);
+                icon.sprite = SpriteLibrary.Still("Effects/status_" + shownStatuses[i]);
                 icon.transform.localPosition = new Vector3((i - (count - 1) / 2f) * IconSpacing, 0f, 0f);
             }
+        }
+
+        readonly List<string> shownStatuses = new List<string>();
+        SpriteRenderer stanceIcon;
+
+        /// <summary>How far above the status row a counter stance's icon sits.</summary>
+        const float StanceIconRise = 0.4f;
+
+        /// <summary>
+        /// A counter stance (Riposte): its icon over the actor's head, above the other statuses, and the guard pose
+        /// held for as long as it lasts.
+        /// </summary>
+        public void SetStance(bool on)
+        {
+            if (on && stanceIcon == null)
+            {
+                stanceIcon = NewRenderer("Stance", statusRow, SpriteLibrary.Still("Effects/status_riposte"), HpBarOrder + 2);
+                stanceIcon.transform.localPosition = new Vector3(0f, StanceIconRise, 0f);
+            }
+            if (stanceIcon != null) stanceIcon.gameObject.SetActive(on);
+            if (on) PlayAndHold("guard");
+            else Release();
         }
 
         /// <summary>Aura of Protection: a soft gold glow over the 3x3 tiles the aura covers, moving with its holder.</summary>
@@ -450,6 +476,10 @@ namespace FiveKingdoms.Dungeon
 
         /// <summary>Leaves a fading, tinted copy of the current pose behind (fast moves like a dash).</summary>
         public void LeaveAfterimage(Transform parent, Color color) => Effects.Afterimage(parent, body, color);
+
+        /// <summary>A fading image of the actor as it looks now, standing somewhere else (Blade Dance: she flickers from foe to foe).</summary>
+        public void LeaveGhostAt(Transform parent, Vector3 position, Color color, float life) =>
+            Effects.Afterimage(parent, body, color, body.transform.position + (position - transform.position), life);
 
         void LateUpdate()
         {

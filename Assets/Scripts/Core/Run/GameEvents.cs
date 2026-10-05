@@ -215,7 +215,26 @@ namespace FiveKingdoms.Core
         }
     }
 
-    /// <summary>An area skill (Volley) comes down on every tile within Radius of Center; the hits follow as DamageEvents.</summary>
+    /// <summary>
+    /// A hero in a counter stance (Riposte) answers the foe that just hit it; the blow follows as an AttackEvent and its
+    /// DamageEvent. It comes in the middle of the foe's own turn.
+    /// </summary>
+    public sealed class CounterEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly int TargetId;
+
+        public CounterEvent(int actorId, int targetId)
+        {
+            ActorId = actorId;
+            TargetId = targetId;
+        }
+    }
+
+    /// <summary>
+    /// An area skill comes down on every tile within Radius of Center. Volley: the hits follow as DamageEvents. Blade
+    /// Dance: each strike follows as its own AttackEvent and DamageEvent.
+    /// </summary>
     public sealed class AreaAttackEvent : GameEvent
     {
         public readonly int ActorId;

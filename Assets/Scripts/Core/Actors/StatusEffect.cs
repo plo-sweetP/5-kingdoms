@@ -25,11 +25,19 @@ namespace FiveKingdoms.Core
         /// Protection).
         /// </summary>
         Aura,
+
+        /// <summary>
+        /// A counter stance, until its holder's next turn (Riposte): it takes <see cref="StatusEffect.Power"/>% less
+        /// damage (<see cref="StatusEffect.BossPower"/>% from a boss), and the first foe that hits it from the next
+        /// tile is struck back for <see cref="StatusEffect.CounterPercent"/>% of its ATK.
+        /// </summary>
+        Riposte,
     }
 
     public sealed class StatusEffect
     {
-        public StatusEffect(StatusKind kind, int sourceId, int power, int turns, bool endsOnSourceTurn, int healPercent = 0)
+        public StatusEffect(StatusKind kind, int sourceId, int power, int turns, bool endsOnSourceTurn, int healPercent = 0,
+            int bossPower = 0, int counterPercent = 0)
         {
             Kind = kind;
             SourceId = sourceId;
@@ -37,6 +45,8 @@ namespace FiveKingdoms.Core
             TurnsLeft = turns;
             EndsOnSourceTurn = endsOnSourceTurn;
             HealPercent = healPercent;
+            BossPower = bossPower;
+            CounterPercent = counterPercent;
         }
 
         public StatusKind Kind { get; }
@@ -54,5 +64,14 @@ namespace FiveKingdoms.Core
 
         /// <summary>An aura's heal at the start of each of its holder's turns, in percent of the holder's max HP.</summary>
         public int HealPercent { get; }
+
+        /// <summary>A counter stance: what it takes off a boss's hits, in percent (<see cref="Power"/> is for everyone else's).</summary>
+        public int BossPower { get; }
+
+        /// <summary>
+        /// A counter stance: the blow that answers the first foe to hit its holder from the next tile, in percent of
+        /// the holder's ATK. 0 once that blow has been struck: one counter per stance, while the damage cut stays.
+        /// </summary>
+        public int CounterPercent { get; set; }
     }
 }

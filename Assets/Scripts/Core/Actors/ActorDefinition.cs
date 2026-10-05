@@ -95,7 +95,7 @@ namespace FiveKingdoms.Core
         /// <summary>How far its weapon attack reaches: 1 is melee, more is a shot at any foe in sight within that many tiles.</summary>
         public int AttackRange { get; }
 
-        /// <summary>The always-ready weapon attack's name (Uzuki's Quick Shot, Haiden's Sword Slash, Kristela's Jab).</summary>
+        /// <summary>The always-ready weapon attack's name (Uzuki's Quick Shot, Haiden's Sword Slash, Kristela's Thrust).</summary>
         public string AttackName => Weapon?.AttackName ?? "Attack";
 
         /// <summary>Fights from a distance (its weapon attack is a shot): hangs back in a fight and never swaps forward.</summary>
@@ -132,14 +132,14 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// Fencer (Medieval Realm, a princess), speed-build melee DPS: the most ATK, the least HP and DEF. Her own speed
-        /// is 95; the Fencer's +5 makes it 100. She was a Monk until 2026-10-05, and until her Fencer kit is built
-        /// (PROGRESSION.md, "Kristela's Fencer kit": Thrust, Triple Thrust, Lunge, Riposte, Blade Dance, with the
-        /// Piercer Blade) she still fights with the Monk's base kit and the Gauntlets: Piercing Punch, Ki Heal, Stun
-        /// Strike; ultimate Flurry of Blows.
+        /// is 95; the Fencer's +5 makes it 100. With the Piercer Blade: Thrust (her weapon attack), Triple Thrust, Lunge
+        /// and Riposte; ultimate Blade Dance (PROGRESSION.md, "Kristela's Fencer kit"). She has no heal of her own: Haiden's
+        /// Heal and aura, berries and the healing between fights carry her. She was a Monk until 2026-10-05; that kit
+        /// (Piercing Punch, Ki Heal, Stun Strike, Flurry of Blows, with the Gauntlets) stays as the Monk's.
         /// </summary>
         public static readonly ActorDefinition Kristela = new ActorDefinition("kristela", "Kristela", maxHp: 380, attack: 64, defense: 26, expReward: 0,
-            speed: 95, skills: new[] { SkillCatalog.PiercingPunch, SkillCatalog.KiHeal, SkillCatalog.StunStrike },
-            ultimate: SkillCatalog.FlurryOfBlows, hpGrowth: 45, atkGrowth: 11, defGrowth: 8, weapon: WeaponCatalog.Gauntlets,
+            speed: 95, skills: new[] { SkillCatalog.TripleThrust, SkillCatalog.Lunge, SkillCatalog.Riposte },
+            ultimate: SkillCatalog.BladeDance, hpGrowth: 45, atkGrowth: 11, defGrowth: 8, weapon: WeaponCatalog.PiercerBlade,
             startingClass: ClassCatalog.Fencer);
 
         /// <summary>

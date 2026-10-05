@@ -554,7 +554,8 @@ namespace FiveKingdoms.Dungeon
         }
 
         static string NoTargetMessage(SkillDefinition skill) =>
-            skill.Effect == SkillEffect.Strike ? $"No enemy next to you for {skill.Name}." : $"No enemy in sight within {skill.Range} tiles for {skill.Name}.";
+            skill.Effect == SkillEffect.Strike && skill.DashTiles > 0 ? $"No enemy within {skill.StrikeReach} tiles in a straight line for {skill.Name}."
+                : skill.Effect == SkillEffect.Strike || skill.Effect == SkillEffect.SharedStrikes ? $"No enemy next to you for {skill.Name}." : $"No enemy in sight within {skill.Range} tiles for {skill.Name}.";
 
         /// <summary>Why the weapon attack has nothing to aim at, for the message log.</summary>
         public static string NoAttackTargetMessage(Actor hero) =>

@@ -93,6 +93,15 @@ namespace FiveKingdoms.Core
             return -1;
         }
 
+        /// <summary>Slot of the hero's strike that dashes up to its target first (Lunge), or -1.</summary>
+        static int LungeSlot(Actor hero)
+        {
+            var skills = hero.Skills;
+            for (int i = 0; i < skills.Count; i++)
+                if (skills[i].Effect == SkillEffect.Strike && skills[i].DashTiles > 0) return i;
+            return -1;
+        }
+
         // ---- Targets ----
 
         /// <summary>
@@ -166,8 +175,9 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// The hero's ultimate, once its meter is full and it's worth it (not on a foe a weapon attack would finish): a
-        /// Volley centered where it catches the most foes; a Flurry on the foe it would attack anyway; an Aura in a fight
-        /// when the hero or an ally next to it (everyone it covers) is in melee or hurt, or the boss is fighting.
+        /// Volley centered where it catches the most foes; a Flurry on the foe it would attack anyway; a Blade Dance
+        /// when its area holds a boss or at least two foes, aimed where it holds the most; an Aura in a fight when the
+        /// hero or an ally next to it (everyone it covers) is in melee or hurt, or the boss is fighting.
         /// </summary>
         public static bool TryUltimate(DungeonRun run, Actor hero, out HeroCommand command)
         {
@@ -202,6 +212,29 @@ namespace FiveKingdoms.Core
                     if (run.CheckUltimateAt(hero, target.Pos) != SkillCheck.Ready) return false;
                     command = HeroCommand.UltimateAt(target.Pos);
                     return true;
+                }
+                case SkillEffect.SharedStrikes:
+                {
+                    // Among the foes next to the hero, the one whose area holds the most; between equals, the one it would attack anyway.
+                    var centers = FoesInStrikeReach(run, hero);
+                    centers.Sort((a, b) => ComesBefore(hero, a, b) ? -1 : ComesBefore(hero, b, a) ? 1 : 0);
+                    int best = 0;
+                    foreach (var center in centers)
+                    {
+                        int foes = 0;
+                        bool boss = false;
+                        foreach (var actor in run.Actors)
+                        {
+                            if (actor.Team == hero.Team || GridPos.ChebyshevDistance(actor.Pos, center.Pos) > ultimate.Radius) continue;
+                            foes++;
+                            boss |= actor.Definition.IsBoss;
+                        }
+                        if (foes <= best || foes < 2 && !boss) continue;
+                        if (run.CheckUltimateAt(hero, center.Pos) != SkillCheck.Ready) continue;
+                        best = foes;
+                        command = HeroCommand.UltimateAt(center.Pos);
+                    }
+                    return best > 0;
                 }
                 case SkillEffect.Aura:
                 {
@@ -488,6 +521,102 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>
+        /// A counter stance (Riposte) when it would be answered: a foe next to the hero comes up before the hero's next
+        /// turn and is going for the hero, not held by another hero's taunt or busy with one (<see cref="WouldStrike"/>).
+        /// Never inside a boss's slam that is winding up (the hero steps out, <see cref="TryDodge"/>, or fights on),
+        /// and not while a skill that hits harder than the weapon attack is ready for a foe in reach: Triple Thrust
+        /// comes first.
+        /// </summary>
+        public static bool TryRiposte(DungeonRun run, Actor hero, out HeroCommand command)
+        {
+            command = HeroCommand.Wait;
+            int stance = SkillSlot(hero, SkillEffect.Counter);
+            if (stance < 0 || run.CheckSkill(hero, stance, hero.Facing) != SkillCheck.Ready) return false;
+            int cost = hero.Skills[stance].CostPercent;
+            bool answered = false;
+            foreach (var foe in run.Actors)
+            {
+                if (foe.Team == hero.Team) continue;
+                if (foe.Charging && GridPos.ChebyshevDistance(hero.Pos, foe.Pos) <= EnemyBrain.SlamRadius) return false;
+                answered |= WouldStrike(run, foe, hero, cost);
+            }
+            if (!answered) return false;
+            if (TryAttack(run, hero, out var attack) && attack.Kind == HeroCommandKind.Skill) return false;
+            command = HeroCommand.Skill(stance);
+            return true;
+        }
+
+        /// <summary>
+        /// Whether <paramref name="foe"/> is set to hit <paramref name="hero"/> before the hero's next turn, if the
+        /// hero now spends <paramref name="costPercent"/> of a turn: it stands next to the hero (corner allowing), its
+        /// turn comes first, and the hero is the one it goes for (<see cref="EnemyBrain.TargetOf"/>: its taunter, else
+        /// the nearest hero). Measured with -balance: without that last check two stances in three went unanswered
+        /// (1.2 a run, 0.4 answered), with it one in five (0.5 a run, 0.4 answered).
+        /// </summary>
+        static bool WouldStrike(DungeonRun run, Actor foe, Actor hero, int costPercent)
+        {
+            if (run.StrikeTargetAt(hero, foe.Pos) == null || !run.ActsBefore(foe, hero, costPercent)) return false;
+            return EnemyBrain.TargetOf(run, foe) == hero;
+        }
+
+        /// <summary>
+        /// "Lunge to reach a foe instead of walking up to it" (PROGRESSION.md, "Kristela's Fencer kit"): a foe that the
+        /// hero's dashing strike reaches from further off than the next tile, picked like any target (the marked one
+        /// first, then the lowest HP). It passes the checks of a step toward the foes: the tile the hero lands on is
+        /// near the leader (the leash), and a dash out of a corridor or a doorway is only made where a step out of it
+        /// would be (<see cref="HoldsTheDoor"/>), and only from its last tile, where that can be told.
+        /// </summary>
+        public static bool TryLunge(DungeonRun run, Actor hero, out HeroCommand command)
+        {
+            command = HeroCommand.Wait;
+            int slot = LungeSlot(hero);
+            if (slot < 0 || hero.SkillCooldowns[slot] > 0) return false;
+            int dash = hero.Skills[slot].DashTiles;
+            var near = NearLeader(run, hero);
+            var foes = new List<Actor>();
+            foreach (var foe in run.Actors)
+            {
+                if (foe.Team == hero.Team || GridPos.ChebyshevDistance(hero.Pos, foe.Pos) < 2) continue;
+                if (run.StrikeTargetAt(hero, foe.Pos, dash) == null) continue;
+                var dir = Directions.Toward(hero.Pos, foe.Pos);
+                var landing = foe.Pos - dir.ToOffset();
+                if (near(landing) && !DashLeavesTheDoor(run, hero, dir, landing)) foes.Add(foe);
+            }
+            var target = PickTarget(hero, foes);
+            if (target == null || run.CheckSkillAt(hero, slot, target.Pos) != SkillCheck.Ready) return false;
+            command = HeroCommand.SkillAt(slot, target.Pos);
+            return true;
+        }
+
+        /// <summary>
+        /// Whether a dash from the hero's tile along <paramref name="dir"/> to <paramref name="landing"/> would carry it
+        /// out of a corridor or a doorway that it should hold, or that it hasn't reached the end of yet.
+        /// </summary>
+        static bool DashLeavesTheDoor(DungeonRun run, Actor hero, Direction8 dir, GridPos landing)
+        {
+            var map = run.Map;
+            for (var pos = hero.Pos; pos != landing;)
+            {
+                var next = pos + dir.ToOffset();
+                if (map.IsNarrow(pos) && !map.IsNarrow(next) && (pos != hero.Pos || HoldsTheDoor(run, hero, next))) return true;
+                pos = next;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// A step toward the foes, as the party's AI takes one: not at all where the hero holds the doorway it stands
+        /// in (<see cref="HoldsTheDoor"/>: it waits there), and as a Lunge when that reaches a foe at once
+        /// (<see cref="TryLunge"/>). Swaps and steps that aren't toward the foes don't come through here.
+        /// </summary>
+        public static HeroCommand StepToward(DungeonRun run, Actor hero, Direction8 step)
+        {
+            var next = hero.Pos + step.ToOffset();
+            if (HoldsTheDoor(run, hero, next)) return HeroCommand.HoldTheDoor;
+            return run.ActorAt(next) == null && TryLunge(run, hero, out var lunge) ? lunge : HeroCommand.Move(step);
+        }
+
+        /// <summary>
         /// An attack on a foe in reach, if there is one: the target by <see cref="PickTarget"/> (the marked enemy first,
         /// then the lowest HP) among the foes next to the hero and, for heroes with shots, those in sight within range.
         /// The attack on it, best first: a skill that puts a status or a stun on a strong target that doesn't have it yet,
@@ -712,9 +841,8 @@ namespace FiveKingdoms.Core
         public static bool TryEngage(DungeonRun run, Actor hero, out HeroCommand command)
         {
             if (!TryFindWayIn(run, hero, out command)) return false;
-            // In front, at a doorway, with a crowd beyond it: let them come.
-            if (command.Kind == HeroCommandKind.Move && HoldsTheDoor(run, hero, hero.Pos + command.Direction.ToOffset()))
-                command = HeroCommand.HoldTheDoor;
+            // In front, at a doorway, with a crowd beyond it: let them come. Otherwise a Lunge gets there sooner than a step.
+            if (command.Kind == HeroCommandKind.Move) command = StepToward(run, hero, command.Direction);
             return true;
         }
 

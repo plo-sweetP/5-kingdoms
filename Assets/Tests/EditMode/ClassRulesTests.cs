@@ -130,22 +130,42 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
+        public void TheRealClassesGiveTheirEveryTierBumps()
+        {
+            string Bumps(ClassDefinition definition) =>
+                string.Join(", ", definition.Bumps.Select(bump => $"{bump.Stat} {bump.PerTier}"));
+            Assert.AreEqual("Atk 4, CritRate 2", Bumps(ClassCatalog.Archer), "+0.4% ATK and +0.2% Crit Rate a tier");
+            Assert.AreEqual("Hp 4, Def 4", Bumps(ClassCatalog.Paladin), "+0.4% HP and +0.4% DEF");
+            Assert.AreEqual("CritRate 2, CritDmg 4", Bumps(ClassCatalog.Fencer), "+0.2% Crit Rate and +0.4% Crit DMG");
+            Assert.AreEqual("Atk 4, CritDmg 4", Bumps(ClassCatalog.Monk), "+0.4% ATK and +0.4% Crit DMG");
+
+            // At tier 1 that is little: Kristela's crit goes from 5% for +50% to 5.2% for +50.4%.
+            var kristela = new Actor(1, ActorCatalog.Kristela, Team.Hero, default);
+            Assert.AreEqual(ActorDefinition.BaseCritRate + 2, kristela.CritRate);
+            Assert.AreEqual(ActorDefinition.BaseCritDmg + 4, kristela.CritDmg);
+        }
+
+        [Test]
         public void EveryTierGivesTheClasssStatBumps()
         {
             var uzuki = Hero(ActorCatalog.Uzuki, 10);
             RaiseTo(uzuki, Scout, 3);
             RaiseTo(uzuki, Bulwark, 2);
             var kit = uzuki.Kit;
-            Assert.AreEqual(12, kit.Percent[StatKind.Atk], "+0.4% ATK a tier");
-            Assert.AreEqual(6, kit.Flat[StatKind.CritRate], "+0.2% Crit Rate a tier: a percentage stat, so it just adds");
-            Assert.AreEqual(8, kit.Percent[StatKind.Hp]);
-            Assert.AreEqual(8, kit.Percent[StatKind.Def]);
+            var own = Hero(ActorCatalog.Uzuki, 10).Kit; // What tier 1 of his own class gives: the real classes' numbers aren't under test.
+            Assert.AreEqual(own.Percent[StatKind.Atk] + 12, kit.Percent[StatKind.Atk], "+0.4% ATK a tier");
+            Assert.AreEqual(own.Flat[StatKind.CritRate] + 6, kit.Flat[StatKind.CritRate], "+0.2% Crit Rate a tier: a percentage stat, so it just adds");
+            Assert.AreEqual(own.Percent[StatKind.Hp] + 8, kit.Percent[StatKind.Hp]);
+            Assert.AreEqual(own.Percent[StatKind.Def] + 8, kit.Percent[StatKind.Def]);
             Assert.AreEqual(0, kit.Percent[StatKind.Spd] + kit.Flat[StatKind.Spd], "never SPD");
 
             var plain = new Actor(1, ActorCatalog.Uzuki, Team.Hero, default, 10);
             var built = new Actor(2, ActorCatalog.Uzuki, Team.Hero, default, 10, kit);
-            Assert.AreEqual(plain.Attack * 1012 / 1000, built.Attack, "the bump scales base, level growth and weapon alike");
-            Assert.AreEqual(plain.MaxHp * 1008 / 1000, built.MaxHp);
+            Assert.AreEqual(built.Stats.Base[StatKind.Atk] * (1000 + kit.Percent[StatKind.Atk]) / 1000, built.Attack,
+                "the bump scales base, level growth and weapon alike");
+            Assert.AreEqual(built.Stats.Base[StatKind.Hp] * (1000 + kit.Percent[StatKind.Hp]) / 1000, built.MaxHp);
+            Assert.Greater(built.Attack, plain.Attack);
+            Assert.Greater(built.MaxHp, plain.MaxHp);
             Assert.AreEqual(built.MaxHp, built.Hp, "and it starts the run at its full HP");
             Assert.AreEqual(plain.Defense * 1008 / 1000, built.Defense);
             Assert.AreEqual(plain.CritRate + 6, built.CritRate);
@@ -175,7 +195,8 @@ namespace FiveKingdoms.Tests
             Assert.AreSame(LearnJolt, uzuki.PickAt(Scout, 5));
             Assert.IsNull(uzuki.PickAt(Scout, 10));
             Assert.AreEqual(RaiseCheck.WrongOption, uzuki.CheckRaise(Scout, HeavyDraw), "one pick per milestone: tier 6 takes none");
-            Assert.AreEqual(20, uzuki.Kit.Percent[StatKind.Atk], "a milestone tier gives the stat bump too");
+            Assert.AreEqual(Hero(ActorCatalog.Uzuki, 1).Kit.Percent[StatKind.Atk] + 20, uzuki.Kit.Percent[StatKind.Atk],
+                "a milestone tier gives the stat bump too (on top of his own class's)");
         }
 
         [Test]
@@ -262,7 +283,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void AnUpgradeOfASkillTheHeroDoesntKnowTeachesThatSkillInstead()
         {
-            var kristela = Hero(ActorCatalog.Kristela, 6);
+            var kristela = Hero(TestHeroes.Monk, 6);
             RaiseTo(kristela, Scout, 5, HeavyDraw);
             var shot = kristela.KnownSkills.Single(skill => skill.Id == "power_shot");
             Assert.AreSame(SkillCatalog.PowerShot, shot, "as the catalog has it: 300%, one tile");
@@ -285,7 +306,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void TheLoadoutHoldsAtMostOneQuickSkill()
         {
-            var kristela = Hero(ActorCatalog.Kristela, 6);
+            var kristela = Hero(TestHeroes.Monk, 6);
             RaiseTo(kristela, Scout, 5, LearnSprint);
             Assert.IsTrue(Sprint.IsQuick);
             Assert.AreEqual(EquipCheck.TooManyQuick, kristela.CheckEquip(0, Sprint), "Ki Heal is her Quick skill");
@@ -329,7 +350,7 @@ namespace FiveKingdoms.Tests
         [Test]
         public void AnOptionCanChangeTheWeaponAttackOfItsWeaponFamily()
         {
-            var kristela = Hero(ActorCatalog.Kristela, 11);
+            var kristela = Hero(TestHeroes.Monk, 11);
             RaiseTo(kristela, Scout, 10, LearnJolt, DoubleJab);
             Assert.AreEqual(2, kristela.Kit.WeaponAttack.Hits);
             Assert.AreEqual(120, kristela.Kit.WeaponAttack.Power);
@@ -338,6 +359,36 @@ namespace FiveKingdoms.Tests
             var haiden = Hero(ActorCatalog.Haiden, 11);
             RaiseTo(haiden, Scout, 10, LearnJolt, DoubleJab);
             Assert.AreEqual(1, haiden.Kit.WeaponAttack.Hits, "his Sword Slash isn't a Jab");
+        }
+
+        [Test]
+        public void AChangedWeaponAttackHitsAsOftenAndAsHardAsItSays()
+        {
+            var monk = Hero(TestHeroes.Monk, 11);
+            RaiseTo(monk, Scout, 10, LearnJolt, DoubleJab);
+            var config = new DungeonRunConfig
+            {
+                MapFactory = (floor, seed) => DungeonMap.FromAscii("############", "#@.........#", "############"),
+                Populate = false,
+                RegenIntervalAv = 0,
+                Boss = null,
+            };
+            var run = new DungeonRun(7, config, new[] { monk });
+            var hero = run.Hero;
+            hero.CritRate = 0;
+            var spider = run.SpawnEnemy(new GridPos(2, 1));
+            spider.MaxHp = spider.Hp = 100000;
+            spider.Defense = 0;
+            spider.Attack = 1;
+
+            Assert.IsTrue(run.AttackAt(spider.Pos));
+            var hits = run.Events.OfType<DamageEvent>().Where(hit => hit.TargetId == spider.Id).ToList();
+            Assert.AreEqual(2, hits.Count, "Double Jab: two hits");
+            int full = hero.Attack * 120 / 100;
+            foreach (var hit in hits)
+                Assert.That(hit.Amount, Is.InRange(full * CombatRules.SpreadMinPercent / 100 - 1, full), "120% each, not the plain 200%");
+            int bites = run.Events.OfType<DamageEvent>().Count(hit => hit.TargetId == hero.Id);
+            Assert.AreEqual(CombatRules.ChargePerAction + 2 * CombatRules.ChargePerHitDealt + bites * CombatRules.ChargePerHitTaken, hero.Charge);
         }
 
         // ---- Unlearning ----
@@ -357,7 +408,7 @@ namespace FiveKingdoms.Tests
             Assert.AreEqual("hunters_mark,power_shot,rolling_shot", Ids(uzuki.KnownSkills));
             Assert.AreEqual(3, uzuki.Kit.Skills.Count, "the slot Jolt left is filled from what he still knows");
             CollectionAssert.AreEquivalent(new[] { "hunters_mark", "power_shot", "rolling_shot" }, uzuki.Kit.Skills.Select(skill => skill.Id));
-            Assert.AreEqual(0, uzuki.Kit.Percent[StatKind.Atk]);
+            Assert.AreEqual(Hero(ActorCatalog.Uzuki, 8).Kit.Percent[StatKind.Atk], uzuki.Kit.Percent[StatKind.Atk], "only his own class's bump is left");
             Assert.AreEqual(0, uzuki.Unlearn(Scout), "nothing left to return");
         }
 

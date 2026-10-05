@@ -8,7 +8,8 @@ namespace FiveKingdoms.Core
     /// doorway), give the front to the fresh melee partner behind when hurt, or take it from a hurt one; use a charged
     /// ultimate when it's worth it; when low, heal with a skill or eat a berry; heal or guard the party; a ranged leader
     /// gets out of melee; a badly hurt one swaps back behind a healthier ally; make way for the melee partner stuck
-    /// behind it in a corridor's mouth; fight a foe in reach, with the target and skill chosen by
+    /// behind it in a corridor's mouth; take a counter stance when a foe is about to hit it; fight a foe in reach, with
+    /// the target and skill chosen by
     /// <see cref="HeroTactics"/> (the marked enemy first, then the lowest HP); in a fight, a ranged leader finds a tile to
     /// shoot from; otherwise chase nearby enemies, but hold a doorway against a crowd instead of stepping out among it
     /// (PROGRESSION.md, "Doorways and corridors"); with partners in a fight, go for the foes that are after the party,
@@ -56,6 +57,7 @@ namespace FiveKingdoms.Core
             if (HeroTactics.TryRunToSafety(run, hero, out command)) return command;
             if (HeroTactics.TryMark(run, hero, out command)) return command;
             if (HeroTactics.TryMakeWay(run, hero, out command)) return command;
+            if (HeroTactics.TryRiposte(run, hero, out command)) return command;
             if (HeroTactics.TryAttack(run, hero, out command)) return command;
             // A ranged leader hangs back at a tile it can shoot from; a melee one chases below, as it always has.
             if (run.InCombat && hero.Definition.IsRanged && HeroTactics.TryTakeFiringPosition(run, hero, out command)) return command;
@@ -115,9 +117,15 @@ namespace FiveKingdoms.Core
             return false;
         }
 
-        /// <summary>A step toward the foes, unless the leader holds the doorway it stands in and lets them come (<see cref="HeroTactics.HoldsTheDoor"/>).</summary>
-        static HeroCommand Advance(DungeonRun run, Direction8 step) =>
-            HeroTactics.HoldsTheDoor(run, run.Hero, run.Hero.Pos + step.ToOffset()) ? HeroCommand.HoldTheDoor : Walk(run, step);
+        /// <summary>
+        /// A step toward the foes, unless the leader holds the doorway it stands in and lets them come
+        /// (<see cref="HeroTactics.HoldsTheDoor"/>), or a Lunge reaches one of them at once (<see cref="HeroTactics.TryLunge"/>).
+        /// </summary>
+        static HeroCommand Advance(DungeonRun run, Direction8 step)
+        {
+            var command = HeroTactics.StepToward(run, run.Hero, step);
+            return command.Kind == HeroCommandKind.Move ? Walk(run, step) : command;
+        }
 
         /// <summary>
         /// One step along a path. Walking into a foe would only turn the leader to face it, so when one stands on the next

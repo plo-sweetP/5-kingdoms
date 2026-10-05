@@ -11,8 +11,8 @@ namespace FiveKingdoms.Core
         Multishot,
     }
 
-    /// <summary>Weapon types; classes and kits will key off them (the Monk fights with gauntlets).</summary>
-    public enum WeaponType { Bow, LongSword, Gauntlets }
+    /// <summary>Weapon types; classes and kits will key off them (the Monk fights with gauntlets, the Fencer with a light blade).</summary>
+    public enum WeaponType { Bow, LongSword, Gauntlets, PiercerBlade }
 
     /// <summary>
     /// What a skill can be tied to (PROGRESSION.md, "Classes"): a bow, a sword, fists, or nothing. A skill tied to a
@@ -56,7 +56,7 @@ namespace FiveKingdoms.Core
 
         /// <summary>Which skills it lets its bearer use.</summary>
         public WeaponFamily Family =>
-            Type == WeaponType.Bow ? WeaponFamily.Bow : Type == WeaponType.LongSword ? WeaponFamily.Sword : WeaponFamily.Fists;
+            Type == WeaponType.Bow ? WeaponFamily.Bow : Type == WeaponType.Gauntlets ? WeaponFamily.Fists : WeaponFamily.Sword;
 
         /// <summary>What its always-ready weapon attack is called (names are drafts).</summary>
         public string AttackName { get; }
@@ -82,8 +82,8 @@ namespace FiveKingdoms.Core
 
     /// <summary>
     /// The starting party's weapons (GEAR.md, PROGRESSION.md), sized like GEAR.md asks: ATK about a third of a same-level
-    /// hero's base ATK, HP and DEF about a fifth, growing with item level to stay that size. The Long Sword and Gauntlets
-    /// have no passive until the gear milestone.
+    /// hero's base ATK, HP and DEF about a fifth, growing with item level to stay that size. The Long Sword, the Piercer
+    /// Blade and the Gauntlets have no passive until the gear milestone.
     /// </summary>
     public static class WeaponCatalog
     {
@@ -96,11 +96,19 @@ namespace FiveKingdoms.Core
         public static readonly WeaponDefinition LongSword = new WeaponDefinition("long_sword", "Long Sword", WeaponType.LongSword, "Sword Slash",
             hp: 90, atk: 20, def: 8, hpPerLevel: 12, atkPerLevel: 3, defPerLevel: 2);
 
-        /// <summary>Kristela's: the Monk and fist-fighter weapon type.</summary>
+        /// <summary>
+        /// Kristela's since she became a Fencer (2026-10-05): a rapier, a sword like Haiden's to the skills that need
+        /// one. Stats only (the Gauntlets' own, so that the weapon didn't move the balance when her kit changed); its
+        /// Bleed passive comes with the gear milestone (GEAR.md).
+        /// </summary>
+        public static readonly WeaponDefinition PiercerBlade = new WeaponDefinition("piercer_blade", "Piercer Blade", WeaponType.PiercerBlade, "Thrust",
+            hp: 60, atk: 22, def: 4, hpPerLevel: 8, atkPerLevel: 3, defPerLevel: 1);
+
+        /// <summary>The Monk and fist-fighter weapon type; Kristela's until she became a Fencer.</summary>
         public static readonly WeaponDefinition Gauntlets = new WeaponDefinition("gauntlets", "Gauntlets", WeaponType.Gauntlets, "Jab",
             hp: 60, atk: 22, def: 4, hpPerLevel: 8, atkPerLevel: 3, defPerLevel: 1);
 
-        public static readonly WeaponDefinition[] All = { HunterBow, LongSword, Gauntlets };
+        public static readonly WeaponDefinition[] All = { HunterBow, LongSword, PiercerBlade, Gauntlets };
 
         public static WeaponDefinition Find(string id) => Array.Find(All, weapon => weapon.Id == id);
     }

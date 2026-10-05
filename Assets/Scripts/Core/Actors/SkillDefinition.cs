@@ -7,7 +7,8 @@ namespace FiveKingdoms.Core
     {
         /// <summary>
         /// A melee hit on the faced enemy (or any adjacent one): <see cref="SkillDefinition.Hits"/> hits of Power% ATK each
-        /// (a basic attack is 200%). Can also pierce to the enemy behind, shove, stun or put a status on the target.
+        /// (a basic attack is 200%). Can also pierce to the enemy behind, shove, stun or put a status on the target, or
+        /// dash up to it first along one of the 8 lines (<see cref="SkillDefinition.DashTiles"/>: Lunge).
         /// </summary>
         Strike,
 
@@ -47,6 +48,21 @@ namespace FiveKingdoms.Core
         /// Protection).
         /// </summary>
         Aura,
+
+        /// <summary>
+        /// A counter stance until the user's next turn (Riposte): it takes StatusPower% less damage
+        /// (<see cref="SkillDefinition.BossStatusPower"/>% from a boss), and the first foe that hits it from the next
+        /// tile is struck back at once for Power% ATK. One counter per stance; the damage cut lasts until its turn.
+        /// </summary>
+        Counter,
+
+        /// <summary>
+        /// <see cref="SkillDefinition.Hits"/> strikes of Power% ATK, one after another, shared among the foes within
+        /// Radius of a foe next to the user: each goes to the living foe there that it has hit the fewest times, and
+        /// among those to the highest threat (a boss, then the foe aimed at, then the highest ATK, then the lowest
+        /// id). The user doesn't move (Blade Dance).
+        /// </summary>
+        SharedStrikes,
     }
 
     /// <summary>Who a heal reaches.</summary>
@@ -88,7 +104,7 @@ namespace FiveKingdoms.Core
             HealTarget healTarget = HealTarget.Self, bool healsFromUser = false,
             bool pierce = false, bool shove = false, int wallBonusPercent = 0, int knockback = 0,
             int stunChance = 0, int stunPercent = CombatRules.MaxDelayPercent, int rollTiles = 0, TrapKind leavesTrap = TrapKind.None,
-            WeaponFamily weapon = WeaponFamily.None)
+            WeaponFamily weapon = WeaponFamily.None, int dashTiles = 0, bool movesOn = false, int bossStatusPower = 0)
         {
             Id = id;
             Name = name;
@@ -119,6 +135,9 @@ namespace FiveKingdoms.Core
             RollTiles = rollTiles;
             LeavesTrap = leavesTrap;
             Weapon = weapon;
+            DashTiles = dashTiles;
+            MovesOn = movesOn;
+            BossStatusPower = bossStatusPower;
         }
 
         /// <summary>
@@ -143,8 +162,9 @@ namespace FiveKingdoms.Core
         public SkillEffect Effect { get; }
 
         /// <summary>
-        /// Damage per hit in percent of ATK (Strike, Shot, Area), heal percent of max HP (Heal, Aura), tiles (Dash),
-        /// percent of damage blocked (Guard) or extra damage from the user in percent (Mark).
+        /// Damage per hit in percent of ATK (Strike, Shot, Area, SharedStrikes; a Counter's answering blow), heal percent
+        /// of max HP (Heal, Aura), tiles (Dash), percent of damage blocked (Guard) or extra damage from the user in
+        /// percent (Mark).
         /// </summary>
         public int Power { get; internal set; }
 
@@ -163,6 +183,19 @@ namespace FiveKingdoms.Core
 
         /// <summary>Strikes: how many hits, each rolling damage and crit on its own.</summary>
         public int Hits { get; internal set; }
+
+        /// <summary>
+        /// Strikes with several hits: when the target falls, the hits that are left go to another foe next to the user
+        /// (Flurry of Blows). Without it they are all for the one target (Triple Thrust).
+        /// </summary>
+        public bool MovesOn { get; internal set; }
+
+        /// <summary>
+        /// Strikes: the user first dashes up to this many tiles to the tile in front of the target, which may stand
+        /// that much further off along one of the 8 lines, with nobody between and no wall corner cut on the way
+        /// (Lunge: 2, so a foe up to 3 tiles away).
+        /// </summary>
+        public int DashTiles { get; internal set; }
 
         /// <summary>Shots, marks and area skills: how far it reaches, in tiles.</summary>
         public int Range { get; internal set; }
@@ -183,6 +216,9 @@ namespace FiveKingdoms.Core
         public StatusKind? Status { get; internal set; }
         public int StatusPower { get; internal set; }
         public int StatusTurns { get; internal set; }
+
+        /// <summary>A counter stance: what it takes off a boss's hits instead of StatusPower, in percent.</summary>
+        public int BossStatusPower { get; internal set; }
 
         public HealTarget HealTarget { get; internal set; }
 
@@ -220,13 +256,18 @@ namespace FiveKingdoms.Core
         /// </summary>
         public WeaponFamily Weapon { get; }
 
-        public bool DealsDamage => Effect == SkillEffect.Strike || Effect == SkillEffect.Shot || Effect == SkillEffect.Area;
+        public bool DealsDamage =>
+            Effect == SkillEffect.Strike || Effect == SkillEffect.Shot || Effect == SkillEffect.Area || Effect == SkillEffect.SharedStrikes;
 
         /// <summary>Hits from a distance: weaker than an equivalent melee hit, and weaker still with a foe adjacent.</summary>
         public bool IsRanged => Reach != AttackReach.Melee;
 
-        /// <summary>Aimed at a foe or a direction (strikes, shots, marks, areas, rolls, dashes); heals, guards and auras just happen.</summary>
-        public bool NeedsAim => Effect != SkillEffect.Heal && Effect != SkillEffect.Guard && Effect != SkillEffect.Aura;
+        /// <summary>Aimed at a foe or a direction (strikes, shots, marks, areas, rolls, dashes); heals, guards, auras and stances just happen.</summary>
+        public bool NeedsAim =>
+            Effect != SkillEffect.Heal && Effect != SkillEffect.Guard && Effect != SkillEffect.Aura && Effect != SkillEffect.Counter;
+
+        /// <summary>How far a strike reaches along a line: the next tile, or further for one that dashes there first.</summary>
+        public int StrikeReach => 1 + DashTiles;
 
         /// <summary>Half a turn or less: the HUD shows a small "Quick" tag.</summary>
         public bool IsQuick => CostPercent <= QuickCostPercent;
@@ -289,13 +330,43 @@ namespace FiveKingdoms.Core
         public static readonly SkillDefinition AuraOfProtection = new SkillDefinition("aura_of_protection", "Aura of Protection", "Aura",
             SkillEffect.Aura, power: 10, ultimate: true, radius: 1, statusPower: 30, statusTurns: 3);
 
-        // ---- Kristela, Monk: speed-build melee DPS. ----
+        // ---- Kristela, Fencer: speed-build melee DPS with a light blade (PROGRESSION.md, "Kristela's Fencer kit"). ----
+
+        /// <summary>
+        /// Three quick thrusts of 90% ATK on one foe next to her, each rolling its damage and its crit on its own. The
+        /// meter counts one action and three hits landed. Thrusts left over when the target falls are lost.
+        /// </summary>
+        public static readonly SkillDefinition TripleThrust = new SkillDefinition("triple_thrust", "Triple Thrust", "Triple",
+            SkillEffect.Strike, power: 90, hits: 3, weapon: WeaponFamily.Sword);
+
+        /// <summary>
+        /// A dash and a strike (200% ATK) on a foe up to 3 tiles away in a straight line with nobody between: she ends
+        /// on the tile in front of it (2 tiles of dash, 1, or none when it stands next to her). A full turn.
+        /// </summary>
+        public static readonly SkillDefinition Lunge = new SkillDefinition("lunge", "Lunge", "Lunge",
+            SkillEffect.Strike, power: 200, dashTiles: 2, weapon: WeaponFamily.Sword);
+
+        /// <summary>
+        /// A counter stance until her next turn, paid for with a full turn: she takes 50% less damage (25% from a
+        /// boss), and the first foe that hits her from the next tile is struck back at once for 250% ATK.
+        /// </summary>
+        public static readonly SkillDefinition Riposte = new SkillDefinition("riposte", "Riposte", "Riposte",
+            SkillEffect.Counter, power: 250, statusPower: 50, bossStatusPower: 25, weapon: WeaponFamily.Sword);
+
+        /// <summary>
+        /// Ultimate: five strikes of 100% ATK shared among the foes in the 3x3 around a foe next to her, each to the
+        /// one hit least so far, the highest threat first. A boss alone takes all five; she doesn't move.
+        /// </summary>
+        public static readonly SkillDefinition BladeDance = new SkillDefinition("blade_dance", "Blade Dance", "Dance",
+            SkillEffect.SharedStrikes, power: 100, ultimate: true, hits: 5, radius: 1, weapon: WeaponFamily.Sword);
+
+        // ---- The Monk's base kit (Kristela's until 2026-10-05; no starting hero has the class now). ----
 
         /// <summary>A punch (220% ATK) that also hits the enemy right behind the target.</summary>
         public static readonly SkillDefinition PiercingPunch = new SkillDefinition("piercing_punch", "Piercing Punch", "Pierce",
             SkillEffect.Strike, power: 220, pierce: true, weapon: WeaponFamily.Fists);
 
-        /// <summary>Quick: Kristela heals herself for 25% of her max HP.</summary>
+        /// <summary>Quick: the Monk heals itself for 25% of its max HP.</summary>
         public static readonly SkillDefinition KiHeal = new SkillDefinition("ki_heal", "Ki Heal", "Ki",
             SkillEffect.Heal, power: 25, costPercent: SkillDefinition.QuickCostPercent);
 
@@ -308,10 +379,10 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// Ultimate: 5 rapid strikes of 80% ATK (moving on to another adjacent foe if the target falls), and it costs only
-        /// 70% of a turn, so her next turn comes 30% sooner (the most any one effect may move a turn, PROGRESSION.md).
+        /// 70% of a turn, so the next turn comes 30% sooner (the most any one effect may move a turn, PROGRESSION.md).
         /// </summary>
         public static readonly SkillDefinition FlurryOfBlows = new SkillDefinition("flurry_of_blows", "Flurry of Blows", "Flurry",
-            SkillEffect.Strike, power: 80, ultimate: true, costPercent: 70, hits: 5, weapon: WeaponFamily.Fists);
+            SkillEffect.Strike, power: 80, ultimate: true, costPercent: 70, hits: 5, movesOn: true, weapon: WeaponFamily.Fists);
 
         // ---- Milestone 1d's kit (Uzuki's before the party); kept for tests and future classes. ----
 

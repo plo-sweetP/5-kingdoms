@@ -59,6 +59,16 @@ namespace FiveKingdoms.Dungeon
 
         readonly Dictionary<int, ActorView> actors = new Dictionary<int, ActorView>();
         SkillDefinition activeSkill; // The skill whose effects are playing, if any.
+        int activeSkillUser = -1;    // Whose it is: nobody else's blows are part of it.
+        int strikesShown;            // Its strikes shown so far: past the skill's own, an attack is a plain one again.
+        int counterBy = -1;          // The hero whose next blow is a Riposte's counter.
+        int dancer = -1;             // The hero in a Blade Dance, until its last strike has been shown.
+        int danceEndsAt;             // Where that strike is in the events being played.
+        int danceStrikes;
+        readonly HashSet<int> stances = new HashSet<int>(); // The heroes holding a counter stance's pose.
+
+        static readonly Color BladeColor = new Color(1f, 0.98f, 0.88f);
+        static readonly Color DanceGhostColor = new Color(1f, 0.86f, 0.45f, 0.8f);
         readonly Dictionary<int, SpriteRenderer> items = new Dictionary<int, SpriteRenderer>();
         readonly Dictionary<int, SpriteRenderer> traps = new Dictionary<int, SpriteRenderer>();
         readonly List<GameObject> warnings = new List<GameObject>();
@@ -123,6 +133,7 @@ namespace FiveKingdoms.Dungeon
             DrawTerrain(run.Map);
             stairs.gameObject.SetActive(run.Map.InBounds(run.Map.Stairs));
             stairs.transform.position = TileCenter(run.Map.Stairs);
+            stances.Clear();
             foreach (var actor in run.Actors) AddActor(actor);
             HeroComposer.ReleaseSources();
             foreach (var item in run.Items) AddItem(item);
@@ -147,6 +158,7 @@ namespace FiveKingdoms.Dungeon
         public IEnumerator Play(DungeonRun run, IReadOnlyList<GameEvent> events)
         {
             activeSkill = null;
+            activeSkillUser = counterBy = dancer = -1;
             bool expLogged = false;
             for (int i = 0; i < events.Count; i++)
             {
@@ -169,13 +181,27 @@ namespace FiveKingdoms.Dungeon
                         ShowStatus(run, status);
                         break;
                     case StatusEndedEvent ended:
-                        if (actors.TryGetValue(ended.ActorId, out var cleared)) ShowStatuses(cleared, run.FindActor(ended.ActorId));
+                        if (actors.TryGetValue(ended.ActorId, out var cleared))
+                        {
+                            ShowStatuses(cleared, run.FindActor(ended.ActorId));
+                            if (ended.Kind == StatusKind.Riposte && stances.Remove(ended.ActorId)) cleared.SetStance(false);
+                        }
+                        break;
+                    case CounterEvent counter:
+                        counterBy = counter.ActorId;
+                        if (actors.TryGetValue(counter.ActorId, out var riposter))
+                        {
+                            hud.ShowFloatingText(riposter.TextAnchor, "Riposte!", UltimateTextColor, 0.9f);
+                            Effects.Burst(effectRoot, riposter.transform.position + Vector3.up * 0.3f, Color.white, 8, 2.5f); // The flash.
+                            hud.AddMessage($"{riposter.DisplayName} turns the blow aside and strikes back!", GuardColor);
+                        }
                         break;
                     case ChargeChangedEvent charge:
                         ShowCharge(run, charge);
                         break;
                     case AreaAttackEvent area:
-                        yield return AnimateVolley(run, area);
+                        if (activeSkill != null && activeSkill.Effect == SkillEffect.SharedStrikes) BeginDance(run, events, i, area);
+                        else yield return AnimateVolley(run, area);
                         break;
                     case TrapPlacedEvent placed:
                         AddTrap(placed.TrapId, placed.Pos);
@@ -200,6 +226,8 @@ namespace FiveKingdoms.Dungeon
                         break;
                     case SkillUsedEvent used:
                         activeSkill = used.Skill;
+                        activeSkillUser = used.ActorId;
+                        strikesShown = 0;
                         RingFlash(used.ActorId); // Stands in for a ring bonus firing until the gear rules exist.
                         yield return AnimateSkillUse(used);
                         break;
@@ -232,10 +260,16 @@ namespace FiveKingdoms.Dungeon
                         break;
                     case AttackEvent attack:
                     {
+                        int at = i;
                         var hit = i + 1 < events.Count ? events[i + 1] as DamageEvent : null;
                         if (hit != null && hit.TargetId == attack.TargetId) i++;
                         else hit = null;
-                        yield return AnimateAttack(run, attack, hit);
+                        if (attack.AttackerId == dancer)
+                        {
+                            yield return AnimateDanceStrike(run, attack, hit);
+                            if (at >= danceEndsAt) dancer = -1;
+                        }
+                        else yield return AnimateAttack(run, attack, hit);
                         break;
                     }
                     case DamageEvent damage:
@@ -350,7 +384,7 @@ namespace FiveKingdoms.Dungeon
         {
             var to = TileCenter(attack.To);
             var direction = (to - shooter.transform.position).normalized;
-            bool skillShot = activeSkill != null && activeSkill.Effect == SkillEffect.Shot;
+            bool skillShot = activeSkill != null && activeSkill.Effect == SkillEffect.Shot && attack.AttackerId == activeSkillUser;
             bool heavy = skillShot && activeSkill.Knockback > 0;
             float draw = heavy ? HeavyDrawTime : ActorView.LungeTime;
             shooter.Play("attack", draw, "cast");
@@ -471,6 +505,13 @@ namespace FiveKingdoms.Dungeon
                 case StatusKind.Rooted:
                     hud.ShowFloatingText(view.TextAnchor, "Snared", SnareColor, 0.75f);
                     break;
+                case StatusKind.Riposte:
+                    // The rig's guard pose, held, with a glint on the blade; the skill's name is over her head already.
+                    stances.Add(status.ActorId);
+                    view.SetStance(true);
+                    Effects.Glint(effectRoot, view.transform.position + new Vector3(0.3f, 0.75f, 0f), Color.white);
+                    hud.AddMessage($"{sourceName} takes a counter stance: the first foe to strike gets an answer.", GuardColor);
+                    break;
                 case StatusKind.Aura:
                     hud.ShowFloatingText(view.TextAnchor + Vector3.up * 0.1f, "Aura of Protection", UltimateTextColor, 0.75f);
                     Effects.Ring(effectRoot, view.transform.position, UltimateTextColor);
@@ -590,7 +631,7 @@ namespace FiveKingdoms.Dungeon
             }
             hud.AddMessage($"{user.DisplayName} used {skill.Name}!", SkillTextColor);
             hud.ShowFloatingText(user.TextAnchor, skill.Name, SkillTextColor, 0.7f);
-            if (skill.Effect == SkillEffect.Dash || skill.RollTiles > 0) yield break; // The dash itself is the show.
+            if (skill.Effect == SkillEffect.Dash || skill.RollTiles > 0 || skill.DashTiles > 0) yield break; // The dash itself is the show.
             if (skill.Effect != SkillEffect.Heal) Effects.Sparkle(effectRoot, user.transform.position, SpiritColor);
             yield return new WaitForSeconds(0.12f);
         }
@@ -621,6 +662,57 @@ namespace FiveKingdoms.Dungeon
                 }
             pixelCamera.Shake(0.1f, 0.2f);
             if (shooter != null) StartCoroutine(shooter.Recover(0.1f));
+        }
+
+        /// <summary>
+        /// Blade Dance begins: its 3x3 lights up, and every strike that follows shows her at its target for a moment
+        /// (<see cref="AnimateDanceStrike"/>), up to the last one, which is found here by looking ahead.
+        /// </summary>
+        void BeginDance(DungeonRun run, IReadOnlyList<GameEvent> events, int index, AreaAttackEvent area)
+        {
+            dancer = area.ActorId;
+            danceStrikes = 0;
+            danceEndsAt = index;
+            for (int j = index + 1; j < events.Count; j++)
+            {
+                if (events[j] is AttackEvent strike)
+                {
+                    if (strike.AttackerId != dancer) break;
+                    danceEndsAt = j;
+                }
+                else if (events[j] is SkillUsedEvent || events[j] is MovedEvent || events[j] is BossActionEvent || events[j] is CounterEvent) break;
+            }
+            if (danceEndsAt == index) dancer = -1; // Nobody left to strike.
+            for (int dy = -area.Radius; dy <= area.Radius; dy++)
+                for (int dx = -area.Radius; dx <= area.Radius; dx++)
+                {
+                    var tile = new GridPos(area.Center.X + dx, area.Center.Y + dy);
+                    if (run.Map.IsWalkable(tile)) Destroy(Effects.TileHighlight(effectRoot, TileCenter(tile), AreaColor), 0.5f);
+                }
+        }
+
+        /// <summary>
+        /// One strike of a Blade Dance: she flickers to her target (a bright image of her beside it, facing it) and
+        /// cuts, and the hit lands. She herself keeps her tile, as the rules have it, so the camera stays calm.
+        /// </summary>
+        IEnumerator AnimateDanceStrike(DungeonRun run, AttackEvent attack, DamageEvent hit)
+        {
+            if (!actors.TryGetValue(attack.AttackerId, out var dancing)) yield break;
+            var target = TileCenter(attack.To);
+            var way = target - dancing.transform.position;
+            way = way.sqrMagnitude < 0.01f ? Vector3.right : way.normalized;
+            dancing.SetFacing(attack.Direction);
+            dancing.Play("attack", 0.05f, "attack2");
+            if (attack.Distance > 1) dancing.LeaveGhostAt(effectRoot, target - way * 0.85f, DanceGhostColor, 0.2f);
+            else dancing.LeaveAfterimage(effectRoot, DanceGhostColor);
+            Effects.Slash(effectRoot, target, UltimateTextColor, flipX: danceStrikes++ % 2 == 1);
+            yield return new WaitForSeconds(0.06f);
+            if (hit != null)
+            {
+                ShowDamage(run, hit, way);
+                if (actors.TryGetValue(hit.TargetId, out var victim)) hud.AddMessage(DescribeHit(dancing, victim, hit), DungeonHud.TextColor);
+            }
+            yield return new WaitForSeconds(hit != null && hit.Critical ? 0.12f : 0.07f);
         }
 
         /// <summary>A snare goes off: it snaps shut around whoever stepped on it, then is gone.</summary>
@@ -669,7 +761,9 @@ namespace FiveKingdoms.Dungeon
         /// A melee attack: the attacker's own attack animation, timed so its swing lands with the lunge, then the hit.
         /// A hero's skills show what they do: Divine Strike bursts into fire on the target, Shoulder Bash leads with the
         /// shield and shocks the ground, Piercing Punch drives a ring through to the foe behind, Flurry of Blows leaves
-        /// afterimages, and gauntlets land with a burst instead of a blade's arc.
+        /// afterimages, and gauntlets land with a burst instead of a blade's arc. The Piercer Blade stabs: a streak
+        /// from its bearer to the target, three side by side in a blur for Triple Thrust, and after a Lunge's dash.
+        /// A Riposte's counter is a flash (shown with its event), a stab and a cut, and then the stance again.
         /// </summary>
         IEnumerator AnimateAttack(DungeonRun run, AttackEvent attack, DamageEvent hit)
         {
@@ -683,16 +777,32 @@ namespace FiveKingdoms.Dungeon
                 yield break;
             }
             // A skill strike lunges further, with the heavier swing where the art has one.
-            var skill = attacker.IsHero && activeSkill != null && activeSkill.Effect == SkillEffect.Strike ? activeSkill : null;
+            bool counter = attack.AttackerId == counterBy;
+            if (counter) counterBy = -1;
+            // The user's own strikes, as many as the skill has: the blows of others, and its later ones, are plain attacks.
+            var skill = !counter && attacker.IsHero && attack.AttackerId == activeSkillUser && activeSkill != null &&
+                        activeSkill.Effect == SkillEffect.Strike && strikesShown < activeSkill.Hits + (activeSkill.Pierce ? 1 : 0)
+                ? activeSkill
+                : null;
+            if (skill != null) strikesShown++;
             bool flurry = skill != null && skill.Hits > 1;
-            string swing = skill == null || flurry ? "attack" : skill.Shove ? "guard" : "attack2";
+            string swing = counter ? "attack2" : skill == null || flurry ? "attack" : skill.Shove ? "guard" : "attack2";
             attacker.Play(swing, ActorView.LungeTime, "attack", "cast");
             if (flurry) attacker.LeaveAfterimage(effectRoot, FlurryGhostColor);
 
-            yield return attacker.Lunge(direction, skill != null ? LungeDistance * 1.3f : LungeDistance);
+            yield return attacker.Lunge(direction, skill != null || counter ? LungeDistance * 1.3f : LungeDistance);
             var targetTile = attacker.transform.position + new Vector3(offset.X, offset.Y, 0f);
-            bool gauntlets = run.FindActor(attack.AttackerId)?.Weapon?.Type == WeaponType.Gauntlets;
+            var weapon = run.FindActor(attack.AttackerId)?.Weapon?.Type;
+            bool gauntlets = weapon == WeaponType.Gauntlets;
             if (gauntlets) Effects.Punch(effectRoot, targetTile, skill != null ? SpiritColor : PunchTint);
+            if (weapon == WeaponType.PiercerBlade)
+            {
+                // A fencer stabs. A flurry's thrusts land side by side.
+                var side = new Vector3(-direction.y, direction.x, 0f) * (flurry ? (strikesShown - 2) * 0.14f : 0f);
+                var from = attacker.transform.position + direction * 0.2f + Vector3.up * 0.1f + side;
+                Effects.Thrust(effectRoot, from, from + direction, counter ? UltimateTextColor : skill != null ? SpiritColor : BladeColor);
+            }
+            if (counter) Effects.Slash(effectRoot, targetTile, UltimateTextColor);
             if (skill != null)
             {
                 if (skill.Element == Element.Fire)
@@ -714,9 +824,10 @@ namespace FiveKingdoms.Dungeon
                 ShowDamage(run, hit, direction);
                 if (actors.TryGetValue(hit.TargetId, out var target))
                     hud.AddMessage(DescribeHit(attacker, target, hit), target.IsHero ? HeroHurtColor : DungeonHud.TextColor);
-                yield return new WaitForSeconds(hit.Critical ? 0.14f : 0.06f); // Hit-stop sells the impact.
+                yield return new WaitForSeconds(hit.Critical ? 0.14f : flurry ? 0.04f : 0.06f); // Hit-stop sells the impact.
             }
-            yield return attacker.Recover(0.09f);
+            yield return attacker.Recover(flurry ? 0.05f : 0.09f); // A flurry's blows come in a blur.
+            if (stances.Contains(attack.AttackerId)) attacker.SetStance(true); // The counter is struck; the stance holds until her turn.
         }
 
         void ShowDamage(DungeonRun run, DamageEvent hit, Vector3 knockDirection)

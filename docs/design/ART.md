@@ -113,7 +113,10 @@ creatures beyond the pack come later.
     look becomes the Piercer Blade on the Warrior rig without a shield, still in Light Warrior. Peter on the icon
     draft (2026-10-05): "I want her sword to look closer to a fencer blade than a long sword. So thinner and change
     the hilt to look rounder and more like a sabre". So the Piercer Blade's look is redrawn: a thin blade and a
-    rounded, sabre-like guard around the hand, in the game and on the icon alike.
+    rounded, sabre-like guard around the hand, in the game and on the icon alike. Built on 2026-10-05 (856a412).
+    Peter on the result: "Only one side of the sabre should have the hand(hilt guard) the side next to the hero
+    should be flatter". So the guard curves around the hand on the outer side only, away from her body, and the
+    side toward her is flat. To do with playtest pass 1 (docs/design/HUD.md).
 - **Female heroes read as feminine, in any armor and with any weapon** (Peter, 2026-10-03, pointing at his chibi
   class sheet): for example long hair falling from under the helmet, lashes, a slimmer or skirted outline, softer
   trim, hair accessories. Kristela is the female hero today; Haiden and Uzuki are boys (Peter, 2026-10-03; older

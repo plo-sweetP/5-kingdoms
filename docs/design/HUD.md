@@ -85,7 +85,8 @@ One build session, after 1g part 1: both change the HUD, so not at the same time
 1. What moves: the top-right row with the Pause button, the skill row, Auto's look.
 2. The minimap, with the explored tiles in Core and tests for the fog rules.
 3. The pause menu with its pages, and Reset level.
-4. Divine Strike's holy light (ART.md, "Skill animations").
+4. Two small art items: Divine Strike's holy light (ART.md, "Skill animations"), and the guard of Kristela's
+   blade on its outer side only (ART.md, "Heroes built from layers").
 5. Footing in a boss fight for the party's AI (PROGRESSION.md, "Ranged vs melee"): measured first, as with the
    corridor tactics.
 

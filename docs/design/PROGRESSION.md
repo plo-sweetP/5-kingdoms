@@ -202,6 +202,23 @@ hub's first drafts (*proposed*), to tune with `-balance`:
   step toward the foes (`HoldsTheDoor`, the leash); Riposte when a foe next to her acts before her next turn and
   isn't held by Haiden's taunt, never inside a boss's slam (she steps out, as today); Blade Dance when the area
   holds a boss or at least two foes.
+- **As built** (2026-10-05, main f83b13a; Peter approved the drafts above the same day: "The fencer drafts looks
+  good"). What the build session settled, by its report:
+  - Riposte's AI rule is narrower: she takes the stance when a foe next to her acts before her next turn and is
+    going for her (not held by Haiden's taunt, not busy with a hero it reaches first). With the wider rule most
+    stances went unanswered.
+  - Thrusts of Triple Thrust left over when its target falls are lost (the Monk's Flurry moves on to another foe).
+  - Riposte's damage cut adds to the aura's (50 + 30 = 80% less; 25 + 30 from a boss). A slam from the next tile
+    counts as a hit and is answered; the AI never stands in one. A counter can fell a monster on its own turn.
+  - Lunge's AI doesn't dash out of a corridor from further back than its last tile: she walks to the doorway
+    first, where "hold the door" is decided.
+  - The Piercer Blade has the Gauntlets' stats (60 HP / 22 ATK / 4 DEF at item level 1).
+  - Her attacks show a streak of light, not a slash arc. Blade Dance shows an image of her at each foe; she and
+    the camera stay where they are.
+  - The class stat bumps are in for Archer, Paladin, Fencer and Monk. The kit and the bumps raised the win rate
+    just past the target (Blade Dance on a lone boss and Riposte outweigh the lost heal), so the Troll has
+    **25000 HP** (was 24000): 28 of 600 fresh level-1 runs win (4.7%), first clear on attempt 3.1 at Lv 9.7.
+    Without her heal more heroes fall on the way down (19 to 31 in 200 runs).
 
 ## Levels 1-100
 - **Each level gives 1 point** (100 at level 100), spent on class or profession tiers in any mix.

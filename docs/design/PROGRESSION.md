@@ -25,8 +25,10 @@ Classes, Traces and professions are for **heroes only**. Monsters get their iden
     toward his signature class **Runegod Fire Blade**.
     Concept: [docs/concept/haiden.jpg](../concept/haiden.jpg): spiky orange-brown hair, blue headband with long
     tails, red eyes.
-  - **Kristela** (girl): 5th kingdom (Medieval Realm), a princess. Base class **Monk**; signature class **Princess
-    Timeless Monk**. Concept: [docs/concept/kristela.jpg](../concept/kristela.jpg): long wavy blonde hair, blue
+  - **Kristela** (girl): 5th kingdom (Medieval Realm), a princess. Base class **Fencer** (Peter, 2026-10-05: "I'm
+    not feeling the monk abilities for her as one of the starting characters"; she was a Monk until then, and the
+    Monk stays in the game as a class). Signature class, *proposed:* **Princess Timeless Fencer** (was Princess
+    Timeless Monk). Concept: [docs/concept/kristela.jpg](../concept/kristela.jpg): long wavy blonde hair, blue
     eyes, gold X-shaped hair clip on one side.
 - GAME_PLAN.md still calls Uzuki the main character and needs updating.
 
@@ -35,12 +37,13 @@ Classes, Traces and professions are for **heroes only**. Monsters get their iden
 |---|---|---|---|---|
 | Uzuki | Archer, speccing into Mage (Ice) toward Crystal Ice Legion Hunter | **Utility DPS** (ranged; traps, slows and control) | Alchemist (potions for the team) | 95 |
 | Haiden | Paladin (later Rune Warrior, toward Runegod Fire Blade) | **Tank first, with some healing** (frontliner; fire runes that guard, mend and hit back) | Blacksmith (equipment) | 90 |
-| Kristela | Monk | **Melee DPS** (speed build) | Chef (meals that buff the party between fights) | 100 |
+| Kristela | Fencer | **Melee DPS** (speed build: thrusts, lunges and counters) | Chef (meals that buff the party between fights) | 100 |
 
 Together they cover tank (with some healing), melee DPS and utility DPS, so the player's own character can fill
 whatever role they like.
 
-**Weapons:** Uzuki uses a **Hunter Bow**, Haiden a **Long Sword**, Kristela **Gauntlets** (see GEAR.md).
+**Weapons:** Uzuki uses a **Hunter Bow**, Haiden a **Long Sword**, Kristela a **Piercer Blade**, her rapier
+(*proposed*; as a Monk she had Gauntlets) (see GEAR.md).
 
 **Starting kits (approved).** Skills are borrowed from D&D; numbers are first drafts to tune.
 
@@ -56,7 +59,7 @@ whatever role they like.
 - **No mana.** Every skill has a **1-turn cooldown**: after using it, it's unavailable on the hero's next turn, so
   the same skill can't be used twice in a row.
 - Every hero has an **always-ready weapon attack** with no cooldown, so there's always something useful to do
-  (names are drafts: Uzuki's Quick Shot, Haiden's Sword Slash, Kristela's Jab).
+  (names are drafts: Uzuki's Quick Shot, Haiden's Sword Slash, Kristela's Thrust; the Monk's is Jab).
 - **Ultimates use a charge meter** that fills as the hero acts, deals damage and takes damage. When it's full, the
   ultimate is ready.
 - Berries heal HP again (in 1d they restored mana).
@@ -125,6 +128,19 @@ whatever role they like.
 - **Heroes heal between fights** (Peter, 2026-10-04; to build in 1g part 1): outside a fight, AI heroes (partners
   and the Auto leader) use their heals to top the party up before moving on. It needs a re-tune: when the C1 session
   tried it by accident, fresh level-1 wins went from 18 to 38 of 200, mostly through the boss fight.
+- **Footing in a boss fight** (Peter's note from the tablet, 2026-10-04; to build in playtest pass 1, AI only):
+  "when fighting the boss ... if the melle characters get stuck against the wall or the pillar. They are do not
+  know to move or escape the bad situation. Can u help them navigate them out of those situations while doing
+  damage?"
+  - A melee hero next to a boss stands on a tile **with a way out**: a free tile beside it that the boss's slam
+    doesn't reach, and that no other hero needs as its only way out.
+  - A hero without one (its back to a wall, a pillar or a corner, or boxed in by allies) moves to a tile next to
+    the boss that has one, on a turn when the boss isn't winding up. Where it can, it gets there with a skill that
+    moves and strikes at once (Kristela's Lunge), so the turn isn't lost; otherwise it gives up one attack.
+  - When the slam is coming and there is still no way out, it uses what it has (Riposte, a guard, the aura, a
+    swap with an ally whose tile is out of reach) instead of only standing there.
+  - Measured first, as with the corridor tactics: `-balance` gains a count of the slams that hit a hero who had no
+    way out, and the rules' numbers come from the run simulations. The hero the player controls is never moved.
 
 **Targeting and input (decided).**
 - **Two steps for skills and ultimates:** tap the skill, the tiles it can reach light up (Fire Emblem style) with
@@ -151,10 +167,41 @@ whatever role they like.
 | Haiden | **Divine Strike** | Smite (~250% ATK). Fire damage until a Light element is decided |
 | Haiden | **Shoulder Bash** | Shove 1 tile; the target must attack Haiden on its next turn (like Compelled Duel). Against a wall: +50% damage instead of moving |
 | Haiden | Ultimate: **Aura of Protection** | 3 turns: Haiden and the allies next to him take 30% less damage, and he heals them all (himself too) at the start of each of his turns. The aura covers its caster (decided 2026-10-03) |
-| Kristela | **Piercing Punch** | Hits the target and the enemy behind it (~220% ATK) |
-| Kristela | **Ki Heal** | Quick skill: heal herself ~25% |
-| Kristela | **Stun Strike** | ~160% ATK with a chance (Affinity vs Resist) to **stun**: the target's next turn is pushed back 50% of a turn on the timeline (bosses 25%). No skipped turns, so no stun-lock |
-| Kristela | Ultimate: **Flurry of Blows** | 5 rapid strikes, then her next turn comes 30% sooner |
+| Kristela | **Triple Thrust** | Three quick hits on one adjacent enemy (~90% ATK each); each rolls its own crit |
+| Kristela | **Lunge** | Dashes in a straight line to an enemy up to 3 tiles away and strikes it (~200% ATK): 2 tiles of dash, or 1 when the enemy is that near |
+| Kristela | **Riposte** | A counter stance until her next turn: she takes 50% less damage (25% from a boss), and the first enemy that hits her from an adjacent tile is struck back (~250% ATK) |
+| Kristela | Ultimate: **Blade Dance** | 5 strikes (~100% ATK each) shared among the enemies in a 3x3 area: each strike goes to the enemy hit least so far, the highest threat first |
+| The Monk (no starting hero) | **Piercing Punch**, **Ki Heal**, **Stun Strike**, ultimate **Flurry of Blows** | Kristela's kit until 2026-10-05, kept as the Monk's base kit: ~220% on the target and the enemy behind it; a Quick self-heal of ~25%; ~160% with a chance to stun (a 50% delay, bosses 25%); 5 strikes, then the next turn comes 30% sooner |
+
+**Kristela's Fencer kit (Peter, 2026-10-05).** His brief: "(1) multi 3 hit strike, (2) dash 2 positions with a
+strike but can go 1 position if moving into a monster, and (3) a riposte to go into a counter stance then counter
+strike if struck before the next turn. Instead of a full block. Do 50% of damage reduction and less if against a
+boss", and an ultimate that is "a 5 strike that hits an area of 3x3". The numbers and the details below are the
+hub's first drafts (*proposed*), to tune with `-balance`:
+- **Thrust** is her always-ready weapon attack (200% ATK, as Jab was). Fencer skills need a sword in hand.
+- **Triple Thrust:** 3 hits of 90% on one adjacent enemy. Each hit rolls its damage and its crit on its own; the
+  charge meter counts one action and three hits landed.
+- **Lunge:** the target is an enemy up to 3 tiles away in a straight line (the 8 directions; the corner rule
+  applies) with nobody standing between. She dashes to the tile in front of it (2 tiles, 1, or none when it is
+  already next to her) and strikes for 200%. It takes a full turn and, like every skill, needs a target.
+- **Riposte:** takes a full turn. Until her next turn she takes 50% less damage (25% from a boss), and the first
+  enemy that hits her from an adjacent tile is struck back at once for 250% (it can crit, and it charges the meter
+  as a hit landed). One counter per stance; the damage cut lasts until her turn. The stance is paid for with her
+  turn, so it isn't a reaction (those stay at one per cycle). An icon over her head shows the stance.
+- **Blade Dance:** she targets an enemy next to her, and the area is the 3x3 around that enemy. Five strikes of
+  100%, one after another: each goes to the living enemy in the area that this ultimate has hit the fewest times,
+  and among those to the highest threat (a boss first, then the enemy she targeted, then the highest ATK, then the
+  lowest actor id). Peter's examples follow from that rule: a boss alone is hit 5 times; a boss with two minions
+  takes the 1st and 4th strikes and the minions the 2nd, 3rd and 5th; if the minions fell to their strikes, the
+  boss takes the 4th and the 5th too. She doesn't move. As with every ultimate, its own hits don't charge the
+  meter.
+- **She has no heal of her own now** (the Monk had Ki Heal): Haiden's Heal, his aura, berries and the healing
+  between fights carry her, and the balance is re-tuned for that.
+- **AI rules** (the autopilot and the partners are the balance report's players): Triple Thrust whenever it is
+  ready and a foe is next to her; Lunge to reach a foe instead of walking up to it, through the same checks as any
+  step toward the foes (`HoldsTheDoor`, the leash); Riposte when a foe next to her acts before her next turn and
+  isn't held by Haiden's taunt, never inside a boss's slam (she steps out, as today); Blade Dance when the area
+  holds a boss or at least two foes.
 
 ## Levels 1-100
 - **Each level gives 1 point** (100 at level 100), spent on class or profession tiers in any mix.
@@ -252,7 +299,24 @@ Every tier: +0.4% HP and +0.4% DEF (+10% each at tier 25).
 | 20 | **Bastion:** Aura of Protection blocks 40% (was 30%) and lasts 4 turns (was 3) | **Sanctuary:** the aura heals 15% a turn (was 10%) and reaches 2 tiles | **Holy Wrath** (alternate ultimate): fire on every foe next to Haiden, 350% each, and they are taunted |
 | 25 | **Master Guardian:** his taunts last a turn longer, and allies next to him always take 10% less damage | **Master of Devotion:** his heals restore 25% more, and Heal reaches allies 2 tiles away | **Master Crusader:** Paladin strikes deal +15%, and a kill with one heals him for 10% |
 
-### Monk (Kristela's class): approved by Peter as a starting point (2026-10-03)
+### Fencer (Kristela's class since 2026-10-05): the hub's draft from Peter's brief, not yet seen by him
+Peter: "Make the skill tree to somewhat follow that idea" (her three abilities, under "Starting kits" above).
+Every tier: +0.2% Crit Rate and +0.4% Crit DMG (+5% and +10% at tier 25). Class speed modifier +5, the same as the
+Monk's, so her speed stays 100.
+
+| Tier | Duelist (flurries and crits) | Footwork (lunges and tempo) | En Garde (counters) |
+|---|---|---|---|
+| 5 | **Precise Thrusts:** each hit of Triple Thrust has +15% Crit Rate, and the third hits for 130% (was 90%) | **Long Lunge:** Lunge reaches 4 tiles (was 3) and hits for 240% (was 200%) | **Sharp Riposte:** the counter hits for 320% (was 250%), and the stance cuts damage by 60% (was 50%; from a boss 30%) |
+| 10 | **Feint** (new Quick skill): the target takes +30% damage from her next strike on it | **Fleche** (new skill): she runs through an enemy next to her to the free tile behind it and hits it for 220%; her next turn comes 25% sooner | **Parry** (new Quick skill): she takes 40% less damage until her next turn (20% from a boss) |
+| 15 | **Remise:** when a hit of Triple Thrust crits, she adds a fourth hit for 90% | **Momentum:** after a skill that moved her, her next strike deals +30% | **Counter Stance:** Riposte strikes back at every enemy that hits her until her next turn (was the first only); the later counters hit for 150% |
+| 20 | **Coup de Grace** (alternate ultimate): one thrust for 800% on a single enemy | **Storm of Steel:** Blade Dance is 7 strikes (was 5) | **Perfect Guard** (alternate ultimate): for 2 of her turns she takes 50% less damage (25% from a boss) and strikes back at every enemy that hits her for 200% |
+| 25 | **Master Duelist:** Fencer strikes deal +15%, and her crits +20% Crit DMG | **Master of Footwork:** her first turn in a fight comes 30% sooner, and Lunge and Fleche take 25% less time | **Master of the Riposte:** her counters deal +25%, and a counter brings her next turn 20% closer (once per turn of hers) |
+
+Feint and Parry are both Quick skills, and a loadout holds one. Every advance stays inside the turn budget
+("Classes": at most 30% of a turn per effect).
+
+### Monk (kept as a class; no starting hero has it since 2026-10-05): approved by Peter as a starting point (2026-10-03)
+Its tiers are built when a hero or a weapon brings the class into play. "Kristela" and "her" below mean the monk.
 Every tier: +0.4% ATK and +0.4% Crit DMG (+10% each at tier 25).
 
 | Tier | Striker (damage) | Windwalker (speed) | Mystic (ki: control and sustain) |
@@ -279,6 +343,7 @@ profession**; it has to make sense for the one that has it. **Potions always hea
 | Blacksmith | armor-breaking debuffs, enhancing himself, later his allies | none |
 | Chef | buffs by meals eaten between fights, item support (her stock of meals), later treats for monster companions | a little, when a meal is eaten between fights; always less than a potion |
 | Paladin (class) | protection, taunts, smites | yes: allies and himself |
+| Fencer (class) | thrusts, lunges, counters | none |
 | Monk (class) | strikes, tempo, stuns | herself only (Ki Heal) |
 | Archer (class) | marks, traps, shots at several targets | none |
 
@@ -364,7 +429,7 @@ come from the 1f, art pass and C1 build sessions.
    tier from any path. A hero starts at tier 1 of their class. Any hero can put points into any base class; an
    option that upgrades a skill the hero doesn't know teaches the base skill instead; a skill tied to a weapon type
    can only go in the loadout when the hero holds that weapon. Speeds stay as they are today (hero bases 90 / 95 /
-   95 for Uzuki / Haiden / Kristela, plus the class modifier: Archer +5, Paladin -5, Monk +5).
+   95 for Uzuki / Haiden / Kristela, plus the class modifier: Archer +5, Paladin -5, Fencer +5, Monk +5).
 3. A hero's kit becomes the hero's own: today it is read from the shared `ActorDefinition` everywhere, so it moves
    onto the hero's saved progress first. The loadout is 3 skills + 1 ultimate from the hero's pool, with at most
    one Quick skill (two with the Monk's Windwalker mastery), changed between runs only.
@@ -376,8 +441,11 @@ come from the 1f, art pass and C1 build sessions.
    one class (three paths side by side, rows for tiers 5 to 25, lines between them, an info panel, the points left),
    the loadout, and unlearn. Rows that have no content yet show as locked. It works with touch, keyboard and gamepad.
    Round icons build on the UI kit's round buttons; every skill needs an icon drawn (ART.md, "Later").
-7. Content: tier 5 of Archer, Paladin and Monk first, then tier 10 ("Starting class content"). Each new skill needs
-   its rule, its AI rule (the autopilot and the partners are the balance report's players), an animation and an icon.
+7. Content: Kristela's Fencer kit first (changed on 2026-10-05, after this part had started: "Starting kits"
+   above; her weapon and look become the Piercer Blade, and the Monk's kit stays in the code as that class's base
+   kit), then tier 5 of Archer, Paladin and Fencer, then tier 10 ("Starting class content"). The Monk's tiers wait
+   until something brings the class into play. Each new skill needs its rule, its AI rule (the autopilot and the
+   partners are the balance report's players), an animation and an icon.
 8. Balance: the report plays sensible default builds, and the numbers go back to the targets in CLAUDE.md.
 
 **Part 2 (1g-2):** tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries); relearning after a
@@ -393,14 +461,15 @@ Each kingdom's classes match its flavor, so players know what style they're buil
 ### Medieval Realm (5th): the classic classes, faith
 - **Base:** **Warrior** (offensive melee), **Knight** (shield and protection), **Mage** (elemental magic), **Archer**
   (ranged physical), **Cleric** (faith healing, support), **Paladin** (holy warrior: armored melee and smites, with
-  light healing), **Rogue** (crit, bleed/poison, mobility), **Monk** (fast unarmed martial arts, multi-hit;
-  Kristela's base class).
+  light healing), **Rogue** (crit, bleed/poison, mobility), **Fencer** (a light blade: flurries, lunges and
+  counters; Kristela's base class), **Monk** (fast unarmed martial arts, multi-hit).
 - **Advanced (affinity):** **Holy Knight** (Knight 15 + Cleric 10): tank-healer with faith shields. **Spellblade**
   (Warrior 15 + Mage 10): magic-infused melee. **Ranger** (Archer 15 + Hunter 10): traps, partner synergy.
   **Archmage** (Mage 25 + Academy Teacher 10): big area spells.
 - **Inherited:** **Crystal Ice Legion Hunter** (Archer 15 + Mage 10 with an Ice skill picked): Uzuki's class. Ice
-  Hunter Bow attacks, summons ice avatars. **Princess Timeless Monk** (*sketch*: Monk 15 + Mage 10 with a Darkness
-  (time) skill picked): Kristela's class. Time magic for a speed build: turn advances and flurries.
+  Hunter Bow attacks, summons ice avatars. **Princess Timeless Fencer** (*proposed* name and base since Kristela
+  became a Fencer; it was Princess Timeless Monk. *Sketch*: Fencer 15 + Mage 10 with a Darkness (time) skill
+  picked): Kristela's class. Time magic for a speed build: turn advances and flurries.
 
 ### Aurelius Empire (1st): dragon and phoenix bloodlines
 - **Base:** **Dragonblood Warrior** (fire/earth melee, bloodline passives), **Phoenix Acolyte** (fire healer,

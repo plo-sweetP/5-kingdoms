@@ -63,9 +63,9 @@ energy) and [docs/design/GEAR.md](docs/design/GEAR.md) (damage formula, stats, g
   |---|---|---|---|---|---|
   | Uzuki | Medieval Realm | Archer (later specs into Ice Mage) | Utility DPS: ranged, slows, control and support shots | Alchemist (team potions) | 95 |
   | Haiden (boy) | Dynasty Nation | Paladin (later Rune Warrior, toward Runegod Fire Blade) | Tank first, with some healing | Blacksmith (equipment) | 90 |
-  | Kristela (girl, a princess) | Medieval Realm | Monk | Melee DPS, speed build | Chef (meals that buff the party between fights) | 100 |
+  | Kristela (girl, a princess) | Medieval Realm | Fencer (Peter, 2026-10-05; a Monk until then, and the Monk stays as a class) | Melee DPS, speed build | Chef (meals that buff the party between fights) | 100 |
 
-  Weapons: Uzuki a **Hunter Bow**, Haiden a **Long Sword**, Kristela **Gauntlets** (stats only for the first playtest,
+  Weapons: Uzuki a **Hunter Bow**, Haiden a **Long Sword**, Kristela a **Piercer Blade** (Gauntlets while she was a Monk; stats only for the first playtest,
   except the Hunter Bow's Multishot).
   Concept sketches: [Haiden](docs/concept/haiden.jpg) (spiky orange-brown hair, blue headband with long tails, red
   eyes), [Kristela](docs/concept/kristela.jpg) (long wavy blonde hair, blue eyes, gold X-shaped hair clip on one side).
@@ -216,6 +216,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | C1 | Corridor tactics for the party's AI (PROGRESSION.md, "Doorways and corridors"): hold the door, rotate the front, enter a room when it's safe or there's room; then a balance re-check | **Done** (2026-10-04; the Troll went from 16000 to 24000 HP) |
 | 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; tiers 5 and 10 of Archer, Paladin and Monk | **In progress** (the three follow-ups are done, 2026-10-04) |
 | 1g-2 | Classes core, part 2: tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries), relearning after a respec from level 20, prerequisites and kingdom locks | |
+| P1 | Playtest pass 1 ([docs/design/HUD.md](docs/design/HUD.md)), Peter's notes from the tablet: the top-right buttons in one row, a minimap with fog, the skills in a row along the bottom, a pause menu (with Reset level for testing), Auto hides the D-pad and greys the buttons out, holy light on Divine Strike, footing in the boss fight for the party's AI | After 1g-1: both change the HUD (listed here, a row down, so the 1g-1 row can be edited without a conflict) |
 | 1g-3 | Professions: potions and meals as items, the Alchemist, Blacksmith and Chef paths (farm paths locked until the farm exists) | |
 | 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
 | 1i | Hero screen between runs: equipment, class and profession tiers, loadout (until the farm exists) | |

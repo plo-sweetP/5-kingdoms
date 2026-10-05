@@ -191,9 +191,9 @@ base ATK, HP and DEF about 15-25%. Names are placeholders.
 | **Mage Staff** | Magic skill range x1.5 (rounded down). Magic skills blast the 8 tiles around the target for 50% damage; the center target takes +20% | |
 | **Great Shield** | Block chance = 10% + a quarter of your bonus DEF% (max 40%). A block halves the hit | Uses bonus DEF% from gear and sets, not raw DEF. Raw DEF grows 10x+ over 100 levels, so "% of DEF" would go from useless to 100% block |
 | **Great Sword** | Physical skills deal +10% -> +20% damage. Crit applies on top, like everything | |
-| **Piercer Blade** | Physical skills and ultimates apply Bleed for 2 turns: at the start of its turn the target loses 2% -> 4% of its max HP, capped at 50% of the wielder's ATK per tick | Uses Affinity vs Resist. The cap stops % max-HP damage from deleting bosses |
+| **Piercer Blade** | Physical skills and ultimates apply Bleed for 2 turns: at the start of its turn the target loses 2% -> 4% of its max HP, capped at 50% of the wielder's ATK per tick | Uses Affinity vs Resist. The cap stops % max-HP damage from deleting bosses. **Kristela's weapon** since she became a Fencer (2026-10-05, *proposed*: her rapier): stats only until 1h builds the passives |
 | **Long Sword** | *Passive later.* Haiden's weapon. Stats only for the first playtest | |
-| **Gauntlets** | *Passive later.* Kristela's weapon, and the Monk/fist-fighter weapon type. Stats only for the first playtest | |
+| **Gauntlets** | *Passive later.* The Monk/fist-fighter weapon type; Kristela's weapon until she became a Fencer (2026-10-05). Stats only | |
 | **Hunter Bow** | **Multishot:** ranged physical skills fire 2 arrows at 60% -> 70% damage each. Each arrow picks its own target in range; both hit the same one if it's alone. +6 SPD | 120-140% total, each arrow rolling crit and on-hit effects separately. Full double damage would be far over budget. +6 is the weapon SPD max |
 
 ## Where gear comes from

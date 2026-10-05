@@ -109,7 +109,8 @@ creatures beyond the pack come later.
     (approved 2026-10-04).
   - Starting looks (approved 2026-10-04): Haiden on the Warrior rig with the Long Sword and shield, in Heavy Armor
     (the great helm); Kristela with Gauntlets, in Light Warrior (the crested cap); Uzuki on the Archer rig with the
-    Hunter Bow, in Archer's Garb (the archer helmet).
+    Hunter Bow, in Archer's Garb (the archer helmet). Since 2026-10-05 Kristela is a Fencer (PROGRESSION.md): her
+    look becomes the Piercer Blade on the Warrior rig without a shield (*proposed*), still in Light Warrior.
 - **Female heroes read as feminine, in any armor and with any weapon** (Peter, 2026-10-03, pointing at his chibi
   class sheet): for example long hair falling from under the helmet, lashes, a slimmer or skirted outline, softer
   trim, hair accessories. Kristela is the female hero today; Haiden and Uzuki are boys (Peter, 2026-10-03; older
@@ -157,11 +158,17 @@ style. They stay short, so turns don't slow down. As a guide:
   Shot is a tumble with dust, a shot, and the snare left where the roll began. Volley sends arrows up and rains them
   on the 3 x 3 area, once per hit.
 - **Haiden:** Sword Slash swings with its arc. Heal plays the pack's heal effect on whoever is healed. Divine Strike
-  is a heavy swing that bursts into fire on the target. Shoulder Bash leads with the shield and shoves the target.
+  is a heavy swing wrapped in holy light (Peter, 2026-10-05: "add a holy light effect to the swing animation";
+  to build in playtest pass 1, docs/design/HUD.md): a gold-white glow along the blade and its arc and a burst of
+  light on the target, in place of the plain fire burst. Shoulder Bash leads with the shield and shoves the target.
   Aura of Protection spreads a golden ring over its 3 x 3 and stays as a glow, with a heal effect on each tick.
-- **Kristela:** Jab is a quick punch. Piercing Punch drives a shockwave through the target into the foe behind.
-  Ki Heal is a short glow on herself. Stun Strike lands with a burst and leaves stars over the target. Flurry of
-  Blows is five fast punches with afterimages.
+- **Kristela** (a Fencer since 2026-10-05, to build in 1g part 1): Thrust is a quick stab. Triple Thrust is three
+  stabs in a blur. Lunge is a dash with afterimages that ends in a stab. Riposte holds the rig's guard pose with a
+  glint on the blade, and its counter is a flash and a stab. Blade Dance flickers her from foe to foe, a slash
+  each, and back to her tile.
+- **The Monk** (Kristela's kit until then, kept for the class): Jab is a quick punch. Piercing Punch drives a
+  shockwave through the target into the foe behind. Ki Heal is a short glow on herself. Stun Strike lands with a
+  burst and leaves stars over the target. Flurry of Blows is five fast punches with afterimages.
 - **Monsters:** the Spider bites, the Giant Bat swoops, the Troll winds up, slams (dust and a shock on every tile it
   hits) and recovers, and roars when it calls its Spiders.
 The manga panels and ultimate cutscenes in PROGRESSION.md ("Skill presentation") are still for later.
@@ -201,6 +208,16 @@ The manga panels and ultimate cutscenes in PROGRESSION.md ("Skill presentation")
 The Core tests, Unity EditMode and PlayMode tests, the Windows build and the autoplay runs pass with the new art in
 all layouts; no placeholder square shows; the three heroes are layered, look like themselves and can show every
 weapon and armor look; and Peter has the preview sheets, screenshots and a build to try.
+
+## App icon (asked 2026-10-04)
+Peter: the three heroes, "Haiden in the middle, kristela to the left, and uzuki to the right", in front of the
+pack's castle with "a gold/sunrise background". From five drafts he chose **A** (bare heads, the blue castle, the
+sun rising behind it with rays) and asked: "show haiden's sword. show all their weapons. the armor can wait until
+they get ingame". The revision (Kristela with her Fencer's blade) went to him on 2026-10-05 and waits for his OK.
+- The drafts and their script are the hub's mock-ups, outside the repo: `C:\Users\peter\5Kingdoms\icon-drafts`.
+- To do in a build session once he has chosen: move the script into `Tools/pixelart`, write the icon at the sizes
+  Android wants (an adaptive icon's foreground and background layers, the legacy and the round icon) and for
+  Windows, set them in the player settings, and check the icon on the tablet's home screen.
 
 ## Later (not in art pass 1)
 - **New bosses and creatures** beyond the Enemy Pack, drawn or generated (Peter: "later").

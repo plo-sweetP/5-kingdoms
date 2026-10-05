@@ -12,8 +12,8 @@ modified. The asset files themselves may not be redistributed, resold or repacka
 required; we give it anyway, here and later on a credits screen.
 
 What that means for this repo:
-- **The packs are not in the repo.** They live outside it (`%LOCALAPPDATA%\5Kingdoms\ArtPacks\TinySwords\`), and
-  their raw files and `.aseprite` sources must never be committed.
+- **The packs are not in the repo.** They live outside it (`C:\Users\peter\5Kingdoms\ArtPacks\TinySwords\`: the
+  zips and the unpacked folders), and their raw files and `.aseprite` sources must never be committed.
 - **`Assets/Art/Resources/` holds only what the game uses**, written by `Tools/pixelart/build_art.py`: files taken
   from the packs under our own names, and what is derived from them (units taken apart into layers, recolors,
   reshaped weapons, wall tiles put together from the terrain tileset, the cave entrance cut down to one tile, the UI

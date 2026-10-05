@@ -19,7 +19,8 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
   `px.py` / `draw.py` (images, shapes, the pack's outline), `rigs.py` (the hero bodies and weapons), `heads.py` (the
   heroes' heads, armor sets, cosmetic head pieces), `looks.py` (stacks a look, like `HeroComposer`), `monsters.py`,
   `terrain.py`, `fx.py`, `ui.py`, `icons.py`, `sheets.py` (preview sheets). The packs stay outside the repo
-  (`%LOCALAPPDATA%\5Kingdoms\ArtPacks\TinySwords\`, or `--pack`): never commit their files (docs/THIRD_PARTY.md).
+  (`C:\Users\peter\5Kingdoms\ArtPacks\TinySwords\`, i.e. `5Kingdoms\ArtPacks\TinySwords` in the user's profile
+  folder, or `--pack`): never commit their files (docs/THIRD_PARTY.md).
 - `Tools/CoreTests/` — runs the Core tests outside Unity.
 
 ## Commands (from the repo root)
@@ -55,7 +56,12 @@ set; the ids are in `art_manifest.json`. PlayMode tests set `DungeonController.O
 `save.json` in `Application.persistentDataPath` (`SaveSystem`); never let tests or tools write to it.
 
 `Tools/CoreTests` needs `Library/` (open the project in Unity once). Unity batchmode can't run while the editor has
-the project open; copy Assets/Packages/ProjectSettings to a scratch folder and run there instead.
+the project open, so the Unity checks run in a permanent sandbox copy of the project:
+`& "C:\Users\peter\5Kingdoms\checkpoint.ps1" -Label <name> -Layouts` from the repo or worktree root mirrors `Assets`
+into `C:\Users\peter\5Kingdoms\UnitySandbox`, runs EditMode, PlayMode, the Windows build and the autoplay runs, and
+writes logs and screenshots to `C:\Users\peter\5Kingdoms\results\<name>` (about 10 minutes; `-CompileOnly` takes one).
+That folder is an ordinary one on purpose: nothing the tools need may live under `%LOCALAPPDATA%`, which the Claude
+desktop app keeps private to its own sessions (Explorer, Peter's editor and its C# compiler don't see files there).
 
 ## Conventions
 - Landscape only; Android builds use IL2CPP + ARM64 (`Assets/Editor/ProjectSettingsApplier.cs`).

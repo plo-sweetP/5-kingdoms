@@ -8,7 +8,9 @@ import os
 from ase import AseFile
 from px import Image, hexc
 
-DEFAULT_ROOT = os.path.join(os.environ.get('LOCALAPPDATA', ''), '5Kingdoms', 'ArtPacks', 'TinySwords')
+# An ordinary folder in the user's profile (C:\Users\<name>\5Kingdoms). Not under AppData: the Claude desktop app
+# gives its sessions a private copy of AppData that Explorer, Unity and other programs can't see.
+DEFAULT_ROOT = os.path.join(os.path.expanduser('~'), '5Kingdoms', 'ArtPacks', 'TinySwords')
 FREE = 'Tiny Swords (Free Pack)'
 ENEMY = 'Tiny Swords (Enemy Pack)/Enemy Pack'
 UNITS = FREE + '/Units/Units (aseprite in Blue only)'

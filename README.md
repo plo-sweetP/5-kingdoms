@@ -64,7 +64,8 @@ behind it.
 ## Art
 Everything under `Assets/Art/Resources` is written by a script from the Tiny Swords packs, which are **not** in the
 repo (their license allows using and changing them, not passing them on). To rebuild the art, put the packs in
-`%LOCALAPPDATA%\5Kingdoms\ArtPacks\TinySwords\` (or pass `--pack <folder>`) and run, with Python 3.7 or newer:
+`5Kingdoms\ArtPacks\TinySwords\` in your user folder (`C:\Users\<you>\5Kingdoms\ArtPacks\TinySwords\`), or pass
+`--pack <folder>`, and run, with Python 3.7 or newer:
 ```
 python Tools/pixelart/build_art.py
 ```

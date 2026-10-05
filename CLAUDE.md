@@ -42,7 +42,8 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
 - Autoplay smoke test: `Builds/Windows/5Kingdoms.exe -screen-fullscreen 0 -fk-autoplay <screenshot folder>`
   (add `-fk-floors 1 -fk-level 10` to go straight to the boss; autoplay always uses its own throwaway save, and
   aims each targeted action once the way a player does, saving `aim_*.png`; it saves `door_*.png` the first times
-  the leader holds a doorway or the front rotates; with `-fk-demo view` it stages foes five tiles up and down a
+  the leader holds a doorway or the front rotates, and `rest*.png` when it waits for the party to heal up; with
+  `-fk-demo view` it stages foes five tiles up and down a
   corridor, then one three tiles away, and captures how the camera shows them instead)
 
 Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway save), `-fk-save PATH`,
@@ -68,8 +69,8 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
 - Unity's C# is 9.0: no file-scoped namespaces, global usings or records.
 - Balance numbers live in `DungeonRunConfig`, `ActorCatalog`, `SkillCatalog`, `CombatRules` (damage, the ranged cuts,
   the ultimate's charge rates) and `EnemyBrain` (boss moves); check `-balance` after changing them (it reports fresh
-  runs, ultimates per fight, the heroes that fall before the boss, what each hero does with its turns in fights, and
-  a campaign with levels kept between runs). The targets: about 2-5% of fresh level-1 runs win, and with levels kept
+  runs, ultimates per fight, the heroes that fall before the boss, the HP they bring into a fight, what each hero
+  does with its turns in fights, and a campaign with levels kept between runs). The targets: about 2-5% of fresh level-1 runs win, and with levels kept
   the first clear comes around the third attempt at Lv 9-10. The autopilot and the partners' AI (`HeroTactics`) are
   the balance report's players, so a new skill or item needs AI rules too.
 - There is no mana (PROGRESSION.md, "Skill resources"): skills sit out the hero's next turn, each hero has an
@@ -93,6 +94,15 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   (`DungeonRun.IsFrontRotation`), and the one behind heals; a hero fighting in a corridor's mouth makes way
   (`TryMakeWay`). A partner never moves the leader this way (`IsRotateSwap`). Any step of the party's AI toward the
   foes goes through `AutoPilot.Advance` or `HeroTactics.TryEngage`, which ask `HoldsTheDoor` first.
+- Heroes heal between fights (PROGRESSION.md, "Heroes heal between fights"; AI only): outside a fight a hero's AI
+  uses its heal whenever at least half of it goes to use (`HeroTactics.WorthToppingUp`, `TopUpPercent`), a hurt hero
+  with no heal of its own goes and stands next to the one that can heal it (`TrySeekHealer`), and the autopilot's
+  leader waits for all of that (`HeroCommand.Rest`, `HeroTactics.TryRest`), for at most `RestPatience` turns in a row
+  without a heal landing on anyone (`Actor.RestedTurns`). The player's own leader is never made to wait.
+- What the party's AI is up to is said by the rules, never guessed by the view: `HeroWaitedEvent` (it holds a door,
+  or rests; with the turns in a row so far) and `SwappedEvent.Reason` (`Rotate`, `Safety`, `Engage`, `Regroup`,
+  `Passing`). `DungeonView.ShowWait / ShowSwap` turn them into a word over the hero and a line in the log, so nobody
+  thinks a hero is stuck. A new reason to stand still needs its event and its line.
 - Shots reach any foe within range that `DungeonMap.HasLineOfSight` sees (walls and wall corners block, actors
   don't; it's symmetric). Use `DungeonRun.InShotReach / FoesInSight / ShotTargetAt`, not line walks.
 - Delays (stuns, slows, a snare under a boss) go through `DungeonRun.Delay`: capped at 50% of a turn (25% on a boss)

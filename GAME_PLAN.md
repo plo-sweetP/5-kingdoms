@@ -135,6 +135,15 @@ Turn order in fights works like Honkai: Star Rail, on Mystery Dungeon grids
   she can come out and fight beside him. Where one hero holds the way, he trades places under half HP with the melee
   hero behind who has clearly more HP left: the fresh one fights, the hurt one heals behind. Partners do all of this
   for themselves and never move the hero the player controls; the autopilot's leader does it too.
+- **Healing between fights (Peter's playtest note, built 2026-10-04):** outside a fight, partners and the
+  autopilot's leader use their heals to top the party up: a heal is used whenever at least half of it goes to use
+  (Haiden ends above 90% of his HP, Kristela near 88%). A hurt hero with no heal of its own (Uzuki) walks over to
+  the one who can heal it. On Auto the leader waits for this before moving on, for at most 6 turns in a row without
+  a heal landing; by hand the player decides when to move on, and the partners heal as they follow.
+- **A line when a hero waits (Peter's playtest note, built 2026-10-04):** when a hero's AI holds a doorway, when
+  the front rotates or a badly hurt hero ducks behind another, and when the Auto leader rests, a word shows over
+  the hero ("Holding the door", "My turn!", "Resting") and the log says why, e.g. `Haiden holds the doorway: "One
+  at a time, please!"`, so nobody thinks the hero is stuck.
 - Defeat (decided 2026-10-03): the run ends when the whole party has fallen; when the leader falls, the next hero
   in line takes the lead. Resurrection may come later, as an ultimate, a weapon ability or a craftable item.
 - Enemies and bosses can target any party member; area attacks hit everyone in range.
@@ -205,7 +214,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, packs; shots at anything in sight, deliberate two-step attacks, stuns as timeline delays | **Done** (parts 1 and 2, and Peter's answers at the first playtest checkpoint) |
 | A1 | Art pass 1 ([docs/design/ART.md](docs/design/ART.md)): the current game on the Tiny Swords art (heroes built from layers with their own faces and hair under the helmets, equipment looks for GEAR.md's weapons and armor sets, ring auras, skill animations, monsters from the Enemy Pack, the outdoor dungeon, the HUD) | **Done** (2026-10-04; new bosses and creatures come with row 7) |
 | C1 | Corridor tactics for the party's AI (PROGRESSION.md, "Doorways and corridors"): hold the door, rotate the front, enter a room when it's safe or there's room; then a balance re-check | **Done** (2026-10-04; the Troll went from 16000 to 24000 HP) |
-| 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; tiers 5 and 10 of Archer, Paladin and Monk | **Next** (Peter, 2026-10-04) |
+| 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; tiers 5 and 10 of Archer, Paladin and Monk | **In progress** (the three follow-ups are done, 2026-10-04) |
 | 1g-2 | Classes core, part 2: tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries), relearning after a respec from level 20, prerequisites and kingdom locks | |
 | 1g-3 | Professions: potions and meals as items, the Alchemist, Blacksmith and Chef paths (farm paths locked until the farm exists) | |
 | 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
@@ -501,6 +510,32 @@ and corridors"; they are AI only, so nothing changes for what the player may do.
 - **Open:** with Kristela leading (`-lead kristela`) she still falls before the boss in about one run in five: out
   in a room she walks up to the pack like a tank. And nothing on screen says why a hero waits at a door; a line in
   the log would be easy to add.
+
+**Milestone 1g, part 1 (roadmap row 1g-1): the three follow-ups (2026-10-04).** The classes core, the skill tree
+and tiers 5 and 10 follow in this same part.
+- **The tooling lives in an ordinary folder.** The Unity sandbox, `checkpoint.ps1`, its results, the test APK and
+  the Tiny Swords packs moved from `%LOCALAPPDATA%\5Kingdoms` to `C:\Users\peter\5Kingdoms`. The Claude desktop app
+  keeps `%LOCALAPPDATA%` private to its own sessions, so Explorer, Peter's editor and the C# compiler server it
+  starts never saw those files; that was the cause of the CS2011 errors in sandbox compiles. The art rebuilds
+  byte-identical from the new place, and the sandbox compiles there while the editor is open. The old private
+  folder (8.9 GB) is unused and left for Peter to delete.
+- **Heroes heal between fights** (the rule is under "Party" above). Measured (autopilot, Haiden leading, 200
+  seeds): 6.9 heals a run are now used outside a fight (0.4 before), and the Auto leader waits 2.4 turns a run for
+  them. The HP brought into a fight went from 81% to 96% for Haiden and from 92% to 95% for Kristela; into the
+  boss fight, from 75% to 95% and from 87% to 94%. **The balance did not move**, so nothing was re-tuned: 8 of 200
+  fresh level-1 runs win (9 before; 17 of 600), and the first clear comes on attempt 3.1 at Lv 9.6 (3.1 at Lv 9.7
+  before). A full HP bar at the Troll's door is worth little against 24000 HP; what decides that fight is the
+  party's level. (The C1 session saw wins double when it healed "by accident". That change isn't in the repo; a
+  guess, not checked: it also healed more freely inside fights.) A fit Haiden steps into rooms a little more often:
+  19 heroes fall before the boss floor in 200 runs (15 before).
+- **A line when a hero waits** (under "Party" above). The rules say what the AI is doing: a `HeroWaitedEvent` for
+  holding a door or resting, and the reason on every swap (rotate, run to safety, engage, regroup, passing); the
+  view only shows it. The balance report and the soak tests now count rotations from that reason instead of
+  guessing them.
+- **Checks:** 230 Core tests (11 new in `BetweenFightsTests`: the top-up rule and its limits, the hurt partner
+  walking to the healer, the Auto leader waiting and giving up, the events), 230 in Unity's EditMode, 23 PlayMode,
+  the Windows build, and four autoplay runs without an error. The soak tests also fail if the leader never rests,
+  or rests longer than its patience. The golden replay is unchanged (its lone hero has no heal).
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

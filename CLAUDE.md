@@ -5,7 +5,8 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
 
 ## Layout
 - `Assets/Scripts/Core/` — game rules in plain C# (asmdef `FiveKingdoms.Core`, `noEngineReferences`). No UnityEngine here.
-  Rules change state and append `GameEvent`s; they never touch visuals.
+  Rules change state and append `GameEvent`s; they never touch visuals. `Actors/` (definitions, the skill catalog,
+  `HeroProgress`), `Classes/` (class definitions and the kit a hero takes into a run), `Combat/`, `Dungeon/`, `Run/`.
 - `Assets/Scripts/` (asmdef `FiveKingdoms.Game`) — Unity side: `Dungeon/` (controller, view, animations), `UI/` (HUD built
   in code), `Shared/` (sprites, the art manifest, the hero composer, pixel camera). Views only animate events and read
   state.
@@ -75,6 +76,23 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   the balance report's players, so a new skill or item needs AI rules too.
 - There is no mana (PROGRESSION.md, "Skill resources"): skills sit out the hero's next turn, each hero has an
   always-ready weapon attack, and ultimates need a full charge meter (`Actor.Charge`).
+- Classes (PROGRESSION.md, "Classes" and "Building 1g"; `Core/Classes`, `HeroProgress`): a hero has a point per
+  level. A point buys the next tier of any class (`HeroProgress.Raise`); a milestone tier (5, 10, 15, 20, 25) also
+  takes one of its three `ClassOption`s, from any path, and a milestone whose options aren't written can't be passed
+  (`ClassDefinition.IsOpen`, `HighestOpenTier`). Every tier adds the class's `StatBump`s (never SPD); the hero's
+  highest class sets its speed modifier (`HeroKit.SpeedFor`, clamped to 85-100 before gear). An option teaches a
+  skill, upgrades the hero's own copy of one (`SkillDefinition.Change`; an upgrade of a skill the hero doesn't know
+  teaches the skill instead) or changes one weapon family's attack. Never change a catalog skill.
+- A hero's kit is its own: read skills, the ultimate and the attack's name from the `Actor` (`Skills`, `Ultimate`,
+  `AttackName`, `Kit`), never from `ActorDefinition`, whose `Skills` are only the kit a hero starts with. The run
+  takes `HeroProgress.Kit` when it starts and keeps it: loadouts (three skills, at most one Quick, weapon-tied
+  skills only with a weapon of that `WeaponFamily`, one ultimate) change between runs only. `HeroProgress.Unlearn`
+  returns a class's points (free for now; relearning from level 20 comes with 1g-2).
+- Saves are version 2 (`SaveSystem`): per hero the level, EXP, classes with their picks, and the loadout. A hero
+  entry says which version wrote it (`HeroSave.savedWith`); one from before classes gets tier 1 of its own class
+  and the rest of its points free. Loading relearns a build tier by tier (`HeroProgress.Restore`), so what the
+  rules no longer allow is dropped and its points stay free. A change to what is saved needs a new version and a
+  migration test in `SaveSystemTests`.
 - Attacks are deliberate (PROGRESSION.md, "Targeting and input"): moving into an enemy never attacks (it only turns
   the hero, no turn used). Attacks, skills and ultimates on a foe carry its tile (`HeroCommand.AttackAt / SkillAt /
   UltimateAt`); the AI must always use those (the soak tests fail on a refused command or an attack at nothing) and

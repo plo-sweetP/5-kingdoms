@@ -160,12 +160,14 @@ namespace FiveKingdoms.Core
         /// Slow and heavy (Speed 85): a hero sometimes gets two turns before it acts, e.g. to escape a slam. Tuned with
         /// -balance for the party of three: a fresh level-1 party rarely wins (about 5%); with levels kept, players win
         /// around Lv 9-10 on the third attempt. Hitting hard (ATK 260) is what makes levels count: a low-level party's
-        /// thinner HP and DEF suffer most. 24000 HP: more HP is what holds a low-level party back without stopping a
+        /// thinner HP and DEF suffer most. 25000 HP: more HP is what holds a low-level party back without stopping a
         /// Lv 9 one. It was 10000 in 1f part 1 (ranged hits dealt 75% and only flew along the 8 lines), 16000 once Aura
-        /// of Protection covered Haiden himself, and 24000 since the party holds doorways and rotates its front (C1):
-        /// nearly always all three heroes now reach it, where one in three used to fall on the way.
+        /// of Protection covered Haiden himself, 24000 since the party holds doorways and rotates its front (C1):
+        /// nearly always all three heroes now reach it, where one in three used to fall on the way; and 25000 since
+        /// Kristela fights as a Fencer (1g-1): Blade Dance puts all five strikes on a boss that stands alone, and
+        /// fresh level-1 wins had crept past 5% (32 of 600 seeds; 28 at 25000).
         /// </summary>
-        public static readonly ActorDefinition Troll = new ActorDefinition("troll", "Troll", maxHp: 24000, attack: 260, defense: 50,
+        public static readonly ActorDefinition Troll = new ActorDefinition("troll", "Troll", maxHp: 25000, attack: 260, defense: 50,
             expReward: 80, brain: ActorBrain.Troll, speed: 85);
 
         /// <summary>

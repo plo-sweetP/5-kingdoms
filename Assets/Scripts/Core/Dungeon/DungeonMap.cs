@@ -60,6 +60,22 @@ namespace FiveKingdoms.Core
         /// <summary>Terrain-only check for stepping one tile in a direction (actors are not considered).</summary>
         public bool CanStep(GridPos from, Direction8 dir) => IsWalkable(from + dir.ToOffset()) && IsCornerClear(from, dir);
 
+        /// <summary>How many of a tile's 8 neighbors it can be stepped onto or struck from (floor, with the corner clear).</summary>
+        public int OpenNeighbors(GridPos pos)
+        {
+            int open = 0;
+            foreach (var dir in Directions.All)
+                if (CanStep(pos, dir)) open++;
+            return open;
+        }
+
+        /// <summary>
+        /// A corridor tile, or a doorway (the last corridor tile before a room): at most two ways in or out. Whoever
+        /// stands there with an ally or a wall behind can be reached from one tile only; the corner rule keeps the
+        /// room's tiles beside a doorway from striking into it.
+        /// </summary>
+        public bool IsNarrow(GridPos pos) => IsWalkable(pos) && OpenNeighbors(pos) <= 2;
+
         /// <summary>
         /// Whether a shot from <paramref name="from"/> reaches <paramref name="to"/> (PROGRESSION.md, "Ranged targets
         /// anything ... in sight"): a straight line of floor tiles between the two that never cuts a wall corner.

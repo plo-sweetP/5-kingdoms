@@ -202,7 +202,7 @@ namespace FiveKingdoms.Core
             {
                 case HeroCommandKind.Move: return Move(command.Direction);
                 case HeroCommandKind.Attack: return Attack(AimOf(command, Hero));
-                case HeroCommandKind.Wait: return Wait();
+                case HeroCommandKind.Wait: return Wait(command.Holding);
                 case HeroCommandKind.UseBerry: return UseBerry();
                 case HeroCommandKind.Descend: return Descend();
                 case HeroCommandKind.Skill: return UseSkill(command.Slot, AimOf(command, Hero));
@@ -251,10 +251,13 @@ namespace FiveKingdoms.Core
         public Actor AttackTargetAt(Actor user, GridPos tile) =>
             user.Definition.IsRanged ? ShotTargetAt(user, tile, user.Definition.AttackRange) : StrikeTargetAt(user, tile);
 
-        public bool Wait()
+        public bool Wait() => Wait(holding: false);
+
+        /// <summary><paramref name="holding"/>: the AI waits at a doorway for the foes to come (<see cref="HeroCommand.HoldTheDoor"/>).</summary>
+        bool Wait(bool holding)
         {
             if (!BeginAction()) return false;
-            FinishLeaderTurn(Config.Costs.PercentFor(ActionKind.Wait));
+            FinishLeaderTurn(Config.Costs.PercentFor(ActionKind.Wait), holding);
             return true;
         }
 
@@ -478,11 +481,12 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// Whether party AI may move <paramref name="mover"/> into <paramref name="other"/>'s tile, swapping the two
-        /// (PROGRESSION.md, "Swaps, without loops"). Three kinds: a melee hero swaps past a ranged one to get next to a foe
+        /// (PROGRESSION.md, "Swaps, without loops"). Four kinds: a melee hero swaps past a ranged one to get next to a foe
         /// or strictly closer to one; a badly hurt hero swaps with a healthier ally standing farther from the foes
-        /// ("run to safety", melee pairs included); and a partner swaps past a partner that comes after it in line, away
-        /// from the foes ("regroup"). Never straight back with the one it just swapped with. The player's own moves
-        /// always swap.
+        /// ("run to safety", melee pairs included); a partner swaps past a partner that comes after it in line, away
+        /// from the foes ("regroup"); and where one hero holds the way (a corridor, a doorway), the hurt one in front
+        /// and the fresh melee hero behind it trade places ("rotate the front"). Never straight back with the one it
+        /// just swapped with. The player's own moves always swap.
         /// </summary>
         public bool CanSwap(Actor mover, Actor other)
         {
@@ -490,7 +494,7 @@ namespace FiveKingdoms.Core
             if (mover.SwappedWithId == other.Id && mover.SwapBlockTurns > 0) return false;
             if (other.SwappedWithId == mover.Id && other.SwapBlockTurns > 0) return false;
             if (GridPos.ChebyshevDistance(mover.Pos, other.Pos) != 1 || !Map.IsCornerClear(mover.Pos, Directions.Toward(mover.Pos, other.Pos))) return false;
-            return IsEngageSwap(mover, other) || IsSaferSwap(mover, other) || IsRegroupSwap(mover, other);
+            return IsEngageSwap(mover, other) || IsSaferSwap(mover, other) || IsRegroupSwap(mover, other) || IsRotateSwap(mover, other);
         }
 
         /// <summary>A melee hero past a ranged one, to stand next to a foe or strictly closer to one.</summary>
@@ -520,6 +524,59 @@ namespace FiveKingdoms.Core
             if (mover == Hero || other == Hero || FoeAdjacent(mover) || FoeAdjacent(other)) return false;
             int place = party.IndexOf(mover);
             return place >= 0 && place < party.IndexOf(other);
+        }
+
+        /// <summary>
+        /// "Rotate the front" (PROGRESSION.md, "Doorways and corridors"): the two trade places because one of them holds
+        /// the way and is hurt, and the other is the fresh melee hero behind it (<see cref="IsFrontRotation"/>).
+        /// Either may make the move, but a partner never moves the leader this way: the hero the player controls only
+        /// changes places when the player (or the autopilot playing it) says so.
+        /// </summary>
+        public bool IsRotateSwap(Actor mover, Actor other) =>
+            other != Hero && (IsFrontRotation(front: other, back: mover) || IsFrontRotation(front: mover, back: other));
+
+        /// <summary>
+        /// <paramref name="front"/> is under half its HP and stands between the foes and <paramref name="back"/>, a melee
+        /// hero next to it with no foe in its own reach and clearly more of its HP left, where the two can't fight side by
+        /// side: one of them is in a corridor or a doorway. Either <paramref name="front"/> is in melee already (out in
+        /// the mouth of a corridor only against a few: a fresh hero isn't fed to a crowd), or it holds the corridor with
+        /// the foes close beyond it. A ranged hero doesn't take the front this way: only when a badly hurt hero has
+        /// nobody else to run behind (<see cref="IsSaferSwap"/>).
+        /// </summary>
+        public bool IsFrontRotation(Actor front, Actor back)
+        {
+            if (back.Definition.IsRanged || InMelee(back)) return false;
+            if (front.Hp * 100 >= front.MaxHp * RotateOutPercent) return false;
+            // Shares of max HP, compared without rounding: back% >= front% + the margin.
+            if ((long)back.Hp * 100 * front.MaxHp < ((long)front.Hp * 100 + (long)RotateMarginPercent * front.MaxHp) * back.MaxHp) return false;
+
+            bool holdsTheWay = Map.IsNarrow(front.Pos);
+            if (!holdsTheWay && !Map.IsNarrow(back.Pos)) return false;
+            int onIt = FoesInMeleeWith(front);
+            if (onIt > 0) return holdsTheWay || onIt <= HeroTactics.SafeCrowd;
+            if (!holdsTheWay) return false;
+            var beyond = Pathfinder.StepsFrom(Map, front.Pos, HeroTactics.CloseSteps(this), p => p == back.Pos);
+            foreach (var actor in actors)
+                if (actor.Team != front.Team && beyond[actor.Pos.Y * Map.Width + actor.Pos.X] >= 0) return true;
+            return false;
+        }
+
+        /// <summary>Under this share of max HP the hero that holds a corridor or a doorway gives its place to a fresher one.</summary>
+        public const int RotateOutPercent = 50;
+
+        /// <summary>How much more of its HP (in points of percent) the hero that takes over must have left.</summary>
+        public const int RotateMarginPercent = 20;
+
+        /// <summary>Whether a foe stands where <paramref name="actor"/>'s melee blows reach it (and its blows the actor): next to it, corners allowing.</summary>
+        public bool InMelee(Actor actor) => FoesInMeleeWith(actor) > 0;
+
+        /// <summary>How many foes stand next to <paramref name="actor"/> with the corner clear for a blow.</summary>
+        public int FoesInMeleeWith(Actor actor)
+        {
+            int foes = 0;
+            foreach (var other in actors)
+                if (other.Team != actor.Team && StrikeTargetAt(actor, other.Pos) != null) foes++;
+            return foes;
         }
 
         /// <summary>Under this share of max HP a hero may swap away from the foes ("run to safety").</summary>
@@ -695,9 +752,10 @@ namespace FiveKingdoms.Core
         /// the timeline. Exploring, each partner and then every enemy takes one turn (the original alternating rhythm);
         /// if that leaves an enemy alerted, a fight starts and the timeline takes over from a fresh start.
         /// </summary>
-        void FinishLeaderTurn(int cost)
+        void FinishLeaderTurn(int cost, bool holding = false)
         {
             Turn++;
+            if (holding) Hero.HeldTurns++;
             EndOwnTurn(Hero);
 
             if (InCombat && AnyEnemyAlerted())
@@ -768,6 +826,7 @@ namespace FiveKingdoms.Core
         void EndCombat()
         {
             InCombat = false;
+            foreach (var member in party) member.HeldTurns = 0;
             timeline.Clear();
             events.Add(new CombatEndedEvent());
         }
@@ -825,6 +884,7 @@ namespace FiveKingdoms.Core
         {
             if (!started) StartTurn(partner);
             var command = PartnerBrain.Decide(this, partner);
+            if (command.Holding) partner.HeldTurns++;
             int cost = Config.Costs.PercentFor(ActionKind.Wait);
             var aim = AimOf(command, partner);
             switch (command.Kind)
@@ -985,10 +1045,11 @@ namespace FiveKingdoms.Core
         /// <summary>What's left of a hit from <paramref name="attacker"/> after the ranged cuts (100 for a melee hit).</summary>
         int ReachPercent(Actor attacker, bool ranged) => CombatRules.ReachPercent(ranged, ranged && FoeAdjacent(attacker));
 
-        /// <summary>A hero attacked or used a skill: its ultimate charges a little, and it isn't retreating any more.</summary>
+        /// <summary>A hero attacked or used a skill: its ultimate charges a little, and it isn't retreating or waiting at a doorway any more.</summary>
         void Acted(Actor hero)
         {
             hero.RetreatSteps = 0;
+            hero.HeldTurns = 0;
             if (State == RunState.InProgress) GainCharge(hero, CombatRules.ChargePerAction);
         }
 
@@ -1026,6 +1087,7 @@ namespace FiveKingdoms.Core
             events.Add(new ChargeChangedEvent(user.Id, -user.Charge, 0));
             user.Charge = 0;
             user.RetreatSteps = 0;
+            user.HeldTurns = 0;
             ultimateUser = user;
             try
             {
@@ -1068,7 +1130,7 @@ namespace FiveKingdoms.Core
                 }
                 case SkillEffect.Heal:
                     foreach (var member in HealTargets(user, skill))
-                        Heal(member, Math.Max(1, (skill.HealsFromUser ? user.MaxHp : member.MaxHp) * skill.Power / 100));
+                        Heal(member, HealAmount(user, member, skill));
                     break;
                 case SkillEffect.Dash:
                 {
@@ -1345,6 +1407,10 @@ namespace FiveKingdoms.Core
                     allies.Add(member);
             return allies;
         }
+
+        /// <summary>What <paramref name="user"/>'s heal restores to <paramref name="target"/>: the skill's percent of the user's max HP, or of the target's.</summary>
+        public static int HealAmount(Actor user, Actor target, SkillDefinition skill) =>
+            Math.Max(1, (skill.HealsFromUser ? user.MaxHp : target.MaxHp) * skill.Power / 100);
 
         /// <summary>Who a heal would reach right now (only those missing HP).</summary>
         public List<Actor> HealTargets(Actor user, SkillDefinition skill)
@@ -1626,6 +1692,7 @@ namespace FiveKingdoms.Core
             Hero.Pos = Hero.PreviousPos = Map.Start;
             Hero.Facing = Direction8.S;
             Hero.Statuses.Clear();
+            foreach (var member in party) member.HeldTurns = 0;
             actors.Add(Hero);
             foreach (var member in party)
             {

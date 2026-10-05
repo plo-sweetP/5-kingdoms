@@ -29,6 +29,8 @@ namespace FiveKingdoms.Tests
             // safety isn't asked for here: heroes heal first, so it happens about once in 20-100 runs. FormationTests cover it.)
             Assert.Greater(totals.Delays, 0, "no stun ever landed");
             Assert.Greater(totals.OffLineShots, 0, "no shot ever flew off the 8 lines");
+            Assert.Greater(totals.DoorsHeld, 0, "the leader never held a doorway");
+            Assert.Greater(totals.FrontRotations, 0, "the front never rotated");
         }
 
         [Test]
@@ -39,10 +41,10 @@ namespace FiveKingdoms.Tests
         public void PartyRunsLedByKristelaKeepTheWorldConsistent() =>
             Soak(seed => new DungeonRun(seed, new DungeonRunConfig { Party = new[] { ActorCatalog.Kristela, ActorCatalog.Haiden, ActorCatalog.Uzuki } }));
 
-        /// <summary>How often the part-2 rules came up in a soak.</summary>
+        /// <summary>How often the rules under test came up in a soak.</summary>
         sealed class Totals
         {
-            public int Delays, OffLineShots;
+            public int Delays, OffLineShots, DoorsHeld, FrontRotations;
         }
 
         static Totals Soak(System.Func<int, DungeonRun> start)
@@ -58,8 +60,12 @@ namespace FiveKingdoms.Tests
                 {
                     string context = $"seed {seed}, action {step}";
                     var command = AutoPilot.Decide(run);
+                    bool fighting = run.InCombat;
                     AssertDeliberate(run, command, context);
                     Assert.IsTrue(run.Execute(command), $"the autopilot's {command} was refused ({context})");
+                    if (command.Holding) totals.DoorsHeld++;
+                    // In a fight two melee heroes only trade places to rotate the front (or to run to safety).
+                    if (fighting) totals.FrontRotations += run.Events.OfType<SwappedEvent>().Count(swap => IsMeleeHero(run, swap.ActorId) && IsMeleeHero(run, swap.OtherId));
                     AssertConsistent(run, context);
                     AssertPartyTogether(run, context);
                     AssertNoSwapLoops(run, swaps, context);
@@ -75,6 +81,8 @@ namespace FiveKingdoms.Tests
             Assert.GreaterOrEqual(deepestFloor, 3, "the autopilot should get a few floors deep on some seed");
             return totals;
         }
+
+        static bool IsMeleeHero(DungeonRun run, int actorId) => run.Party.Any(member => member.Id == actorId && !member.Definition.IsRanged);
 
         /// <summary>
         /// Attacks are deliberate (PROGRESSION.md, "Targeting and input"): the autopilot never walks into an enemy, and

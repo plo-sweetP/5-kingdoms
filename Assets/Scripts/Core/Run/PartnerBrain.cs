@@ -11,6 +11,9 @@ namespace FiveKingdoms.Core
     /// <see cref="PartyTactic"/> decides: Attack goes after foes it can see while staying near the leader, Follow keeps
     /// in line behind the member ahead of it. Hold stays where it is, even in a fight. The party stays together: a
     /// partner whose way is held by its own allies queues up behind them rather than walking around the floor.
+    /// At doorways and in corridors (PROGRESSION.md, "Doorways and corridors") the partner in front holds the door
+    /// against a crowd, the one behind takes a hurt partner's place at the front, and the one in a corridor's mouth
+    /// makes way; none of it ever moves the leader.
     /// Decides only; <see cref="DungeonRun"/> carries the command out.
     /// </summary>
     public static class PartnerBrain
@@ -23,15 +26,18 @@ namespace FiveKingdoms.Core
         public static HeroCommand Decide(DungeonRun run, Actor partner)
         {
             if (HeroTactics.TryDodge(run, partner, out var command)) return command;
+            bool holds = partner.Tactic == PartyTactic.Hold;
+            if (!holds && HeroTactics.TryTakeTheFront(run, partner, out command)) return command;
             if (HeroTactics.TryUltimate(run, partner, out command)) return command;
             if (HeroTactics.TryHealParty(run, partner, out command)) return command;
             if (HeroTactics.TryGuard(run, partner, out command)) return command;
             if (HeroTactics.TryStepOutOfMelee(run, partner, out command)) return command;
             if (HeroTactics.TryRunToSafety(run, partner, out command)) return command;
             if (HeroTactics.TryMark(run, partner, out command)) return command;
+            if (!holds && HeroTactics.TryMakeWay(run, partner, out command)) return command;
             if (HeroTactics.TryAttack(run, partner, out command)) return command;
 
-            if (partner.Tactic == PartyTactic.Hold) return HeroCommand.Wait;
+            if (holds) return HeroCommand.Wait;
             if (run.InCombat && HeroTactics.TryJoinFight(run, partner, out command)) return command;
             if (partner.Tactic == PartyTactic.Attack && !partner.Definition.IsRanged && TryChase(run, partner, out command)) return command;
             return Follow(run, partner);
@@ -56,7 +62,9 @@ namespace FiveKingdoms.Core
                     command = HeroCommand.Move(step);
                 }
             }
-            return best != int.MaxValue;
+            if (best == int.MaxValue) return false;
+            if (HeroTactics.HoldsTheDoor(run, partner, partner.Pos + command.Direction.ToOffset())) command = HeroCommand.HoldTheDoor;
+            return true;
         }
 
         /// <summary>

@@ -12,12 +12,13 @@ namespace FiveKingdoms.Tests
     /// through it instead (the party rewrite itself left these solo replays unchanged); and at 1f part 2, when attacks
     /// became deliberate: the autopilot no longer attacks by walking into a foe but with a command naming its target's
     /// tile (now part of the fingerprint), and of several foes in reach it picks the lowest HP instead of the first in
-    /// turn order.
+    /// turn order; and at C1 (corridor tactics), when the lone hero started to hold a doorway against two or more foes
+    /// close beyond it, letting them come to it one at a time, instead of stepping out among them.
     /// </summary>
     public class GoldenReplayTests
     {
-        /// <summary>Recorded on 2026-10-03 at milestone 1f part 2 (explicit, targeted attacks; lowest HP first).</summary>
-        const ulong RecordedFingerprint = 16507842954104813772UL;
+        /// <summary>Recorded on 2026-10-04 at C1 (the hero holds a doorway against two or more foes close beyond it).</summary>
+        const ulong RecordedFingerprint = 11176097261485298183UL;
 
         [Test]
         public void EqualSpeedsReplayTheOriginalTurnOrder()

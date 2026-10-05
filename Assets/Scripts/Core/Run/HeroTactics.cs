@@ -12,6 +12,9 @@ namespace FiveKingdoms.Core
     /// In a fight, melee heroes close in on a foe and ranged ones find a tile to shoot from behind them ("Ranged vs
     /// melee"). Partners stay together doing it: they fight near the leader, and with allies in the way (a corridor, a
     /// doorway) they take a way around only if it's short, and otherwise wait their turn right behind them.
+    /// They use the corridors too ("Doorways and corridors"): the hero in front holds a doorway against a crowd rather
+    /// than step out among it, the hurt hero that holds the way trades places with the fresh melee hero behind it, who
+    /// fights while it heals, and a hero fighting in a corridor's mouth makes way for the one behind.
     /// Works from a hero's skills by their effects, so new kits need no new AI.
     /// </summary>
     public static class HeroTactics
@@ -40,6 +43,37 @@ namespace FiveKingdoms.Core
         /// way through them. In a corridor or a doorway the way around is a tour of the floor: there it waits behind them.
         /// </summary>
         public const int DetourSteps = 4;
+
+        /// <summary>
+        /// With at most this many foes close beyond a doorway the party goes in, and the melee hero behind gets into the
+        /// fight too; with more, the hero in front holds the doorway (PROGRESSION.md, "Doorways and corridors").
+        /// </summary>
+        public const int SafeCrowd = 2;
+
+        /// <summary>
+        /// The same for a hero that has no melee ally to bring into the fight, or that is hurt: going in gains it nothing
+        /// (or costs it too much), so it goes in against one foe only and holds the doorway against two.
+        /// </summary>
+        public const int LoneCrowd = 1;
+
+        /// <summary>
+        /// With at least this share of its max HP a hero is fit to step out among <see cref="SafeCrowd"/> foes. Set with
+        /// the run simulations: at 60% nearly as many heroes fell before the boss as with no such rule, from 85% up
+        /// about half as many.
+        /// </summary>
+        public const int FitPercent = 90;
+
+        /// <summary>
+        /// Turns a hero holds a doorway with no foe coming into its reach before it goes in after all: foes that are
+        /// after someone they can't get to only mill about.
+        /// </summary>
+        public const int DoorPatience = 5;
+
+        /// <summary>
+        /// How near a foe is "close", in steps' walk: the foes' sight range. A foe that near has noticed the hero and is
+        /// on its way. From a doorway that is 4 tiles into the room (PROGRESSION.md: "within 3-4 tiles").
+        /// </summary>
+        public static int CloseSteps(DungeonRun run) => run.Config.SightRange;
 
         /// <summary>Slot of the hero's first skill with this effect, or -1.</summary>
         public static int SkillSlot(Actor hero, SkillEffect effect)
@@ -189,16 +223,23 @@ namespace FiveKingdoms.Core
             }
         }
 
-        /// <summary>A heal when someone it would reach is badly hurt (the hero below 40%, an ally below 50%).</summary>
+        /// <summary>
+        /// A heal when someone it would reach is badly hurt (the hero below 40%, an ally below 50%). A hero waiting
+        /// behind the one that holds a corridor or a doorway heals sooner, whenever none of it is wasted: "the fresh one
+        /// fights, the hurt one heals behind" (PROGRESSION.md, "Doorways and corridors").
+        /// </summary>
         public static bool TryHealParty(DungeonRun run, Actor hero, out HeroCommand command)
         {
             command = HeroCommand.Wait;
             int heal = SkillSlot(hero, SkillEffect.Heal);
             if (heal < 0 || run.CheckSkill(hero, heal, hero.Facing) != SkillCheck.Ready) return false;
-            foreach (var member in run.HealTargets(hero, hero.Definition.Skills[heal]))
+            var skill = hero.Definition.Skills[heal];
+            bool resting = IsBehindTheFront(run, hero);
+            foreach (var member in run.HealTargets(hero, skill))
             {
                 int threshold = member == hero ? SelfHealPercent : AllyHealPercent;
-                if (member.Hp * 100 < member.MaxHp * threshold)
+                if (member.Hp * 100 < member.MaxHp * threshold ||
+                    resting && member.MaxHp - member.Hp >= DungeonRun.HealAmount(hero, member, skill))
                 {
                     command = HeroCommand.Skill(heal);
                     return true;
@@ -378,6 +419,165 @@ namespace FiveKingdoms.Core
             return true;
         }
 
+        // ---- Doorways and corridors (PROGRESSION.md, "Doorways and corridors") ----
+
+        /// <summary>
+        /// "Hold the door": whether <paramref name="hero"/>, about to step out of a corridor or a doorway onto
+        /// <paramref name="next"/>, should wait where it stands instead. There only the tile straight ahead can reach
+        /// it (the corner rule), and the archer shoots past it; out there the crowd would be all around it while the
+        /// others watched from the corridor. It holds when more than <see cref="SafeCrowd"/> foes are close beyond the
+        /// doorway. With that many or fewer the party goes in, so that the melee hero behind gets into the fight too:
+        /// if there is one to bring, and the hero is fit (<see cref="FitPercent"/>); otherwise it goes in against one foe
+        /// only. Hurt, with a fresher melee ally behind it, it waits to be relieved
+        /// (<see cref="DungeonRun.IsFrontRotation"/>). It doesn't hold when an ally is out there already (it isn't the
+        /// one in front), against a boss (a slam is dodged in the open, not taken in a corridor), or for ever
+        /// (<see cref="DoorPatience"/>). Ranged heroes keep their distance their own way.
+        /// </summary>
+        public static bool HoldsTheDoor(DungeonRun run, Actor hero, GridPos next)
+        {
+            var map = run.Map;
+            if (hero.Definition.IsRanged || hero.HeldTurns >= DoorPatience) return false;
+            if (!map.IsNarrow(hero.Pos) || map.IsNarrow(next)) return false;
+
+            // Who is beyond the doorway, in steps from the tile outside it and not back through the hero's own.
+            var beyond = Pathfinder.StepsFrom(map, next, CloseSteps(run) - 1, p => p == hero.Pos);
+            int close = 0;
+            foreach (var actor in run.Actors)
+            {
+                if (actor == hero || beyond[actor.Pos.Y * map.Width + actor.Pos.X] < 0) continue;
+                if (actor.Team == hero.Team || actor.Definition.IsBoss) return false;
+                close++;
+            }
+            if (close == 0) return false;
+            if (AwaitsRelief(run, hero)) return true;
+            bool fit = hero.Hp * 100 >= hero.MaxHp * FitPercent;
+            return close > (fit && BringsAMeleeAlly(run, hero) ? SafeCrowd : LoneCrowd);
+        }
+
+        /// <summary>A fresher melee ally stands next to the hurt hero, ready to take the front from it.</summary>
+        static bool AwaitsRelief(DungeonRun run, Actor hero)
+        {
+            foreach (var dir in Directions.All)
+            {
+                if (!run.Map.CanStep(hero.Pos, dir)) continue;
+                var back = run.ActorAt(hero.Pos + dir.ToOffset());
+                if (back != null && back.Team == hero.Team && run.IsFrontRotation(hero, back)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Another melee hero of the party is near enough to follow the hero into a fight (within <see cref="LeashRange"/> steps' walk).</summary>
+        static bool BringsAMeleeAlly(DungeonRun run, Actor hero)
+        {
+            var steps = Pathfinder.StepsFrom(run.Map, hero.Pos, LeashRange);
+            foreach (var member in run.Party)
+            {
+                if (member == hero || !member.IsAlive || member.Definition.IsRanged || run.FindActor(member.Id) == null) continue;
+                if (steps[member.Pos.Y * run.Map.Width + member.Pos.X] >= 0) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// "Rotate the front", from behind: a melee hero behind a hurt ally that holds the way takes its place, so the
+        /// fresh one fights and the hurt one heals behind (<see cref="DungeonRun.IsFrontRotation"/>). A partner never
+        /// does this to the leader (<see cref="DungeonRun.IsRotateSwap"/>).
+        /// </summary>
+        public static bool TryTakeTheFront(DungeonRun run, Actor hero, out HeroCommand command)
+        {
+            command = HeroCommand.Wait;
+            foreach (var dir in Directions.All)
+            {
+                var front = run.ActorAt(hero.Pos + dir.ToOffset());
+                if (front == null || front.Team != hero.Team || !run.IsFrontRotation(front, back: hero) || !run.CanSwap(hero, front)) continue;
+                command = HeroCommand.Move(dir);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// "Rotate the front", from the front: the hurt hero that holds the way steps back behind the fresh melee ally
+        /// next to it. For the leader's autopilot; a partner in front leaves the move to the one behind it, whose turn
+        /// would be spent waiting anyway.
+        /// </summary>
+        public static bool TryGiveUpTheFront(DungeonRun run, Actor hero, out HeroCommand command)
+        {
+            command = HeroCommand.Wait;
+            foreach (var dir in Directions.All)
+            {
+                var back = run.ActorAt(hero.Pos + dir.ToOffset());
+                if (back == null || back.Team != hero.Team || !run.IsFrontRotation(hero, back) || !run.CanSwap(hero, back)) continue;
+                command = HeroCommand.Move(dir);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// "Steps in and aside": a melee hero that fights in the mouth of a corridor while a melee ally behind it can't
+        /// get out moves over to another tile it can fight from (the one with the fewest ways to reach it), so the ally
+        /// comes out and fights beside it. Only with more than one foe near: against one, the turn buys nothing.
+        /// </summary>
+        public static bool TryMakeWay(DungeonRun run, Actor hero, out HeroCommand command)
+        {
+            command = HeroCommand.Wait;
+            var map = run.Map;
+            if (hero.Definition.IsRanged || !run.InCombat || !run.InMelee(hero) || !HoldsUpAnAlly(run, hero)) return false;
+            if (FoesWithin(run, hero, CloseSteps(run)) < 2) return false;
+            int best = int.MaxValue;
+            foreach (var dir in Directions.All)
+            {
+                var next = hero.Pos + dir.ToOffset();
+                if (!map.CanStep(hero.Pos, dir) || run.ActorAt(next) != null || map.IsNarrow(next) || !IsAttackSpot(run, hero, next)) continue;
+                int open = map.OpenNeighbors(next);
+                if (open >= best) continue;
+                best = open;
+                command = HeroCommand.Move(dir);
+            }
+            return best != int.MaxValue;
+        }
+
+        /// <summary>
+        /// Whether <paramref name="hero"/> waits behind the front: no foe in its own reach, next to an ally that is in
+        /// melee, where one of the two stands in a corridor or a doorway (so nothing gets past that ally to it).
+        /// </summary>
+        public static bool IsBehindTheFront(DungeonRun run, Actor hero)
+        {
+            if (FoesInReach(run, hero).Count > 0) return false;
+            bool narrow = run.Map.IsNarrow(hero.Pos);
+            foreach (var dir in Directions.All)
+            {
+                if (!run.Map.CanStep(hero.Pos, dir)) continue;
+                var ally = run.ActorAt(hero.Pos + dir.ToOffset());
+                if (ally != null && ally.Team == hero.Team && (narrow || run.Map.IsNarrow(ally.Pos)) && run.InMelee(ally)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>A melee ally next to the hero, in a corridor or a doorway, with no foe in its reach: the hero stands in its way out.</summary>
+        static bool HoldsUpAnAlly(DungeonRun run, Actor hero)
+        {
+            foreach (var dir in Directions.All)
+            {
+                if (!run.Map.CanStep(hero.Pos, dir)) continue;
+                var ally = run.ActorAt(hero.Pos + dir.ToOffset());
+                if (ally == null || ally.Team != hero.Team || ally.Definition.IsRanged) continue;
+                if (run.Map.IsNarrow(ally.Pos) && !run.InMelee(ally)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>How many foes are within <paramref name="steps"/> steps' walk of the hero (walls count, actors don't).</summary>
+        static int FoesWithin(DungeonRun run, Actor hero, int steps)
+        {
+            var from = Pathfinder.StepsFrom(run.Map, hero.Pos, steps);
+            int foes = 0;
+            foreach (var actor in run.Actors)
+                if (actor.Team != hero.Team && from[actor.Pos.Y * run.Map.Width + actor.Pos.X] >= 0) foes++;
+            return foes;
+        }
+
         /// <summary>
         /// Moving in a fight (PROGRESSION.md, "Battle formation"): a melee hero closes in on a foe (<see cref="TryEngage"/>),
         /// a ranged one goes to a tile it can shoot from (<see cref="TryTakeFiringPosition"/>).
@@ -393,6 +593,15 @@ namespace FiveKingdoms.Core
         /// of going off to look for another way into the fight.
         /// </summary>
         public static bool TryEngage(DungeonRun run, Actor hero, out HeroCommand command)
+        {
+            if (!TryFindWayIn(run, hero, out command)) return false;
+            // In front, at a doorway, with a crowd beyond it: let them come.
+            if (command.Kind == HeroCommandKind.Move && HoldsTheDoor(run, hero, hero.Pos + command.Direction.ToOffset()))
+                command = HeroCommand.HoldTheDoor;
+            return true;
+        }
+
+        static bool TryFindWayIn(DungeonRun run, Actor hero, out HeroCommand command)
         {
             command = HeroCommand.Wait;
             var near = NearLeader(run, hero);

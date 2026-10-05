@@ -4,11 +4,14 @@ using System.Collections.Generic;
 namespace FiveKingdoms.Core
 {
     /// <summary>
-    /// Plays the leader automatically: step out of a boss's wind-up; use a charged ultimate when it's worth it; when low,
-    /// heal with a skill or eat a berry; heal or guard the party; a ranged leader gets out of melee; a badly hurt one
-    /// swaps back behind a healthier ally; fight a foe in reach, with the target and skill chosen by
+    /// Plays the leader automatically: step out of a boss's wind-up; where one hero holds the way (a corridor, a
+    /// doorway), give the front to the fresh melee partner behind when hurt, or take it from a hurt one; use a charged
+    /// ultimate when it's worth it; when low, heal with a skill or eat a berry; heal or guard the party; a ranged leader
+    /// gets out of melee; a badly hurt one swaps back behind a healthier ally; make way for the melee partner stuck
+    /// behind it in a corridor's mouth; fight a foe in reach, with the target and skill chosen by
     /// <see cref="HeroTactics"/> (the marked enemy first, then the lowest HP); in a fight, a ranged leader finds a tile to
-    /// shoot from; otherwise chase nearby enemies; with partners in a fight, go for the foes that are after the party,
+    /// shoot from; otherwise chase nearby enemies, but hold a doorway against a crowd instead of stepping out among it
+    /// (PROGRESSION.md, "Doorways and corridors"); with partners in a fight, go for the foes that are after the party,
     /// closing up behind the partners that hold the way to them (it doesn't walk off while they fight); then pick up
     /// nearby berries and head for the stairs, dashing down straight stretches (or for the boss, on the boss floor).
     /// It never walks into a foe: every attack is an explicit command naming its target. Partners play themselves
@@ -34,6 +37,10 @@ namespace FiveKingdoms.Core
                  run.InCombat && (hero.Definition.IsRanged || !other.Definition.IsRanged));
 
             if (HeroTactics.TryDodge(run, hero, out var command)) return command;
+            // Where one hero holds the way, the hurt one and the fresh one trade places before anything else: an aura is
+            // raised as well from behind, and nobody heals at the front.
+            if (HeroTactics.TryGiveUpTheFront(run, hero, out command)) return command;
+            if (HeroTactics.TryTakeTheFront(run, hero, out command)) return command;
             if (HeroTactics.TryUltimate(run, hero, out command)) return command;
 
             if (hero.Hp * 100 < hero.MaxHp * HeroTactics.SelfHealPercent)
@@ -47,6 +54,7 @@ namespace FiveKingdoms.Core
             if (HeroTactics.TryStepOutOfMelee(run, hero, out command)) return command;
             if (HeroTactics.TryRunToSafety(run, hero, out command)) return command;
             if (HeroTactics.TryMark(run, hero, out command)) return command;
+            if (HeroTactics.TryMakeWay(run, hero, out command)) return command;
             if (HeroTactics.TryAttack(run, hero, out command)) return command;
             // A ranged leader hangs back at a tile it can shoot from; a melee one chases below, as it always has.
             if (run.InCombat && hero.Definition.IsRanged && HeroTactics.TryTakeFiringPosition(run, hero, out command)) return command;
@@ -58,11 +66,11 @@ namespace FiveKingdoms.Core
             if (!map.InBounds(map.Stairs))
             {
                 // Boss floor: no stairs, so the only way forward is through the enemies.
-                if (TryStepTowardNearest(run, enemies, FarSearchLimit, blocked, out step)) return Walk(run, step);
+                if (TryStepTowardNearest(run, enemies, FarSearchLimit, blocked, out step)) return Advance(run, step);
                 return HeroCommand.Wait;
             }
 
-            if (TryStepTowardNearest(run, enemies, ChaseRange, blocked, out step)) return Walk(run, step);
+            if (TryStepTowardNearest(run, enemies, ChaseRange, blocked, out step)) return Advance(run, step);
 
             // In a fight the party stays together: a leader with partners goes for the foes that are after them, farther
             // off too, by the straight way. Where a partner holds that way (a corridor, a doorway) it closes up behind
@@ -76,7 +84,7 @@ namespace FiveKingdoms.Core
                 {
                     var next = hero.Pos + step.ToOffset();
                     bool heldByPartner = run.ActorAt(next) is Actor ally && ally.Team == hero.Team && blocked(next);
-                    return heldByPartner ? HeroCommand.Wait : Walk(run, step);
+                    return heldByPartner ? HeroCommand.Wait : Advance(run, step);
                 }
             }
 
@@ -103,6 +111,10 @@ namespace FiveKingdoms.Core
                 if (member != run.Hero && member.IsAlive && run.FindActor(member.Id) != null) return true;
             return false;
         }
+
+        /// <summary>A step toward the foes, unless the leader holds the doorway it stands in and lets them come (<see cref="HeroTactics.HoldsTheDoor"/>).</summary>
+        static HeroCommand Advance(DungeonRun run, Direction8 step) =>
+            HeroTactics.HoldsTheDoor(run, run.Hero, run.Hero.Pos + step.ToOffset()) ? HeroCommand.HoldTheDoor : Walk(run, step);
 
         /// <summary>
         /// One step along a path. Walking into a foe would only turn the leader to face it, so when one stands on the next

@@ -31,6 +31,11 @@ namespace FiveKingdoms.CoreTests
             foreach (string arg in args)
                 if (arg.StartsWith("seeds=")) seeds = int.Parse(arg.Substring(6));
             args = args.Where(arg => !arg.StartsWith("seeds=")).ToArray();
+            // "map=N" draws the floor around the leader for the first N actions of a party trace.
+            int mapActions = 0;
+            foreach (string arg in args)
+                if (arg.StartsWith("map=")) mapActions = int.Parse(arg.Substring(4));
+            args = args.Where(arg => !arg.StartsWith("map=")).ToArray();
             if (args.Contains("-balance")) return BalanceReport(seeds, TuningFrom(args));
             if (args.Contains("-spread")) return SpreadReport(seeds, TuningFrom(args));
             int bossIndex = Array.IndexOf(args, "-boss");
@@ -38,7 +43,11 @@ namespace FiveKingdoms.CoreTests
             int mapIndex = Array.IndexOf(args, "-map");
             if (mapIndex >= 0) return PrintFloor(int.Parse(args[mapIndex + 1]));
             int partyIndex = Array.IndexOf(args, "-party");
-            if (partyIndex >= 0) return TraceParty(int.Parse(args[partyIndex + 1]), partyIndex + 2 < args.Length ? int.Parse(args[partyIndex + 2]) : int.MaxValue);
+            if (partyIndex >= 0)
+            {
+                bool from = partyIndex + 2 < args.Length && !args[partyIndex + 2].Contains('=');
+                return TraceParty(int.Parse(args[partyIndex + 1]), from ? int.Parse(args[partyIndex + 2]) : int.MaxValue, mapActions, TuningFrom(args));
+            }
             int traceIndex = Array.IndexOf(args, "-trace");
             if (traceIndex >= 0) return TraceAutopilot(int.Parse(args[traceIndex + 1]), int.Parse(args[traceIndex + 2]));
             if (!AssertsThrow()) return 2;
@@ -160,13 +169,40 @@ namespace FiveKingdoms.CoreTests
         }
 
         /// <summary>
+        /// The floor around the leader: '#' walls, ',' corridors and doorways (<see cref="DungeonMap.IsNarrow"/>), '.' open
+        /// floor, the heroes by their initial, foes as 's' (after the party), 'z' (hasn't noticed it), 'b' (a bat) or 'T'.
+        /// </summary>
+        static void PrintAround(DungeonRun run, int halfWidth, int halfHeight)
+        {
+            var center = run.Hero.Pos;
+            for (int y = center.Y + halfHeight; y >= center.Y - halfHeight; y--)
+            {
+                var line = new System.Text.StringBuilder("        ");
+                for (int x = center.X - halfWidth; x <= center.X + halfWidth; x++)
+                {
+                    var pos = new GridPos(x, y);
+                    var actor = run.ActorAt(pos);
+                    char c = !run.Map.IsWalkable(pos) ? '#' : pos == run.Map.Stairs ? '>' : run.Map.IsNarrow(pos) ? ',' : '.';
+                    if (actor != null)
+                        c = actor.Team == Team.Hero ? actor.Name[0]
+                            : actor.Definition.IsBoss ? 'T'
+                            : actor.Definition == ActorCatalog.Bat ? 'b'
+                            : actor.Alerted ? 's' : 'z';
+                    line.Append(c);
+                }
+                Console.WriteLine(line);
+            }
+        }
+
+        /// <summary>
         /// Plays the starting party with the autopilot on a seed, as the game does, printing one line per floor and, from
         /// action <paramref name="fromAction"/> on, every action with where everyone stands, where the foes that are after
-        /// the party are, and who swapped places (by actor id).
+        /// the party are, and who swapped places (by actor id); for the first <paramref name="mapActions"/> of those, the
+        /// floor around the leader too.
         /// </summary>
-        static int TraceParty(int seed, int fromAction)
+        static int TraceParty(int seed, int fromAction, int mapActions, Func<DungeonRunConfig> tuning)
         {
-            var run = new DungeonRun(seed, new DungeonRunConfig(), Party.Select(d => new HeroProgress(d)).ToArray());
+            var run = new DungeonRun(seed, tuning(), Party.Select(d => new HeroProgress(d)).ToArray());
             int floor = 0;
             for (int action = 0; action < 3000 && run.State == RunState.InProgress; action++)
             {
@@ -183,6 +219,7 @@ namespace FiveKingdoms.CoreTests
                                       $" foes={run.Actors.Count(a => a.Team == Team.Enemy)} after us: " +
                                       string.Join(" ", run.Actors.Where(a => a.Team == Team.Enemy && a.Alerted).Select(a => a.Pos)) +
                                       string.Concat(run.Events.OfType<SwappedEvent>().Select(swap => $" swap {swap.ActorId}<>{swap.OtherId}")));
+                if (action >= fromAction && action - fromAction < mapActions) PrintAround(run, 9, 6);
             }
             Console.WriteLine($"{run.State} on B{run.Floor}F after turn {run.Turn}");
             return 0;
@@ -259,6 +296,9 @@ namespace FiveKingdoms.CoreTests
             var floorsReached = new int[new DungeonRunConfig().FloorCount + 1];
             var standingAtBoss = new int[Party.Length];
             int reachedBoss = 0;
+            int holds = 0, frontSwaps = 0, fallenEarly = 0, fallenBesideHelp = 0;
+            var packFights = new FightStats(Party.Length);
+            var bossFight = new FightStats(Party.Length);
             for (int seed = 1; seed <= seeds; seed++)
             {
                 var config = tuning();
@@ -270,7 +310,24 @@ namespace FiveKingdoms.CoreTests
                     // Who might run to safety during this action: badly hurt, with a foe next to them.
                     var hurt = run.Party.Where(member => member.IsAlive && DungeonRun.IsBadlyHurt(member) && run.FoeAdjacent(member))
                         .Select(member => member.Id).ToList();
-                    run.Execute(AutoPilot.Decide(run));
+                    var round = (wasBossFloor ? bossFight : packFights).Begin(run);
+                    bool fighting = run.InCombat;
+                    var command = AutoPilot.Decide(run);
+                    if (command.Holding) holds++;
+                    round.End(run, run.Execute(command));
+                    // Heroes that fall before the boss, and how many of them fell while a melee ally with most of its HP
+                    // stood within two tiles with nothing to hit: the playtest's "the other two can't do anything useful".
+                    if (!wasBossFloor)
+                        foreach (var died in run.Events.OfType<DiedEvent>())
+                        {
+                            var victim = run.Party.FirstOrDefault(member => member.Id == died.ActorId);
+                            if (victim == null) continue;
+                            fallenEarly++;
+                            if (run.Party.Any(member => member != victim && member.IsAlive && !member.Definition.IsRanged &&
+                                                        GridPos.ChebyshevDistance(member.Pos, victim.Pos) <= 2 &&
+                                                        member.Hp * 100 >= member.MaxHp * 60 && !run.InMelee(member)))
+                                fallenBesideHelp++;
+                        }
                     if (run.IsBossFloor && !wasBossFloor)
                     {
                         reachedBoss++;
@@ -293,6 +350,8 @@ namespace FiveKingdoms.CoreTests
                         {
                             swaps++;
                             if (hurt.Contains(swapped.ActorId)) safetySwaps++;
+                            else if (fighting && run.Party.Count(member => !member.Definition.IsRanged && (member.Id == swapped.ActorId || member.Id == swapped.OtherId)) == 2)
+                                frontSwaps++; // In a fight two melee heroes only trade places to rotate the front.
                         }
                         else if (e is ChargeChangedEvent changed && changed.Amount > 0)
                         {
@@ -326,8 +385,159 @@ namespace FiveKingdoms.CoreTests
                               $"(charge gained {charge / 3f / Math.Max(1, fights):0}), in the boss fight {bossUltimates / 3f / Math.Max(1, bossFights):0.00} " +
                               $"(charge {bossCharge / 3f / Math.Max(1, bossFights):0}); swaps {swaps / (float)seeds:0.0} a run " +
                               $"({safetySwaps / (float)seeds:0.00} of them a badly hurt hero running to safety)");
+            Console.WriteLine($"Doorways and corridors: the leader held a doorway for {holds / (float)seeds:0.0} turns a run, and two melee heroes " +
+                              $"rotated the front {frontSwaps / (float)seeds:0.0} times a run (the fresh one for the hurt one). Heroes fallen before the boss floor: " +
+                              $"{fallenEarly} in {seeds} runs, {fallenBesideHelp} of them with a fresh melee ally idle within two tiles");
+            Console.WriteLine("In the fights before the boss (a round is one action of the leader's in which blows were exchanged):");
+            packFights.Print(Party);
+            Console.WriteLine("In the boss fight:");
+            bossFight.Print(Party);
             CampaignReport(players: seeds / 2, maxAttempts: 10, tuning);
             return 0;
+        }
+
+        /// <summary>
+        /// What the heroes do in fights, for the balance report: per hero, how its turns split into attacking or using a
+        /// skill, moving and waiting, and in how many rounds (one action of the leader's, so about one turn for
+        /// everyone) three or more different enemies hit it. Read from the events of each action, so partners count too.
+        /// </summary>
+        sealed class FightStats
+        {
+            const int Crowd = 3;
+            readonly long[] turns, acted, moved, rounds, crowded, hits;
+            long fightRounds, crowdedRounds;
+
+            public FightStats(int partySize)
+            {
+                turns = new long[partySize];
+                acted = new long[partySize];
+                moved = new long[partySize];
+                rounds = new long[partySize];
+                crowded = new long[partySize];
+                hits = new long[partySize];
+            }
+
+            /// <summary>Call before an action; <see cref="Round.End"/> after it. Rounds outside a fight count nothing.</summary>
+            public Round Begin(DungeonRun run) => new Round(this, run);
+
+            public readonly struct Round
+            {
+                readonly FightStats stats;
+                readonly bool fighting;
+                readonly int[] turnsBefore;
+                readonly bool[] standing;
+                readonly Actor leader;
+
+                public Round(FightStats stats, DungeonRun run)
+                {
+                    this.stats = stats;
+                    fighting = run.InCombat;
+                    turnsBefore = run.Party.Select(member => member.TurnsTaken).ToArray();
+                    standing = run.Party.Select(member => member.IsAlive).ToArray();
+                    leader = run.Hero;
+                }
+
+                public void End(DungeonRun run, bool used)
+                {
+                    if (!fighting) return;
+                    int size = run.Party.Count;
+                    var acted = new int[size];
+                    var moved = new int[size];
+                    var attackers = new HashSet<int>[size];
+                    for (int member = 0; member < size; member++) attackers[member] = new HashSet<int>();
+                    int IndexOf(int actorId)
+                    {
+                        for (int member = 0; member < size; member++)
+                            if (run.Party[member].Id == actorId) return member;
+                        return -1;
+                    }
+
+                    // A skill's own swings and shots follow its SkillUsedEvent; an attack by anyone else ends them.
+                    int skillUser = -1, swappedAway = -1;
+                    GameEvent previous = null;
+                    foreach (var e in run.Events)
+                    {
+                        switch (e)
+                        {
+                            case SkillUsedEvent skill:
+                                skillUser = skill.ActorId;
+                                if (IndexOf(skill.ActorId) >= 0) acted[IndexOf(skill.ActorId)]++;
+                                break;
+                            case ItemUsedEvent item:
+                                if (IndexOf(item.ActorId) >= 0) acted[IndexOf(item.ActorId)]++;
+                                break;
+                            case AttackEvent attack:
+                                int attacker = IndexOf(attack.AttackerId), target = IndexOf(attack.TargetId);
+                                if (attacker < 0 && target >= 0) attackers[target].Add(attack.AttackerId);
+                                if (attack.AttackerId == skillUser) break;
+                                skillUser = -1;
+                                if (attacker >= 0) acted[attacker]++;
+                                break;
+                            case SwappedEvent swap:
+                                swappedAway = swap.OtherId; // Its move follows the mover's: not a step of its own.
+                                break;
+                            case MovedEvent move:
+                                bool pushed = previous is PushedEvent push && push.ActorId == move.ActorId;
+                                if (move.ActorId == swappedAway) swappedAway = -1;
+                                else if (!pushed)
+                                {
+                                    if (move.ActorId != skillUser) skillUser = -1;
+                                    if (IndexOf(move.ActorId) >= 0) moved[IndexOf(move.ActorId)]++;
+                                }
+                                break;
+                            case BossActionEvent _:
+                                skillUser = -1;
+                                break;
+                        }
+                        previous = e;
+                    }
+
+                    // Rounds where the party only walks (the foes are still on their way, or it is chasing one) aren't the fight.
+                    bool blows = false;
+                    foreach (var e in run.Events)
+                        if (e is AttackEvent blow && (IndexOf(blow.AttackerId) >= 0 || IndexOf(blow.TargetId) >= 0)) blows = true;
+                    if (!blows) return;
+
+                    bool anyCrowded = false;
+                    for (int member = 0; member < size; member++)
+                    {
+                        if (!standing[member]) continue;
+                        var hero = run.Party[member];
+                        // The leader's turn began before this action. A partner's turns begin and end inside it, except
+                        // the one that begins as it takes the lead (the leader fell), which is still to be played.
+                        int taken = hero == leader ? (used ? 1 : 0) : hero.TurnsTaken - turnsBefore[member] - (hero == run.Hero ? 1 : 0);
+                        taken = Math.Max(taken, acted[member] + moved[member]);
+                        stats.turns[member] += taken;
+                        stats.acted[member] += acted[member];
+                        stats.moved[member] += moved[member];
+                        stats.rounds[member]++;
+                        stats.hits[member] += attackers[member].Count;
+                        if (attackers[member].Count < Crowd) continue;
+                        stats.crowded[member]++;
+                        anyCrowded = true;
+                    }
+                    stats.fightRounds++;
+                    if (anyCrowded) stats.crowdedRounds++;
+                }
+            }
+
+            public void Print(ActorDefinition[] party)
+            {
+                if (fightRounds == 0)
+                {
+                    Console.WriteLine("  (no fights)");
+                    return;
+                }
+                Console.WriteLine($"  rounds in which some hero was hit by {Crowd} or more enemies: {crowdedRounds * 100f / fightRounds:0.0}%");
+                for (int member = 0; member < party.Length; member++)
+                {
+                    long all = Math.Max(1, turns[member]);
+                    long waited = Math.Max(0, turns[member] - acted[member] - moved[member]);
+                    Console.WriteLine($"  {party[member].Name,-9} hit by {Crowd}+ in {crowded[member] * 100f / Math.Max(1, rounds[member]):0.0}% of its rounds " +
+                                      $"({hits[member] / (float)Math.Max(1, rounds[member]):0.00} enemies a round); turns: " +
+                                      $"{acted[member] * 100f / all:0}% attacking or using a skill, {moved[member] * 100f / all:0}% moving, {waited * 100f / all:0}% waiting");
+                }
+            }
         }
 
         /// <summary>

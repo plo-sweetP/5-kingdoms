@@ -10,7 +10,9 @@ namespace FiveKingdoms.Dungeon
     /// Unattended smoke test for builds: launch the game with "-fk-autoplay &lt;folder&gt;" and the hero plays
     /// itself using the AutoPilot, saving screenshots along the way (some mid-animation) and quitting after
     /// a fixed number of actions. The first use of each targeted action goes through the player's two-step aiming
-    /// (press, screenshot of the highlight, press again), so that path runs in the build too. Does nothing in normal play.
+    /// (press, screenshot of the highlight, press again), so that path runs in the build too. It also captures the
+    /// first times the leader holds a doorway against a crowd and the first times the front rotates ("door_*.png").
+    /// Does nothing in normal play.
     /// </summary>
     public sealed class AutoplayDriver : MonoBehaviour
     {
@@ -116,7 +118,7 @@ namespace FiveKingdoms.Dungeon
             yield return new WaitForSeconds(1.8f);
             yield return Capture("01_start");
 
-            int actions = 0, shot = 0, attackShots = 0, chargeShots = 0;
+            int actions = 0, shot = 0, attackShots = 0, chargeShots = 0, holdShots = 0, rotateShots = 0;
             var skillsShown = new System.Collections.Generic.HashSet<SkillEffect>();
             var ultimatesShown = new System.Collections.Generic.HashSet<string>();
             var aimsShown = new System.Collections.Generic.HashSet<string>();
@@ -154,6 +156,7 @@ namespace FiveKingdoms.Dungeon
                 }
                 bool attacks = command.Kind == HeroCommandKind.Attack; // Always an explicit command: nobody attacks by walking into a foe.
                 bool bossWasHelped = run.Boss?.CalledForHelp ?? true;
+                bool fighting = run.InCombat;
                 var skill = command.Kind == HeroCommandKind.Skill ? run.Hero.Definition.Skills[command.Slot]
                     : command.Kind == HeroCommandKind.Ultimate ? run.Hero.Definition.Ultimate
                     : null;
@@ -178,6 +181,16 @@ namespace FiveKingdoms.Dungeon
                     yield return new WaitForSeconds(0.45f); // The reinforcements fading in.
                     yield return Capture($"boss_summon_action{actions}");
                 }
+                else if (command.Holding && holdShots < 3)
+                {
+                    while (controller.IsAnimating) yield return null; // The leader in the doorway, the foes coming up to it.
+                    yield return Capture($"door_hold{++holdShots}_action{actions}");
+                }
+                else if (fighting && rotateShots < 2 && FrontRotated(controller.Run))
+                {
+                    while (controller.IsAnimating) yield return null; // The fresh hero in front, the hurt one behind it.
+                    yield return Capture($"door_rotate{++rotateShots}_action{actions}");
+                }
                 else if (attacks && attackShots < 2)
                 {
                     yield return new WaitForSeconds(0.12f); // Just after the lunge connects: slash and hit flash.
@@ -199,6 +212,21 @@ namespace FiveKingdoms.Dungeon
             Debug.Log($"[Autoplay] Finished after {actions} actions: {final.State} on B{final.Floor}F, " +
                       $"Lv {final.Hero.Level}, HP {final.Hero.Hp}/{final.Hero.MaxHp}, turn {final.Turn}.");
             Application.Quit();
+        }
+
+        /// <summary>Whether two melee heroes traded places in the last action: in a fight they only do that to rotate the front.</summary>
+        static bool FrontRotated(DungeonRun run)
+        {
+            foreach (var e in run.Events)
+                if (e is SwappedEvent swap && IsMeleeHero(run, swap.ActorId) && IsMeleeHero(run, swap.OtherId)) return true;
+            return false;
+        }
+
+        static bool IsMeleeHero(DungeonRun run, int actorId)
+        {
+            foreach (var member in run.Party)
+                if (member.Id == actorId) return !member.Definition.IsRanged;
+            return false;
         }
 
         /// <summary>What a targeted command aims: the leader's weapon attack, or the skill or ultimate by its id.</summary>

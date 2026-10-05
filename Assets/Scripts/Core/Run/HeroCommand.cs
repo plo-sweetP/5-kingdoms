@@ -23,7 +23,14 @@ namespace FiveKingdoms.Core
         public readonly bool Targeted;
         public readonly GridPos Target;
 
-        HeroCommand(HeroCommandKind kind, Direction8 direction, int slot = 0, bool aimed = false, bool targeted = false, GridPos target = default)
+        /// <summary>
+        /// A wait by the party's AI that holds a doorway against foes that are on their way (<see cref="HoldTheDoor"/>).
+        /// The run counts these (<see cref="Actor.HeldTurns"/>), so a hero nobody comes for goes in after all.
+        /// </summary>
+        public readonly bool Holding;
+
+        HeroCommand(HeroCommandKind kind, Direction8 direction, int slot = 0, bool aimed = false, bool targeted = false, GridPos target = default,
+            bool holding = false)
         {
             Kind = kind;
             Direction = direction;
@@ -31,6 +38,7 @@ namespace FiveKingdoms.Core
             Aimed = aimed || targeted;
             Targeted = targeted;
             Target = target;
+            Holding = holding;
         }
 
         public static HeroCommand Move(Direction8 direction) => new HeroCommand(HeroCommandKind.Move, direction);
@@ -54,6 +62,9 @@ namespace FiveKingdoms.Core
 
         public static readonly HeroCommand Attack = new HeroCommand(HeroCommandKind.Attack, Direction8.S);
         public static readonly HeroCommand Wait = new HeroCommand(HeroCommandKind.Wait, Direction8.S);
+
+        /// <summary>The party AI's wait at a doorway, for the foes to come to it (PROGRESSION.md, "Doorways and corridors").</summary>
+        public static readonly HeroCommand HoldTheDoor = new HeroCommand(HeroCommandKind.Wait, Direction8.S, holding: true);
         public static readonly HeroCommand UseBerry = new HeroCommand(HeroCommandKind.UseBerry, Direction8.S);
         public static readonly HeroCommand Descend = new HeroCommand(HeroCommandKind.Descend, Direction8.S);
 
@@ -61,6 +72,7 @@ namespace FiveKingdoms.Core
         {
             string aim = Targeted ? $" @{Target}" : Aimed ? $" {Direction}" : "";
             return Kind == HeroCommandKind.Move ? $"Move {Direction}"
+                : Holding ? "Hold the door"
                 : Kind == HeroCommandKind.Skill ? $"Skill {Slot + 1}{aim}"
                 : Kind == HeroCommandKind.Attack || Kind == HeroCommandKind.Ultimate ? Kind + aim
                 : Kind == HeroCommandKind.SwitchLeader ? $"Lead {Slot + 1}"

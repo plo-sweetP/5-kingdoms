@@ -200,13 +200,14 @@ namespace FiveKingdoms.Tests
             var run = HurtMonkInFront(new[] { ActorCatalog.Kristela, ActorCatalog.Haiden }, out var kristela, out var haiden);
             Assert.IsTrue(DungeonRun.IsBadlyHurt(kristela), "under 30%");
             Assert.IsTrue(run.CanSwap(kristela, haiden), "run to safety: he stands farther from the spider");
-            Assert.IsFalse(run.CanSwap(haiden, kristela), "he isn't hurt, and melee heroes don't swap forward past each other");
+            Assert.IsFalse(run.CanSwap(haiden, kristela), "he isn't hurt, and a partner never takes the front from the leader");
 
             haiden.Hp = haiden.MaxHp * 25 / 100;
             Assert.IsFalse(run.CanSwap(kristela, haiden), "not with an ally as badly hurt");
             haiden.Hp = haiden.MaxHp;
             kristela.Hp = kristela.MaxHp * 30 / 100;
-            Assert.IsFalse(run.CanSwap(kristela, haiden), "at 30% she isn't badly hurt");
+            Assert.IsFalse(run.IsSaferSwap(kristela, haiden), "at 30% she isn't badly hurt");
+            Assert.IsTrue(run.IsRotateSwap(kristela, haiden), "though holding a corridor, under half, she may give him the front (DoorTacticsTests)");
         }
 
         [Test]
@@ -255,8 +256,16 @@ namespace FiveKingdoms.Tests
         [Test]
         public void AHurtHeroHealsRatherThanRunsWhenItCan()
         {
-            var run = HurtMonkInFront(new[] { ActorCatalog.Kristela, ActorCatalog.Haiden }, out var kristela, out _);
-            kristela.SkillCooldowns[1] = 0;
+            // In a room: in a corridor she would give Haiden the front and heal behind him (DoorTacticsTests).
+            var run = Run(new[] { ActorCatalog.Kristela, ActorCatalog.Haiden }, Room);
+            var kristela = run.Hero;
+            var haiden = run.Party[1];
+            Place(kristela, 3, 3);
+            Place(haiden, 2, 3);
+            Root(Dummy(run, 4, 3));
+            kristela.Hp = kristela.MaxHp * 25 / 100;
+            Assert.IsTrue(run.CanSwap(kristela, haiden), "she could run behind him");
+
             var command = AutoPilot.Decide(run);
             Assert.AreEqual(HeroCommandKind.Skill, command.Kind);
             Assert.AreSame(SkillCatalog.KiHeal, kristela.Definition.Skills[command.Slot]);

@@ -70,7 +70,10 @@ namespace FiveKingdoms.Core
         /// <paramref name="maxSteps"/> of <paramref name="start"/> is from it; -1 for the tiles farther off or walled
         /// away. Indexed y * width + x.
         /// </summary>
-        public static int[] StepsFrom(DungeonMap map, GridPos start, int maxSteps)
+        public static int[] StepsFrom(DungeonMap map, GridPos start, int maxSteps) => StepsFrom(map, start, maxSteps, null);
+
+        /// <summary>The same, never entering the tiles <paramref name="isBlocked"/> marks (what lies beyond a doorway, say, without going back through it).</summary>
+        public static int[] StepsFrom(DungeonMap map, GridPos start, int maxSteps, Func<GridPos, bool> isBlocked)
         {
             int width = map.Width;
             var steps = new int[width * map.Height];
@@ -91,7 +94,7 @@ namespace FiveKingdoms.Core
                     if (!map.CanStep(current, dir)) continue;
                     var next = current + dir.ToOffset();
                     int nextIndex = next.Y * width + next.X;
-                    if (steps[nextIndex] != Unvisited) continue;
+                    if (steps[nextIndex] != Unvisited || isBlocked != null && isBlocked(next)) continue;
                     steps[nextIndex] = taken + 1;
                     queue.Enqueue(next);
                 }

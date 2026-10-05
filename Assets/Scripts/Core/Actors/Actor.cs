@@ -105,6 +105,12 @@ namespace FiveKingdoms.Core
         /// <summary>Party AI: steps a ranged hero took in a row to get out of melee (it stops retreating after one).</summary>
         public int RetreatSteps { get; set; }
 
+        /// <summary>
+        /// Party AI: turns it has held a doorway, waiting for the foes to come to it, since it last attacked or used a
+        /// skill (or the fight ended). After <see cref="HeroTactics.DoorPatience"/> of them it goes in after all.
+        /// </summary>
+        public int HeldTurns { get; set; }
+
         /// <summary>Own turns it has started so far (heroes: this run).</summary>
         public int TurnsTaken { get; set; }
 

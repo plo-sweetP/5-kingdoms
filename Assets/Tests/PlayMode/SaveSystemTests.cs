@@ -102,6 +102,16 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
+        public void KristelaMigratesAsAFencer()
+        {
+            File.WriteAllText(path, "{\"version\": 1, \"heroes\": [{\"id\": \"kristela\", \"level\": 5, \"exp\": 0}]}");
+            var kristela = SaveSystem.LoadHero(ActorCatalog.Kristela);
+            Assert.AreEqual(1, kristela.TierOf(ClassCatalog.Fencer), "her class since 2026-10-05");
+            Assert.AreEqual(0, kristela.TierOf(ClassCatalog.Monk));
+            Assert.AreEqual(4, kristela.PointsFree);
+        }
+
+        [Test]
         public void AnOlderEntryNextToNewOnesStillMigrates()
         {
             File.WriteAllText(path, VersionOneSave);

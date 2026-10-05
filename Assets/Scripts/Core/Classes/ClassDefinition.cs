@@ -177,8 +177,8 @@ namespace FiveKingdoms.Core
     }
 
     /// <summary>
-    /// The classes heroes can learn. Part 1 of milestone 1g has the starting party's three (PROGRESSION.md, "Starting
-    /// class content"); the other base classes, the advanced and the inherited ones come later.
+    /// The classes heroes can learn. Part 1 of milestone 1g has the starting party's three and the Monk (PROGRESSION.md,
+    /// "Starting class content"); the other base classes, the advanced and the inherited ones come later.
     /// </summary>
     public static class ClassCatalog
     {
@@ -190,12 +190,22 @@ namespace FiveKingdoms.Core
         public static readonly ClassDefinition Paladin = new ClassDefinition("paladin", "Paladin", WeaponFamily.Sword, speedModifier: -5,
             paths: new[] { "Guardian", "Devotion", "Crusader" });
 
-        /// <summary>Kristela's class: fast unarmed martial arts, many hits. A quick class.</summary>
+        /// <summary>
+        /// Kristela's class since 2026-10-05 (Peter: "I'm not feeling the monk abilities for her"): a light blade,
+        /// flurries, lunges and counters. A quick class, like the Monk she was until then.
+        /// </summary>
+        public static readonly ClassDefinition Fencer = new ClassDefinition("fencer", "Fencer", WeaponFamily.Sword, speedModifier: 5,
+            paths: new[] { "Duelist", "Footwork", "En Garde" });
+
+        /// <summary>
+        /// Fast unarmed martial arts, many hits. A quick class. No starting hero has it since Kristela became a Fencer;
+        /// its tiers are built when a hero or a weapon brings it into play.
+        /// </summary>
         public static readonly ClassDefinition Monk = new ClassDefinition("monk", "Monk", WeaponFamily.Fists, speedModifier: 5,
             paths: new[] { "Striker", "Windwalker", "Mystic" });
 
         /// <summary>Every class, in the order the tree lists them.</summary>
-        public static readonly ClassDefinition[] All = { Archer, Paladin, Monk };
+        public static readonly ClassDefinition[] All = { Archer, Paladin, Fencer, Monk };
 
         /// <summary>Looks a class up by its id (e.g. from a save file). Null if unknown.</summary>
         public static ClassDefinition Find(string id) => Array.Find(All, definition => definition.Id == id);

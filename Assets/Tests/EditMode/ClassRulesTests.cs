@@ -101,7 +101,8 @@ namespace FiveKingdoms.Tests
         {
             Assert.AreSame(ClassCatalog.Archer, ActorCatalog.Uzuki.StartingClass);
             Assert.AreSame(ClassCatalog.Paladin, ActorCatalog.Haiden.StartingClass);
-            Assert.AreSame(ClassCatalog.Monk, ActorCatalog.Kristela.StartingClass);
+            Assert.AreSame(ClassCatalog.Fencer, ActorCatalog.Kristela.StartingClass, "a Fencer since 2026-10-05; the Monk stays as a class");
+            CollectionAssert.Contains(ClassCatalog.All, ClassCatalog.Monk);
             Assert.IsNull(ActorCatalog.Spider.StartingClass);
             foreach (var definition in ClassCatalog.All)
             {

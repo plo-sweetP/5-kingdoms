@@ -131,13 +131,16 @@ namespace FiveKingdoms.Core
             startingClass: ClassCatalog.Paladin);
 
         /// <summary>
-        /// Monk (Medieval Realm, a princess), speed-build melee DPS: the most ATK, the least HP and DEF. Piercing Punch, Ki
-        /// Heal, Stun Strike; ultimate Flurry of Blows. Her own speed is 95; the Monk's +5 makes it 100.
+        /// Fencer (Medieval Realm, a princess), speed-build melee DPS: the most ATK, the least HP and DEF. Her own speed
+        /// is 95; the Fencer's +5 makes it 100. She was a Monk until 2026-10-05, and until her Fencer kit is built
+        /// (PROGRESSION.md, "Kristela's Fencer kit": Thrust, Triple Thrust, Lunge, Riposte, Blade Dance, with the
+        /// Piercer Blade) she still fights with the Monk's base kit and the Gauntlets: Piercing Punch, Ki Heal, Stun
+        /// Strike; ultimate Flurry of Blows.
         /// </summary>
         public static readonly ActorDefinition Kristela = new ActorDefinition("kristela", "Kristela", maxHp: 380, attack: 64, defense: 26, expReward: 0,
             speed: 95, skills: new[] { SkillCatalog.PiercingPunch, SkillCatalog.KiHeal, SkillCatalog.StunStrike },
             ultimate: SkillCatalog.FlurryOfBlows, hpGrowth: 45, atkGrowth: 11, defGrowth: 8, weapon: WeaponCatalog.Gauntlets,
-            startingClass: ClassCatalog.Monk);
+            startingClass: ClassCatalog.Fencer);
 
         /// <summary>
         /// The party for the first playtest, leader first (the player's own character joins later). A melee hero leads

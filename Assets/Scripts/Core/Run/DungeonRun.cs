@@ -202,7 +202,7 @@ namespace FiveKingdoms.Core
             {
                 case HeroCommandKind.Move: return Move(command.Direction);
                 case HeroCommandKind.Attack: return Attack(AimOf(command, Hero));
-                case HeroCommandKind.Wait: return Wait(command.Holding);
+                case HeroCommandKind.Wait: return Wait(command.Holding, command.Resting);
                 case HeroCommandKind.UseBerry: return UseBerry();
                 case HeroCommandKind.Descend: return Descend();
                 case HeroCommandKind.Skill: return UseSkill(command.Slot, AimOf(command, Hero));
@@ -251,15 +251,23 @@ namespace FiveKingdoms.Core
         public Actor AttackTargetAt(Actor user, GridPos tile) =>
             user.Definition.IsRanged ? ShotTargetAt(user, tile, user.Definition.AttackRange) : StrikeTargetAt(user, tile);
 
-        public bool Wait() => Wait(holding: false);
+        public bool Wait() => Wait(holding: false, resting: false);
 
-        /// <summary><paramref name="holding"/>: the AI waits at a doorway for the foes to come (<see cref="HeroCommand.HoldTheDoor"/>).</summary>
-        bool Wait(bool holding)
+        /// <summary>
+        /// <paramref name="holding"/>: the AI waits at a doorway for the foes to come (<see cref="HeroCommand.HoldTheDoor"/>);
+        /// <paramref name="resting"/>: it waits while the party heals up between fights (<see cref="HeroCommand.Rest"/>).
+        /// </summary>
+        bool Wait(bool holding, bool resting)
         {
             if (!BeginAction()) return false;
-            FinishLeaderTurn(Config.Costs.PercentFor(ActionKind.Wait), holding);
+            if (holding) Held(Hero);
+            if (resting) events.Add(new HeroWaitedEvent(Hero.Id, WaitReason.Rests, ++Hero.RestedTurns));
+            FinishLeaderTurn(Config.Costs.PercentFor(ActionKind.Wait));
             return true;
         }
+
+        /// <summary>A hero's AI holds a doorway this turn: counted, so it goes in after all if nobody comes, and said, so the view can show it.</summary>
+        void Held(Actor hero) => events.Add(new HeroWaitedEvent(hero.Id, WaitReason.HoldsTheDoor, ++hero.HeldTurns));
 
         /// <summary>The leader eats a berry and heals. Refused (no turn used) when out of berries or already at full HP.</summary>
         public bool UseBerry()
@@ -752,10 +760,9 @@ namespace FiveKingdoms.Core
         /// the timeline. Exploring, each partner and then every enemy takes one turn (the original alternating rhythm);
         /// if that leaves an enemy alerted, a fight starts and the timeline takes over from a fresh start.
         /// </summary>
-        void FinishLeaderTurn(int cost, bool holding = false)
+        void FinishLeaderTurn(int cost)
         {
             Turn++;
-            if (holding) Hero.HeldTurns++;
             EndOwnTurn(Hero);
 
             if (InCombat && AnyEnemyAlerted())
@@ -819,6 +826,7 @@ namespace FiveKingdoms.Core
         void StartCombat()
         {
             InCombat = true;
+            foreach (var member in party) member.RestedTurns = 0;
             timeline.Start(actors);
             events.Add(new CombatStartedEvent());
         }
@@ -884,7 +892,7 @@ namespace FiveKingdoms.Core
         {
             if (!started) StartTurn(partner);
             var command = PartnerBrain.Decide(this, partner);
-            if (command.Holding) partner.HeldTurns++;
+            if (command.Holding) Held(partner);
             int cost = Config.Costs.PercentFor(ActionKind.Wait);
             var aim = AimOf(command, partner);
             switch (command.Kind)
@@ -976,7 +984,7 @@ namespace FiveKingdoms.Core
             if (occupant != null && allowSwap && occupant.Team == actor.Team && Map.CanStep(actor.Pos, dir))
             {
                 var from = actor.Pos;
-                events.Add(new SwappedEvent(actor.Id, occupant.Id));
+                events.Add(SwapOf(actor, occupant));
                 Step(actor, dir);
                 occupant.PreviousPos = occupant.Pos;
                 occupant.Pos = from;
@@ -1006,6 +1014,21 @@ namespace FiveKingdoms.Core
             }
             cost = Config.Costs.PercentFor(ActionKind.Move);
             return true;
+        }
+
+        /// <summary>
+        /// The event for <paramref name="mover"/> stepping into <paramref name="other"/>'s tile, with what the trade is
+        /// for (as they stand before it): the front rotating, a hurt hero running to safety, a melee hero getting past
+        /// a ranged one, the line regrouping, or just passing.
+        /// </summary>
+        SwappedEvent SwapOf(Actor mover, Actor other)
+        {
+            if (IsFrontRotation(front: mover, back: other)) return new SwappedEvent(mover.Id, other.Id, SwapReason.Rotate, mover.Id);
+            if (IsFrontRotation(front: other, back: mover)) return new SwappedEvent(mover.Id, other.Id, SwapReason.Rotate, other.Id);
+            if (IsSaferSwap(mover, other)) return new SwappedEvent(mover.Id, other.Id, SwapReason.Safety, mover.Id);
+            if (IsEngageSwap(mover, other)) return new SwappedEvent(mover.Id, other.Id, SwapReason.Engage);
+            if (IsRegroupSwap(mover, other)) return new SwappedEvent(mover.Id, other.Id, SwapReason.Regroup);
+            return new SwappedEvent(mover.Id, other.Id);
         }
 
         void Step(Actor actor, Direction8 dir)
@@ -1629,6 +1652,9 @@ namespace FiveKingdoms.Core
             int healed = Math.Min(amount, actor.MaxHp - actor.Hp);
             actor.Hp += healed;
             events.Add(new HealedEvent(actor.Id, healed, actor.Hp));
+            // The party is getting somewhere with its healing: the leader's patience with a rest starts over.
+            if (healed > 0 && actor.Team == Team.Hero)
+                foreach (var member in party) member.RestedTurns = 0;
         }
 
         /// <summary>Party members pick up whatever they step on, into the shared bag.</summary>
@@ -1692,7 +1718,7 @@ namespace FiveKingdoms.Core
             Hero.Pos = Hero.PreviousPos = Map.Start;
             Hero.Facing = Direction8.S;
             Hero.Statuses.Clear();
-            foreach (var member in party) member.HeldTurns = 0;
+            foreach (var member in party) member.HeldTurns = member.RestedTurns = 0;
             actors.Add(Hero);
             foreach (var member in party)
             {

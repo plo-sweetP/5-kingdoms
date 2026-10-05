@@ -116,6 +116,7 @@ namespace FiveKingdoms.Dungeon
             items.Clear();
             foreach (var trap in traps.Values) Destroy(trap.gameObject);
             traps.Clear();
+            lastWaitNote.Clear();
             ClearWarnings();
             ClearAim();
 
@@ -157,6 +158,12 @@ namespace FiveKingdoms.Dungeon
                             pixelCamera.Target = newLeader.transform;
                             hud.AddMessage($"{newLeader.DisplayName} takes the lead.", GoldColor);
                         }
+                        break;
+                    case HeroWaitedEvent waited:
+                        ShowWait(run, waited);
+                        break;
+                    case SwappedEvent swapped:
+                        ShowSwap(swapped);
                         break;
                     case StatusAppliedEvent status:
                         ShowStatus(run, status);
@@ -368,6 +375,69 @@ namespace FiveKingdoms.Dungeon
             if (actors.TryGetValue(hit.TargetId, out var target))
                 hud.AddMessage(DescribeHit(shooter, target, hit), target.IsHero ? HeroHurtColor : DungeonHud.TextColor);
             yield return new WaitForSeconds(hit.Critical ? 0.12f : 0.05f);
+        }
+
+        // ---- Notes on what the party's AI is up to (PROGRESSION.md, "A note when a hero waits") ----
+
+        /// <summary>Leader turns between two log lines about the same hero waiting: a hold that goes on isn't said again.</summary>
+        const int WaitNoteEvery = 4;
+
+        // {0} is the hero. A few of each, taken in turn, so the log doesn't repeat itself.
+        static readonly string[] HoldLines =
+        {
+            "{0} holds the doorway: \"One at a time, please!\"",
+            "{0} plants both feet in the doorway. Let them come!",
+            "{0} waits at the doorway, sizing up the fight ahead.",
+        };
+
+        static readonly string[] RestLines =
+        {
+            "{0} calls a breather: heal up first, then onward.",
+            "{0} waits while the party patches itself up.",
+            "{0} is in no hurry: everyone catches their breath.",
+        };
+
+        // {0} takes the front, {1} is the hurt one who steps back.
+        static readonly string[] RotateLines =
+        {
+            "{0} steps up to the front; {1} falls back to catch a breath.",
+            "{1} tags out. {0} takes the front!",
+        };
+
+        static readonly string[] SafetyLines =
+        {
+            "{1} ducks behind {0}!",
+            "{1} is badly hurt and slips behind {0}.",
+        };
+
+        readonly Dictionary<int, int> lastWaitNote = new Dictionary<int, int>();
+        int noteCount;
+
+        string NextLine(string[] lines, params object[] names) => string.Format(lines[noteCount++ % lines.Length], names);
+
+        /// <summary>
+        /// A hero's AI stands still on purpose: a word over its head every turn it does, and a line in the log when it
+        /// starts, so nobody thinks it is stuck.
+        /// </summary>
+        void ShowWait(DungeonRun run, HeroWaitedEvent waited)
+        {
+            if (!actors.TryGetValue(waited.ActorId, out var hero)) return;
+            bool holds = waited.Reason == WaitReason.HoldsTheDoor;
+            hud.ShowFloatingText(hero.TextAnchor, holds ? "Holding the door" : "Resting", holds ? GuardColor : HealColor, 0.7f);
+            if (lastWaitNote.TryGetValue(waited.ActorId, out int last) && run.Turn - last < WaitNoteEvery && run.Turn >= last) return;
+            lastWaitNote[waited.ActorId] = run.Turn;
+            hud.AddMessage(NextLine(holds ? HoldLines : RestLines, hero.DisplayName), holds ? GuardColor : HealColor);
+        }
+
+        /// <summary>Two heroes traded places for a reason worth saying: the front rotated, or a badly hurt one ran to safety.</summary>
+        void ShowSwap(SwappedEvent swapped)
+        {
+            if (swapped.Reason != SwapReason.Rotate && swapped.Reason != SwapReason.Safety) return;
+            int freshId = swapped.HurtId == swapped.ActorId ? swapped.OtherId : swapped.ActorId;
+            if (!actors.TryGetValue(freshId, out var fresh) || !actors.TryGetValue(swapped.HurtId, out var hurt)) return;
+            bool rotate = swapped.Reason == SwapReason.Rotate;
+            hud.ShowFloatingText(fresh.TextAnchor, rotate ? "My turn!" : "Get behind me!", GuardColor, 0.7f);
+            hud.AddMessage(NextLine(rotate ? RotateLines : SafetyLines, fresh.DisplayName, hurt.DisplayName), GuardColor);
         }
 
         /// <summary>

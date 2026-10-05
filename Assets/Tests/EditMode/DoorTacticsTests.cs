@@ -164,6 +164,7 @@ namespace FiveKingdoms.Tests
             var run = Run(ActorCatalog.StartingParty, Doorway);
             LineUp(run, Door.X, Door.Y, run.Party[0], run.Party[1], run.Party[2]);
             var crowd = Crowd(run, 2);
+            StartFight(run); // They are after him: before that he would heal up first.
             run.Hero.Hp = run.Hero.MaxHp * (HeroTactics.FitPercent - 10) / 100;
             Assert.AreEqual(HeroCommand.HoldTheDoor, AutoPilot.Decide(run), "not fit to stand between two: he lets them come");
 

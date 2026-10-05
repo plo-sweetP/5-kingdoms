@@ -290,6 +290,7 @@ namespace FiveKingdoms.Tests
             Place(uzuki, 1, 4);
             kristela.Hp = 100;
             uzuki.Hp = 300;
+            NoHealing(kristela); // Her own Ki Heal would follow his.
 
             Assert.IsTrue(run.UseSkill(Slot(haiden, SkillCatalog.PaladinHeal)));
             Assert.AreEqual(100 + haiden.MaxHp * 20 / 100, kristela.Hp, "the most hurt, by share of max HP");

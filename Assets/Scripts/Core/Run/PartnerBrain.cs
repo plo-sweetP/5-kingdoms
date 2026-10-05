@@ -11,6 +11,8 @@ namespace FiveKingdoms.Core
     /// <see cref="PartyTactic"/> decides: Attack goes after foes it can see while staying near the leader, Follow keeps
     /// in line behind the member ahead of it. Hold stays where it is, even in a fight. The party stays together: a
     /// partner whose way is held by its own allies queues up behind them rather than walking around the floor.
+    /// Between fights it uses its heal to top the party up, or, hurt with no heal of its own, goes to the partner that
+    /// can heal it (PROGRESSION.md, "Heroes heal between fights").
     /// At doorways and in corridors (PROGRESSION.md, "Doorways and corridors") the partner in front holds the door
     /// against a crowd, the one behind takes a hurt partner's place at the front, and the one in a corridor's mouth
     /// makes way; none of it ever moves the leader.
@@ -39,6 +41,8 @@ namespace FiveKingdoms.Core
 
             if (holds) return HeroCommand.Wait;
             if (run.InCombat && HeroTactics.TryJoinFight(run, partner, out command)) return command;
+            // Between fights a hurt partner that can't mend itself goes to the one that can heal it.
+            if (HeroTactics.TrySeekHealer(run, partner, out command)) return command;
             if (partner.Tactic == PartyTactic.Attack && !partner.Definition.IsRanged && TryChase(run, partner, out command)) return command;
             return Follow(run, partner);
         }

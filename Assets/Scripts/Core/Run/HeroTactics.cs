@@ -226,7 +226,8 @@ namespace FiveKingdoms.Core
         /// <summary>
         /// A heal when someone it would reach is badly hurt (the hero below 40%, an ally below 50%). A hero waiting
         /// behind the one that holds a corridor or a doorway heals sooner, whenever none of it is wasted: "the fresh one
-        /// fights, the hurt one heals behind" (PROGRESSION.md, "Doorways and corridors").
+        /// fights, the hurt one heals behind" (PROGRESSION.md, "Doorways and corridors"). Between fights the party tops
+        /// itself up: a heal is used whenever it's worth it (<see cref="WorthToppingUp"/>).
         /// </summary>
         public static bool TryHealParty(DungeonRun run, Actor hero, out HeroCommand command)
         {
@@ -234,6 +235,11 @@ namespace FiveKingdoms.Core
             int heal = SkillSlot(hero, SkillEffect.Heal);
             if (heal < 0 || run.CheckSkill(hero, heal, hero.Facing) != SkillCheck.Ready) return false;
             var skill = hero.Definition.Skills[heal];
+            if (!run.InCombat && WouldTopUp(run, hero, skill))
+            {
+                command = HeroCommand.Skill(heal);
+                return true;
+            }
             bool resting = IsBehindTheFront(run, hero);
             foreach (var member in run.HealTargets(hero, skill))
             {
@@ -246,6 +252,117 @@ namespace FiveKingdoms.Core
                 }
             }
             return false;
+        }
+
+        // ---- Between fights (PROGRESSION.md, "Heroes heal between fights") ----
+
+        /// <summary>
+        /// Between fights a heal is worth using on someone missing at least this share of what it restores: at most
+        /// half of it is wasted, and nobody spends a turn on a scratch. With Haiden's 20% heal that tops him up to over
+        /// 90% of his HP, which is what makes him fit to step into a room (<see cref="FitPercent"/>).
+        /// </summary>
+        public const int TopUpPercent = 50;
+
+        /// <summary>
+        /// Turns in a row the autopilot's leader waits for the party to heal up without a heal landing on anyone,
+        /// before it moves on: long enough for a hurt partner to walk over to the healer (<see cref="LeashRange"/>).
+        /// </summary>
+        public const int RestPatience = 6;
+
+        /// <summary>Whether <paramref name="healer"/>'s heal, used on <paramref name="target"/> between fights, would mostly go to use.</summary>
+        public static bool WorthToppingUp(Actor healer, Actor target, SkillDefinition heal) =>
+            (target.MaxHp - target.Hp) * 100 >= DungeonRun.HealAmount(healer, target, heal) * TopUpPercent;
+
+        /// <summary>Whether <paramref name="healer"/>'s heal, used where it stands, would top up someone it reaches.</summary>
+        static bool WouldTopUp(DungeonRun run, Actor healer, SkillDefinition heal)
+        {
+            foreach (var member in run.HealTargets(healer, heal))
+                if (WorthToppingUp(healer, member, heal)) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// The party member whose heal could top <paramref name="hero"/> up between fights, if the hero went and stood
+        /// next to it: the nearest one, within <see cref="LeashRange"/> steps' walk, whose heal reaches its neighbors
+        /// and would be worth using on the hero. Null if there is none, or if the hero has a heal of its own that it
+        /// will use on itself instead.
+        /// </summary>
+        public static Actor HealerFor(DungeonRun run, Actor hero)
+        {
+            if (run.InCombat || !hero.IsAlive) return null;
+            int own = SkillSlot(hero, SkillEffect.Heal);
+            if (own >= 0 && WorthToppingUp(hero, hero, hero.Definition.Skills[own])) return null;
+
+            Actor nearest = null;
+            int best = int.MaxValue;
+            int[] steps = null;
+            foreach (var member in run.Party)
+            {
+                if (member == hero || !member.IsAlive || run.FindActor(member.Id) == null) continue;
+                int slot = SkillSlot(member, SkillEffect.Heal);
+                if (slot < 0) continue;
+                var heal = member.Definition.Skills[slot];
+                if (heal.HealTarget == HealTarget.Self || !WorthToppingUp(member, hero, heal)) continue;
+                steps ??= Pathfinder.StepsFrom(run.Map, hero.Pos, LeashRange);
+                int distance = steps[member.Pos.Y * run.Map.Width + member.Pos.X];
+                if (distance < 0 || distance >= best) continue;
+                best = distance;
+                nearest = member;
+            }
+            return nearest;
+        }
+
+        /// <summary>
+        /// Between fights, a hurt hero that can't mend itself goes and stands next to the party member that can heal
+        /// it (<see cref="HealerFor"/>), and stays there until it's topped up. False when nobody can, or when there is
+        /// no way to a tile next to the healer (its own allies fill the corridor).
+        /// </summary>
+        public static bool TrySeekHealer(DungeonRun run, Actor hero, out HeroCommand command)
+        {
+            command = HeroCommand.Wait;
+            var healer = HealerFor(run, hero);
+            if (healer == null) return false;
+            if (GridPos.ChebyshevDistance(hero.Pos, healer.Pos) <= 1) return true; // In its reach: stay for the heal.
+            if (!Pathfinder.TryFindNearest(run.Map, hero.Pos, p => GridPos.ChebyshevDistance(p, healer.Pos) == 1,
+                    p => run.ActorAt(p) != null, LeashRange + 2, out var step, out _, out _))
+                return false;
+            command = HeroCommand.Move(step);
+            return true;
+        }
+
+        /// <summary>
+        /// Whether the party is still healing up between fights: someone's heal would top up a hero it reaches (now, or
+        /// once it's ready again), or a hurt hero is on its way to the one that can heal it.
+        /// </summary>
+        public static bool IsToppingUp(DungeonRun run)
+        {
+            if (run.InCombat) return false;
+            foreach (var member in run.Party)
+            {
+                if (!member.IsAlive || run.FindActor(member.Id) == null) continue;
+                int slot = SkillSlot(member, SkillEffect.Heal);
+                if (slot >= 0 && WouldTopUp(run, member, member.Definition.Skills[slot])) return true;
+                var healer = HealerFor(run, member);
+                if (healer != null && GridPos.ChebyshevDistance(member.Pos, healer.Pos) > 1) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// The autopilot's leader between fights: it doesn't move on while the party is healing up
+        /// (<see cref="IsToppingUp"/>). Hurt with no heal of its own, it goes to the partner that can heal it. It
+        /// gives up after <see cref="RestPatience"/> turns in which no heal landed (<see cref="Actor.RestedTurns"/>).
+        /// </summary>
+        public static bool TryRest(DungeonRun run, Actor hero, out HeroCommand command)
+        {
+            command = HeroCommand.Rest;
+            if (run.InCombat || hero.RestedTurns >= RestPatience) return false;
+            if (TrySeekHealer(run, hero, out var seek))
+            {
+                if (seek.Kind == HeroCommandKind.Move) command = seek;
+                return true;
+            }
+            return IsToppingUp(run);
         }
 
         /// <summary>

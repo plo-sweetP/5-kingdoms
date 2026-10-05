@@ -118,7 +118,7 @@ namespace FiveKingdoms.Dungeon
             yield return new WaitForSeconds(1.8f);
             yield return Capture("01_start");
 
-            int actions = 0, shot = 0, attackShots = 0, chargeShots = 0, holdShots = 0, rotateShots = 0;
+            int actions = 0, shot = 0, attackShots = 0, chargeShots = 0, holdShots = 0, rotateShots = 0, restShots = 0;
             var skillsShown = new System.Collections.Generic.HashSet<SkillEffect>();
             var ultimatesShown = new System.Collections.Generic.HashSet<string>();
             var aimsShown = new System.Collections.Generic.HashSet<string>();
@@ -191,6 +191,11 @@ namespace FiveKingdoms.Dungeon
                     while (controller.IsAnimating) yield return null; // The fresh hero in front, the hurt one behind it.
                     yield return Capture($"door_rotate{++rotateShots}_action{actions}");
                 }
+                else if (command.Resting && restShots < 2)
+                {
+                    yield return new WaitForSeconds(0.2f); // The leader waits, the heals sparkle, the log says why.
+                    yield return Capture($"rest{++restShots}_action{actions}");
+                }
                 else if (attacks && attackShots < 2)
                 {
                     yield return new WaitForSeconds(0.12f); // Just after the lunge connects: slash and hit flash.
@@ -218,14 +223,7 @@ namespace FiveKingdoms.Dungeon
         static bool FrontRotated(DungeonRun run)
         {
             foreach (var e in run.Events)
-                if (e is SwappedEvent swap && IsMeleeHero(run, swap.ActorId) && IsMeleeHero(run, swap.OtherId)) return true;
-            return false;
-        }
-
-        static bool IsMeleeHero(DungeonRun run, int actorId)
-        {
-            foreach (var member in run.Party)
-                if (member.Id == actorId) return !member.Definition.IsRanged;
+                if (e is SwappedEvent swap && swap.Reason == SwapReason.Rotate) return true;
             return false;
         }
 

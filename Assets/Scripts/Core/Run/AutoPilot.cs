@@ -12,7 +12,8 @@ namespace FiveKingdoms.Core
     /// <see cref="HeroTactics"/> (the marked enemy first, then the lowest HP); in a fight, a ranged leader finds a tile to
     /// shoot from; otherwise chase nearby enemies, but hold a doorway against a crowd instead of stepping out among it
     /// (PROGRESSION.md, "Doorways and corridors"); with partners in a fight, go for the foes that are after the party,
-    /// closing up behind the partners that hold the way to them (it doesn't walk off while they fight); then pick up
+    /// closing up behind the partners that hold the way to them (it doesn't walk off while they fight); between fights,
+    /// wait while the party heals up ("Heroes heal between fights"); then pick up
     /// nearby berries and head for the stairs, dashing down straight stretches (or for the boss, on the boss floor).
     /// It never walks into a foe: every attack is an explicit command naming its target. Partners play themselves
     /// (<see cref="PartnerBrain"/>).
@@ -58,6 +59,8 @@ namespace FiveKingdoms.Core
             if (HeroTactics.TryAttack(run, hero, out command)) return command;
             // A ranged leader hangs back at a tile it can shoot from; a melee one chases below, as it always has.
             if (run.InCombat && hero.Definition.IsRanged && HeroTactics.TryTakeFiringPosition(run, hero, out command)) return command;
+            // Between fights the party heals up before it moves on: the leader waits for the heals (its own came above).
+            if (HeroTactics.TryRest(run, hero, out command)) return command;
             var enemies = HeroTactics.FoePositions(run, hero);
 
             if (run.HeroOnStairs) return HeroCommand.Descend;

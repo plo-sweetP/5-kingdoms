@@ -29,8 +29,14 @@ namespace FiveKingdoms.Core
         /// </summary>
         public readonly bool Holding;
 
+        /// <summary>
+        /// A wait by the autopilot's leader while the party tops itself up between fights (<see cref="Rest"/>). The run
+        /// counts these too (<see cref="Actor.RestedTurns"/>), so it moves on when no heal comes of it.
+        /// </summary>
+        public readonly bool Resting;
+
         HeroCommand(HeroCommandKind kind, Direction8 direction, int slot = 0, bool aimed = false, bool targeted = false, GridPos target = default,
-            bool holding = false)
+            bool holding = false, bool resting = false)
         {
             Kind = kind;
             Direction = direction;
@@ -39,6 +45,7 @@ namespace FiveKingdoms.Core
             Targeted = targeted;
             Target = target;
             Holding = holding;
+            Resting = resting;
         }
 
         public static HeroCommand Move(Direction8 direction) => new HeroCommand(HeroCommandKind.Move, direction);
@@ -65,6 +72,9 @@ namespace FiveKingdoms.Core
 
         /// <summary>The party AI's wait at a doorway, for the foes to come to it (PROGRESSION.md, "Doorways and corridors").</summary>
         public static readonly HeroCommand HoldTheDoor = new HeroCommand(HeroCommandKind.Wait, Direction8.S, holding: true);
+
+        /// <summary>The autopilot's wait between fights, while the party heals up (PROGRESSION.md, "Heroes heal between fights").</summary>
+        public static readonly HeroCommand Rest = new HeroCommand(HeroCommandKind.Wait, Direction8.S, resting: true);
         public static readonly HeroCommand UseBerry = new HeroCommand(HeroCommandKind.UseBerry, Direction8.S);
         public static readonly HeroCommand Descend = new HeroCommand(HeroCommandKind.Descend, Direction8.S);
 
@@ -73,6 +83,7 @@ namespace FiveKingdoms.Core
             string aim = Targeted ? $" @{Target}" : Aimed ? $" {Direction}" : "";
             return Kind == HeroCommandKind.Move ? $"Move {Direction}"
                 : Holding ? "Hold the door"
+                : Resting ? "Rest"
                 : Kind == HeroCommandKind.Skill ? $"Skill {Slot + 1}{aim}"
                 : Kind == HeroCommandKind.Attack || Kind == HeroCommandKind.Ultimate ? Kind + aim
                 : Kind == HeroCommandKind.SwitchLeader ? $"Lead {Slot + 1}"

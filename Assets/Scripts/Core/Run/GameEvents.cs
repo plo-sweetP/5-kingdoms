@@ -230,16 +230,69 @@ namespace FiveKingdoms.Core
         }
     }
 
+    /// <summary>Why two party members traded places, so the view can say what the party's AI is up to.</summary>
+    public enum SwapReason
+    {
+        /// <summary>Just passing: the player walked into a partner, or the leader's autopilot did on its way.</summary>
+        Passing,
+
+        /// <summary>A melee hero went past a ranged one to get at the foes.</summary>
+        Engage,
+
+        /// <summary>A badly hurt hero ran behind a healthier ally ("run to safety").</summary>
+        Safety,
+
+        /// <summary>A partner got past the one that follows it in line.</summary>
+        Regroup,
+
+        /// <summary>The hurt hero that held a corridor or a doorway gave the front to the fresh one behind it ("rotate the front").</summary>
+        Rotate,
+    }
+
     /// <summary>Two party members swapped places (their moves follow as MovedEvents).</summary>
     public sealed class SwappedEvent : GameEvent
     {
         public readonly int ActorId;
         public readonly int OtherId;
+        public readonly SwapReason Reason;
 
-        public SwappedEvent(int actorId, int otherId)
+        /// <summary>The hurt hero that stepped back (<see cref="SwapReason.Safety"/>, <see cref="SwapReason.Rotate"/>), else -1.</summary>
+        public readonly int HurtId;
+
+        public SwappedEvent(int actorId, int otherId, SwapReason reason = SwapReason.Passing, int hurtId = -1)
         {
             ActorId = actorId;
             OtherId = otherId;
+            Reason = reason;
+            HurtId = hurtId;
+        }
+    }
+
+    /// <summary>Why a hero stood still on purpose.</summary>
+    public enum WaitReason
+    {
+        /// <summary>It holds a doorway and lets the foes come to it (PROGRESSION.md, "Doorways and corridors").</summary>
+        HoldsTheDoor,
+
+        /// <summary>The autopilot's leader waits while the party heals up between fights ("Heroes heal between fights").</summary>
+        Rests,
+    }
+
+    /// <summary>
+    /// A hero's AI passed its turn on purpose, so the view can say why: it isn't stuck. <see cref="Turns"/> counts the
+    /// waits in a row so far (1 for the first).
+    /// </summary>
+    public sealed class HeroWaitedEvent : GameEvent
+    {
+        public readonly int ActorId;
+        public readonly WaitReason Reason;
+        public readonly int Turns;
+
+        public HeroWaitedEvent(int actorId, WaitReason reason, int turns)
+        {
+            ActorId = actorId;
+            Reason = reason;
+            Turns = turns;
         }
     }
 

@@ -31,6 +31,7 @@ namespace FiveKingdoms.Tests
             Assert.Greater(totals.OffLineShots, 0, "no shot ever flew off the 8 lines");
             Assert.Greater(totals.DoorsHeld, 0, "the leader never held a doorway");
             Assert.Greater(totals.FrontRotations, 0, "the front never rotated");
+            Assert.Greater(totals.Rests, 0, "the leader never waited for the party to heal up");
         }
 
         [Test]
@@ -44,7 +45,7 @@ namespace FiveKingdoms.Tests
         /// <summary>How often the rules under test came up in a soak.</summary>
         sealed class Totals
         {
-            public int Delays, OffLineShots, DoorsHeld, FrontRotations;
+            public int Delays, OffLineShots, DoorsHeld, FrontRotations, Rests;
         }
 
         static Totals Soak(System.Func<int, DungeonRun> start)
@@ -60,12 +61,12 @@ namespace FiveKingdoms.Tests
                 {
                     string context = $"seed {seed}, action {step}";
                     var command = AutoPilot.Decide(run);
-                    bool fighting = run.InCombat;
                     AssertDeliberate(run, command, context);
                     Assert.IsTrue(run.Execute(command), $"the autopilot's {command} was refused ({context})");
                     if (command.Holding) totals.DoorsHeld++;
-                    // In a fight two melee heroes only trade places to rotate the front (or to run to safety).
-                    if (fighting) totals.FrontRotations += run.Events.OfType<SwappedEvent>().Count(swap => IsMeleeHero(run, swap.ActorId) && IsMeleeHero(run, swap.OtherId));
+                    if (command.Resting) totals.Rests++;
+                    totals.FrontRotations += run.Events.OfType<SwappedEvent>().Count(swap => swap.Reason == SwapReason.Rotate);
+                    AssertRestsEnd(run, command, context);
                     AssertConsistent(run, context);
                     AssertPartyTogether(run, context);
                     AssertNoSwapLoops(run, swaps, context);
@@ -82,7 +83,16 @@ namespace FiveKingdoms.Tests
             return totals;
         }
 
-        static bool IsMeleeHero(DungeonRun run, int actorId) => run.Party.Any(member => member.Id == actorId && !member.Definition.IsRanged);
+        /// <summary>
+        /// PROGRESSION.md, "Heroes heal between fights": the leader only rests outside a fight, and never for more than
+        /// <see cref="HeroTactics.RestPatience"/> turns in a row without a heal landing on anyone.
+        /// </summary>
+        static void AssertRestsEnd(DungeonRun run, HeroCommand command, string context)
+        {
+            if (!command.Resting) return;
+            foreach (var member in run.Party)
+                Assert.LessOrEqual(member.RestedTurns, HeroTactics.RestPatience, $"{member.Name} rests without end ({context})");
+        }
 
         /// <summary>
         /// Attacks are deliberate (PROGRESSION.md, "Targeting and input"): the autopilot never walks into an enemy, and

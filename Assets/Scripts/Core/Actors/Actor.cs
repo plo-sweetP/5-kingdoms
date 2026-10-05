@@ -111,6 +111,13 @@ namespace FiveKingdoms.Core
         /// </summary>
         public int HeldTurns { get; set; }
 
+        /// <summary>
+        /// Party AI: turns in a row the autopilot's leader has waited for the party to heal up between fights, since a
+        /// heal last landed on anyone (or a fight or a floor began). After <see cref="HeroTactics.RestPatience"/> of
+        /// them it moves on: the heals that are left can't be used where the party stands.
+        /// </summary>
+        public int RestedTurns { get; set; }
+
         /// <summary>Own turns it has started so far (heroes: this run).</summary>
         public int TurnsTaken { get; set; }
 

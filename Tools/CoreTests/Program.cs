@@ -297,6 +297,9 @@ namespace FiveKingdoms.CoreTests
             var standingAtBoss = new int[Party.Length];
             int reachedBoss = 0;
             int holds = 0, frontSwaps = 0, fallenEarly = 0, fallenBesideHelp = 0;
+            int rests = 0, restHeals = 0;
+            var hpAtFightStart = new long[Party.Length];
+            var hpAtBossStart = new long[Party.Length];
             var packFights = new FightStats(Party.Length);
             var bossFight = new FightStats(Party.Length);
             for (int seed = 1; seed <= seeds; seed++)
@@ -307,14 +310,20 @@ namespace FiveKingdoms.CoreTests
                 for (int i = 0; i < 5000 && run.State == RunState.InProgress; i++)
                 {
                     bool wasBossFloor = run.IsBossFloor;
-                    // Who might run to safety during this action: badly hurt, with a foe next to them.
-                    var hurt = run.Party.Where(member => member.IsAlive && DungeonRun.IsBadlyHurt(member) && run.FoeAdjacent(member))
-                        .Select(member => member.Id).ToList();
                     var round = (wasBossFloor ? bossFight : packFights).Begin(run);
                     bool fighting = run.InCombat;
                     var command = AutoPilot.Decide(run);
                     if (command.Holding) holds++;
+                    if (command.Resting) rests++;
                     round.End(run, run.Execute(command));
+                    // Heals used between fights: by the leader's own action, or by partners before a fight (re)started.
+                    bool quiet = !fighting;
+                    foreach (var e in run.Events)
+                    {
+                        if (e is CombatStartedEvent) quiet = false;
+                        else if (e is CombatEndedEvent) quiet = true;
+                        else if (quiet && e is SkillUsedEvent heal && heal.Skill.Effect == SkillEffect.Heal) restHeals++;
+                    }
                     // Heroes that fall before the boss, and how many of them fell while a melee ally with most of its HP
                     // stood within two tiles with nothing to hit: the playtest's "the other two can't do anything useful".
                     if (!wasBossFloor)
@@ -340,6 +349,9 @@ namespace FiveKingdoms.CoreTests
                         {
                             if (run.IsBossFloor) bossFights++;
                             else fights++;
+                            // How much of its HP each hero brings into the fight (fallen heroes bring none).
+                            for (int member = 0; member < run.Party.Count; member++)
+                                (run.IsBossFloor ? hpAtBossStart : hpAtFightStart)[member] += run.Party[member].Hp * 100 / run.Party[member].MaxHp;
                         }
                         else if (e is SkillUsedEvent used && used.Skill.IsUltimate)
                         {
@@ -349,9 +361,8 @@ namespace FiveKingdoms.CoreTests
                         else if (e is SwappedEvent swapped)
                         {
                             swaps++;
-                            if (hurt.Contains(swapped.ActorId)) safetySwaps++;
-                            else if (fighting && run.Party.Count(member => !member.Definition.IsRanged && (member.Id == swapped.ActorId || member.Id == swapped.OtherId)) == 2)
-                                frontSwaps++; // In a fight two melee heroes only trade places to rotate the front.
+                            if (swapped.Reason == SwapReason.Safety) safetySwaps++;
+                            else if (swapped.Reason == SwapReason.Rotate) frontSwaps++;
                         }
                         else if (e is ChargeChangedEvent changed && changed.Amount > 0)
                         {
@@ -388,6 +399,11 @@ namespace FiveKingdoms.CoreTests
             Console.WriteLine($"Doorways and corridors: the leader held a doorway for {holds / (float)seeds:0.0} turns a run, and two melee heroes " +
                               $"rotated the front {frontSwaps / (float)seeds:0.0} times a run (the fresh one for the hurt one). Heroes fallen before the boss floor: " +
                               $"{fallenEarly} in {seeds} runs, {fallenBesideHelp} of them with a fresh melee ally idle within two tiles");
+            Console.WriteLine($"Between fights: the leader waited {rests / (float)seeds:0.0} turns a run for the party to heal up, and {restHeals / (float)seeds:0.0} heals a run " +
+                              "were used outside a fight. HP brought into a fight: " +
+                              string.Join(", ", Party.Select((definition, member) => $"{definition.Name} {hpAtFightStart[member] / Math.Max(1, fights)}%")) +
+                              "; into the boss fight: " +
+                              string.Join(", ", Party.Select((definition, member) => $"{definition.Name} {hpAtBossStart[member] / Math.Max(1, bossFights)}%")));
             Console.WriteLine("In the fights before the boss (a round is one action of the leader's in which blows were exchanged):");
             packFights.Print(Party);
             Console.WriteLine("In the boss fight:");

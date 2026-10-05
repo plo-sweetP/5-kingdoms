@@ -62,6 +62,17 @@ namespace FiveKingdoms.Tests
             foreach (var member in run.Party) run.SetTactic(member, PartyTactic.Hold);
         }
 
+        /// <summary>
+        /// Keeps a hero's AI from healing for the rest of a test (its heals sit out a long cooldown): between fights
+        /// partners top the party up on their own, which gets in the way of a test that counts HP.
+        /// </summary>
+        public static void NoHealing(Actor hero)
+        {
+            var skills = hero.Definition.Skills;
+            for (int slot = 0; slot < skills.Count; slot++)
+                if (skills[slot].Effect == SkillEffect.Heal) hero.SkillCooldowns[slot] = 99;
+        }
+
         [Test]
         public void TheStartingPartyStandsTogetherWithAMeleeHeroInTheLead()
         {

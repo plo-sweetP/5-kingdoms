@@ -159,6 +159,7 @@ namespace FiveKingdoms.Tests
             kristela.Hp = 300;
             haiden.Hp = haiden.MaxHp - 200;
             haiden.Charge = CombatRules.MaxCharge;
+            NoHealing(kristela); // Only the aura's heals are counted here.
             int heal = haiden.MaxHp * SkillCatalog.AuraOfProtection.Power / 100;
 
             Assert.IsTrue(run.UseUltimate());

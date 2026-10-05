@@ -214,7 +214,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, packs; shots at anything in sight, deliberate two-step attacks, stuns as timeline delays | **Done** (parts 1 and 2, and Peter's answers at the first playtest checkpoint) |
 | A1 | Art pass 1 ([docs/design/ART.md](docs/design/ART.md)): the current game on the Tiny Swords art (heroes built from layers with their own faces and hair under the helmets, equipment looks for GEAR.md's weapons and armor sets, ring auras, skill animations, monsters from the Enemy Pack, the outdoor dungeon, the HUD) | **Done** (2026-10-04; new bosses and creatures come with row 7) |
 | C1 | Corridor tactics for the party's AI (PROGRESSION.md, "Doorways and corridors"): hold the door, rotate the front, enter a room when it's safe or there's room; then a balance re-check | **Done** (2026-10-04; the Troll went from 16000 to 24000 HP) |
-| 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; tiers 5 and 10 of Archer, Paladin and Monk | **In progress** (the three follow-ups are done, 2026-10-04) |
+| 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; Kristela's Fencer kit (she was a Monk until 2026-10-05); tiers 5 and 10 of Archer, Paladin and Fencer | **In progress.** Done and on main (2026-10-05): the three follow-ups and the classes core (rules, the hero's own kit and loadout, save version 2, free respec), with no change in play. **Left:** Kristela's Fencer kit, the skill-tree screen, tiers 5 and 10, the balance with default builds ("Progress" below says where each stands) |
 | 1g-2 | Classes core, part 2: tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries), relearning after a respec from level 20, prerequisites and kingdom locks | |
 | P1 | Playtest pass 1 ([docs/design/HUD.md](docs/design/HUD.md)), Peter's notes from the tablet: the top-right buttons in one row, a minimap with fog, the skills in a row along the bottom, a pause menu (with Reset level for testing), Auto hides the D-pad and greys the buttons out, holy light on Divine Strike, footing in the boss fight for the party's AI | After 1g-1: both change the HUD (listed here, a row down, so the 1g-1 row can be edited without a conflict) |
 | 1g-3 | Professions: potions and meals as items, the Alchemist, Blacksmith and Chef paths (farm paths locked until the farm exists) | |
@@ -537,6 +537,44 @@ and tiers 5 and 10 follow in this same part.
   walking to the healer, the Auto leader waiting and giving up, the events), 230 in Unity's EditMode, 23 PlayMode,
   the Windows build, and four autoplay runs without an error. The soak tests also fail if the leader never rests,
   or rests longer than its patience. The golden replay is unchanged (its lone hero has no heal).
+
+**Milestone 1g, part 1: the classes core (2026-10-05).** The rules of PROGRESSION.md, "Classes" and "Building 1g"
+(part 1, items 2 to 5), built so that nothing changes in play yet: the balance report prints the same numbers line
+for line, and the golden replay is unchanged.
+- **Points and tiers.** A hero has a point per level. A point buys the next tier of any class; tiers 5, 10, 15, 20
+  and 25 are milestones that also take one of three options, from any of the class's three paths. A milestone whose
+  options aren't written yet can't be passed, so a class stops at tier 4 until its tier 5 exists. Every tier adds
+  the class's stat bumps (never SPD). A hero starts at tier 1 of its own class.
+- **The classes in the catalog:** Archer (Uzuki), Paladin (Haiden), Fencer (Kristela, since Peter's change of
+  2026-10-05) and Monk (kept as a class, no starting hero), each with its three paths and its speed modifier. Their
+  stat bumps and options are not in yet: they come with the content, so play is unchanged until then.
+- **A kit of the hero's own.** The skills a hero fights with used to be read from the shared definition of the
+  hero; now they come from the hero's saved progress. Its pool is its starting kit plus what its options teach; an
+  upgrade changes the hero's own copy of a skill, and an upgrade of a skill the hero doesn't know teaches the skill
+  instead. The loadout is three skills and an ultimate: at most one Quick skill, and a skill tied to a weapon
+  family (bow, sword, fists) only while the hero holds such a weapon. It changes between runs only.
+- **Speeds are as they were:** the heroes' own speeds are 90 / 95 / 95 (Uzuki / Haiden / Kristela) and their
+  classes add +5 / -5 / +5, kept within 85-100 before gear.
+- **Respec:** unlearning a class returns its points (free for now; relearning from level 20 is part 2). A hero can
+  even unlearn its own class; its starting kit stays, since that is the hero's and not the class's.
+- **Saves are version 2:** each hero's classes, picks and loadout. A hero from an older save gets a point per
+  level with tier 1 of its own class spent and the rest free (Kristela as a Fencer). Loading learns a build again
+  tier by tier, so anything today's rules don't allow is left out and its points stay free.
+- **Kristela is a Fencer in name only so far.** Her class, her migration and her speed are the Fencer's; she still
+  fights with the Monk's base kit and the Gauntlets until her Fencer kit is built (next).
+- **Checks:** 259 Core tests (29 new in `ClassRulesTests`, on classes made up for the tests so the real ones can be
+  tuned freely), 259 in Unity's EditMode, 28 PlayMode (5 new: the save migration, Kristela's, a mixed file, a round
+  trip, a hero without a class), the Windows build and four autoplay runs without an error.
+- **What is left of part 1, in the order to build it:**
+  1. Kristela's Fencer kit (PROGRESSION.md, "Kristela's Fencer kit"): the Piercer Blade as her weapon and look,
+     Thrust, Triple Thrust, Lunge, Riposte, Blade Dance, each with its rule, AI rule, animation and icon; she loses
+     Ki Heal, so the balance moves.
+  2. The class stat bumps (data only; they move the balance report a little, so they were left out of the core).
+  3. The skill-tree screen. Its art is drafted but has never been run: the dark gold-trimmed panel, the spheres
+     (tinted per path, with glow, ring and shine), a lock, badges and 24 skill icons, on the branch
+     `wip/1g-1-skill-tree-art` (`Tools/pixelart/ui.py` and `icons.py`).
+  4. Tier 5, then tier 10, of Archer, Paladin and Fencer; then default builds for the balance report and the
+     re-tune to the targets in CLAUDE.md.
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

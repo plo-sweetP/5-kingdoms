@@ -31,6 +31,11 @@ ground. Map should be big enough to see but small enough to not clutter the whol
   enemies **red**, items on the ground **yellow**, the way down as its own small icon. *Proposed:* enemies show only
   while the party can see them (in the same room as a hero, or within sight range in a corridor); items and the
   way down show once their tile is explored, and stay.
+- **Built 2026-10-05 (7772829)**, with Small (6 px a tile) as the default and Small, Large, Off in Settings; the
+  way down is a small green "V". Peter on the screenshots: "Looks good so far", and "Let the dot for the hero and
+  each party member be a yellow or orange to better see it". So the whole party is marked in **orange** (the hero
+  the player controls keeps the blink), which also settles the white mark that was hard to see; items stay yellow.
+  If orange and yellow read too alike at this size, the session shows Peter the choice instead of guessing.
 - **Size:** the whole floor (56 x 32 tiles) at a whole number of screen pixels per tile. *Proposed:* 6 px a tile
   on a 1080p phone (336 x 192, about a seventh of the screen's width); the build session shows Peter that and one
   size up.
@@ -42,6 +47,14 @@ ground. Map should be big enough to see but small enough to not clutter the whol
 
 ## Skills in a row along the bottom
 Peter: "bc of the mini map, move the skills on the bottom in a row."
+
+**Reverted by Peter on 2026-10-05, after seeing the row as built (feeea98):** "For the skills and ultimate. Pls
+revert and go back to the original design. I don't like the row anymore. I like the more reachable orientation u had
+before." So the attack button, the three skills and the ultimate go back to the arc at the bottom right, as before
+playtest pass 1. The top-right row, Auto's look and the pause menu stay. The session that reverts it checks that
+the arc's top stays clear of the minimap (small by default) on the phone and the tablet and shows Peter both; the
+log, the aiming prompt and the Descend button go back to their old places where the arc allows it. The bullets
+below describe the row and no longer apply.
 - The attack button, the three skills and the ultimate form **one row along the bottom edge**, right-aligned, so
   nothing on the right reaches up into the minimap. *Proposed order,* left to right: ultimate, skill 3, skill 2,
   skill 1, attack (the largest, in the corner under the right thumb).

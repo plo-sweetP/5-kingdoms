@@ -459,8 +459,9 @@ where this spec left room:
 - **Waiting notes:** also for "run to safety" and for the Auto leader resting; two or three lines take turns.
 - **Weapon ties:** shots and Volley need a bow; Divine Strike and Shoulder Bash a sword; the Monk's strikes fists;
   Hunter's Mark, Heal, Ki Heal and the aura nothing. Swords are one family, so a hero who holds any sword and has
-  learned Fencer skills can use them, Haiden included (*proposed* by the hub: light and heavy blades can be told
-  apart when gear is built, if Peter wants that).
+  learned Fencer skills can use them, Haiden included. Peter, 2026-10-05: yes, "Haiden can later multi class. The
+  skills can somehow combine or replace when multi classing"; how they combine is decided with the advanced
+  classes.
 - **Picks:** a milestone pick is final until the class is unlearned. A hero can unlearn even its own class and
   keeps its starting kit. A newly learned skill goes into the loadout only when a slot is free.
 - **Speed** with two classes at the same tier: the hero's own class counts, then the one learned first.

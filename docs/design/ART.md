@@ -110,7 +110,10 @@ creatures beyond the pack come later.
   - Starting looks (approved 2026-10-04): Haiden on the Warrior rig with the Long Sword and shield, in Heavy Armor
     (the great helm); Kristela with Gauntlets, in Light Warrior (the crested cap); Uzuki on the Archer rig with the
     Hunter Bow, in Archer's Garb (the archer helmet). Since 2026-10-05 Kristela is a Fencer (PROGRESSION.md): her
-    look becomes the Piercer Blade on the Warrior rig without a shield (*proposed*), still in Light Warrior.
+    look becomes the Piercer Blade on the Warrior rig without a shield, still in Light Warrior. Peter on the icon
+    draft (2026-10-05): "I want her sword to look closer to a fencer blade than a long sword. So thinner and change
+    the hilt to look rounder and more like a sabre". So the Piercer Blade's look is redrawn: a thin blade and a
+    rounded, sabre-like guard around the hand, in the game and on the icon alike.
 - **Female heroes read as feminine, in any armor and with any weapon** (Peter, 2026-10-03, pointing at his chibi
   class sheet): for example long hair falling from under the helmet, lashes, a slimmer or skirted outline, softer
   trim, hair accessories. Kristela is the female hero today; Haiden and Uzuki are boys (Peter, 2026-10-03; older
@@ -213,7 +216,9 @@ weapon and armor look; and Peter has the preview sheets, screenshots and a build
 Peter: the three heroes, "Haiden in the middle, kristela to the left, and uzuki to the right", in front of the
 pack's castle with "a gold/sunrise background". From five drafts he chose **A** (bare heads, the blue castle, the
 sun rising behind it with rays) and asked: "show haiden's sword. show all their weapons. the armor can wait until
-they get ingame". The revision (Kristela with her Fencer's blade) went to him on 2026-10-05 and waits for his OK.
+they get ingame". He approved the revision on 2026-10-05 (Haiden in front with sword and shield, Kristela and
+Uzuki a step behind, facing outward) with one change: Kristela's blade thinner, with a rounded sabre-like hilt
+(see "Heroes built from layers"). The icon is redrawn from the game's art once that blade exists.
 - The drafts and their script are the hub's mock-ups, outside the repo: `C:\Users\peter\5Kingdoms\icon-drafts`.
 - To do in a build session once he has chosen: move the script into `Tools/pixelart`, write the icon at the sizes
   Android wants (an adaptive icon's foreground and background layers, the legacy and the round icon) and for

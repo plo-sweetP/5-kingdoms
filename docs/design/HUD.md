@@ -62,9 +62,11 @@ levels."
   as after a defeat.
 - **Settings.** *Proposed first set:* the camera while aiming (step out when needed, or always wide: ART.md's
   options B and C) and the minimap (on or off, small or large). Sound comes with audio.
-- **Hero stats** (the hub reads "hero stats shred option" as a hero stats screen): a read-only page per hero with
-  level and EXP, HP, ATK, DEF, SPD, Crit Rate and Crit DMG, the skills and the ultimate with what they do, and
-  from 1g the class and its tiers. Changing a build stays between runs.
+- **Hero stats** (Peter, 2026-10-05: "a stats screen. It is per hero that list out the hero gear, stat attributes
+  and list of skills. So they can read the skills description and ultimates"): a read-only page per hero with the
+  gear (the weapon now, the other slots from 1h), level and EXP, HP, ATK, DEF, SPD, Crit Rate and Crit DMG, and
+  the skills and the ultimate with their descriptions; from 1g also the class and its tiers. Changing a build
+  stays between runs.
 - **Exit:** leaves the run. It asks first; EXP is kept. Until the farm exists it ends the run with the usual end
   panel; later it becomes "Return to the farm?".
 - **Reset level** (testing only and labelled so; to be hidden or removed later): every hero goes back to level 1
@@ -76,7 +78,7 @@ Peter: "if auto play is enabled. Please hide the dpad and grey out the skills op
   out and don't respond**. Auto, Pause, the party cards and the tactics badges still do. Switching Auto off brings
   everything back.
 - This replaces the rule of 2026-10-02 that skills stay usable by hand while Auto plays (GAME_PLAN.md, "Progress",
-  milestone 1b).
+  milestone 1b). Peter confirmed it on 2026-10-05: "Auto blocks the skills".
 
 ## Building it (playtest pass 1)
 One build session, after 1g part 1: both change the HUD, so not at the same time.

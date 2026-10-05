@@ -117,6 +117,12 @@ namespace FiveKingdoms.Dungeon
             yield return Capture("00_banner");
             yield return new WaitForSeconds(1.8f);
             yield return Capture("01_start");
+            // How the HUD looks while Auto plays: the D-pad hidden, the leader's buttons greyed out.
+            controller.AutoPilotEnabled = true;
+            yield return null;
+            yield return Capture("01_auto_on");
+            controller.AutoPilotEnabled = false;
+            while (controller.IsAnimating) yield return null;
 
             int actions = 0, shot = 0, attackShots = 0, chargeShots = 0, holdShots = 0, rotateShots = 0, restShots = 0;
             var skillsShown = new System.Collections.Generic.HashSet<SkillEffect>();

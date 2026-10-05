@@ -53,6 +53,7 @@ namespace FiveKingdoms.Dungeon
         HeroCommand? buffered;
         float directionHeldFor;
         bool autoPilot;
+        bool paused;
         InputMode inputMode = InputMode.Touch;
 
         /// <summary>The action being aimed, or null.</summary>
@@ -128,6 +129,7 @@ namespace FiveKingdoms.Dungeon
             hud.CommandRequested += command => buffered = command;
             hud.RestartRequested += StartNewRun;
             hud.AutoPilotToggled += () => SetAutoPilot(!autoPilot);
+            hud.PauseRequested += () => SetPaused(!paused);
             hud.TacticCycleRequested += CycleTactic;
             if (options.StartInputMode.HasValue)
             {
@@ -169,6 +171,7 @@ namespace FiveKingdoms.Dungeon
             buffered = null;
             injectedTap = null;
             EndAiming();
+            SetPaused(false);
             hud.HideRunEnd();
             hud.ClearLog();
             StartCoroutine(hud.Fade(0f, 0.01f));
@@ -191,6 +194,13 @@ namespace FiveKingdoms.Dungeon
                 bool restart = keyboard != null && (keyboard.rKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame) ||
                                gamepad != null && (gamepad.buttonSouth.wasPressedThisFrame || gamepad.startButton.wasPressedThisFrame);
                 if (!busy && restart) StartNewRun();
+                return;
+            }
+            if (paused)
+            {
+                // Nothing acts, the auto-pilot included; what was pressed meanwhile is dropped, not kept for later.
+                buffered = null;
+                injectedTap = null;
                 return;
             }
 
@@ -392,24 +402,33 @@ namespace FiveKingdoms.Dungeon
 
         /// <summary>
         /// Picks this turn's command. While the auto-pilot is on it plays every turn and the player's moves and actions
-        /// are ignored, except skills and the ultimate, which the player can still fire by hand, and switching which hero
-        /// leads (so another hero's skills can be fired). The auto-pilot carries on afterwards.
+        /// are ignored, skills and ultimates included (HUD.md, "Auto": Peter, 2026-10-05, "Auto blocks the skills").
+        /// Only switching which hero leads still goes through; the auto-pilot carries on with that hero.
         /// </summary>
         public static HeroCommand? ChooseCommand(HeroCommand? playerCommand, bool autoPilot, DungeonRun run) =>
             !autoPilot ? playerCommand
             : playerCommand.HasValue && AllowedDuringAuto(playerCommand.Value) ? playerCommand
             : AutoPilot.Decide(run);
 
-        static bool AllowedDuringAuto(HeroCommand command) =>
-            command.Kind == HeroCommandKind.Skill || command.Kind == HeroCommandKind.Ultimate || command.Kind == HeroCommandKind.SwitchLeader;
+        static bool AllowedDuringAuto(HeroCommand command) => command.Kind == HeroCommandKind.SwitchLeader;
 
         /// <summary>The hero plays itself (the same AutoPilot the tests use). Only the player turns it off: Auto, T or View.</summary>
         void SetAutoPilot(bool on)
         {
             if (autoPilot == on) return;
             autoPilot = on;
+            if (on) EndAiming(); // An aim the player had open is let go: the hero plays itself from here.
             hud.SetAutoPilot(on);
             hud.AddMessage(on ? "Auto-pilot on. Press Auto again to take over." : "Auto-pilot off.", DungeonHud.HintColor);
+        }
+
+        /// <summary>The Pause button: while the game is paused no command is taken, from the player or the auto-pilot.</summary>
+        void SetPaused(bool on)
+        {
+            if (paused == on) return;
+            paused = on;
+            if (on) EndAiming();
+            hud.SetPaused(on);
         }
 
         IEnumerator Execute(HeroCommand command)

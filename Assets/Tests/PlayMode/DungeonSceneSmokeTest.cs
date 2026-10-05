@@ -197,6 +197,9 @@ namespace FiveKingdoms.Tests
             {
                 HeroCommand.Move(Direction8.N), HeroCommand.Attack, HeroCommand.AttackAt(new GridPos(1, 1)), HeroCommand.Wait, HeroCommand.UseBerry,
                 HeroCommand.Descend,
+                // Skills and ultimates too (HUD.md, "Auto"): their buttons are greyed out while Auto plays.
+                HeroCommand.Skill(1), HeroCommand.Skill(2, Direction8.E), HeroCommand.SkillAt(1, new GridPos(4, 2)), HeroCommand.UltimateFacing,
+                HeroCommand.UltimateAt(new GridPos(4, 2)),
             };
             foreach (var playerCommand in playerCommands)
             {
@@ -209,16 +212,11 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
-        public void WhileAutoPlaysThePlayerCanStillUseSkillsUltimatesAndSwitchHeroes()
+        public void WhileAutoPlaysThePlayerCanStillSwitchHeroes()
         {
             var run = new DungeonRun(3);
-            var commands = new[]
-            {
-                HeroCommand.Skill(1), HeroCommand.Skill(2, Direction8.E), HeroCommand.SkillAt(1, new GridPos(4, 2)), HeroCommand.UltimateFacing,
-                HeroCommand.UltimateAt(new GridPos(4, 2)), HeroCommand.SwitchLeader(1),
-            };
-            foreach (var command in commands)
-                Assert.AreEqual(command, DungeonController.ChooseCommand(command, autoPilot: true, run).Value);
+            var command = HeroCommand.SwitchLeader(1);
+            Assert.AreEqual(command, DungeonController.ChooseCommand(command, autoPilot: true, run).Value);
         }
 
         [Test]

@@ -2110,6 +2110,30 @@
    "path": "UI/dpad_arrow_diagonal",
    "right": 0,
    "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "icon_wait",
+   "path": "UI/icon_wait",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "icon_pause",
+   "path": "UI/icon_pause",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "icon_berry",
+   "path": "UI/icon_berry",
+   "right": 0,
+   "top": 0
   }
  ]
 }

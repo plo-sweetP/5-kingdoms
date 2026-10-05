@@ -13,11 +13,13 @@ namespace FiveKingdoms.UI
     public enum InputMode { Touch, Keyboard, Gamepad }
 
     /// <summary>
-    /// Landscape HUD for the dungeon, built in code. The party's HP, ultimate charge, EXP and levels and the floor across
-    /// the top, plus a boss bar on boss floors; D-pad bottom-left; the weapon attack, the three skills and the ultimate
-    /// bottom-right (each starts aiming: pick it, then the target); Wait and Berry top-right; a message log; an aiming
-    /// prompt; floating numbers; fades, floor banner and end-of-run panel. The D-pad and attack button hide while a keyboard or controller is in use (PC, Steam Deck); the
-    /// skill buttons stay, in a row with their keys, since they also show cooldowns, Quick tags and the charge.
+    /// Landscape HUD for the dungeon, built in code (docs/design/HUD.md). The party's HP, ultimate charge, EXP and levels
+    /// and the floor across the top, plus a boss bar on boss floors; Wait, Berry, Auto and Pause in a row top-right;
+    /// D-pad bottom-left; the ultimate, the three skills and the weapon attack in a row along the bottom, the attack in
+    /// the corner (each starts aiming: pick it, then the target); a message log; an aiming prompt; floating numbers;
+    /// fades, floor banner and end-of-run panel. The D-pad and attack button hide while a keyboard or controller is in
+    /// use (PC, Steam Deck); the skill buttons stay, in a row with their keys, since they also show cooldowns, Quick
+    /// tags and the charge. While Auto plays, the D-pad is hidden and every button that acts for the leader is greyed.
     /// Layout is in 1920x1080 reference pixels, scaled to the screen height and kept inside the safe area. The art is
     /// the Tiny Swords UI kit (round buttons, the gold-cornered panel, a ribbon for the dungeon's name) and frames,
     /// bars and rectangular buttons drawn to match it, at whole screen pixels per art pixel (<see cref="UiArtScaler"/>).
@@ -58,11 +60,25 @@ namespace FiveKingdoms.UI
         static readonly string[] KeyboardSkillKeys = { "1", "2", "3", "4" };
         static readonly string[] GamepadSkillKeys = { "LB", "LT", "RT", "RB" };
 
-        // Skill buttons (three skills, then the ultimate): around the attack button for thumbs, or in a row for keys.
-        static readonly Vector2[] TouchSkillPositions = { new Vector2(-470f, 120f), new Vector2(-455f, 335f), new Vector2(-330f, 485f), new Vector2(-135f, 460f) };
+        // Skill buttons (three skills, then the ultimate). Touch: one row along the bottom edge, from the corner under
+        // the right thumb leftwards: the attack, skills 1 to 3, the ultimate, standing on one line. Keys and controllers
+        // have no attack button and keep their row in key order.
+        static readonly Vector2 AttackPosition = new Vector2(-150f, 150f);
+        const float AttackSize = 200f;
+        static readonly Vector2[] TouchSkillPositions = { new Vector2(-336f, 120f), new Vector2(-492f, 120f), new Vector2(-648f, 120f), new Vector2(-809f, 125f) };
         static readonly float[] TouchSkillSizes = { 140f, 140f, 140f, 150f };
         static readonly Vector2[] RowSkillPositions = { new Vector2(-560f, 100f), new Vector2(-420f, 100f), new Vector2(-280f, 100f), new Vector2(-125f, 108f) };
         static readonly float[] RowSkillSizes = { 124f, 124f, 124f, 140f };
+        const float TouchRowWidth = 884f; // From the screen's right edge to the ultimate's left edge.
+        const float TouchRowTop = 250f;
+        const float DPadRight = 480f;
+
+        // The top-right row, right to left: Pause, Auto, Berry, Wait.
+        static readonly Vector2 TopButtonSize = new Vector2(124f, 80f);
+        const float TopButtonGap = 12f;
+
+        const float LogWidth = 660f;
+        const float LogLineHeight = 38f;
 
         const int LogLines = 4;
         const float LogLifetime = 6f;
@@ -71,6 +87,7 @@ namespace FiveKingdoms.UI
         public event Action<HeroCommand> CommandRequested;
         public event Action RestartRequested;
         public event Action AutoPilotToggled;
+        public event Action PauseRequested;
 
         /// <summary>A partner's tactic badge was tapped (party index).</summary>
         public event Action<int> TacticCycleRequested;
@@ -84,13 +101,16 @@ namespace FiveKingdoms.UI
         Text timelineHeader;
         Camera worldCamera;
         RectTransform canvasRect, safeArea, floatingLayer, logRoot, touchControls;
-        Text floorText, bossName, keysText, bannerTitle, bannerSubtitle, endTitle, endDetail, aimPrompt;
+        Text floorText, bossName, keysText, bannerTitle, bannerSubtitle, endTitle, endDetail, aimPrompt, pausedLabel;
         Image bossFill;
         PartyPanel party;
         GameObject bossPanel;
         int bossMaxHp;
-        HoldButton berryButton, descendButton, againButton, autoButton, attackButton, waitButton;
+        HoldButton berryButton, descendButton, againButton, autoButton, attackButton, waitButton, pauseButton;
         readonly HoldButton[] skillButtons = new HoldButton[4]; // Three skills, then the ultimate.
+        readonly bool[] skillUsable = new bool[4];              // What the rules say; Auto greys them all the same.
+        float laidOutWidth = -1f;
+        bool logRaised;
         readonly Text[] skillKeys = new Text[4];
         readonly GameObject[] quickTags = new GameObject[3];
         bool autoPilotOn;
@@ -143,9 +163,9 @@ namespace FiveKingdoms.UI
             party.Refresh(run);
             RefreshSkills(run);
             floorText.text = $"B{run.Floor}F";
-            berryButton.SetLabel($"Berry x{run.Berries}");
+            berryButton.SetLabel($"x{run.Berries}");
             hasBerries = run.Berries > 0;
-            berryButton.Interactable = hasBerries && !autoPilotOn;
+            ApplyAvailability();
             descendButton.gameObject.SetActive(run.State == RunState.InProgress && run.HeroOnStairs);
             RefreshTimeline(run);
         }
@@ -216,7 +236,7 @@ namespace FiveKingdoms.UI
         /// The leader's buttons: the attack button names its weapon attack (Quick Shot, Sword Slash, Jab); each skill
         /// shows its name, a small Quick tag if it takes half a turn, and "next turn" while it sits out its cooldown; the
         /// ultimate shows its charge, and its name once it's ready. A skill that can't be used right now is dimmed but
-        /// still answers a press, so the log can say why.
+        /// still answers a press, so the log can say why. <see cref="ApplyAvailability"/> sets what can be pressed.
         /// </summary>
         void RefreshSkills(DungeonRun run)
         {
@@ -230,7 +250,7 @@ namespace FiveKingdoms.UI
                 if (i >= skills.Count)
                 {
                     button.SetLabel("-");
-                    button.Interactable = false;
+                    skillUsable[i] = false;
                     quickTags[i].SetActive(false);
                     continue;
                 }
@@ -240,7 +260,7 @@ namespace FiveKingdoms.UI
                 quickTags[i].SetActive(skill.IsQuick);
                 var check = run.CheckSkill(i);
                 // Blocked only means "not the way the hero faces": aiming can still find room.
-                button.Interactable = playing && (check == SkillCheck.Ready || check == SkillCheck.Blocked);
+                skillUsable[i] = playing && (check == SkillCheck.Ready || check == SkillCheck.Blocked);
             }
 
             var ultimate = hero.Ultimate;
@@ -248,14 +268,14 @@ namespace FiveKingdoms.UI
             if (ultimate == null)
             {
                 ult.SetLabel("ULT");
-                ult.Interactable = false;
+                skillUsable[3] = false;
             }
             else
             {
                 bool ready = hero.UltimateReady;
                 ult.SetLabel(ready ? $"{ultimate.ShortName}\n<size=22>READY</size>" : $"ULT\n<size=22>{hero.Charge}%</size>");
                 ult.SetArt(ready ? UltimateReadyArt : UltimateArt);
-                ult.Interactable = playing && ready;
+                skillUsable[3] = playing && ready;
             }
         }
 
@@ -278,26 +298,47 @@ namespace FiveKingdoms.UI
             bossMaxHp = Mathf.Max(1, maxHp);
             bossPanel.SetActive(true);
             SetBossHp(hp);
+            PlaceAimPrompt();
         }
 
         public void SetBossHp(int hp) => bossFill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(hp / (float)bossMaxHp), 1f);
 
-        public void HideBoss() => bossPanel.SetActive(false);
+        public void HideBoss()
+        {
+            bossPanel.SetActive(false);
+            PlaceAimPrompt();
+        }
 
         /// <summary>
-        /// Shows whether the auto-pilot is playing (gold while on). While it plays, movement and the normal action
-        /// buttons are dimmed; skills and the ultimate are not affected.
+        /// Shows whether the auto-pilot is playing (the Auto button is gold while it does). While it plays the D-pad is
+        /// hidden, and the attack, the skills, the ultimate, Wait and Berry are greyed out and don't act (HUD.md, "Auto").
+        /// Auto, Pause, the party cards and the tactic badges still answer.
         /// </summary>
         public void SetAutoPilot(bool on)
         {
             autoPilotOn = on;
-            autoButton.SetLabel(on ? "Auto: On" : "Auto: Off");
             autoButton.SetArt(on ? ActiveArt : ActionArt);
             DPad.Interactable = !on;
-            attackButton.Interactable = !on;
-            waitButton.Interactable = !on;
-            descendButton.Interactable = !on;
-            berryButton.Interactable = !on && hasBerries;
+            DPad.gameObject.SetActive(!on);
+            ApplyAvailability();
+        }
+
+        /// <summary>Which buttons answer: what the rules allow (a skill's cooldown, the berries left), and none of them while Auto plays.</summary>
+        void ApplyAvailability()
+        {
+            bool free = !autoPilotOn;
+            attackButton.Interactable = free;
+            waitButton.Interactable = free;
+            descendButton.Interactable = free;
+            berryButton.Interactable = free && hasBerries;
+            for (int i = 0; i < skillButtons.Length; i++) skillButtons[i].Interactable = free && skillUsable[i];
+        }
+
+        /// <summary>The game stands still: the Pause button is lit, and nothing acts until it is pressed again.</summary>
+        public void SetPaused(bool on)
+        {
+            pauseButton.SetArt(on ? ActiveArt : ActionArt);
+            pausedLabel.gameObject.SetActive(on);
         }
 
         /// <summary>The player tried to move or act while the auto-pilot plays (shown at most every couple of seconds).</summary>
@@ -317,9 +358,7 @@ namespace FiveKingdoms.UI
             inputMode = mode;
             bool touch = mode == InputMode.Touch;
             touchControls.gameObject.SetActive(touch);
-            // Between the D-pad and the buttons for touch; without the D-pad, bottom-left, clear of the skill row.
-            UiFactory.Place(logRoot, touch ? new Vector2(0.5f, 0f) : Vector2.zero, touch ? new Vector2(-330f, 40f) : new Vector2(32f, 40f),
-                new Vector2(660f, 160f), Vector2.zero);
+            LayoutBottom();
             for (int i = 0; i < skillButtons.Length; i++)
             {
                 float size = touch ? TouchSkillSizes[i] : RowSkillSizes[i];
@@ -333,6 +372,41 @@ namespace FiveKingdoms.UI
             againButton.SetLabel(mode == InputMode.Gamepad ? "Try Again (A)" : mode == InputMode.Keyboard ? "Try Again (R)" : "Try Again");
         }
 
+        /// <summary>
+        /// The bottom edge. With keys or a controller there is no D-pad and the log starts at the left edge. For touch
+        /// the log lies between the D-pad and the skill row where the screen is wide enough (a phone); on a narrower
+        /// one (a tablet) it moves up above the row, the aiming prompt goes to the top of the screen
+        /// (<see cref="PlaceAimPrompt"/>), and the Descend button takes the gap between the D-pad and the row.
+        /// </summary>
+        void LayoutBottom()
+        {
+            laidOutWidth = safeArea.rect.width;
+            var size = new Vector2(LogWidth, LogLines * LogLineHeight);
+            var bottomCentre = new Vector2(0.5f, 0f);
+            float gap = laidOutWidth - TouchRowWidth - DPadRight;
+            bool touch = inputMode == InputMode.Touch;
+            bool raised = logRaised = touch && gap < LogWidth + 48f;
+            if (!touch) UiFactory.Place(logRoot, Vector2.zero, new Vector2(32f, 40f), size, Vector2.zero);
+            else if (!raised) UiFactory.Place(logRoot, Vector2.zero, new Vector2(DPadRight + (gap - LogWidth) / 2f, 40f), size, Vector2.zero);
+            else UiFactory.Place(logRoot, new Vector2(1f, 0f), new Vector2(-40f - LogWidth, TouchRowTop + 18f), size, Vector2.zero);
+
+            PlaceAimPrompt();
+            var descend = (RectTransform)descendButton.transform;
+            if (raised && gap >= descend.sizeDelta.x + 24f) UiFactory.Place(descend, Vector2.zero, new Vector2(DPadRight + gap / 2f, 100f), descend.sizeDelta);
+            else UiFactory.Place(descend, bottomCentre, new Vector2(0f, 260f), descend.sizeDelta);
+        }
+
+        /// <summary>
+        /// The aiming prompt: under the party's feet, over the log. Where the log has moved up (a tablet) that place is
+        /// the log's, and the prompt stands at the top instead, under the floor (under the boss bar on a boss floor).
+        /// </summary>
+        void PlaceAimPrompt()
+        {
+            var size = new Vector2(900f, 44f);
+            if (!logRaised) UiFactory.Place(aimPrompt.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 380f), size);
+            else UiFactory.Place(aimPrompt.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, bossPanel.activeSelf ? -226f : -134f), size);
+        }
+
         public void AddMessage(string message, Color? color = null)
         {
             if (log.Count >= LogLines)
@@ -341,10 +415,10 @@ namespace FiveKingdoms.UI
                 log.RemoveAt(0);
             }
             var text = UiFactory.CreateText("Line", logRoot, message, 30, TextAnchor.LowerLeft, color ?? TextColor);
-            UiFactory.Place(text.rectTransform, new Vector2(0f, 0f), Vector2.zero, new Vector2(660f, 36f), new Vector2(0f, 0f));
+            UiFactory.Place(text.rectTransform, new Vector2(0f, 0f), Vector2.zero, new Vector2(LogWidth, 36f), new Vector2(0f, 0f));
             log.Add(new LogLine { Text = text, Born = Time.unscaledTime });
             for (int i = 0; i < log.Count; i++)
-                log[i].Text.rectTransform.anchoredPosition = new Vector2(0f, (log.Count - 1 - i) * 38f);
+                log[i].Text.rectTransform.anchoredPosition = new Vector2(0f, (log.Count - 1 - i) * LogLineHeight);
         }
 
         public void ClearLog()
@@ -415,6 +489,7 @@ namespace FiveKingdoms.UI
 
         void Update()
         {
+            if (!Mathf.Approximately(safeArea.rect.width, laidOutWidth)) LayoutBottom(); // Another screen size, or a notch's side.
             float now = Time.unscaledTime;
             foreach (var line in log)
             {
@@ -532,7 +607,7 @@ namespace FiveKingdoms.UI
 
         void BuildLog()
         {
-            logRoot = UiFactory.CreateRect("Log", safeArea); // Placed by SetInputMode.
+            logRoot = UiFactory.CreateRect("Log", safeArea); // Placed by LayoutBottom.
         }
 
         void BuildControls()
@@ -544,7 +619,7 @@ namespace FiveKingdoms.UI
             DPad = DPad.Create(touchControls, bottomLeft, new Vector2(270f, 270f), 420f);
             DPad.DisabledPressed += ShowAutoPilotBlocked;
 
-            attackButton = HoldButton.Create(touchControls, "Attack", "ATK", bottomRight, new Vector2(-230f, 230f), new Vector2(230f, 230f), AttackArt, 40);
+            attackButton = HoldButton.Create(touchControls, "Attack", "ATK", bottomRight, AttackPosition, new Vector2(AttackSize, AttackSize), AttackArt, 36);
             attackButton.Pressed += () => CommandRequested?.Invoke(HeroCommand.Attack);
             attackButton.DisabledPressed += ShowAutoPilotBlocked;
 
@@ -576,10 +651,21 @@ namespace FiveKingdoms.UI
             }
 
             aimPrompt = UiFactory.CreateText("AimPrompt", safeArea, "", 30, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.6f));
-            UiFactory.Place(aimPrompt.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 380f), new Vector2(900f, 44f));
-            aimPrompt.gameObject.SetActive(false);
+            aimPrompt.gameObject.SetActive(false); // Placed by LayoutBottom, like the Descend button.
 
-            berryButton = HoldButton.Create(safeArea, "Berry", "Berry x0", topRight, new Vector2(-140f, -64f), new Vector2(230f, 84f), ActionArt, 32);
+            // One row along the top edge: icon buttons, so it stays short enough for the minimap under it.
+            Vector2 TopButton(int fromRight) =>
+                new Vector2(-28f - TopButtonSize.x / 2f - fromRight * (TopButtonSize.x + TopButtonGap), -24f - TopButtonSize.y / 2f);
+
+            pauseButton = HoldButton.Create(safeArea, "Pause", "", topRight, TopButton(0), TopButtonSize, ActionArt, 30);
+            pauseButton.SetIcon("icon_pause");
+            pauseButton.Pressed += () => PauseRequested?.Invoke();
+
+            autoButton = HoldButton.Create(safeArea, "Auto", "AUTO", topRight, TopButton(1), TopButtonSize, ActionArt, 30);
+            autoButton.Pressed += () => AutoPilotToggled?.Invoke();
+
+            berryButton = HoldButton.Create(safeArea, "Berry", "x0", topRight, TopButton(2), TopButtonSize, ActionArt, 32);
+            berryButton.SetIcon("icon_berry", offset: -24f, labelShift: 26f);
             berryButton.Pressed += () => CommandRequested?.Invoke(HeroCommand.UseBerry);
             berryButton.DisabledPressed += () =>
             {
@@ -587,12 +673,10 @@ namespace FiveKingdoms.UI
                 else AddMessage("You have no berries.", HintColor);
             };
 
-            waitButton = HoldButton.Create(safeArea, "Wait", "Wait", topRight, new Vector2(-390f, -64f), new Vector2(230f, 84f), ActionArt, 32);
+            waitButton = HoldButton.Create(safeArea, "Wait", "", topRight, TopButton(3), TopButtonSize, ActionArt, 32);
+            waitButton.SetIcon("icon_wait");
             waitButton.Pressed += () => CommandRequested?.Invoke(HeroCommand.Wait);
             waitButton.DisabledPressed += ShowAutoPilotBlocked;
-
-            autoButton = HoldButton.Create(safeArea, "Auto", "Auto: Off", topRight, new Vector2(-140f, -158f), new Vector2(230f, 76f), ActionArt, 30);
-            autoButton.Pressed += () => AutoPilotToggled?.Invoke();
 
             descendButton = HoldButton.Create(safeArea, "Descend", "Descend", new Vector2(0.5f, 0f), new Vector2(0f, 260f), new Vector2(330f, 96f), ActiveArt, 36);
             descendButton.Pressed += () => CommandRequested?.Invoke(HeroCommand.Descend);
@@ -617,6 +701,10 @@ namespace FiveKingdoms.UI
             UiFactory.Place(bannerTitle.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 48f), new Vector2(900f, 90f));
             bannerSubtitle = UiFactory.CreateText("Subtitle", bannerRect, "", 52, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.3f));
             UiFactory.Place(bannerSubtitle.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -100f), new Vector2(900f, 70f));
+
+            pausedLabel = UiFactory.CreateText("Paused", canvasRect, "Paused", 68, TextAnchor.MiddleCenter, TextColor);
+            UiFactory.Place(pausedLabel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 200f), new Vector2(900f, 90f));
+            pausedLabel.gameObject.SetActive(false);
 
             var end = UiFactory.CreatePanel("RunEnd", canvasRect, "panel", raycast: true);
             UiFactory.Place(end.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(880f, 480f));

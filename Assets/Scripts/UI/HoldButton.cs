@@ -22,6 +22,8 @@ namespace FiveKingdoms.UI
         Text label;
         RectTransform labelRect;
         Image brackets;
+        Image icon;
+        float iconOffset, labelShift;
         string art;
         Color tint = Color.white;
         bool interactable = true;
@@ -62,6 +64,25 @@ namespace FiveKingdoms.UI
         }
 
         public void SetLabel(string text) => label.text = text;
+
+        /// <summary>
+        /// A glyph on the button's face (a piece of HUD art, drawn at its own size), <paramref name="offset"/> from the
+        /// middle; the label moves <paramref name="labelShift"/> to the side to stand next to it (the Berry's count).
+        /// </summary>
+        public void SetIcon(string name, float offset = 0f, float labelShift = 0f)
+        {
+            if (icon == null) icon = UiFactory.CreateIcon("Icon", transform, name);
+            else
+            {
+                icon.sprite = UiFactory.Art(name);
+                UiArtScaler.Size(icon);
+            }
+            icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = icon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            icon.transform.SetSiblingIndex(0); // Under the label and the aiming brackets.
+            iconOffset = offset;
+            this.labelShift = labelShift;
+            Refresh();
+        }
 
         /// <summary>Switches to another piece of art (a skill that is ready turns gold, say).</summary>
         public void SetArt(string name)
@@ -121,8 +142,11 @@ namespace FiveKingdoms.UI
             label.color = interactable ? Color.white : new Color(1f, 1f, 1f, 0.55f);
             // The label sits on the button's face: up a little while the button stands on its side, down when pressed.
             float lift = (pressed ? -1f : 2f) * UiArtScaler.UnitsPerArtPixel;
-            labelRect.offsetMin = new Vector2(0f, lift);
-            labelRect.offsetMax = new Vector2(0f, lift);
+            labelRect.offsetMin = new Vector2(labelShift, lift);
+            labelRect.offsetMax = new Vector2(labelShift, lift);
+            if (icon == null) return;
+            icon.color = interactable ? Color.white : DisabledTint;
+            icon.rectTransform.anchoredPosition = new Vector2(iconOffset, lift);
         }
     }
 }

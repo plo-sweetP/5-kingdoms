@@ -218,6 +218,38 @@ def dpad_pieces():
     return [Piece('dpad', disc), Piece('dpad_hub', hub), Piece('dpad_arrow', arrow.image), Piece('dpad_arrow_diagonal', diagonal.image)]
 
 
+def glyph_pieces():
+    """
+    The glyphs on the HUD's top-right buttons, in the pack's outline: an hourglass (Wait), a pair of berries (the
+    Berry button, with its count beside them) and a pause sign.
+    """
+    white, shade, sand = hexc('#ffffff'), hexc('#cedce1'), hexc('#e8c170')
+    h = Canvas(14, 18)
+    h.rect(0, 0, 14, 2, white).rect(0, 16, 14, 2, shade)
+    h.polygon([(1, 2), (13, 2), (8, 9), (6, 9)], white)
+    h.polygon([(6, 9), (8, 9), (13, 16), (1, 16)], white)
+    h.polygon([(4, 5), (10, 5), (8, 8), (6, 8)], sand, only=(white,))
+    h.polygon([(5, 13), (9, 13), (12, 16), (2, 16)], sand, only=(white,))
+    h.rect(6, 9, 2, 4, sand, only=(white,))
+
+    p = Canvas(12, 14)
+    for x in (0, 8):
+        p.rect(x, 0, 4, 14, white).rect(x, 11, 4, 3, shade)
+
+    red, red_dark, red_light = hexc('#e76161'), hexc('#924159'), hexc('#f9856c')
+    leaf, leaf_dark = hexc('#6fae5f'), hexc('#3f6b4a')
+    b = Canvas(20, 18)
+    b.polygon([(8, 7), (10, 3), (12, 4), (10, 8)], leaf_dark)
+    b.polygon([(10, 4), (15, 1), (18, 3), (15, 6), (11, 6)], leaf)
+    b.polygon([(13, 4), (18, 3), (15, 6)], leaf_dark, only=(leaf,))
+    for cx, cy in ((6.0, 11.5), (13.0, 12.5)):
+        b.ellipse(cx, cy, 4.5, 4.5, red)
+        b.ellipse(cx + 1.0, cy + 1.2, 3.6, 3.3, red_dark, only=(red,))
+        b.ellipse(cx - 0.3, cy - 0.3, 3.2, 3.2, red, only=(red_dark,))
+        b.dots(red_light, [(int(cx) - 2, int(cy) - 3), (int(cx) - 1, int(cy) - 3), (int(cx) - 2, int(cy) - 2)])
+    return [Piece('icon_wait', h.part().image), Piece('icon_pause', p.part().image), Piece('icon_berry', b.part().trimmed().image)]
+
+
 def build(pack):
     """
     Every HUD texture the game uses, as Pieces: only what DungeonHud, PartyPanel, HoldButton and DPad ask for by name
@@ -232,7 +264,7 @@ def build(pack):
         for suffix, mapping in recolors:
             pieces.append(Piece(piece.name.replace('blue', suffix), piece.image.mapped(mapping), piece.border))
 
-    # Rectangular buttons: Wait, Berry and Auto (dark), Descend and Auto while on (gold), Try Again (red).
+    # Rectangular buttons: Wait, Berry, Auto and Pause (dark), Descend and Auto while on (gold), Try Again (red).
     pieces.extend(piece for piece in button_pieces() if not piece.name.startswith('button_blue'))
     # Round buttons: the weapon attack (the kit's small red one), the skills (tiny blue) and the ultimate (dark while
     # it charges, gold when ready).
@@ -246,6 +278,6 @@ def build(pack):
     ribbons = png('Ribbons/BigRibbons.png')                                 # The dungeon's name on a floor change.
     _, rows = filled(ribbons)
     add(assemble(ribbons.crop(0, rows[0][0], ribbons.w, rows[0][1] - rows[0][0]), 'ribbon_blue'))
-    for piece in dpad_pieces():
+    for piece in dpad_pieces() + glyph_pieces():
         add(piece)
     return pieces

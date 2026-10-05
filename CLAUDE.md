@@ -33,6 +33,11 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
   heroes, weapons, armor sets, head pieces, rings, animation strips, icons; `--only preview` skips writing the art)
 - Unity tests: `Unity.exe -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults results.xml`
 - Windows build: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildWindowsDev`
+- Android test APK, ~6 min: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildAndroidDev`
+  (writes `Builds/Android/5Kingdoms-dev.apk`: a development build, IL2CPP, ARM64, Android 7.1 and up; the editor's
+  Android module brings the SDK, NDK and JDK). It leaves the project on the Android target: switch back afterwards
+  with `Unity.exe -batchmode -quit -projectPath . -buildTarget StandaloneWindows64`. The log's "Host type is not
+  matching any asset type" lines come from the render pipeline package in every build and can be ignored.
 - Autoplay smoke test: `Builds/Windows/5Kingdoms.exe -screen-fullscreen 0 -fk-autoplay <screenshot folder>`
   (add `-fk-floors 1 -fk-level 10` to go straight to the boss; autoplay always uses its own throwaway save, and
   aims each targeted action once the way a player does, saving `aim_*.png`; it saves `door_*.png` the first times

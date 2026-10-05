@@ -448,6 +448,29 @@ come from the 1f, art pass and C1 build sessions.
    partners are the balance report's players), an animation and an icon.
 8. Balance: the report plays sensible default builds, and the numbers go back to the targets in CLAUDE.md.
 
+**Part 1, first half: built on 2026-10-04 and 05** (main 76904b9; GAME_PLAN.md, "Progress", has the details).
+Done: step 1, and steps 2 to 5 as rules (points, tiers, milestones with three options, the hero's own pool and
+loadout, save version 2 with its migration, free respec); Kristela's class is the Fencer in the catalog and in
+saves. Nothing a player sees has changed yet, apart from the healing and the notes. What the build session settled
+where this spec left room:
+- **Healing between fights:** a heal is used when at least half of it goes to use; the Auto leader waits at most
+  6 turns in a row without a heal landing; a hurt hero with no heal of its own walks to the healer. By the build
+  session's report it didn't move the win rate (8 of 200 fresh runs, 9 before), so nothing was re-tuned.
+- **Waiting notes:** also for "run to safety" and for the Auto leader resting; two or three lines take turns.
+- **Weapon ties:** shots and Volley need a bow; Divine Strike and Shoulder Bash a sword; the Monk's strikes fists;
+  Hunter's Mark, Heal, Ki Heal and the aura nothing. Swords are one family, so a hero who holds any sword and has
+  learned Fencer skills can use them, Haiden included (*proposed* by the hub: light and heavy blades can be told
+  apart when gear is built, if Peter wants that).
+- **Picks:** a milestone pick is final until the class is unlearned. A hero can unlearn even its own class and
+  keeps its starting kit. A newly learned skill goes into the loadout only when a slot is free.
+- **Speed** with two classes at the same tier: the hero's own class counts, then the one learned first.
+- The real classes give **no stat bump yet**: it comes with the content, so that this half changed nothing in play.
+
+**Left of part 1**, in this order, in fresh sessions: Kristela's Fencer kit (the first item of step 7) together
+with the class stat bumps and one re-tune; then the skill-tree screen (step 6; drafted art is on the branch
+`wip/1g-1-skill-tree-art`, not reviewed, its icons drawn for the Monk); then tiers 5 and 10 of Archer, Paladin
+and Fencer with default builds for `-balance` and the re-tune (step 8).
+
 **Part 2 (1g-2):** tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries); relearning after a
 respec from level 20; prerequisites and kingdom locks for advanced and inherited classes.
 

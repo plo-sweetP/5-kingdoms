@@ -157,8 +157,8 @@ namespace FiveKingdoms.Dungeon
                 bool attacks = command.Kind == HeroCommandKind.Attack; // Always an explicit command: nobody attacks by walking into a foe.
                 bool bossWasHelped = run.Boss?.CalledForHelp ?? true;
                 bool fighting = run.InCombat;
-                var skill = command.Kind == HeroCommandKind.Skill ? run.Hero.Definition.Skills[command.Slot]
-                    : command.Kind == HeroCommandKind.Ultimate ? run.Hero.Definition.Ultimate
+                var skill = command.Kind == HeroCommandKind.Skill ? run.Hero.Skills[command.Slot]
+                    : command.Kind == HeroCommandKind.Ultimate ? run.Hero.Ultimate
                     : null;
                 controller.Submit(command);
                 actions++;
@@ -230,8 +230,8 @@ namespace FiveKingdoms.Dungeon
         /// <summary>What a targeted command aims: the leader's weapon attack, or the skill or ultimate by its id.</summary>
         static string AimName(DungeonRun run, HeroCommand command) =>
             command.Kind == HeroCommandKind.Attack ? "attack_" + run.Hero.Definition.Id
-            : command.Kind == HeroCommandKind.Ultimate ? run.Hero.Definition.Ultimate.Id
-            : run.Hero.Definition.Skills[command.Slot].Id;
+            : command.Kind == HeroCommandKind.Ultimate ? run.Hero.Ultimate.Id
+            : run.Hero.Skills[command.Slot].Id;
 
         IEnumerator Capture(string name)
         {

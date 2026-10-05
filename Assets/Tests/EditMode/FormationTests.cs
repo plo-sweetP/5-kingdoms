@@ -268,7 +268,7 @@ namespace FiveKingdoms.Tests
 
             var command = AutoPilot.Decide(run);
             Assert.AreEqual(HeroCommandKind.Skill, command.Kind);
-            Assert.AreSame(SkillCatalog.KiHeal, kristela.Definition.Skills[command.Slot]);
+            Assert.AreSame(SkillCatalog.KiHeal, kristela.Skills[command.Slot]);
         }
 
         [Test]

@@ -83,7 +83,7 @@ namespace FiveKingdoms.Core
             }
             foreach (var progress in heroes)
             {
-                var member = new Actor(nextId++, progress.Definition, Team.Hero, default, progress.Level) { Exp = progress.Exp };
+                var member = new Actor(nextId++, progress.Definition, Team.Hero, default, progress.Level, progress.Kit) { Exp = progress.Exp };
                 party.Add(member);
                 progressById[member.Id] = progress;
             }
@@ -294,7 +294,7 @@ namespace FiveKingdoms.Core
 
         SkillCheck CheckSkill(Actor user, int slot, AimAt aim)
         {
-            var skills = user.Definition.Skills;
+            var skills = user.Skills;
             if (slot < 0 || slot >= skills.Count) return SkillCheck.NoSkill;
             if (user.SkillCooldowns[slot] > 0) return SkillCheck.OnCooldown;
             return CheckTarget(user, skills[slot], aim);
@@ -311,7 +311,7 @@ namespace FiveKingdoms.Core
 
         SkillCheck CheckUltimate(Actor user, AimAt aim)
         {
-            var ultimate = user.Definition.Ultimate;
+            var ultimate = user.Ultimate;
             if (ultimate == null) return SkillCheck.NoSkill;
             if (user.Charge < CombatRules.MaxCharge) return SkillCheck.NotCharged;
             return CheckTarget(user, ultimate, aim);
@@ -1079,7 +1079,7 @@ namespace FiveKingdoms.Core
         /// <summary>Fills a hero's charge meter up to full; records the change if there was one. Only heroes with an ultimate charge.</summary>
         void GainCharge(Actor hero, int amount)
         {
-            if (hero.Definition.Ultimate == null || hero == ultimateUser) return;
+            if (hero.Ultimate == null || hero == ultimateUser) return;
             int after = Math.Max(0, Math.Min(CombatRules.MaxCharge, hero.Charge + amount));
             int change = after - hero.Charge;
             if (change == 0) return;
@@ -1093,7 +1093,7 @@ namespace FiveKingdoms.Core
         {
             cost = 0;
             if (CheckSkill(user, slot, aim) != SkillCheck.Ready) return false;
-            var skill = user.Definition.Skills[slot];
+            var skill = user.Skills[slot];
             Perform(user, skill, aim);
             Acted(user);
             user.SkillCooldowns[slot] = skill.Cooldown + 1; // The end of this very turn takes the first step off.
@@ -1106,7 +1106,7 @@ namespace FiveKingdoms.Core
         {
             cost = 0;
             if (CheckUltimate(user, aim) != SkillCheck.Ready) return false;
-            var ultimate = user.Definition.Ultimate;
+            var ultimate = user.Ultimate;
             events.Add(new ChargeChangedEvent(user.Id, -user.Charge, 0));
             user.Charge = 0;
             user.RetreatSteps = 0;

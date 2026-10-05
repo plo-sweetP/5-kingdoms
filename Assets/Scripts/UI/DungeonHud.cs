@@ -222,8 +222,8 @@ namespace FiveKingdoms.UI
         {
             var hero = run.Hero;
             bool playing = run.State == RunState.InProgress;
-            attackButton.SetLabel(hero.Definition.AttackName.Replace(' ', '\n'));
-            var skills = hero.Definition.Skills;
+            attackButton.SetLabel(hero.AttackName.Replace(' ', '\n'));
+            var skills = hero.Skills;
             for (int i = 0; i < 3; i++)
             {
                 var button = skillButtons[i];
@@ -243,7 +243,7 @@ namespace FiveKingdoms.UI
                 button.Interactable = playing && (check == SkillCheck.Ready || check == SkillCheck.Blocked);
             }
 
-            var ultimate = hero.Definition.Ultimate;
+            var ultimate = hero.Ultimate;
             var ult = skillButtons[3];
             if (ultimate == null)
             {

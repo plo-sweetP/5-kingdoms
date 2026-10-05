@@ -15,6 +15,13 @@ namespace FiveKingdoms.Core
     public enum WeaponType { Bow, LongSword, Gauntlets }
 
     /// <summary>
+    /// What a skill can be tied to (PROGRESSION.md, "Classes"): a bow, a sword, fists, or nothing. A skill tied to a
+    /// family only goes in the loadout while the hero holds a weapon of that family. GEAR.md's other weapons join these
+    /// families (or add one) when gear arrives.
+    /// </summary>
+    public enum WeaponFamily { None, Bow, Sword, Fists }
+
+    /// <summary>
     /// A weapon (GEAR.md): flat HP, ATK and a little DEF that count as base stats, so % bonuses scale them, plus on a few
     /// weapons some SPD and a passive. Flat stats grow with the item's level (1-100); SPD doesn't.
     /// </summary>
@@ -46,6 +53,10 @@ namespace FiveKingdoms.Core
         public string Id { get; }
         public string Name { get; }
         public WeaponType Type { get; }
+
+        /// <summary>Which skills it lets its bearer use.</summary>
+        public WeaponFamily Family =>
+            Type == WeaponType.Bow ? WeaponFamily.Bow : Type == WeaponType.LongSword ? WeaponFamily.Sword : WeaponFamily.Fists;
 
         /// <summary>What its always-ready weapon attack is called (names are drafts).</summary>
         public string AttackName { get; }

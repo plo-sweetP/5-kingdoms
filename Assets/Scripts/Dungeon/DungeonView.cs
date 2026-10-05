@@ -496,7 +496,7 @@ namespace FiveKingdoms.Dungeon
         {
             hud.SetMemberCharge(charge.ActorId, charge.ChargeAfter);
             if (charge.Amount <= 0 || charge.ChargeAfter < CombatRules.MaxCharge || !actors.TryGetValue(charge.ActorId, out var hero)) return;
-            var ultimate = PartyMember(run, charge.ActorId)?.Definition.Ultimate;
+            var ultimate = PartyMember(run, charge.ActorId)?.Ultimate;
             hud.ShowFloatingText(hero.transform.position + new Vector3(-0.7f, 0.6f, 0f), "ULT ready!", UltimateTextColor, 0.75f);
             if (ultimate != null) hud.AddMessage($"{hero.DisplayName}'s {ultimate.Name} is ready!", UltimateTextColor);
         }

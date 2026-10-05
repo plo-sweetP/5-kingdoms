@@ -10,12 +10,14 @@ namespace FiveKingdoms.Core
 
     /// <summary>
     /// A character or monster standing in the dungeon, with its current stats. Its <see cref="Stats"/> sheet is built
-    /// from the definition, its level and its weapon; the final stats below are read from the sheet whenever it
-    /// changes (see <see cref="RecalculateStats"/>).
+    /// from the definition, its level, its weapon and what its class tiers add; the final stats below are read from
+    /// the sheet whenever it changes (see <see cref="RecalculateStats"/>). What it fights with (skills, ultimate,
+    /// weapon attack) is its <see cref="Kit"/>: a hero's own, from its saved progress.
     /// </summary>
     public sealed class Actor
     {
-        public Actor(int id, ActorDefinition definition, Team team, GridPos pos, int level = 1)
+        /// <param name="kit">A hero's kit from its <see cref="HeroProgress"/>; null gives the definition's starting kit.</param>
+        public Actor(int id, ActorDefinition definition, Team team, GridPos pos, int level = 1, HeroKit kit = null)
         {
             Id = id;
             Definition = definition;
@@ -23,7 +25,10 @@ namespace FiveKingdoms.Core
             Pos = PreviousPos = pos;
             Level = Math.Max(1, level);
             Weapon = definition.Weapon;
-            SkillCooldowns = new int[definition.Skills.Count];
+            Kit = kit ?? HeroKit.Starting(definition);
+            SkillCooldowns = new int[Kit.Skills.Count];
+            Stats.Percent.Add(Kit.Percent);
+            Stats.Flat.Add(Kit.Flat);
             RecalculateStats();
             Speed = Stats.Final(StatKind.Spd);
             Hp = MaxHp;
@@ -32,6 +37,18 @@ namespace FiveKingdoms.Core
         public int Id { get; }
         public ActorDefinition Definition { get; }
         public string Name => Definition.Name;
+
+        /// <summary>What it fights with, fixed for the run: loadouts change between runs only.</summary>
+        public HeroKit Kit { get; }
+
+        /// <summary>Its skills by slot (button order), as it has them: a hero's upgrades are in here, not in the catalog.</summary>
+        public IReadOnlyList<SkillDefinition> Skills => Kit.Skills;
+
+        /// <summary>Used when the charge meter is full; null for monsters.</summary>
+        public SkillDefinition Ultimate => Kit.Ultimate;
+
+        /// <summary>The always-ready weapon attack's name (Uzuki's Quick Shot, Haiden's Sword Slash, Kristela's Jab).</summary>
+        public string AttackName => Kit.WeaponAttack.Name;
         public Team Team { get; }
         public GridPos Pos { get; set; }
         public Direction8 Facing { get; set; } = Direction8.S;
@@ -90,7 +107,7 @@ namespace FiveKingdoms.Core
         /// </summary>
         public int Charge { get; set; }
 
-        public bool UltimateReady => Definition.Ultimate != null && Charge >= CombatRules.MaxCharge;
+        public bool UltimateReady => Ultimate != null && Charge >= CombatRules.MaxCharge;
 
         /// <summary>Own turns left before each skill (by slot) can be used again.</summary>
         public int[] SkillCooldowns { get; }
@@ -158,7 +175,7 @@ namespace FiveKingdoms.Core
             b[StatKind.Hp] = definition.MaxHp + levels * definition.HpGrowth + (Weapon?.HpAt(WeaponLevel) ?? 0);
             b[StatKind.Atk] = definition.Attack + levels * definition.AtkGrowth + (Weapon?.AtkAt(WeaponLevel) ?? 0);
             b[StatKind.Def] = definition.Defense + levels * definition.DefGrowth + (Weapon?.DefAt(WeaponLevel) ?? 0);
-            b[StatKind.Spd] = definition.Speed + (Weapon?.Spd ?? 0);
+            b[StatKind.Spd] = Kit.SpeedFor(definition.Speed) + (Weapon?.Spd ?? 0);
             b[StatKind.CritRate] = definition.CritRate;
             b[StatKind.CritDmg] = definition.CritDmg;
 

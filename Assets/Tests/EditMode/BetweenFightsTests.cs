@@ -44,7 +44,7 @@ namespace FiveKingdoms.Tests
             for (int action = 0; action < 40; action++)
             {
                 var command = AutoPilot.Decide(run);
-                bool healing = command.Kind == HeroCommandKind.Skill && run.Hero.Definition.Skills[command.Slot].Effect == SkillEffect.Heal;
+                bool healing = command.Kind == HeroCommandKind.Skill && run.Hero.Skills[command.Slot].Effect == SkillEffect.Heal;
                 if (!command.Resting && !healing) break;
                 if (command.Resting) rests++;
                 Assert.IsTrue(run.Execute(command));
@@ -62,7 +62,7 @@ namespace FiveKingdoms.Tests
 
             var command = PartnerBrain.Decide(run, kristela);
             Assert.AreEqual(HeroCommandKind.Skill, command.Kind, "a quarter of her HP, and she is missing a fifth");
-            Assert.AreSame(SkillCatalog.KiHeal, kristela.Definition.Skills[command.Slot]);
+            Assert.AreSame(SkillCatalog.KiHeal, kristela.Skills[command.Slot]);
 
             Hurt(kristela, 90);
             Assert.AreEqual(HeroCommand.Wait, PartnerBrain.Decide(run, kristela), "more than half of it would be wasted");
@@ -97,7 +97,7 @@ namespace FiveKingdoms.Tests
 
             var command = AutoPilot.Decide(run);
             Assert.AreEqual(HeroCommandKind.Skill, command.Kind);
-            Assert.AreSame(SkillCatalog.PaladinHeal, haiden.Definition.Skills[command.Slot]);
+            Assert.AreSame(SkillCatalog.PaladinHeal, haiden.Skills[command.Slot]);
 
             Assert.IsTrue(run.Execute(command));
             Assert.Greater(Percent(uzuki), 90);

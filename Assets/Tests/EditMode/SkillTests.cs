@@ -31,8 +31,8 @@ namespace FiveKingdoms.Tests
         public void TheClassicKitHasThreeSkillsAndNoUltimate()
         {
             var run = Run();
-            CollectionAssert.AreEqual(new[] { "spirit_strike", "second_wind", "dash" }, run.Hero.Definition.Skills.Select(s => s.Id).ToArray());
-            Assert.IsNull(run.Hero.Definition.Ultimate);
+            CollectionAssert.AreEqual(new[] { "spirit_strike", "second_wind", "dash" }, run.Hero.Skills.Select(s => s.Id).ToArray());
+            Assert.IsNull(run.Hero.Ultimate);
             Assert.AreEqual(SkillCheck.NoSkill, run.CheckUltimate());
         }
 

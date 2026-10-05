@@ -68,7 +68,7 @@ namespace FiveKingdoms.Tests
         /// </summary>
         public static void NoHealing(Actor hero)
         {
-            var skills = hero.Definition.Skills;
+            var skills = hero.Skills;
             for (int slot = 0; slot < skills.Count; slot++)
                 if (skills[slot].Effect == SkillEffect.Heal) hero.SkillCooldowns[slot] = 99;
         }

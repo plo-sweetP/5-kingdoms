@@ -18,9 +18,11 @@ namespace FiveKingdoms.Core
         public ActorDefinition(string id, string name, int maxHp, int attack, int defense, int expReward,
             ActorBrain brain = ActorBrain.Chaser, int speed = DefaultSpeed, IReadOnlyList<SkillDefinition> skills = null,
             SkillDefinition ultimate = null, int hpGrowth = 0, int atkGrowth = 0, int defGrowth = 0, int expGrowth = 0,
-            int critRate = BaseCritRate, int critDmg = BaseCritDmg, WeaponDefinition weapon = null, int attackRange = 1)
+            int critRate = BaseCritRate, int critDmg = BaseCritDmg, WeaponDefinition weapon = null, int attackRange = 1,
+            ClassDefinition startingClass = null)
         {
             AttackRange = attackRange;
+            StartingClass = startingClass;
             Id = id;
             Name = name;
             MaxHp = maxHp;
@@ -58,14 +60,24 @@ namespace FiveKingdoms.Core
         public int ExpReward { get; }
         public ActorBrain Brain { get; }
 
-        /// <summary>Combat speed: one turn every 10000 / Speed AV. Never randomized, and levels never raise it.</summary>
+        /// <summary>
+        /// Combat speed: one turn every 10000 / Speed AV. Never randomized, and levels never raise it. For a hero this
+        /// is its own base; its highest class adds a modifier (<see cref="HeroKit.SpeedFor"/>).
+        /// </summary>
         public int Speed { get; }
 
-        /// <summary>Up to three skills, in button order.</summary>
+        /// <summary>
+        /// Up to three skills, in button order. For a hero this is its own starting kit (PROGRESSION.md, "Starting
+        /// kits"): what it knows before any class option, and its loadout until the player changes it. What it fights
+        /// with in a run is on the actor (<see cref="Actor.Skills"/>).
+        /// </summary>
         public IReadOnlyList<SkillDefinition> Skills { get; }
 
-        /// <summary>Used when the charge meter is full (<see cref="Actor.Charge"/>); null for monsters.</summary>
+        /// <summary>The starting kit's ultimate; null for monsters. In a run: <see cref="Actor.Ultimate"/>.</summary>
         public SkillDefinition Ultimate { get; }
+
+        /// <summary>The class a hero starts in, at tier 1 (PROGRESSION.md, "Classes"); null for monsters.</summary>
+        public ClassDefinition StartingClass { get; }
 
         /// <summary>What each level after the first adds.</summary>
         public int HpGrowth { get; }
@@ -100,29 +112,32 @@ namespace FiveKingdoms.Core
     {
         /// <summary>
         /// Archer (Medieval Realm), utility ranged DPS built around traps: his weapon attack (Quick Shot) reaches any foe in
-        /// sight within 5 tiles; Hunter's Mark, Power Shot and Rolling Shot (which leaves a snare); ultimate Volley. The
-        /// Hunter Bow's +6 SPD takes his base 95 to 101.
+        /// sight within 5 tiles; Hunter's Mark, Power Shot and Rolling Shot (which leaves a snare); ultimate Volley. His
+        /// own speed is 90; the Archer's +5 makes it 95, and the Hunter Bow's +6 SPD 101.
         /// </summary>
         public static readonly ActorDefinition Uzuki = new ActorDefinition("uzuki", "Uzuki", maxHp: 400, attack: 60, defense: 30, expReward: 0,
-            speed: 95, skills: new[] { SkillCatalog.HuntersMark, SkillCatalog.PowerShot, SkillCatalog.RollingShot },
+            speed: 90, skills: new[] { SkillCatalog.HuntersMark, SkillCatalog.PowerShot, SkillCatalog.RollingShot },
             ultimate: SkillCatalog.Volley, hpGrowth: 50, atkGrowth: 10, defGrowth: 10, weapon: WeaponCatalog.HunterBow,
-            attackRange: SkillCatalog.RangedReach);
+            attackRange: SkillCatalog.RangedReach, startingClass: ClassCatalog.Archer);
 
         /// <summary>
         /// Paladin (Dynasty Nation), a tank first with some healing: the most HP and DEF, the slowest. Heal, Divine Strike,
-        /// Shoulder Bash; ultimate Aura of Protection. He trains Rune Warrior later, toward Runegod Fire Blade.
+        /// Shoulder Bash; ultimate Aura of Protection. He trains Rune Warrior later, toward Runegod Fire Blade. His own
+        /// speed is 95; the Paladin's -5 makes it 90.
         /// </summary>
         public static readonly ActorDefinition Haiden = new ActorDefinition("haiden", "Haiden", maxHp: 520, attack: 55, defense: 45, expReward: 0,
-            speed: 90, skills: new[] { SkillCatalog.PaladinHeal, SkillCatalog.DivineStrike, SkillCatalog.ShoulderBash },
-            ultimate: SkillCatalog.AuraOfProtection, hpGrowth: 65, atkGrowth: 9, defGrowth: 14, weapon: WeaponCatalog.LongSword);
+            speed: 95, skills: new[] { SkillCatalog.PaladinHeal, SkillCatalog.DivineStrike, SkillCatalog.ShoulderBash },
+            ultimate: SkillCatalog.AuraOfProtection, hpGrowth: 65, atkGrowth: 9, defGrowth: 14, weapon: WeaponCatalog.LongSword,
+            startingClass: ClassCatalog.Paladin);
 
         /// <summary>
         /// Monk (Medieval Realm, a princess), speed-build melee DPS: the most ATK, the least HP and DEF. Piercing Punch, Ki
-        /// Heal, Stun Strike; ultimate Flurry of Blows.
+        /// Heal, Stun Strike; ultimate Flurry of Blows. Her own speed is 95; the Monk's +5 makes it 100.
         /// </summary>
         public static readonly ActorDefinition Kristela = new ActorDefinition("kristela", "Kristela", maxHp: 380, attack: 64, defense: 26, expReward: 0,
-            speed: 100, skills: new[] { SkillCatalog.PiercingPunch, SkillCatalog.KiHeal, SkillCatalog.StunStrike },
-            ultimate: SkillCatalog.FlurryOfBlows, hpGrowth: 45, atkGrowth: 11, defGrowth: 8, weapon: WeaponCatalog.Gauntlets);
+            speed: 95, skills: new[] { SkillCatalog.PiercingPunch, SkillCatalog.KiHeal, SkillCatalog.StunStrike },
+            ultimate: SkillCatalog.FlurryOfBlows, hpGrowth: 45, atkGrowth: 11, defGrowth: 8, weapon: WeaponCatalog.Gauntlets,
+            startingClass: ClassCatalog.Monk);
 
         /// <summary>
         /// The party for the first playtest, leader first (the player's own character joins later). A melee hero leads

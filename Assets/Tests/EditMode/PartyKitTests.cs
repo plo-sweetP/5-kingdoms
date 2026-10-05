@@ -34,7 +34,7 @@ namespace FiveKingdoms.Tests
 
         static int Slot(Actor hero, SkillDefinition skill)
         {
-            var skills = hero.Definition.Skills;
+            var skills = hero.Skills;
             for (int i = 0; i < skills.Count; i++)
                 if (skills[i] == skill) return i;
             return -1;
@@ -469,7 +469,7 @@ namespace FiveKingdoms.Tests
             Dummy(run, 4, 1);
             var command = AutoPilot.Decide(run);
             Assert.AreEqual(HeroCommandKind.Skill, command.Kind);
-            Assert.AreSame(SkillCatalog.HuntersMark, run.Hero.Definition.Skills[command.Slot]);
+            Assert.AreSame(SkillCatalog.HuntersMark, run.Hero.Skills[command.Slot]);
         }
 
         [Test]
@@ -479,7 +479,7 @@ namespace FiveKingdoms.Tests
             Place(run.Hero, 5, 1);
             Dummy(run, 6, 1);
             var command = AutoPilot.Decide(run);
-            Assert.AreSame(SkillCatalog.RollingShot, run.Hero.Definition.Skills[command.Slot]);
+            Assert.AreSame(SkillCatalog.RollingShot, run.Hero.Skills[command.Slot]);
             Assert.AreEqual(Direction8.W, command.Direction);
         }
 
@@ -492,7 +492,7 @@ namespace FiveKingdoms.Tests
             run.Hero.Hp = 50;
             var command = PartnerBrain.Decide(run, run.Party[1]);
             Assert.AreEqual(HeroCommandKind.Skill, command.Kind);
-            Assert.AreSame(SkillCatalog.PaladinHeal, run.Party[1].Definition.Skills[command.Slot]);
+            Assert.AreSame(SkillCatalog.PaladinHeal, run.Party[1].Skills[command.Slot]);
         }
     }
 }

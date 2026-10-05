@@ -257,12 +257,12 @@ namespace FiveKingdoms.Dungeon
             if (command.Kind == HeroCommandKind.Skill)
             {
                 if (run.CheckSkill(command.Slot) is SkillCheck.NoSkill or SkillCheck.OnCooldown) return command;
-                skill = hero.Definition.Skills[command.Slot];
+                skill = hero.Skills[command.Slot];
             }
             else if (command.Kind == HeroCommandKind.Ultimate)
             {
                 if (run.CheckUltimate() is SkillCheck.NoSkill or SkillCheck.NotCharged) return command;
-                skill = hero.Definition.Ultimate;
+                skill = hero.Ultimate;
             }
             var aim = run.AimFor(hero, skill);
             if (!aim.NeedsAim) return command;
@@ -350,7 +350,7 @@ namespace FiveKingdoms.Dungeon
 
         string AimPrompt(AimInfo aim, SkillDefinition skill)
         {
-            string name = skill?.Name ?? run.Hero.Definition.AttackName;
+            string name = skill?.Name ?? run.Hero.AttackName;
             string what = !aim.PicksTile ? "a target" : skill?.Effect == SkillEffect.Dash ? "where to dash" : "where to roll";
             switch (inputMode)
             {
@@ -516,7 +516,7 @@ namespace FiveKingdoms.Dungeon
         public static string SkillRefusalMessage(DungeonRun run, HeroCommand command)
         {
             int slot = command.Slot;
-            var skills = run.Hero.Definition.Skills;
+            var skills = run.Hero.Skills;
             if (slot < 0 || slot >= skills.Count) return "No skill in that slot yet.";
             var skill = skills[slot];
             var check = command.Targeted ? run.CheckSkillAt(run.Hero, slot, command.Target)
@@ -540,7 +540,7 @@ namespace FiveKingdoms.Dungeon
         public static string UltimateRefusalMessage(DungeonRun run, HeroCommand command)
         {
             var hero = run.Hero;
-            var ultimate = hero.Definition.Ultimate;
+            var ultimate = hero.Ultimate;
             if (ultimate == null) return $"{hero.Name} has no ultimate.";
             var check = command.Targeted ? run.CheckUltimateAt(hero, command.Target)
                 : command.Aimed ? run.CheckUltimate(command.Direction)
@@ -558,12 +558,12 @@ namespace FiveKingdoms.Dungeon
 
         /// <summary>Why the weapon attack has nothing to aim at, for the message log.</summary>
         public static string NoAttackTargetMessage(Actor hero) =>
-            hero.Definition.IsRanged ? $"No enemy in sight within {hero.Definition.AttackRange} tiles for {hero.Definition.AttackName}."
-            : $"No enemy next to you for {hero.Definition.AttackName}.";
+            hero.Definition.IsRanged ? $"No enemy in sight within {hero.Definition.AttackRange} tiles for {hero.AttackName}."
+            : $"No enemy next to you for {hero.AttackName}.";
 
         static string OutOfReachMessage(Actor hero, Actor foe) =>
-            hero.Definition.IsRanged ? $"The {foe.Name} is out of {hero.Definition.AttackName}'s reach or out of sight."
-            : $"The {foe.Name} is too far for {hero.Definition.AttackName}: step next to it first.";
+            hero.Definition.IsRanged ? $"The {foe.Name} is out of {hero.AttackName}'s reach or out of sight."
+            : $"The {foe.Name} is too far for {hero.AttackName}: step next to it first.";
 
         // ---- Input ----
 

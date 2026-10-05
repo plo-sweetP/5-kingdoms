@@ -1,3 +1,5 @@
+using System;
+
 namespace FiveKingdoms.Core
 {
     /// <summary>What a skill does when used.</summary>
@@ -85,7 +87,8 @@ namespace FiveKingdoms.Core
             StatusKind? status = null, int statusPower = 0, int statusTurns = 0,
             HealTarget healTarget = HealTarget.Self, bool healsFromUser = false,
             bool pierce = false, bool shove = false, int wallBonusPercent = 0, int knockback = 0,
-            int stunChance = 0, int stunPercent = CombatRules.MaxDelayPercent, int rollTiles = 0, TrapKind leavesTrap = TrapKind.None)
+            int stunChance = 0, int stunPercent = CombatRules.MaxDelayPercent, int rollTiles = 0, TrapKind leavesTrap = TrapKind.None,
+            WeaponFamily weapon = WeaponFamily.None)
         {
             Id = id;
             Name = name;
@@ -115,6 +118,19 @@ namespace FiveKingdoms.Core
             StunPercent = stunPercent;
             RollTiles = rollTiles;
             LeavesTrap = leavesTrap;
+            Weapon = weapon;
+        }
+
+        /// <summary>
+        /// A copy with something changed: how a class option upgrades a skill (PROGRESSION.md, "Classes": upgrades are
+        /// modifiers on skill data). The catalog's own skill is never touched, and the copy keeps its id, so it still
+        /// is that skill to the loadout, the saves and the view.
+        /// </summary>
+        public SkillDefinition Change(Action<SkillDefinition> change)
+        {
+            var copy = (SkillDefinition)MemberwiseClone();
+            change(copy);
+            return copy;
         }
 
         /// <summary>Stable key (saves, and for later: the manga-panel and cutscene hooks look skills up by it).</summary>
@@ -130,73 +146,79 @@ namespace FiveKingdoms.Core
         /// Damage per hit in percent of ATK (Strike, Shot, Area), heal percent of max HP (Heal, Aura), tiles (Dash),
         /// percent of damage blocked (Guard) or extra damage from the user in percent (Mark).
         /// </summary>
-        public int Power { get; }
+        public int Power { get; internal set; }
 
         /// <summary>An ultimate: used with a full charge meter instead of a cooldown (<see cref="ActorDefinition.Ultimate"/>).</summary>
         public bool IsUltimate { get; }
 
         /// <summary>Action-value cost in percent of a normal turn.</summary>
-        public int CostPercent { get; }
+        public int CostPercent { get; internal set; }
 
         /// <summary>The user's own turns it sits out after use (1: not two turns in a row). Ultimates have none.</summary>
-        public int Cooldown { get; }
+        public int Cooldown { get; internal set; }
 
         public DamageKind Kind { get; }
         public AttackReach Reach { get; }
         public Element Element { get; }
 
         /// <summary>Strikes: how many hits, each rolling damage and crit on its own.</summary>
-        public int Hits { get; }
+        public int Hits { get; internal set; }
 
         /// <summary>Shots, marks and area skills: how far it reaches, in tiles.</summary>
-        public int Range { get; }
+        public int Range { get; internal set; }
 
         /// <summary>
         /// Heals, guards and auras: how close an ally must be to share it (0 = the user only). Area skills: the size of
         /// the area around the target (1 = 3x3).
         /// </summary>
-        public int Radius { get; }
+        public int Radius { get; internal set; }
 
         /// <summary>
         /// Pushes each enemy hit back on the timeline by this percent of one of its turns (a slow), within the delay
         /// budget (<see cref="CombatRules.DelayCap"/>, and at most once per the enemy's own turn).
         /// </summary>
-        public int DelayPercent { get; }
+        public int DelayPercent { get; internal set; }
 
         /// <summary>A status put on each enemy hit, with its power and length in the enemy's own turns.</summary>
-        public StatusKind? Status { get; }
-        public int StatusPower { get; }
-        public int StatusTurns { get; }
+        public StatusKind? Status { get; internal set; }
+        public int StatusPower { get; internal set; }
+        public int StatusTurns { get; internal set; }
 
-        public HealTarget HealTarget { get; }
+        public HealTarget HealTarget { get; internal set; }
 
         /// <summary>Heals: Power is a percent of the user's max HP (a tanky healer heals more) instead of each target's.</summary>
-        public bool HealsFromUser { get; }
+        public bool HealsFromUser { get; internal set; }
 
         /// <summary>Strikes: also hits the enemy standing right behind the target.</summary>
-        public bool Pierce { get; }
+        public bool Pierce { get; internal set; }
 
         /// <summary>Strikes: shoves the target one tile away; if it can't move, the hit does <see cref="WallBonusPercent"/>% more.</summary>
-        public bool Shove { get; }
-        public int WallBonusPercent { get; }
+        public bool Shove { get; internal set; }
+        public int WallBonusPercent { get; internal set; }
 
         /// <summary>Shots: knocks the target back this many tiles, straight away from the shooter (onto a trap, say).</summary>
-        public int Knockback { get; }
+        public int Knockback { get; internal set; }
 
         /// <summary>Base chance in percent to stun, scaled by the user's Affinity and the target's Resist.</summary>
-        public int StunChance { get; }
+        public int StunChance { get; internal set; }
 
         /// <summary>
         /// A stun pushes the target's next turn back by this percent of a turn instead of skipping it (a boss by at most
         /// <see cref="CombatRules.MaxBossDelayPercent"/>), and never twice before the target acts: no stun-lock.
         /// </summary>
-        public int StunPercent { get; }
+        public int StunPercent { get; internal set; }
 
         /// <summary>Moves (rolls) this many tiles the way it's aimed before acting.</summary>
-        public int RollTiles { get; }
+        public int RollTiles { get; internal set; }
 
         /// <summary>A trap left on the tile the user rolled away from.</summary>
-        public TrapKind LeavesTrap { get; }
+        public TrapKind LeavesTrap { get; internal set; }
+
+        /// <summary>
+        /// The weapon family it needs (PROGRESSION.md, "Classes"): it only goes in the loadout of a hero holding such a
+        /// weapon. None: any hero can use it.
+        /// </summary>
+        public WeaponFamily Weapon { get; }
 
         public bool DealsDamage => Effect == SkillEffect.Strike || Effect == SkillEffect.Shot || Effect == SkillEffect.Area;
 
@@ -228,7 +250,7 @@ namespace FiveKingdoms.Core
 
         /// <summary>A heavy shot (300% ATK) that knocks the target back a tile, e.g. onto a trap.</summary>
         public static readonly SkillDefinition PowerShot = new SkillDefinition("power_shot", "Power Shot", "Power",
-            SkillEffect.Shot, power: 300, reach: AttackReach.Ranged, range: RangedReach, knockback: 1);
+            SkillEffect.Shot, power: 300, reach: AttackReach.Ranged, range: RangedReach, knockback: 1, weapon: WeaponFamily.Bow);
 
         /// <summary>
         /// Roll 2 tiles, then shoot (150% ATK) the nearest foe in sight: out of melee and attacking in one turn. A snare
@@ -236,11 +258,11 @@ namespace FiveKingdoms.Core
         /// </summary>
         public static readonly SkillDefinition RollingShot = new SkillDefinition("rolling_shot", "Rolling Shot", "Roll",
             SkillEffect.Shot, power: 150, reach: AttackReach.Ranged, range: RangedReach,
-            rollTiles: 2, leavesTrap: TrapKind.Snare);
+            rollTiles: 2, leavesTrap: TrapKind.Snare, weapon: WeaponFamily.Bow);
 
         /// <summary>Ultimate: arrows rain on a 3x3 area around a foe in sight, two hits of 200% ATK on every foe there.</summary>
         public static readonly SkillDefinition Volley = new SkillDefinition("volley", "Volley", "Volley",
-            SkillEffect.Area, power: 200, ultimate: true, reach: AttackReach.Area, hits: 2, range: RangedReach, radius: 1);
+            SkillEffect.Area, power: 200, ultimate: true, reach: AttackReach.Area, hits: 2, range: RangedReach, radius: 1, weapon: WeaponFamily.Bow);
 
         // ---- Haiden, Paladin: a tank first, with some healing. ----
 
@@ -250,7 +272,7 @@ namespace FiveKingdoms.Core
 
         /// <summary>A smite (250% ATK), Fire until a Light element is decided.</summary>
         public static readonly SkillDefinition DivineStrike = new SkillDefinition("divine_strike", "Divine Strike", "Smite",
-            SkillEffect.Strike, power: 250, element: Element.Fire);
+            SkillEffect.Strike, power: 250, element: Element.Fire, weapon: WeaponFamily.Sword);
 
         /// <summary>
         /// Shoves the target a tile (120% ATK) and makes it attack Haiden on its next turn. Against a wall it can't move,
@@ -258,7 +280,7 @@ namespace FiveKingdoms.Core
         /// </summary>
         public static readonly SkillDefinition ShoulderBash = new SkillDefinition("shoulder_bash", "Shoulder Bash", "Bash",
             SkillEffect.Strike, power: 120, shove: true, wallBonusPercent: 50,
-            status: StatusKind.Taunt, statusTurns: 1);
+            status: StatusKind.Taunt, statusTurns: 1, weapon: WeaponFamily.Sword);
 
         /// <summary>
         /// Ultimate: for 3 of Haiden's turns, he and the allies next to him take 30% less damage, and at the start of each
@@ -271,7 +293,7 @@ namespace FiveKingdoms.Core
 
         /// <summary>A punch (220% ATK) that also hits the enemy right behind the target.</summary>
         public static readonly SkillDefinition PiercingPunch = new SkillDefinition("piercing_punch", "Piercing Punch", "Pierce",
-            SkillEffect.Strike, power: 220, pierce: true);
+            SkillEffect.Strike, power: 220, pierce: true, weapon: WeaponFamily.Fists);
 
         /// <summary>Quick: Kristela heals herself for 25% of her max HP.</summary>
         public static readonly SkillDefinition KiHeal = new SkillDefinition("ki_heal", "Ki Heal", "Ki",
@@ -282,14 +304,14 @@ namespace FiveKingdoms.Core
         /// (a boss's 25%). No skipped turns, and nothing is delayed twice before it acts, so no stun-lock.
         /// </summary>
         public static readonly SkillDefinition StunStrike = new SkillDefinition("stun_strike", "Stun Strike", "Stun",
-            SkillEffect.Strike, power: 160, stunChance: 60, stunPercent: 50);
+            SkillEffect.Strike, power: 160, stunChance: 60, stunPercent: 50, weapon: WeaponFamily.Fists);
 
         /// <summary>
         /// Ultimate: 5 rapid strikes of 80% ATK (moving on to another adjacent foe if the target falls), and it costs only
         /// 70% of a turn, so her next turn comes 30% sooner (the most any one effect may move a turn, PROGRESSION.md).
         /// </summary>
         public static readonly SkillDefinition FlurryOfBlows = new SkillDefinition("flurry_of_blows", "Flurry of Blows", "Flurry",
-            SkillEffect.Strike, power: 80, ultimate: true, costPercent: 70, hits: 5);
+            SkillEffect.Strike, power: 80, ultimate: true, costPercent: 70, hits: 5, weapon: WeaponFamily.Fists);
 
         // ---- Milestone 1d's kit (Uzuki's before the party); kept for tests and future classes. ----
 

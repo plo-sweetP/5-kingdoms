@@ -78,6 +78,72 @@ namespace FiveKingdoms.Tests
             Assert.AreEqual(5, SaveSystem.LoadHero(ActorCatalog.Uzuki).Level);
         }
 
+        // ---- Classes and the loadout (save version 2, milestone 1g) ----
+
+        const string VersionOneSave = "{\"version\": 1, \"heroes\": [{\"id\": \"uzuki\", \"level\": 7, \"exp\": 13}, {\"id\": \"haiden\", \"level\": 4, \"exp\": 2}]}";
+
+        [Test]
+        public void ASaveFromBeforeClassesMigrates()
+        {
+            File.WriteAllText(path, VersionOneSave);
+            var uzuki = SaveSystem.LoadHero(ActorCatalog.Uzuki);
+            Assert.AreEqual(7, uzuki.Level);
+            Assert.AreEqual(13, uzuki.Exp);
+            Assert.AreEqual(7, uzuki.Points, "a point per level");
+            Assert.AreEqual(1, uzuki.TierOf(ClassCatalog.Archer), "tier 1 of his own class is spent");
+            Assert.AreEqual(6, uzuki.PointsFree, "and the rest is free");
+            CollectionAssert.AreEqual(new[] { "hunters_mark", "power_shot", "rolling_shot" }, uzuki.LoadoutIds);
+            Assert.AreEqual("volley", uzuki.UltimateId);
+
+            SaveSystem.SaveHero(uzuki);
+            StringAssert.Contains("\"version\": 2", File.ReadAllText(path));
+            StringAssert.Contains("\"archer\"", File.ReadAllText(path));
+            Assert.AreEqual(6, SaveSystem.LoadHero(ActorCatalog.Uzuki).PointsFree, "the same hero from the new format");
+        }
+
+        [Test]
+        public void AnOlderEntryNextToNewOnesStillMigrates()
+        {
+            File.WriteAllText(path, VersionOneSave);
+            SaveSystem.SaveHero(SaveSystem.LoadHero(ActorCatalog.Uzuki)); // The file is version 2 now; Haiden's entry is as it was.
+
+            var haiden = SaveSystem.LoadHero(ActorCatalog.Haiden);
+            Assert.AreEqual(4, haiden.Level);
+            Assert.AreEqual(1, haiden.TierOf(ClassCatalog.Paladin), "his entry was written before classes: it migrates when it is read");
+            Assert.AreEqual(3, haiden.PointsFree);
+        }
+
+        [Test]
+        public void ClassesAndTheLoadoutSurviveASaveAndLoad()
+        {
+            var uzuki = new HeroProgress(ActorCatalog.Uzuki, level: 6, exp: 2);
+            Assert.IsTrue(uzuki.Raise(ClassCatalog.Archer));
+            Assert.IsTrue(uzuki.Raise(ClassCatalog.Archer));
+            Assert.IsTrue(uzuki.Raise(ClassCatalog.Paladin));
+            Assert.IsTrue(uzuki.Equip(0, SkillCatalog.RollingShot));
+            SaveSystem.SaveHero(uzuki);
+
+            var loaded = SaveSystem.LoadHero(ActorCatalog.Uzuki);
+            Assert.AreEqual(3, loaded.TierOf(ClassCatalog.Archer));
+            Assert.AreEqual(1, loaded.TierOf(ClassCatalog.Paladin));
+            CollectionAssert.AreEqual(new[] { "archer", "paladin" }, loaded.Classes.Select(progress => progress.Class.Id).ToArray());
+            Assert.AreEqual(2, loaded.PointsFree);
+            CollectionAssert.AreEqual(new[] { "rolling_shot", "power_shot", "hunters_mark" }, loaded.LoadoutIds);
+            Assert.AreEqual("volley", loaded.UltimateId);
+        }
+
+        [Test]
+        public void AHeroThatUnlearnedItsClassComesBackWithoutIt()
+        {
+            var haiden = new HeroProgress(ActorCatalog.Haiden, level: 3);
+            Assert.AreEqual(1, haiden.Unlearn(ClassCatalog.Paladin));
+            SaveSystem.SaveHero(haiden);
+
+            var loaded = SaveSystem.LoadHero(ActorCatalog.Haiden);
+            Assert.AreEqual(0, loaded.Classes.Count, "not migrated a second time");
+            Assert.AreEqual(3, loaded.PointsFree);
+        }
+
         [Test]
         public void ThePartySavesAndLoadsTogether()
         {

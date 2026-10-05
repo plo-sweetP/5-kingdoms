@@ -297,7 +297,7 @@ namespace FiveKingdoms.Tests
             Assert.IsTrue(HeroTactics.IsBehindTheFront(run, kristela));
             var command = PartnerBrain.Decide(run, kristela);
             Assert.AreEqual(HeroCommandKind.Skill, command.Kind, "at 70% she wouldn't heal in the open yet");
-            Assert.AreSame(SkillCatalog.KiHeal, kristela.Definition.Skills[command.Slot]);
+            Assert.AreSame(SkillCatalog.KiHeal, kristela.Skills[command.Slot]);
 
             kristela.Hp = kristela.MaxHp * 80 / 100;
             Assert.AreEqual(HeroCommand.Wait, PartnerBrain.Decide(run, kristela), "a quarter of her HP would be half wasted now");

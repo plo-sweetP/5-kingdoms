@@ -134,7 +134,7 @@ namespace FiveKingdoms.Core
         static bool DashSaves(DungeonRun run, int dash, GridPos goal, Direction8 step, int pathLength, Func<GridPos, bool> blocked)
         {
             if (dash < 0 || run.CheckSkill(dash, step) != SkillCheck.Ready) return false;
-            var end = run.DashDestination(run.Hero.Definition.Skills[dash].Power, step);
+            var end = run.DashDestination(run.Hero.Skills[dash].Power, step);
             int rest = end == goal ? 0
                 : Pathfinder.TryFirstStep(run.Map, end, goal, blocked, FarSearchLimit, out _, out int length) ? length
                 : int.MaxValue;

@@ -78,7 +78,7 @@ namespace FiveKingdoms.Core
         /// <summary>Slot of the hero's first skill with this effect, or -1.</summary>
         public static int SkillSlot(Actor hero, SkillEffect effect)
         {
-            var skills = hero.Definition.Skills;
+            var skills = hero.Skills;
             for (int i = 0; i < skills.Count; i++)
                 if (skills[i].Effect == effect) return i;
             return -1;
@@ -87,7 +87,7 @@ namespace FiveKingdoms.Core
         /// <summary>Slot of the hero's rolling skill (Rolling Shot), or -1.</summary>
         static int RollSlot(Actor hero)
         {
-            var skills = hero.Definition.Skills;
+            var skills = hero.Skills;
             for (int i = 0; i < skills.Count; i++)
                 if (skills[i].RollTiles > 0) return i;
             return -1;
@@ -172,7 +172,7 @@ namespace FiveKingdoms.Core
         public static bool TryUltimate(DungeonRun run, Actor hero, out HeroCommand command)
         {
             command = HeroCommand.Wait;
-            var ultimate = hero.Definition.Ultimate;
+            var ultimate = hero.Ultimate;
             if (ultimate == null || !hero.UltimateReady) return false;
             switch (ultimate.Effect)
             {
@@ -234,7 +234,7 @@ namespace FiveKingdoms.Core
             command = HeroCommand.Wait;
             int heal = SkillSlot(hero, SkillEffect.Heal);
             if (heal < 0 || run.CheckSkill(hero, heal, hero.Facing) != SkillCheck.Ready) return false;
-            var skill = hero.Definition.Skills[heal];
+            var skill = hero.Skills[heal];
             if (!run.InCombat && WouldTopUp(run, hero, skill))
             {
                 command = HeroCommand.Skill(heal);
@@ -291,7 +291,7 @@ namespace FiveKingdoms.Core
         {
             if (run.InCombat || !hero.IsAlive) return null;
             int own = SkillSlot(hero, SkillEffect.Heal);
-            if (own >= 0 && WorthToppingUp(hero, hero, hero.Definition.Skills[own])) return null;
+            if (own >= 0 && WorthToppingUp(hero, hero, hero.Skills[own])) return null;
 
             Actor nearest = null;
             int best = int.MaxValue;
@@ -301,7 +301,7 @@ namespace FiveKingdoms.Core
                 if (member == hero || !member.IsAlive || run.FindActor(member.Id) == null) continue;
                 int slot = SkillSlot(member, SkillEffect.Heal);
                 if (slot < 0) continue;
-                var heal = member.Definition.Skills[slot];
+                var heal = member.Skills[slot];
                 if (heal.HealTarget == HealTarget.Self || !WorthToppingUp(member, hero, heal)) continue;
                 steps ??= Pathfinder.StepsFrom(run.Map, hero.Pos, LeashRange);
                 int distance = steps[member.Pos.Y * run.Map.Width + member.Pos.X];
@@ -341,7 +341,7 @@ namespace FiveKingdoms.Core
             {
                 if (!member.IsAlive || run.FindActor(member.Id) == null) continue;
                 int slot = SkillSlot(member, SkillEffect.Heal);
-                if (slot >= 0 && WouldTopUp(run, member, member.Definition.Skills[slot])) return true;
+                if (slot >= 0 && WouldTopUp(run, member, member.Skills[slot])) return true;
                 var healer = HealerFor(run, member);
                 if (healer != null && GridPos.ChebyshevDistance(member.Pos, healer.Pos) > 1) return true;
             }
@@ -379,7 +379,7 @@ namespace FiveKingdoms.Core
                 var status = actor.FindStatus(StatusKind.Mark);
                 if (status != null && status.SourceId == hero.Id) return false; // Already hunting something.
             }
-            var target = PickTarget(hero, run.FoesInSight(hero, hero.Definition.Skills[mark].Range));
+            var target = PickTarget(hero, run.FoesInSight(hero, hero.Skills[mark].Range));
             if (target == null || !WorthAStatus(hero, target) || run.CheckSkillAt(hero, mark, target.Pos) != SkillCheck.Ready) return false;
             command = HeroCommand.SkillAt(mark, target.Pos);
             return true;
@@ -399,7 +399,7 @@ namespace FiveKingdoms.Core
             int roll = RollSlot(hero);
             if (roll >= 0)
             {
-                var skill = hero.Definition.Skills[roll];
+                var skill = hero.Skills[roll];
                 int best = 0;
                 foreach (var dir in Directions.All)
                 {
@@ -465,7 +465,7 @@ namespace FiveKingdoms.Core
             command = HeroCommand.Wait;
             int guard = SkillSlot(hero, SkillEffect.Guard);
             if (guard < 0 || run.CheckSkill(hero, guard, hero.Facing) != SkillCheck.Ready) return false;
-            int radius = hero.Definition.Skills[guard].Radius;
+            int radius = hero.Skills[guard].Radius;
             int adjacentFoes = 0;
             foreach (var actor in run.Actors)
             {
@@ -511,7 +511,7 @@ namespace FiveKingdoms.Core
         static bool TryAttack(DungeonRun run, Actor hero, Actor target, out HeroCommand command)
         {
             command = HeroCommand.Wait;
-            var skills = hero.Definition.Skills;
+            var skills = hero.Skills;
             int control = -1, strongest = -1, strongestPower = CombatRules.BasicAttackPercent;
             for (int slot = 0; slot < skills.Count; slot++)
             {
@@ -816,7 +816,7 @@ namespace FiveKingdoms.Core
         public static int Reach(Actor hero)
         {
             int reach = hero.Definition.AttackRange;
-            foreach (var skill in hero.Definition.Skills)
+            foreach (var skill in hero.Skills)
                 if (skill.Effect == SkillEffect.Shot && skill.Range > reach) reach = skill.Range;
             return reach;
         }

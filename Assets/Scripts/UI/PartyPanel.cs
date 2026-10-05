@@ -101,7 +101,7 @@ namespace FiveKingdoms.UI
                 SetBar(card.HpFill, member.Hp, member.MaxHp);
                 card.HpFill.color = HpColor(member.Hp, member.MaxHp);
                 card.Hp.text = member.IsAlive ? $"{member.Hp}/{member.MaxHp}" : "Fallen";
-                ShowCharge(card, member.Definition.Ultimate != null ? member.Charge : -1);
+                ShowCharge(card, member.Ultimate != null ? member.Charge : -1);
                 SetBar(card.ExpFill, member.Exp, CombatRules.ExpToNextLevel(member.Level));
                 card.Lead.gameObject.SetActive(leader && member.IsAlive);
                 card.Tactic.gameObject.SetActive(!leader && member.IsAlive);

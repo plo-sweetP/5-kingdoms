@@ -41,9 +41,12 @@ namespace FiveKingdoms.Dungeon
         /// <summary>The run's seed, for the same floors every launch (comparing screenshots, chasing a bug).</summary>
         public int? Seed;
 
+        /// <summary>The minimap's size or off, instead of the player's setting (to screenshot each size).</summary>
+        public MinimapSize? Minimap;
+
         /// <summary>
         /// Flags: -fk-floors N, -fk-level N, -fk-save PATH, -fk-input touch|keyboard|gamepad, -fk-leader ID,
-        /// -fk-look LOOKS, -fk-view lead|zoomout|wide, -fk-seed N, and -fk-autoplay FOLDER (which also uses a fresh save
+        /// -fk-look LOOKS, -fk-view lead|zoomout|wide, -fk-seed N, -fk-minimap off|small|large, and -fk-autoplay FOLDER (which also uses a fresh save
         /// inside FOLDER, so smoke tests never touch the player's save).
         /// </summary>
         public static LaunchOptions FromCommandLine()
@@ -59,6 +62,7 @@ namespace FiveKingdoms.Dungeon
                 Looks = StringArg(args, "-fk-look"),
                 View = Enum.TryParse(StringArg(args, "-fk-view"), ignoreCase: true, out ViewMode view) ? view : (ViewMode?)null,
                 Seed = IntArg(args, "-fk-seed"),
+                Minimap = Enum.TryParse(StringArg(args, "-fk-minimap"), ignoreCase: true, out MinimapSize minimap) ? minimap : (MinimapSize?)null,
             };
             string autoplayFolder = StringArg(args, "-fk-autoplay");
             if (autoplayFolder != null && options.SavePath == null)

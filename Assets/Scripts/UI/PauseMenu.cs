@@ -30,6 +30,9 @@ namespace FiveKingdoms.UI
         /// <summary>The camera while aiming was switched: true for always wide, false to step out only when needed (ART.md's options C and B).</summary>
         public event Action<bool> WideViewChanged;
 
+        /// <summary>The minimap was switched to another size, or off.</summary>
+        public event Action<MinimapSize> MinimapChanged;
+
         enum Page { Main, Confirm, Settings, Stats }
 
         readonly Dictionary<Page, GameObject> pages = new Dictionary<Page, GameObject>();
@@ -38,7 +41,8 @@ namespace FiveKingdoms.UI
         int selected;
         Text confirmText, statsTitle, statsLeft, statsRight;
         Image statsPortrait;
-        HoldButton confirmButton, viewButton;
+        HoldButton confirmButton, viewButton, minimapButton;
+        MinimapSize minimap;
         Action confirmed;
         DungeonRun run;
         IReadOnlyList<HeroProgress> party;
@@ -62,11 +66,12 @@ namespace FiveKingdoms.UI
         }
 
         /// <summary>Opens on the main page. <paramref name="party"/>: the heroes' saved progress, for their classes.</summary>
-        public void Open(DungeonRun run, IReadOnlyList<HeroProgress> party, bool wideView)
+        public void Open(DungeonRun run, IReadOnlyList<HeroProgress> party, bool wideView, MinimapSize minimap)
         {
             this.run = run;
             this.party = party;
             this.wideView = wideView;
+            this.minimap = minimap;
             shownHero = 0;
             for (int i = 0; i < run.Party.Count; i++)
                 if (run.Party[i] == run.Hero) shownHero = i;
@@ -185,7 +190,7 @@ namespace FiveKingdoms.UI
 
         void BuildSettings(Transform root)
         {
-            var panel = NewPage(root, Page.Settings, new Vector2(1100f, 540f), "Settings");
+            var panel = NewPage(root, Page.Settings, new Vector2(1100f, 650f), "Settings");
             var label = UiFactory.CreateText("ViewLabel", panel, "Camera while aiming", 32, TextAnchor.MiddleLeft, DungeonHud.TextColor);
             UiFactory.Place(label.rectTransform, new Vector2(0f, 1f), new Vector2(100f, -230f), new Vector2(420f, 60f), new Vector2(0f, 0.5f));
             viewButton = AddButton(Page.Settings, panel, "", new Vector2(1f, 1f), new Vector2(-330f, -230f), new Vector2(460f, 90f), "button_dark", () =>
@@ -194,10 +199,22 @@ namespace FiveKingdoms.UI
                 RefreshSettings();
                 WideViewChanged?.Invoke(wideView);
             });
+            var mapLabel = UiFactory.CreateText("MinimapLabel", panel, "Minimap", 32, TextAnchor.MiddleLeft, DungeonHud.TextColor);
+            UiFactory.Place(mapLabel.rectTransform, new Vector2(0f, 1f), new Vector2(100f, -340f), new Vector2(420f, 60f), new Vector2(0f, 0.5f));
+            minimapButton = AddButton(Page.Settings, panel, "", new Vector2(1f, 1f), new Vector2(-330f, -340f), new Vector2(460f, 90f), "button_dark", () =>
+            {
+                minimap = minimap == MinimapSize.Small ? MinimapSize.Large : minimap == MinimapSize.Large ? MinimapSize.Off : MinimapSize.Small;
+                RefreshSettings();
+                MinimapChanged?.Invoke(minimap);
+            });
             AddButton(Page.Settings, panel, "Back", new Vector2(0.5f, 0f), new Vector2(0f, 135f), ButtonSize, "button_dark", () => Show(Page.Main));
         }
 
-        void RefreshSettings() => viewButton.SetLabel(wideView ? "Always wide" : "Steps out when needed");
+        void RefreshSettings()
+        {
+            viewButton.SetLabel(wideView ? "Always wide" : "Steps out when needed");
+            minimapButton.SetLabel(minimap.ToString());
+        }
 
         void BuildStats(Transform root)
         {

@@ -199,6 +199,13 @@ namespace FiveKingdoms.Core
 
         public bool Execute(HeroCommand command)
         {
+            bool usedTurn = Carry(command);
+            Explore(); // Wherever the party stands now, partners included.
+            return usedTurn;
+        }
+
+        bool Carry(HeroCommand command)
+        {
             switch (command.Kind)
             {
                 case HeroCommandKind.Move: return Move(command.Direction);
@@ -1860,6 +1867,99 @@ namespace FiveKingdoms.Core
             }
         }
 
+        // ---- What the party has explored: the minimap's fog (HUD.md, "Minimap") ----
+
+        bool[] explored = Array.Empty<bool>();
+        bool[] roomExplored = Array.Empty<bool>();
+
+        /// <summary>Goes up with every newly explored tile and every new floor, so a view knows when to redraw.</summary>
+        public int ExploredVersion { get; private set; }
+
+        /// <summary>
+        /// Whether the party has explored a tile of this floor. A room is explored as a whole once a hero stands in it or
+        /// on its doorway (a tile one step from it); along a corridor the walkable tiles within two steps of a hero are.
+        /// What was explored stays explored, and a new floor starts with nothing but the party's surroundings. Only
+        /// walkable tiles are ever explored. Nothing in the rules depends on it yet: it is what the minimap shows.
+        /// </summary>
+        public bool IsExplored(GridPos pos) => Map.InBounds(pos) && explored[pos.Y * Map.Width + pos.X];
+
+        /// <summary>
+        /// Whether the party sees a tile right now: a living hero stands in the same room, or within sight range of it
+        /// with nothing in the way. The minimap marks only the foes on such tiles.
+        /// </summary>
+        public bool PartySees(GridPos pos)
+        {
+            int room = Map.RoomIndexAt(pos);
+            foreach (var member in party)
+            {
+                if (!member.IsAlive) continue;
+                if (room >= 0 && Map.RoomIndexAt(member.Pos) == room) return true;
+                int distance = Math.Max(Math.Abs(member.Pos.X - pos.X), Math.Abs(member.Pos.Y - pos.Y));
+                if (distance <= Config.SightRange && Map.HasLineOfSight(member.Pos, pos)) return true;
+            }
+            return false;
+        }
+
+        void StartExploring()
+        {
+            explored = new bool[Map.Width * Map.Height];
+            roomExplored = new bool[Map.Rooms.Count];
+            ExploredVersion++;
+            Explore();
+        }
+
+        void Explore()
+        {
+            foreach (var member in party)
+            {
+                if (!member.IsAlive || !Map.InBounds(member.Pos)) continue;
+                int room = Map.RoomIndexAt(member.Pos);
+                if (room >= 0)
+                {
+                    ExploreRoom(room);
+                    continue;
+                }
+                // A corridor: two steps' walk each way. A room one step away is entered through this tile, its doorway.
+                ExploreTile(member.Pos);
+                for (int a = 0; a < 8; a++)
+                {
+                    if (!Map.CanStep(member.Pos, (Direction8)a)) continue;
+                    var one = member.Pos + ((Direction8)a).ToOffset();
+                    int next = Map.RoomIndexAt(one);
+                    if (next >= 0)
+                    {
+                        ExploreRoom(next);
+                        continue;
+                    }
+                    ExploreTile(one);
+                    for (int b = 0; b < 8; b++)
+                    {
+                        if (!Map.CanStep(one, (Direction8)b)) continue;
+                        var two = one + ((Direction8)b).ToOffset();
+                        if (Map.RoomIndexAt(two) < 0) ExploreTile(two); // A room never shows in part.
+                    }
+                }
+            }
+        }
+
+        void ExploreRoom(int index)
+        {
+            if (roomExplored[index]) return;
+            roomExplored[index] = true;
+            var room = Map.Rooms[index];
+            for (int y = room.Y; y <= room.YMax; y++)
+                for (int x = room.X; x <= room.XMax; x++)
+                    if (Map.IsWalkable(new GridPos(x, y))) ExploreTile(new GridPos(x, y));
+        }
+
+        void ExploreTile(GridPos pos)
+        {
+            int index = pos.Y * Map.Width + pos.X;
+            if (explored[index]) return;
+            explored[index] = true;
+            ExploredVersion++;
+        }
+
         /// <summary>
         /// The player leaves the dungeon (the pause menu's Exit, HUD.md): the run ends where it stands, neither won nor
         /// lost. What the party earned so far is kept, as after a defeat.
@@ -1915,6 +2015,7 @@ namespace FiveKingdoms.Core
                 if (IsBossFloor) PopulateBossFloor(floorRng);
                 else Populate(floorRng);
             }
+            StartExploring();
             events.Add(new FloorStartedEvent(floor));
         }
 

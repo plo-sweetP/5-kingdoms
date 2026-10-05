@@ -107,6 +107,7 @@ namespace FiveKingdoms.UI
         Text floorText, bossName, keysText, bannerTitle, bannerSubtitle, endTitle, endDetail, aimPrompt;
         Image bossFill;
         PartyPanel party;
+        Minimap minimap;
         GameObject bossPanel;
         int bossMaxHp;
         HoldButton berryButton, descendButton, againButton, autoButton, attackButton, waitButton, pauseButton;
@@ -169,6 +170,7 @@ namespace FiveKingdoms.UI
             berryButton.SetLabel($"x{run.Berries}");
             hasBerries = run.Berries > 0;
             ApplyAvailability();
+            minimap.Refresh(run);
             descendButton.gameObject.SetActive(run.State == RunState.InProgress && run.HeroOnStairs);
             RefreshTimeline(run);
         }
@@ -336,6 +338,9 @@ namespace FiveKingdoms.UI
             berryButton.Interactable = free && hasBerries;
             for (int i = 0; i < skillButtons.Length; i++) skillButtons[i].Interactable = free && skillUsable[i];
         }
+
+        /// <summary>The minimap's size, or off (the pause menu's setting).</summary>
+        public void SetMinimap(MinimapSize size) => minimap.SetSize(size);
 
         /// <summary>The game stands still under the pause menu: the Pause button is lit.</summary>
         public void SetPaused(bool on) => pauseButton.SetArt(on ? ActiveArt : ActionArt);
@@ -677,6 +682,9 @@ namespace FiveKingdoms.UI
             waitButton.SetIcon("icon_wait");
             waitButton.Pressed += () => CommandRequested?.Invoke(HeroCommand.Wait);
             waitButton.DisabledPressed += ShowAutoPilotBlocked;
+
+            // Under the row, see-through, and never in the way of a touch.
+            minimap = Minimap.Create(safeArea, new Vector2(-28f, -24f - TopButtonSize.y - 12f));
 
             descendButton = HoldButton.Create(safeArea, "Descend", "Descend", new Vector2(0.5f, 0f), new Vector2(0f, 260f), new Vector2(330f, 96f), ActiveArt, 36);
             descendButton.Pressed += () => CommandRequested?.Invoke(HeroCommand.Descend);

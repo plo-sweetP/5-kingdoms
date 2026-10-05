@@ -58,6 +58,8 @@ namespace FiveKingdoms.Dungeon
 
         /// <summary>The settings page's choice for the camera while aiming, kept on this device (not in the save).</summary>
         const string WideViewKey = "fk.view.wide";
+        const string MinimapKey = "fk.minimap";
+        MinimapSize minimap = MinimapSize.Small;
         InputMode inputMode = InputMode.Touch;
 
         /// <summary>The action being aimed, or null.</summary>
@@ -149,6 +151,9 @@ namespace FiveKingdoms.Dungeon
             hud.PauseMenu.ExitConfirmed += LeaveRun;
             hud.PauseMenu.ResetLevelConfirmed += ResetLevels;
             hud.PauseMenu.WideViewChanged += SetWideView;
+            hud.PauseMenu.MinimapChanged += SetMinimap;
+            minimap = options.Minimap ?? (UsesRealSave ? (MinimapSize)Mathf.Clamp(PlayerPrefs.GetInt(MinimapKey, (int)MinimapSize.Small), 0, 2) : MinimapSize.Small);
+            hud.SetMinimap(minimap);
             if (!options.View.HasValue && UsesRealSave && PlayerPrefs.GetInt(WideViewKey, 0) == 1) pixelCamera.Mode = ViewMode.Wide;
             hud.TacticCycleRequested += CycleTactic;
             if (options.StartInputMode.HasValue)
@@ -453,7 +458,7 @@ namespace FiveKingdoms.Dungeon
             paused = on;
             if (on) EndAiming();
             hud.SetPaused(on);
-            if (on) hud.PauseMenu.Open(run, party, pixelCamera.Mode == ViewMode.Wide);
+            if (on) hud.PauseMenu.Open(run, party, pixelCamera.Mode == ViewMode.Wide, minimap);
             else hud.PauseMenu.Close();
         }
 
@@ -486,6 +491,15 @@ namespace FiveKingdoms.Dungeon
             SaveSystem.SaveParty(party);
             StartNewRun();
             hud.AddMessage("Testing: every hero is back at level 1.", DungeonHud.HintColor);
+        }
+
+        void SetMinimap(MinimapSize size)
+        {
+            minimap = size;
+            hud.SetMinimap(size);
+            if (!UsesRealSave) return;
+            PlayerPrefs.SetInt(MinimapKey, (int)size);
+            PlayerPrefs.Save();
         }
 
         void SetWideView(bool wide)

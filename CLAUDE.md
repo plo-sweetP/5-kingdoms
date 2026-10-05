@@ -49,7 +49,8 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
   corridor, then one three tiles away, and captures how the camera shows them instead)
 
 Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway save), `-fk-save PATH`,
-`-fk-input keyboard|gamepad` (start with that HUD layout, e.g. to screenshot the skill row), `-fk-leader kristela|uzuki`
+`-fk-input keyboard|gamepad` (start with that HUD layout, e.g. to screenshot the skill row), `-fk-minimap off|small|large`
+(instead of the player's setting), `-fk-leader kristela|uzuki`
 (someone other than Haiden leads), `-fk-seed N` (the same floors every launch), `-fk-view zoomout|wide|lead` (the
 camera while aiming: `zoomout` is the game's behavior, `wide` is always one zoom step out and is kept for a player
 setting later, `lead` slides to the targets however far and is for debugging only), and `-fk-look` to try other looks, e.g.
@@ -119,6 +120,10 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   PlayerPrefs, read and written only with the real save (`UsesRealSave`). The hero stats page writes each skill's
   description from the hero's own copy (`SkillText.Describe`): a new `SkillEffect` or skill field needs its
   sentence there.
+- The minimap (HUD.md, "Minimap"; `Minimap`, `MinimapFogTests`) only draws what the rules say: explored tiles are
+  Core state (`DungeonRun.IsExplored`, updated by `Explore` after every `Execute` and on a new floor: a room as a
+  whole once a hero stands in it or one step from it, a corridor two steps around a hero, never part of a room),
+  and a foe is marked only while `DungeonRun.PartySees` its tile. No fog is drawn over the dungeon itself.
 - Attacks are deliberate (PROGRESSION.md, "Targeting and input"): moving into an enemy never attacks (it only turns
   the hero, no turn used). Attacks, skills and ultimates on a foe carry its tile (`HeroCommand.AttackAt / SkillAt /
   UltimateAt`); the AI must always use those (the soak tests fail on a refused command or an attack at nothing) and

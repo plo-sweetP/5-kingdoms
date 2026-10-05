@@ -32,7 +32,8 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
   (solo) or `-- -party <seed> <fromAction>` (add `map=N` to draw the floor around the leader for N actions, and
   `key=value` overrides as for `-balance`); how far partners stray from the leader: `-- -spread`
 - Rebuild the art, ~10 s: `python Tools/pixelart/build_art.py` (add `--preview <folder>` for the review sheets:
-  heroes, weapons, armor sets, head pieces, rings, animation strips, icons; `--only preview` skips writing the art)
+  heroes, weapons, armor sets, head pieces, rings, animation strips, icons, the Fencer kit's skill icons and
+  effects; `--only preview` skips writing the art)
 - Unity tests: `Unity.exe -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults results.xml`
 - Windows build: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildWindowsDev`
 - Android test APK, ~6 min: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildAndroidDev`
@@ -80,7 +81,8 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   level. A point buys the next tier of any class (`HeroProgress.Raise`); a milestone tier (5, 10, 15, 20, 25) also
   takes one of its three `ClassOption`s, from any path, and a milestone whose options aren't written can't be passed
   (`ClassDefinition.IsOpen`, `HighestOpenTier`). The catalog has Archer, Paladin, Fencer (Kristela's since
-  2026-10-05) and Monk; their bumps and options are not written yet. Every tier adds the class's `StatBump`s (never SPD); the hero's
+  2026-10-05) and Monk, each with its "Every tier" bumps; their options are not written yet, so a class stops at
+  tier 4. Every tier adds the class's `StatBump`s (never SPD); the hero's
   highest class sets its speed modifier (`HeroKit.SpeedFor`, clamped to 85-100 before gear). An option teaches a
   skill, upgrades the hero's own copy of one (`SkillDefinition.Change`; an upgrade of a skill the hero doesn't know
   teaches the skill instead) or changes one weapon family's attack. Never change a catalog skill.
@@ -89,6 +91,19 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   takes `HeroProgress.Kit` when it starts and keeps it: loadouts (three skills, at most one Quick, weapon-tied
   skills only with a weapon of that `WeaponFamily`, one ultimate) change between runs only. `HeroProgress.Unlearn`
   returns a class's points (free for now; relearning from level 20 comes with 1g-2).
+- Kristela's Fencer kit (PROGRESSION.md, "Kristela's Fencer kit"; `FencerKitTests`). A strike that dashes up to
+  its target first is `SkillDefinition.DashTiles` (Lunge: along the 8 lines, nobody between, corner rule kept;
+  `DungeonRun.StrikeTargetAt(user, tile, dashTiles)`). A strike with several hits keeps to one foe unless `MovesOn`
+  (the Monk's Flurry). A counter stance is `SkillEffect.Counter` and `StatusKind.Riposte`: the cut is in
+  `DamageTakenPercent`, the answering blow in `DungeonRun.Counter` (said by `CounterEvent`), and a monster can fall
+  to it on its own turn. Blade Dance is `SkillEffect.SharedStrikes`. The weapon attack hits as its kit says
+  (`Kit.WeaponAttack.Power`, `Hits`). The AI's step toward the foes is `HeroTactics.StepToward`: a Lunge when that
+  reaches a foe, through `HoldsTheDoor` and the leash; it takes the stance only when a foe next to the hero acts
+  first and is going for it (`TryRiposte`, `EnemyBrain.TargetOf`). The Monk's kit is tested on `TestHeroes.Monk`.
+- The view plays an action's events after the rules are through, so the run's state is already the end state: a
+  status that begins and ends within the events (a counter stance) is shown from its events
+  (`ActorView.SetStance`), not read from the actor. A skill's effects belong to its user's own strikes only
+  (`DungeonView.activeSkillUser`).
 - Saves are version 2 (`SaveSystem`): per hero the level, EXP, classes with their picks, and the loadout. A hero
   entry says which version wrote it (`HeroSave.savedWith`); one from before classes gets tier 1 of its own class
   and the rest of its points free. Loading relearns a build tier by tier (`HeroProgress.Restore`), so what the

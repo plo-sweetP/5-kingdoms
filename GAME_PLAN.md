@@ -214,7 +214,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, packs; shots at anything in sight, deliberate two-step attacks, stuns as timeline delays | **Done** (parts 1 and 2, and Peter's answers at the first playtest checkpoint) |
 | A1 | Art pass 1 ([docs/design/ART.md](docs/design/ART.md)): the current game on the Tiny Swords art (heroes built from layers with their own faces and hair under the helmets, equipment looks for GEAR.md's weapons and armor sets, ring auras, skill animations, monsters from the Enemy Pack, the outdoor dungeon, the HUD) | **Done** (2026-10-04; new bosses and creatures come with row 7) |
 | C1 | Corridor tactics for the party's AI (PROGRESSION.md, "Doorways and corridors"): hold the door, rotate the front, enter a room when it's safe or there's room; then a balance re-check | **Done** (2026-10-04; the Troll went from 16000 to 24000 HP) |
-| 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; Kristela's Fencer kit (she was a Monk until 2026-10-05); tiers 5 and 10 of Archer, Paladin and Fencer | **In progress.** Done and on main (2026-10-05): the three follow-ups and the classes core (rules, the hero's own kit and loadout, save version 2, free respec), with no change in play. **Left:** Kristela's Fencer kit, the skill-tree screen, tiers 5 and 10, the balance with default builds ("Progress" below says where each stands) |
+| 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; Kristela's Fencer kit (she was a Monk until 2026-10-05); tiers 5 and 10 of Archer, Paladin and Fencer | **In progress.** Done and on main (2026-10-05): the three follow-ups, the classes core (rules, the hero's own kit and loadout, save version 2, free respec), Kristela's Fencer kit with the Piercer Blade, and the class stat bumps (the Troll went from 24000 to 25000 HP). **Left:** the skill-tree screen, tiers 5 and 10, the balance with default builds ("Progress" below says where each stands) |
 | 1g-2 | Classes core, part 2: tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries), relearning after a respec from level 20, prerequisites and kingdom locks | |
 | P1 | Playtest pass 1 ([docs/design/HUD.md](docs/design/HUD.md)), Peter's notes from the tablet: the top-right buttons in one row, a minimap with fog, the skills in a row along the bottom, a pause menu (with Reset level for testing), Auto hides the D-pad and greys the buttons out, holy light on Divine Strike, footing in the boss fight for the party's AI | After 1g-1: both change the HUD (listed here, a row down, so the 1g-1 row can be edited without a conflict) |
 | 1g-3 | Professions: potions and meals as items, the Alchemist, Blacksmith and Chef paths (farm paths locked until the farm exists) | |
@@ -565,7 +565,7 @@ for line, and the golden replay is unchanged.
 - **Checks:** 259 Core tests (29 new in `ClassRulesTests`, on classes made up for the tests so the real ones can be
   tuned freely), 259 in Unity's EditMode, 28 PlayMode (5 new: the save migration, Kristela's, a mixed file, a round
   trip, a hero without a class), the Windows build and four autoplay runs without an error.
-- **What is left of part 1, in the order to build it:**
+- **What was left of part 1 then, in the order to build it** (items 1 and 2 are done: the next section):
   1. Kristela's Fencer kit (PROGRESSION.md, "Kristela's Fencer kit"): the Piercer Blade as her weapon and look,
      Thrust, Triple Thrust, Lunge, Riposte, Blade Dance, each with its rule, AI rule, animation and icon; she loses
      Ki Heal, so the balance moves.
@@ -574,6 +574,54 @@ for line, and the golden replay is unchanged.
      (tinted per path, with glow, ring and shine), a lock, badges and 24 skill icons, on the branch
      `wip/1g-1-skill-tree-art` (`Tools/pixelart/ui.py` and `icons.py`).
   4. Tier 5, then tier 10, of Archer, Paladin and Fencer; then default builds for the balance report and the
+     re-tune to the targets in CLAUDE.md.
+
+**Milestone 1g, part 1: Kristela's Fencer kit and the class stat bumps (2026-10-05).** PROGRESSION.md, "Kristela's
+Fencer kit", built as written. She fights as a Fencer now; the Monk's kit stays in the code as the Monk's base kit.
+- **Her kit.** Thrust is her weapon attack (200%). Triple Thrust: three hits of 90% on one foe next to her. Lunge:
+  a dash of up to 2 tiles and a strike of 200% on a foe up to 3 tiles away in a straight line with nobody between.
+  Riposte: a stance until her next turn in which she takes 50% less damage (25% from a boss) and strikes the first
+  foe that hits her from the next tile back for 250%. Blade Dance, her ultimate: five strikes of 100% shared among
+  the foes in the 3x3 around a foe next to her, all five on a boss that stands alone. She has no heal of her own.
+- **Her weapon and her look.** The Piercer Blade (the Gauntlets' stats, no passive until 1h), on the Warrior rig
+  without a shield, still in Light Warrior. Its look is redrawn as Peter asked: a thinner blade and a rounded,
+  sabre-like guard, in the dungeon and on its icon alike. Any hero's weapon attack now hits as hard and as often as
+  its kit says (it was a fixed 200% once), so a class option can change it.
+- **What the party's AI does with it** (the autopilot and the partners are the balance report's players): Triple
+  Thrust whenever it is ready; a Lunge in place of a step toward the foes, through the same checks (it holds a
+  doorway against a crowd, and it stays near the leader); Blade Dance when its area holds a boss or two foes;
+  Riposte when a foe next to her is about to act and is going for her.
+- **Settled where the spec left room** (sent to the hub for docs/design): Triple Thrust's leftover thrusts are lost
+  when its target falls (the Monk's Flurry still moves on). Riposte's cut adds to an aura's, like a guard's. A slam
+  from the next tile counts as a hit and is answered. A counter can fell a monster on its own turn. The AI takes
+  the stance only when the foe is going for her (its taunter, else the nearest hero, and Haiden comes first when
+  both stand next to it): with the draft's "isn't held by Haiden's taunt" alone, two stances in three went
+  unanswered (1.2 a run, 0.4 answered; now 0.5 a run, 0.4 answered; with her leading 1.7 and 1.6). The AI doesn't
+  dash out of a corridor from further back than its last tile, where "hold the door" can be told.
+- **In the dungeon.** A stab leaves a streak of light instead of the sword's arc. Triple Thrust lands three side by
+  side in a blur. Lunge is the dash with afterimages, then the stab. Riposte holds the rig's guard pose with a glint
+  on the blade and its own icon over her head, and its counter is a flash, a stab and a cut. Blade Dance lights its
+  3x3 and shows her at each foe for a moment, a cut each. None of it sets the pace. Five skill icons are drawn
+  (24 px white glyphs like the drafts on `wip/1g-1-skill-tree-art`; preview sheet 08); no screen shows them yet.
+- **Class stat bumps** (data only, each class's "Every tier" line): Archer +0.4% ATK and +0.2% Crit Rate, Paladin
+  +0.4% HP and +0.4% DEF, Fencer +0.2% Crit Rate and +0.4% Crit DMG, Monk +0.4% ATK and +0.4% Crit DMG. At tier 1
+  that is a point or two of HP and a fifth of a percent of crit.
+- **Balance** (measured with `-balance`, autopilot; before is main at 660738f): with Haiden leading, fresh level-1
+  wins went from 8 to 9 of 200 and the first clear from attempt 3.1 at Lv 9.6 to 3.0 at Lv 9.6; with Kristela
+  leading, from 4 to 11 of 200 (attempt 2.8 at Lv 9.4 to 2.8 at Lv 9.3). Over 600 seeds that was 32 and 31 wins
+  (5.3% and 5.2%), just past the target's 5%, so **the Troll went from 24000 to 25000 HP**: 28 and 27 of 600 (4.7%
+  and 4.5%), first clear on attempt 3.1 at Lv 9.7 (2.9 at Lv 9.5 with her leading); over the usual 200 seeds, 6
+  wins and attempt 3.1 at Lv 9.8 (11 and 2.8 at Lv 9.4 with her leading). Losing Ki Heal shows on the way down:
+  heroes fallen before the boss floor went from 19 to 31 in 200 runs, and she arrives standing in 89% of runs (94%
+  before); leading, 76% as before. Partners stray 9 steps from the leader at most (`-spread`).
+- **Checks:** 294 Core tests (35 new, most of them in `FencerKitTests`; the Monk's kit is tested on a test Monk), 297 in Unity's
+  EditMode, 28 PlayMode, the Windows build, the four autoplay runs and a phone-size one (2340x1080, Kristela
+  leading, straight to the boss: won) without an error line. The golden replay is unchanged.
+- **What is left of part 1, in the order to build it:**
+  1. The skill-tree screen. Its art is drafted on `wip/1g-1-skill-tree-art`; the Fencer's five icons are on main
+     (`Tools/pixelart/icons.py`, `skill_icons()`: the weapon attack's is keyed by its weapon, `attack_piercer_blade`,
+     since Thrust and Sword Slash are both sword attacks). The HUD still names skills in words.
+  2. Tier 5, then tier 10, of Archer, Paladin and Fencer; then default builds for the balance report and the
      re-tune to the targets in CLAUDE.md.
 
 ## Open questions (resolve as we go)

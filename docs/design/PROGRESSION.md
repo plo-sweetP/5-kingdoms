@@ -115,6 +115,16 @@ whatever role they like.
   - **Not built, as decided:** pulling a pack to the door with a shot ("almost seems too advance for now"), walking
     in and backing out to drag enemies along, and wider corridors. Reach weapons (a spear, the Arcane Sword) are the
     gear answer to hitting past an ally.
+  - **A note when a hero waits** (Peter, 2026-10-04; to build in 1g part 1): when a hero holds a door or trades
+    places, a short line on screen says so, "so the player doesn't think the hero is just standing there or stuck".
+    His example: "<hero name> is strategizing for the next fight". Cute is welcome.
+  - The boss fight got about a third longer with the Troll's 24000 HP; Peter keeps it ("this is really just a test
+    boss"), and difficulty gets adjusted when real levels and tiers of bosses exist.
+  - With Kristela leading she still falls often; that is accepted: "it actually makes sense for a dps to die quickly
+    if they lead", and the party's arrangement is the player's to sort out.
+- **Heroes heal between fights** (Peter, 2026-10-04; to build in 1g part 1): outside a fight, AI heroes (partners
+  and the Auto leader) use their heals to top the party up before moving on. It needs a re-tune: when the C1 session
+  tried it by accident, fresh level-1 wins went from 18 to 38 of 200, mostly through the boss fight.
 
 **Targeting and input (decided).**
 - **Two steps for skills and ultimates:** tap the skill, the tiles it can reach light up (Fire Emblem style) with
@@ -340,6 +350,41 @@ Every tier: +0.6% HP (+15% at tier 25).
 | 15 | **Strong Tea:** every hero's first turn in the next fight comes 30% sooner | **Leftovers:** when a meal's fight ends, half of its buff stays for the fight after | Treats that strengthen monster companions (when they join the party) |
 | 20 | **Banquet:** once per run, a meal that gives all her dishes at once | **Lunchboxes:** each hero carries one dish of their own, eaten outside a fight, on top of the party's meal | Once a day, a banquet with a large buff for a whole run |
 | 25 | **Master Cook:** her dishes are a third stronger | **Master of Provisions:** meals last two fights | Meals cost half the ingredients |
+
+## Building 1g (in parts)
+Peter left the split to the planning hub (2026-10-04). Each part ends tested, pushed and playable. The code notes
+come from the 1f, art pass and C1 build sessions.
+
+**Part 1 (roadmap row 1g-1): the core, the skill tree, and tiers 5 and 10 of the three classes**
+1. Three small follow-ups first: the test sandbox, its results and the art packs move out of the Claude app's
+   private AppData to an ordinary folder (`C:\Users\peter\5Kingdoms`); heroes heal between fights; a note on
+   screen when a hero waits at a door (both under "Ranged vs melee" above).
+2. The rules: a hero has as many points as levels; a class has tiers 1-25 at one point each; every tier gives the
+   class's stat bump (never SPD); tiers 5, 10, 15, 20 and 25 are milestones with three options, one picked per
+   tier from any path. A hero starts at tier 1 of their class. Any hero can put points into any base class; an
+   option that upgrades a skill the hero doesn't know teaches the base skill instead; a skill tied to a weapon type
+   can only go in the loadout when the hero holds that weapon. Speeds stay as they are today (hero bases 90 / 95 /
+   95 for Uzuki / Haiden / Kristela, plus the class modifier: Archer +5, Paladin -5, Monk +5).
+3. A hero's kit becomes the hero's own: today it is read from the shared `ActorDefinition` everywhere, so it moves
+   onto the hero's saved progress first. The loadout is 3 skills + 1 ultimate from the hero's pool, with at most
+   one Quick skill (two with the Monk's Windwalker mastery), changed between runs only.
+4. Saves get a new version with a migration: an existing hero gets points equal to their level, with tier 1 of
+   their class spent and the rest free.
+5. Respec: free for now (every hero is below level 20): unlearning a class returns its points. The relearning rule
+   from level 20 comes in part 2.
+6. The skill-tree screen, reachable between runs: per hero, the classes with their tiers, the tree of spheres for
+   one class (three paths side by side, rows for tiers 5 to 25, lines between them, an info panel, the points left),
+   the loadout, and unlearn. Rows that have no content yet show as locked. It works with touch, keyboard and gamepad.
+   Round icons build on the UI kit's round buttons; every skill needs an icon drawn (ART.md, "Later").
+7. Content: tier 5 of Archer, Paladin and Monk first, then tier 10 ("Starting class content"). Each new skill needs
+   its rule, its AI rule (the autopilot and the partners are the balance report's players), an animation and an icon.
+8. Balance: the report plays sensible default builds, and the numbers go back to the targets in CLAUDE.md.
+
+**Part 2 (1g-2):** tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries); relearning after a
+respec from level 20; prerequisites and kingdom locks for advanced and inherited classes.
+
+**Part 3 (1g-3):** the three professions: potions and meals as items the party carries, the Alchemist's flasks, the
+Blacksmith's enhancements, the Chef's dishes and stock; farm paths shown but locked.
 
 ## Class list (first draft)
 Each kingdom's classes match its flavor, so players know what style they're building toward. Prerequisites marked

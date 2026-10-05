@@ -81,7 +81,8 @@ whatever role they like.
 - **Swaps, without loops.** A swap is allowed when it either puts a melee hero next to an enemy (or strictly closer
   to one), or **moves a badly hurt hero away from enemies** ("run to safety"; this one works between two melee heroes
   too), or lets a partner get past the partner that follows it in line when no enemy is next to either ("regroup";
-  only ever the earlier past the later, never the leader). A pair that just swapped can't swap back for a few turns. The soak test fails if it sees the same two heroes
+  only ever the earlier past the later, never the leader), or relieves a hurt hero who holds a doorway or corridor
+  ("rotate the front", below). A pair that just swapped can't swap back for a few turns. The soak test fails if it sees the same two heroes
   swapping back and forth.
 - **Ranged targets anything within 5 tiles that's in sight** (decided), not only along the 8 grid lines. Walls block
   shots; allies don't. Damage stays at 90% of melee.
@@ -89,24 +90,31 @@ whatever role they like.
   near the leader and only by a short way; otherwise they stay behind the line. On Auto, the leader with partners in
   a fight goes for the enemies that are after the party (up to 12 steps) and waits behind a partner that holds the
   way.
-- **Doorways and corridors** (decided 2026-10-04, to build as roadmap row C1). Peter's playtest note: a melee hero
+- **Doorways and corridors** (decided 2026-10-04, built as roadmap row C1). Peter's playtest note: a melee hero
   who steps through a room's entrance gets surrounded and falls, while the two behind him can't do anything useful.
   This dungeon keeps its narrow corridors (Peter: other biomes will open the floor up in other ways), so the party's
-  AI, the autopilot's leader included, learns to use them:
-  - **Hold the door.** When a fight is on or about to start, the hero at the front stays on the last corridor tile
-    (the doorway) instead of stepping into the room. Only the tile straight ahead can reach him there, and the
-    archer shoots past him.
-  - **Rotate the front.** At a doorway or in a corridor, when the front hero is below about half HP and the melee
-    hero behind him is healthier, they swap: the fresh one fights, the hurt one heals behind. The swap cooldown and
-    the no-loops check still apply.
-  - **Enter when it's safe, or when there's room.** The lead hero looks before stepping in. With at most 2 enemies
-    close (within 3-4 tiles), the party goes in. With more, it goes in only if there is room to bring the second
-    (and third) melee hero into the fight beside the leader; then the leader steps in and aside so the others can
-    follow. Otherwise it holds the door. Peter: "i'll trust your judgement on this when simulating the dungeon
-    runs", so the numbers are set with the run simulations.
-  - **Not now:** pulling a pack to the door with a shot ("almost seems too advance for now"), walking in and backing
-    out to drag enemies along, and wider corridors. Reach weapons (a spear, the Arcane Sword) are the gear answer to
-    hitting past an ally.
+  AI, the autopilot's leader included, uses them:
+  - **Hold the door.** With more than two enemies close beyond a doorway (within their sight range of the hero:
+    5 steps, 4 tiles into the room), the hero at the front stays on the last corridor tile instead of stepping into
+    the room. Only the tile straight ahead can reach him there, and the archer shoots past him. If nobody comes
+    within 5 turns he goes in. Not against a boss (a slam has to be dodged).
+  - **Rotate the front.** Where one hero holds the way (a corridor or a doorway; in a corridor's mouth only with one
+    or two enemies on him), when he is under 50% HP and the melee hero behind him has 20 points more of her HP left,
+    they swap, in the fight or just before it reaches them: the fresh one fights, the hurt one heals behind. The
+    swap cooldown and the no-loops check still apply. A partner never takes the leader's place (on Auto the leader
+    steps back himself; by hand it is the player's move); a ranged hero takes the front only through run to safety.
+  - **Enter when it's safe.** With at most 2 enemies close, the party goes in, if the hero in front has at least 90%
+    of his HP and a second melee hero to bring; hurt, or with nobody to bring, he goes in against one enemy only. In
+    the corridor's mouth, with her still behind him and 2 or more enemies near, he steps aside to another tile he
+    can fight from so she can come out. (Peter set "2 or fewer close" and left the rest to the run simulations; the
+    90% rule was the biggest single gain.)
+  - **What it did** (autopilot, Haiden leading, 200 seeds): heroes fallen before the boss floor 162 -> 15; standing
+    on arrival Haiden 53% -> 97%, Kristela 66% -> 95%. Kristela still waits in 46% of her fight turns (54% before):
+    in a corridor only one hero can fight, and this dungeon is mostly corridors. The Troll went from 16000 to 24000
+    HP to keep the targets (fresh level-1 wins 4.5%, first clear on attempt 3.1 at Lv 9.7).
+  - **Not built, as decided:** pulling a pack to the door with a shot ("almost seems too advance for now"), walking
+    in and backing out to drag enemies along, and wider corridors. Reach weapons (a spear, the Arcane Sword) are the
+    gear answer to hitting past an ally.
 
 **Targeting and input (decided).**
 - **Two steps for skills and ultimates:** tap the skill, the tiles it can reach light up (Fire Emblem style) with

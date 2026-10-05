@@ -16,8 +16,9 @@ it, and says so in its report.
   the pack's palette are realistic. New animated characters at the pack's quality are not.
 
 ## The pack
-- **Where it is** (outside the repo): `%LOCALAPPDATA%\5Kingdoms\ArtPacks\TinySwords\`, with the original zips and
-  three unpacked folders: `Tiny Swords (Free Pack)`, `Tiny Swords (Enemy Pack)` (bought by Peter on 2026-10-03) and
+- **Where it is** (outside the repo): `C:\Users\peter\5Kingdoms\ArtPacks\TinySwords\` (an ordinary folder since
+  2026-10-04; the Claude app keeps `%LOCALAPPDATA%` private to its sessions), with the original zips and three
+  unpacked folders: `Tiny Swords (Free Pack)`, `Tiny Swords (Enemy Pack)` (bought by Peter on 2026-10-03) and
   `Tiny Swords (Update 010)` (the old version, see below).
 - **License** (store page, read 2026-10-03): free to use in personal and commercial projects, and the assets may be
   modified. The asset files themselves may not be redistributed, resold or repackaged, even modified. Credit is not

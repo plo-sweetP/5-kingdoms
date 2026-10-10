@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
@@ -13,9 +14,20 @@ static class BuildTools
     public static void BuildWindowsDev() =>
         Build(BuildTarget.StandaloneWindows64, "Builds/Windows/5Kingdoms.exe", BuildOptions.Development);
 
+    /// <summary>
+    /// Where Gradle keeps the package it built last. It patches that file on the next build instead of writing a new
+    /// one, and what a patch replaces stays in the file as dead weight: the same 41 MB of content came out as 60, 74
+    /// and 92 MB on three builds in a row (2026-10-10).
+    /// </summary>
+    const string GradlePackage = "Library/Bee/Android/Prj/IL2CPP/Gradle/launcher/build/outputs/apk/debug/launcher-debug.apk";
+
     [MenuItem("5 Kingdoms/Build/Android APK (development)")]
-    public static void BuildAndroidDev() =>
+    public static void BuildAndroidDev()
+    {
+        // Without the old package Gradle writes a fresh one: the APK is as large as its content, no larger.
+        if (File.Exists(GradlePackage)) File.Delete(GradlePackage);
         Build(BuildTarget.Android, "Builds/Android/5Kingdoms-dev.apk", BuildOptions.Development);
+    }
 
     static void Build(BuildTarget target, string path, BuildOptions options)
     {

@@ -114,6 +114,14 @@ namespace FiveKingdoms.Dungeon
                 yield return ViewDemo();
                 yield break;
             }
+            if (demo == "tree")
+            {
+                yield return TreeDemo();
+                yield break;
+            }
+            // With -fk-tree the skill tree is up before the run: its states first, with a point spent where there is one.
+            yield return null;
+            if (controller.SkillTree.IsOpen) yield return TreeTour("00_tree", change: true);
             yield return new WaitForSeconds(0.6f);
             yield return Capture("00_banner");
             yield return new WaitForSeconds(1.8f);
@@ -140,6 +148,9 @@ namespace FiveKingdoms.Dungeon
             menu.Activate();
             yield return Capture("01_pause_restart_question");
             menu.Back();
+            // The skill tree as the hero stats page opens it during a run: to look at only.
+            controller.OpenSkillTree(0);
+            yield return TreeTour("01_tree", change: false);
             menu.Back();
 
             int actions = 0, shot = 0, attackShots = 0, chargeShots = 0, holdShots = 0, rotateShots = 0, restShots = 0, clearShots = 0;
@@ -269,6 +280,74 @@ namespace FiveKingdoms.Dungeon
             command.Kind == HeroCommandKind.Attack ? "attack_" + run.Hero.Definition.Id
             : command.Kind == HeroCommandKind.Ultimate ? run.Hero.Ultimate.Id
             : run.Hero.Skills[command.Slot].Id;
+
+        /// <summary>
+        /// The skill tree's states, captured as "<paramref name="prefix"/>_*.png": a class, a row that isn't written
+        /// yet, the loadout with the skills that could go in a slot, the question before unlearning, another hero.
+        /// With <paramref name="change"/> a point goes into the hero's own class first, where it has one.
+        /// </summary>
+        IEnumerator TreeTour(string prefix, bool change)
+        {
+            var tree = controller.SkillTree;
+            yield return null;
+            yield return Capture(prefix + "_1_class");
+            if (change && tree.Model.Info.Enabled)
+            {
+                tree.Activate();
+                yield return Capture(prefix + "_2_raised");
+            }
+            tree.Tap(TreeFocus.Option(0, 1));
+            yield return Capture(prefix + "_3_locked_row");
+            tree.Tap(TreeFocus.Slot(0));
+            tree.Activate();
+            yield return Capture(prefix + "_4_loadout");
+            if (tree.Model.Focus.Zone == TreeZone.Choices) tree.Back();
+            tree.Tap(TreeFocus.Unlearn, press: true);
+            yield return Capture(prefix + "_5_unlearn");
+            if (tree.Model.Confirming) tree.Back();
+            tree.NextHero(1);
+            tree.Tap(TreeFocus.Class(1));
+            yield return Capture(prefix + "_6_next_hero");
+            Debug.Log($"[Autoplay tour] Skill tree toured ({(tree.Model.ReadOnly ? "looking only" : "changing")}): {tree.Model.Notice ?? "no notice"}");
+            controller.CloseSkillTree();
+            yield return null;
+        }
+
+        /// <summary>
+        /// "-fk-demo tree": the skill tree for every hero in turn, as between runs, then quit: the screen's screenshots
+        /// without playing a run ("tree_<hero>_*.png"). Each hero's own class goes as far as it can, a second class gets
+        /// two tiers, and the row that isn't written, the loadout and the question before unlearning are shown.
+        /// </summary>
+        IEnumerator TreeDemo()
+        {
+            yield return null;
+            if (!controller.SkillTree.IsOpen) controller.OpenSkillTree(0);
+            yield return new WaitForSeconds(0.3f);
+            var tree = controller.SkillTree;
+            for (int i = 0; i < tree.Model.Party.Count; i++)
+            {
+                string hero = tree.Model.Hero.Definition.Id;
+                yield return Capture($"tree_{hero}_1_class");
+                while (tree.Model.Focus.Zone == TreeZone.Classes && tree.Model.Info.Enabled) tree.Activate();
+                yield return Capture($"tree_{hero}_2_as_far_as_it_goes");
+                tree.Tap(TreeFocus.Option(0, 1));
+                yield return Capture($"tree_{hero}_3_locked_row");
+                tree.Tap(TreeFocus.Class((tree.Model.ClassIndex + 1) % tree.Model.Classes.Count));
+                tree.Activate();
+                tree.Activate();
+                yield return Capture($"tree_{hero}_4_second_class");
+                tree.Tap(TreeFocus.Slot(0));
+                tree.Activate();
+                yield return Capture($"tree_{hero}_5_loadout");
+                if (tree.Model.Focus.Zone == TreeZone.Choices) tree.Back();
+                tree.Tap(TreeFocus.Unlearn, press: true);
+                yield return Capture($"tree_{hero}_6_unlearn_question");
+                if (tree.Model.Confirming) tree.Back();
+                tree.NextHero(1);
+            }
+            Debug.Log("[Autoplay] Skill tree demo captured.");
+            Application.Quit();
+        }
 
         IEnumerator Capture(string name)
         {

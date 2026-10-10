@@ -12,7 +12,8 @@ namespace FiveKingdoms.UI
     /// The pause menu (HUD.md, "Pause button and menu"), built in code like the rest of the HUD: Resume, Restart,
     /// Settings, Hero stats, Exit, and Reset level for testing. Restart, Exit and Reset level ask first. Hero stats is
     /// a read-only page per hero: class, level and EXP, the weapon, the stats, and the weapon attack, the skills and the
-    /// ultimate with what they do (<see cref="SkillText"/>), all read from the hero's own kit. Buttons answer a touch
+    /// ultimate with what they do (<see cref="SkillText"/>), all read from the hero's own kit, and a button that opens
+    /// the hero's skill tree to look at (<see cref="SkillTreeScreen"/>). Buttons answer a touch
     /// or a click; with keys or a controller the game moves a marked button (<see cref="Move"/>, <see cref="Side"/>,
     /// <see cref="Activate"/>, <see cref="Back"/>). The menu only asks: the controller does what was chosen.
     /// </summary>
@@ -32,6 +33,9 @@ namespace FiveKingdoms.UI
 
         /// <summary>The minimap was switched to another size, or off.</summary>
         public event Action<MinimapSize> MinimapChanged;
+
+        /// <summary>The hero stats page's Skill tree button, with the hero's place in the party: during a run the tree only shows.</summary>
+        public event Action<int> SkillTreeRequested;
 
         enum Page { Main, Confirm, Settings, Stats }
 
@@ -233,6 +237,14 @@ namespace FiveKingdoms.UI
             AddButton(Page.Stats, panel, "Back", new Vector2(0.5f, 0f), new Vector2(0f, 125f), ButtonSize, "button_dark", () => Show(Page.Main));
             AddButton(Page.Stats, panel, "< Hero", new Vector2(0.5f, 0f), new Vector2(-360f, 125f), ButtonSize, "button_dark", () => ShowStats(shownHero - 1));
             AddButton(Page.Stats, panel, "Hero >", new Vector2(0.5f, 0f), new Vector2(360f, 125f), ButtonSize, "button_dark", () => ShowStats(shownHero + 1));
+            AddButton(Page.Stats, panel, "Skill tree", new Vector2(1f, 1f), new Vector2(-270f, -128f), new Vector2(360f, 84f), "button_gold", () =>
+            {
+                var shown = run.Party[shownHero].Definition;
+                int index = 0;
+                for (int i = 0; party != null && i < party.Count; i++)
+                    if (party[i].Definition == shown) index = i;
+                SkillTreeRequested?.Invoke(index);
+            });
         }
 
         static Text Body(Transform parent, string name, Vector2 position, Vector2 size)

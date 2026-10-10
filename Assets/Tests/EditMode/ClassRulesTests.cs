@@ -13,38 +13,38 @@ namespace FiveKingdoms.Tests
     /// </summary>
     public class ClassRulesTests
     {
-        static readonly SkillDefinition Jolt = new SkillDefinition("test_jolt", "Jolt", "Jolt", SkillEffect.Strike, power: 180);
+        internal static readonly SkillDefinition Jolt = new SkillDefinition("test_jolt", "Jolt", "Jolt", SkillEffect.Strike, power: 180);
 
-        static readonly SkillDefinition Sprint = new SkillDefinition("test_sprint", "Sprint", "Sprint", SkillEffect.Dash, power: 3,
+        internal static readonly SkillDefinition Sprint = new SkillDefinition("test_sprint", "Sprint", "Sprint", SkillEffect.Dash, power: 3,
             costPercent: SkillDefinition.QuickCostPercent);
 
-        static readonly SkillDefinition Nova = new SkillDefinition("test_nova", "Nova", "Nova", SkillEffect.Area, power: 300,
+        internal static readonly SkillDefinition Nova = new SkillDefinition("test_nova", "Nova", "Nova", SkillEffect.Area, power: 300,
             ultimate: true, range: 3, radius: 1);
 
-        static readonly ClassOption HeavyDraw = new ClassOption("test_heavy_draw", "Heavy Draw", 0, "Power Shot hits harder and knocks back 2 tiles.",
+        internal static readonly ClassOption HeavyDraw = new ClassOption("test_heavy_draw", "Heavy Draw", 0, "Power Shot hits harder and knocks back 2 tiles.",
             upgrades: SkillCatalog.PowerShot, change: skill =>
             {
                 skill.Power = 360;
                 skill.Knockback = 2;
             });
 
-        static readonly ClassOption LearnJolt = new ClassOption("test_learn_jolt", "Jolt", 1, "A new strike.", teaches: Jolt);
-        static readonly ClassOption LearnSprint = new ClassOption("test_learn_sprint", "Sprint", 2, "A Quick dash.", teaches: Sprint);
+        internal static readonly ClassOption LearnJolt = new ClassOption("test_learn_jolt", "Jolt", 1, "A new strike.", teaches: Jolt);
+        internal static readonly ClassOption LearnSprint = new ClassOption("test_learn_sprint", "Sprint", 2, "A Quick dash.", teaches: Sprint);
 
-        static readonly ClassOption DoubleJab = new ClassOption("test_double_jab", "Double Jab", 0, "Jab hits twice.",
+        internal static readonly ClassOption DoubleJab = new ClassOption("test_double_jab", "Double Jab", 0, "Jab hits twice.",
             attackOf: WeaponFamily.Fists, change: attack =>
             {
                 attack.Hits = 2;
                 attack.Power = 120;
             });
 
-        static readonly ClassOption LongDraw = new ClassOption("test_long_draw", "Long Draw", 1, "Power Shot reaches further.",
+        internal static readonly ClassOption LongDraw = new ClassOption("test_long_draw", "Long Draw", 1, "Power Shot reaches further.",
             upgrades: SkillCatalog.PowerShot, change: skill => skill.Range += 1);
 
-        static readonly ClassOption LearnNova = new ClassOption("test_learn_nova", "Nova", 2, "Another ultimate.", teaches: Nova);
+        internal static readonly ClassOption LearnNova = new ClassOption("test_learn_nova", "Nova", 2, "Another ultimate.", teaches: Nova);
 
         /// <summary>A light class with content at tiers 5 and 10; tier 15 isn't written, so it stops at 14.</summary>
-        static readonly ClassDefinition Scout = new ClassDefinition("test_scout", "Scout", WeaponFamily.Bow, speedModifier: 5,
+        internal static readonly ClassDefinition Scout = new ClassDefinition("test_scout", "Scout", WeaponFamily.Bow, speedModifier: 5,
             paths: new[] { "One", "Two", "Three" },
             bumps: new[] { new StatBump(StatKind.Atk, 4), new StatBump(StatKind.CritRate, 2) },
             milestones: new[]
@@ -54,7 +54,7 @@ namespace FiveKingdoms.Tests
             });
 
         /// <summary>A heavy class with no milestones written at all.</summary>
-        static readonly ClassDefinition Bulwark = new ClassDefinition("test_bulwark", "Bulwark", WeaponFamily.None, speedModifier: -5,
+        internal static readonly ClassDefinition Bulwark = new ClassDefinition("test_bulwark", "Bulwark", WeaponFamily.None, speedModifier: -5,
             paths: new[] { "One", "Two", "Three" }, bumps: new[] { new StatBump(StatKind.Hp, 4), new StatBump(StatKind.Def, 4) });
 
         static ClassDefinition Find(string id) => id == Scout.Id ? Scout : id == Bulwark.Id ? Bulwark : ClassCatalog.Find(id);

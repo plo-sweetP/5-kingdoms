@@ -31,6 +31,7 @@ import pack as packs  # noqa: E402
 import rigs  # noqa: E402
 import sheets  # noqa: E402
 import terrain  # noqa: E402
+import tree  # noqa: E402
 import ui  # noqa: E402
 from px import sheet, to_hex  # noqa: E402
 
@@ -204,10 +205,15 @@ def export(pack, wardrobe):
 
     # The HUD.
     manifest['ui'] = []
-    for piece in ui.build(pack):
+    for piece in ui.build(pack) + tree.pieces():
         writer.save('UI/' + piece.name, piece.image)
         left, bottom, right, top = piece.border
         manifest['ui'].append({'name': piece.name, 'path': 'UI/' + piece.name, 'left': left, 'bottom': bottom, 'right': right, 'top': top})
+    # The skill icons: Icons/skill_<skill id> (a weapon attack by its weapon), listed with the HUD art so the screens
+    # that show them load them the same way.
+    for skill_id, image in sorted(icons.skill_icons().items()):
+        writer.save('Icons/skill_' + skill_id, image)
+        manifest['ui'].append({'name': 'skill_' + skill_id, 'path': 'Icons/skill_' + skill_id, 'left': 0, 'bottom': 0, 'right': 0, 'top': 0})
 
     removed = writer.remove_stale()
     with open(os.path.join(RESOURCES, 'art_manifest.json'), 'w', newline='\n') as f:

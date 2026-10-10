@@ -50,6 +50,12 @@ namespace FiveKingdoms.Dungeon
         /// </summary>
         public ScreenKind? Device;
 
+        /// <summary>
+        /// Open the skill tree before the first run, on this hero ("" for the leader): a build can be changed there, and
+        /// the run starts when the screen closes. For screenshots and tests of the screen.
+        /// </summary>
+        public string OpenTree;
+
         /// <summary>The run's seed, for the same floors every launch (comparing screenshots, chasing a bug).</summary>
         public int? Seed;
 
@@ -58,7 +64,7 @@ namespace FiveKingdoms.Dungeon
 
         /// <summary>
         /// Flags: -fk-floors N, -fk-level N, -fk-save PATH, -fk-input touch|keyboard|gamepad, -fk-leader ID,
-        /// -fk-look LOOKS, -fk-view lead|zoomout|wide, -fk-zoom near|far, -fk-device desktop|phone|tablet, -fk-seed N, -fk-minimap off|small|large, and
+        /// -fk-look LOOKS, -fk-view lead|zoomout|wide, -fk-zoom near|far, -fk-device desktop|phone|tablet, -fk-tree [HERO], -fk-seed N, -fk-minimap off|small|large, and
         /// -fk-autoplay FOLDER (which also uses a fresh save inside FOLDER, so smoke tests never touch the player's save).
         /// </summary>
         /// <summary>"-fk-zoom near" or "-fk-zoom far"; anything else leaves the view to the player's setting.</summary>
@@ -81,6 +87,7 @@ namespace FiveKingdoms.Dungeon
                 View = Enum.TryParse(StringArg(args, "-fk-view"), ignoreCase: true, out ViewMode view) ? view : (ViewMode?)null,
                 FarView = FarViewArg(StringArg(args, "-fk-zoom")),
                 Device = Enum.TryParse(StringArg(args, "-fk-device"), ignoreCase: true, out ScreenKind device) ? device : (ScreenKind?)null,
+                OpenTree = Array.IndexOf(args, "-fk-tree") >= 0 ? StringArg(args, "-fk-tree")?.ToLowerInvariant() ?? "" : null,
                 Seed = IntArg(args, "-fk-seed"),
                 Minimap = Enum.TryParse(StringArg(args, "-fk-minimap"), ignoreCase: true, out MinimapSize minimap) ? minimap : (MinimapSize?)null,
             };

@@ -56,6 +56,9 @@ namespace FiveKingdoms.Dungeon
         bool paused;
         Vector2Int menuStick;
 
+        /// <summary>The skill tree was opened by `-fk-tree` before the first run: the run starts when it closes.</summary>
+        bool treeBeforeRun;
+
         /// <summary>The settings page's choice for the camera while aiming, kept on this device (not in the save).</summary>
         const string FarViewKey = "fk.view.far";
 
@@ -155,6 +158,10 @@ namespace FiveKingdoms.Dungeon
             hud.PauseMenu.ResetLevelConfirmed += ResetLevels;
             hud.PauseMenu.ViewChanged += SetFarView;
             hud.PauseMenu.MinimapChanged += SetMinimap;
+            hud.PauseMenu.SkillTreeRequested += OpenSkillTree;
+            hud.SkillTreeRequested += () => OpenSkillTree(0);
+            hud.SkillTree.CloseRequested += CloseSkillTree;
+            hud.SkillTree.BuildChanged += () => SaveSystem.SaveParty(party);
             minimap = options.Minimap ?? (UsesRealSave ? (MinimapSize)Mathf.Clamp(PlayerPrefs.GetInt(MinimapKey, (int)MinimapSize.Small), 0, 2) : MinimapSize.Small);
             hud.SetMinimap(minimap);
             pixelCamera.Kind = options.Device ?? PixelCamera.ScreenKindFor(Application.isMobilePlatform, Screen.width, Screen.height, Screen.dpi);
@@ -175,7 +182,39 @@ namespace FiveKingdoms.Dungeon
             AutoplayDriver.AttachIfRequested(this);
         }
 
-        void Start() => StartNewRun();
+        void Start()
+        {
+            StartNewRun();
+            if (options.OpenTree == null) return;
+            // -fk-tree: the screen first, as between runs. The run starts over when it closes, with the builds made there.
+            treeBeforeRun = true;
+            OpenSkillTree(Mathf.Max(0, Array.FindIndex(party, hero => hero.Definition.Id == options.OpenTree)));
+        }
+
+        /// <summary>The skill-tree screen (for tests and the autoplay smoke test).</summary>
+        public SkillTreeScreen SkillTree => hud.SkillTree;
+
+        /// <summary>
+        /// Opens the skill tree on a hero of the party. A build changes between runs only (PROGRESSION.md, "Classes"):
+        /// while a run is going the screen only shows; once it has ended (the end panel's Skills button), or before
+        /// the first one with `-fk-tree`, tiers, picks and the loadout can be changed, and every change is saved.
+        /// </summary>
+        public void OpenSkillTree(int hero = 0)
+        {
+            if (busy) return;
+            EndAiming();
+            bool running = run != null && run.State == RunState.InProgress && !treeBeforeRun;
+            hud.SkillTree.Open(party, hero, readOnly: running, inputMode);
+        }
+
+        public void CloseSkillTree()
+        {
+            if (!hud.SkillTree.IsOpen) return;
+            hud.SkillTree.Close();
+            if (!treeBeforeRun) return;
+            treeBeforeRun = false;
+            StartNewRun();
+        }
 
         /// <summary>Queues a command as if a button had been pressed (used by the autoplay smoke test).</summary>
         public void Submit(HeroCommand command) => buffered = command;
@@ -222,12 +261,22 @@ namespace FiveKingdoms.Dungeon
             var gamepad = Gamepad.current;
             UpdateInputMode(keyboard, gamepad);
 
+            if (hud.SkillTree.IsOpen)
+            {
+                // The screen has the keys and the controller; whatever it was opened over (the end panel, the pause menu) waits.
+                buffered = null;
+                injectedTap = null;
+                ReadTreeInput(keyboard, gamepad);
+                return;
+            }
             if (run.State != RunState.InProgress)
             {
                 EndAiming();
                 bool restart = keyboard != null && (keyboard.rKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame) ||
                                gamepad != null && (gamepad.buttonSouth.wasPressedThisFrame || gamepad.startButton.wasPressedThisFrame);
+                bool skills = keyboard != null && keyboard.kKey.wasPressedThisFrame || gamepad != null && gamepad.buttonNorth.wasPressedThisFrame;
                 if (!busy && restart) StartNewRun();
+                else if (!busy && skills) OpenSkillTree();
                 return;
             }
             if (paused)
@@ -486,7 +535,7 @@ namespace FiveKingdoms.Dungeon
             run.Leave();
             SaveSystem.SaveParty(party);
             hud.Refresh(run);
-            hud.ShowRunEnd(run, levelsAtStart);
+            hud.ShowRunEnd(run, levelsAtStart, party);
         }
 
         /// <summary>
@@ -530,6 +579,42 @@ namespace FiveKingdoms.Dungeon
         void ReadMenuInput(Keyboard keyboard, Gamepad gamepad)
         {
             var menu = hud.PauseMenu;
+            var step = ReadMenuStep(keyboard, gamepad);
+            if (step.y != 0) menu.Move(step.y);
+            if (step.x != 0) menu.Side(step.x);
+            if (MenuPress(keyboard, gamepad)) menu.Activate();
+            else if (MenuBack(keyboard, gamepad)) menu.Back();
+        }
+
+        /// <summary>
+        /// The skill tree with keys or a controller: the arrows, WASD, the D-pad or the stick move its cursor, Enter,
+        /// Space or A press what it is on, Q and E or L1 and R1 go to the hero before or after, Esc, B or Start step back
+        /// (out of a question or a list, then out of the screen).
+        /// </summary>
+        void ReadTreeInput(Keyboard keyboard, Gamepad gamepad)
+        {
+            var tree = hud.SkillTree;
+            var step = ReadMenuStep(keyboard, gamepad);
+            if (step.x != 0) tree.Move(step.x, 0);
+            if (step.y != 0) tree.Move(0, step.y);
+            int hero = (keyboard != null && keyboard.eKey.wasPressedThisFrame || gamepad != null && gamepad.rightShoulder.wasPressedThisFrame ? 1 : 0) -
+                       (keyboard != null && keyboard.qKey.wasPressedThisFrame || gamepad != null && gamepad.leftShoulder.wasPressedThisFrame ? 1 : 0);
+            if (hero != 0) tree.NextHero(hero);
+            if (MenuPress(keyboard, gamepad)) tree.Activate();
+            else if (MenuBack(keyboard, gamepad)) tree.Back();
+        }
+
+        static bool MenuPress(Keyboard keyboard, Gamepad gamepad) =>
+            keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame) ||
+            gamepad != null && gamepad.buttonSouth.wasPressedThisFrame;
+
+        static bool MenuBack(Keyboard keyboard, Gamepad gamepad) =>
+            keyboard != null && keyboard.escapeKey.wasPressedThisFrame ||
+            gamepad != null && (gamepad.buttonEast.wasPressedThisFrame || gamepad.startButton.wasPressedThisFrame);
+
+        /// <summary>One step in a menu this frame: x is right, y is down. The stick counts once each time it is pushed over.</summary>
+        Vector2Int ReadMenuStep(Keyboard keyboard, Gamepad gamepad)
+        {
             int dx = 0, dy = 0;
             if (keyboard != null)
             {
@@ -551,14 +636,7 @@ namespace FiveKingdoms.Dungeon
                 if (pushed.y != menuStick.y) dy += pushed.y;
                 menuStick = pushed;
             }
-            if (dy != 0) menu.Move(dy);
-            if (dx != 0) menu.Side(dx);
-            if (keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame) ||
-                gamepad != null && gamepad.buttonSouth.wasPressedThisFrame)
-                menu.Activate();
-            else if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame ||
-                     gamepad != null && (gamepad.buttonEast.wasPressedThisFrame || gamepad.startButton.wasPressedThisFrame))
-                menu.Back();
+            return new Vector2Int(dx, dy);
         }
 
         IEnumerator Execute(HeroCommand command)
@@ -570,7 +648,7 @@ namespace FiveKingdoms.Dungeon
             if (events.Any(e => e is ExpGainedEvent || e is RunEndedEvent)) SaveSystem.SaveParty(party);
             yield return view.Play(run, events);
             hud.Refresh(run);
-            if (run.State != RunState.InProgress) hud.ShowRunEnd(run, levelsAtStart);
+            if (run.State != RunState.InProgress) hud.ShowRunEnd(run, levelsAtStart, party);
             busy = false;
         }
 

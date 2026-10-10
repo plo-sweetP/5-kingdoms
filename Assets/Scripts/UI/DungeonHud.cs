@@ -81,6 +81,9 @@ namespace FiveKingdoms.UI
 
         public event Action<HeroCommand> CommandRequested;
         public event Action RestartRequested;
+
+        /// <summary>The end panel's Skills button: between runs is when a build changes.</summary>
+        public event Action SkillTreeRequested;
         public event Action AutoPilotToggled;
         public event Action PauseRequested;
 
@@ -91,6 +94,9 @@ namespace FiveKingdoms.UI
 
         /// <summary>Opened and closed by the controller, which also does what is chosen in it.</summary>
         public PauseMenu PauseMenu { get; private set; }
+
+        /// <summary>The skill-tree screen. Like the pause menu, it only asks: the controller opens, saves and closes.</summary>
+        public SkillTreeScreen SkillTree { get; private set; }
 
         readonly List<LogLine> log = new List<LogLine>();
         readonly List<FloatingText> floating = new List<FloatingText>();
@@ -106,7 +112,7 @@ namespace FiveKingdoms.UI
         Minimap minimap;
         GameObject bossPanel;
         int bossMaxHp;
-        HoldButton berryButton, descendButton, againButton, autoButton, attackButton, waitButton, pauseButton;
+        HoldButton berryButton, descendButton, againButton, skillsButton, autoButton, attackButton, waitButton, pauseButton;
         readonly HoldButton[] skillButtons = new HoldButton[4]; // Three skills, then the ultimate.
         readonly bool[] skillUsable = new bool[4];              // What the rules say; Auto greys them all the same.
         readonly Text[] skillKeys = new Text[4];
@@ -365,6 +371,8 @@ namespace FiveKingdoms.UI
             keysText.text = mode == InputMode.Gamepad ? GamepadHint : desktop || mode == InputMode.Keyboard ? KeyboardHint : "";
             descendButton.SetLabel(mode == InputMode.Gamepad ? "Descend (R3)" : mode == InputMode.Keyboard ? "Descend (Enter)" : "Descend");
             againButton.SetLabel(mode == InputMode.Gamepad ? "Try Again (A)" : mode == InputMode.Keyboard ? "Try Again (R)" : "Try Again");
+            skillsButton.SetLabel(mode == InputMode.Gamepad ? "Skills (Y)" : mode == InputMode.Keyboard ? "Skills (K)" : "Skills");
+            SkillTree.SetInputMode(mode);
         }
 
         public void AddMessage(string message, Color? color = null)
@@ -422,8 +430,11 @@ namespace FiveKingdoms.UI
             fader.color = new Color(0f, 0f, 0f, targetAlpha);
         }
 
-        /// <summary>End-of-run panel: the result, and what the party takes home (levels are kept win or lose).</summary>
-        public void ShowRunEnd(DungeonRun run, IReadOnlyList<int> levelsAtStart)
+        /// <summary>
+        /// End-of-run panel: the result, what the party takes home (levels are kept win or lose), and who has points to
+        /// spend in the skill tree (<paramref name="progress"/>: the heroes' saved progress).
+        /// </summary>
+        public void ShowRunEnd(DungeonRun run, IReadOnlyList<int> levelsAtStart, IReadOnlyList<HeroProgress> progress = null)
         {
             bool won = run.State == RunState.Won;
             bool left = run.State == RunState.Left; // The pause menu's Exit; "Return to the farm?" once there is one.
@@ -439,7 +450,11 @@ namespace FiveKingdoms.UI
                 int before = i < levelsAtStart.Count ? levelsAtStart[i] : member.Level;
                 levels.Add(member.Level > before ? $"{member.Name} Lv {before} > {member.Level}" : $"{member.Name} Lv {member.Level}");
             }
-            endDetail.text = result + "\n" + string.Join(",  ", levels) + "\nProgress saved.";
+            var spare = new List<string>();
+            foreach (var hero in progress ?? new HeroProgress[0])
+                if (hero.PointsFree > 0) spare.Add($"{hero.Definition.Name} {hero.PointsFree}");
+            endDetail.text = result + "\n" + string.Join(",  ", levels) + "\nProgress saved." +
+                             (spare.Count > 0 ? "\nPoints to spend:  " + string.Join(",  ", spare) : "");
             endPanel.alpha = 1f;
             endPanel.blocksRaycasts = true;
             endPanel.interactable = true;
@@ -676,14 +691,19 @@ namespace FiveKingdoms.UI
             PauseMenu = PauseMenu.Create(canvasRect);
 
             var end = UiFactory.CreatePanel("RunEnd", canvasRect, "panel", raycast: true);
-            UiFactory.Place(end.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(880f, 480f));
+            UiFactory.Place(end.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(880f, 520f));
             endPanel = end.gameObject.AddComponent<CanvasGroup>();
             endTitle = UiFactory.CreateText("Title", end.transform, "", 64, TextAnchor.MiddleCenter, TextColor);
             UiFactory.Place(endTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -90f), new Vector2(820f, 90f));
             endDetail = UiFactory.CreateText("Detail", end.transform, "", 30, TextAnchor.MiddleCenter, TextColor);
-            UiFactory.Place(endDetail.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -205f), new Vector2(820f, 140f));
-            againButton = HoldButton.Create(end.transform, "TryAgain", "Try Again", new Vector2(0.5f, 0f), new Vector2(0f, 95f), new Vector2(360f, 100f), "button_red", 38);
+            UiFactory.Place(endDetail.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -220f), new Vector2(820f, 170f));
+            againButton = HoldButton.Create(end.transform, "TryAgain", "Try Again", new Vector2(0.5f, 0f), new Vector2(-195f, 95f), new Vector2(360f, 100f), "button_red", 38);
             againButton.Pressed += () => RestartRequested?.Invoke();
+            // A build changes between runs: here is where the skill tree opens for that.
+            skillsButton = HoldButton.Create(end.transform, "Skills", "Skills", new Vector2(0.5f, 0f), new Vector2(195f, 95f), new Vector2(360f, 100f), "button_gold", 38);
+            skillsButton.Pressed += () => SkillTreeRequested?.Invoke();
+
+            SkillTree = SkillTreeScreen.Create(canvasRect);
         }
     }
 }

@@ -2160,6 +2160,270 @@
    "path": "UI/icon_berry",
    "right": 0,
    "top": 0
+  },
+  {
+   "bottom": 14,
+   "left": 14,
+   "name": "panel_dark",
+   "path": "UI/panel_dark",
+   "right": 14,
+   "top": 14
+  },
+  {
+   "bottom": 5,
+   "left": 5,
+   "name": "panel_inset",
+   "path": "UI/panel_inset",
+   "right": 5,
+   "top": 5
+  },
+  {
+   "bottom": 1,
+   "left": 1,
+   "name": "tree_line",
+   "path": "UI/tree_line",
+   "right": 1,
+   "top": 1
+  },
+  {
+   "bottom": 4,
+   "left": 4,
+   "name": "tree_cursor",
+   "path": "UI/tree_cursor",
+   "right": 4,
+   "top": 4
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "lock",
+   "path": "UI/lock",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "tree_pip",
+   "path": "UI/tree_pip",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "tree_node",
+   "path": "UI/tree_node",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "badge_upgrade",
+   "path": "UI/badge_upgrade",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "badge_learned",
+   "path": "UI/badge_learned",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "sphere",
+   "path": "UI/sphere",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "sphere_shine",
+   "path": "UI/sphere_shine",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "sphere_glow",
+   "path": "UI/sphere_glow",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "sphere_ring",
+   "path": "UI/sphere_ring",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "sphere_big",
+   "path": "UI/sphere_big",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "sphere_big_shine",
+   "path": "UI/sphere_big_shine",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "sphere_big_glow",
+   "path": "UI/sphere_big_glow",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "sphere_big_ring",
+   "path": "UI/sphere_big_ring",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_attack_hunter_bow",
+   "path": "Icons/skill_attack_hunter_bow",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_attack_long_sword",
+   "path": "Icons/skill_attack_long_sword",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_attack_piercer_blade",
+   "path": "Icons/skill_attack_piercer_blade",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_aura_of_protection",
+   "path": "Icons/skill_aura_of_protection",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_blade_dance",
+   "path": "Icons/skill_blade_dance",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_divine_strike",
+   "path": "Icons/skill_divine_strike",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_hunters_mark",
+   "path": "Icons/skill_hunters_mark",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_lunge",
+   "path": "Icons/skill_lunge",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_paladin_heal",
+   "path": "Icons/skill_paladin_heal",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_power_shot",
+   "path": "Icons/skill_power_shot",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_riposte",
+   "path": "Icons/skill_riposte",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_rolling_shot",
+   "path": "Icons/skill_rolling_shot",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_shoulder_bash",
+   "path": "Icons/skill_shoulder_bash",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_triple_thrust",
+   "path": "Icons/skill_triple_thrust",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_unknown",
+   "path": "Icons/skill_unknown",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_volley",
+   "path": "Icons/skill_volley",
+   "right": 0,
+   "top": 0
   }
  ]
 }

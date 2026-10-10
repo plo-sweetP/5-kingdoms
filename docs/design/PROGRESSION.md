@@ -523,15 +523,36 @@ and the re-tune (steps 7 and 8). Kristela's Fencer kit with the class stat bumps
 skill-tree screen on 2026-10-10.
 
 **Step 6 as built (2026-10-10): the skill-tree screen** (`SkillTreeModel`, `TreeText`, `SkillTreeScreen`). What the
-build session settled where the spec left room; Peter had the mock-ups and has not answered on the look yet.
+build session settled where the spec left room.
+
+**Peter on the mock-ups, 2026-10-10** (built the same day, 34fe31a):
+- The look: "yes look is right for now".
+- The layout: "yes heros on top, classes and loadout. only suggestion would be to only show 'what class you have'
+  then do a '+' symbol to add another class or profession below the shown class. just to show what classes they
+  have vs what they dont have".
+- His reference: "nothing is missing. we can keep it there for now and come back to it later when i try to a more
+  personal playthrough."
+- So the list on the left shows only the classes the hero has a tier of, in the order learned, and under them a
+  **"+  Add a class"** entry while there is a class left to add. On the "+" the info panel lists the classes the
+  hero doesn't have; choosing one shows its tree, to look at for nothing, and its button reads "Learn the
+  Paladin". Learning its first tier puts it in the hero's list and the cursor follows it there. Unlearning a class
+  takes it out of the list again and puts it back under the "+". That goes for a hero's own class too (the rules
+  let any class go back to tier 0): the hero keeps the starting kit, the list is then just the "+", and the own
+  class is the first one it offers to look at. With every class learned the "+" is gone. During a run the "+"
+  still works for looking.
+- *The hub's proposals, not Peter's words:* professions belong under the same "+", but none exist until 1g-3, so
+  the list has classes only for now, not locked professions. And rows without content read **"Coming soon"**
+  instead of "Not written yet", which read like a developer's note (Peter was asked and has not answered); the
+  info panel still explains that the class stops at tier 4 for now.
+
 - **One screen.** On top a tab per hero (level, free points), the points left and Close. On the left the classes
-  with their tiers (Archer, Paladin, Fencer, Monk: any hero can put points into any of them), the loadout (three
-  skills and the ultimate) and Unlearn. In the middle the tree of the class the cursor chose: three paths side by
+  the hero has with their tiers and the "+" for the others (Archer, Paladin, Fencer, Monk: any hero can put points
+  into any of them), the loadout (three skills and the ultimate) and Unlearn. In the middle the tree of the class the cursor chose: three paths side by
   side in blue, green and purple, rows for tiers 5, 10, 15, 20 and 25, and on its left a track with a mark per
   tier (gold: reached, white: next), so the tiers between milestones have a place. On the right an info panel
   for whatever the cursor is on, with one button.
 - **A sphere's states:** picked (gold ring, a tick), can be picked now (it glows), further down (dimmed), not
-  taken (grey: another option of its row was picked), not written yet (a lock; the row says so). A green arrow
+  taken (grey: another option of its row was picked), not written yet (a lock; the row says "Coming soon"). A green arrow
   marks an option that upgrades a skill.
 - **The cursor is the selection.** A tap puts it on a class, a sphere, a loadout slot or a skill in a list; the
   info panel's button presses. With keys or a controller the arrows, WASD, the D-pad or the stick move it, Enter,
@@ -547,7 +568,7 @@ build session settled where the spec left room; Peter had the mock-ups and has n
   teaches the skill instead. For a loadout slot, the skill in it and the list of the hero's other skills, each
   with why it can't go there (another weapon, a second Quick skill) or what happens if it does (trades places,
   or the old one leaves the loadout).
-- **Locked rows.** Every milestone row is unwritten today: three locks, "Not written yet", and the panel explains
+- **Locked rows.** Every milestone row is unwritten today: three locks, "Coming soon", and the panel explains
   that the class stops at tier 4 for now and that points keep or can go into another class.
 - **Where it opens.** The end panel has a Skills button (K, the controller's Y) and lists who has points to
   spend: there a build can change, and every change is saved at once. The pause menu's Hero stats page has a

@@ -139,7 +139,9 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
 - The skill-tree screen (PROGRESSION.md, "Building 1g", "Step 6 as built"; `SkillTreeModel`, `TreeText`,
   `SkillTreeScreen`; `SkillTreeModelTests`, `SkillTreeScreenTests`): everything the screen knows and does is the
   model's, plain C# in Core (where the cursor stands, what the info panel says, what pressing does), and goes
-  through `HeroProgress`; the screen only draws the model and passes on touches, keys and controller buttons. A
+  through `HeroProgress`; the screen only draws the model and passes on touches, keys and controller buttons. The
+  list on the left shows only the classes a hero has (`Learned`), with a "+" entry that lists the others (`Others`,
+  `TreeZone.Adding`; Peter, 2026-10-10); professions join that list with 1g-3. A
   tap puts the cursor somewhere and the info panel's button presses; raising a tier asks nothing, unlearning asks
   first. A build changes between runs only: the end panel's Skills button (K, the controller's Y) opens the
   screen to change one, the pause menu's Hero stats page to look (`SkillTreeModel.ReadOnly`), `-fk-tree` before

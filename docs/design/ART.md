@@ -237,8 +237,8 @@ Uzuki a step behind, facing outward) with one change: Kristela's blade thinner, 
   rows for tiers 5, 10, 15, 20 and 25, round glowing icons in a color per path, connecting lines, an info panel and
   the points left. The same round, glowing look for the skill buttons. The reference's painted gold-vine frames need
   bought or generated art.
-  **Built on 2026-10-10** (`Tools/pixelart/tree.py`, `icons.py`, `tree_mock.py`; Peter had the mock-ups, his word on
-  the look is still open): a dark panel with a bevelled gold trim and a stud in each corner (`panel_dark`), a
+  **Built on 2026-10-10** (`Tools/pixelart/tree.py`, `icons.py`, `tree_mock.py`; Peter on the mock-ups, 2026-10-10:
+  "yes look is right for now"): a dark panel with a bevelled gold trim and a stud in each corner (`panel_dark`), a
   sunken box (`panel_inset`), a sphere in two sizes drawn in bands of grey with the pack's outline, which the game
   tints (blue #5aa9ee, green #7ccb62, purple #bb82f0 for the three paths; `SkillTreeScreen.PathColors`), with its
   glow, gold ring and white glint as pieces of their own, a line piece for the connections, a small and a large

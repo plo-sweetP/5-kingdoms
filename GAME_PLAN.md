@@ -708,7 +708,8 @@ the spec is docs/design/HUD.md. Built:
   we'll adjust later when we do more direct individual levels/stages").
 
 **The view follow-ups and the skill-tree screen (2026-10-10, roadmap rows P1 and 1g-1).** One build session, three
-pushes: 8ab5327 (the view), 74c75ad (the art tools and mock-ups), adceaf0 (the screen).
+pushes: 8ab5327 (the view), 74c75ad (the art tools and mock-ups), adceaf0 (the screen), and 34fe31a (Peter's change
+to the class list, the same day).
 - **The view** (HUD.md, "The view on the tablet"). A tablet starts in Far, a phone and a PC in Near, until the
   player picks a view in Settings; a picked view is kept. A tablet is a touch screen at least 600 dp on its
   shorter side by the reported dpi (Android's own line, about 95 mm), used instead of the proposed "a Near tile
@@ -722,11 +723,15 @@ pushes: 8ab5327 (the view), 74c75ad (the art tools and mock-ups), adceaf0 (the s
   apart, the lines between them, a mark per tier for the track, a gold cursor box, a lock, badges, and a 24 px
   icon for every skill, ultimate and weapon attack of the three kits. The panel, spheres, lock and badges come
   from the draft branch; its Monk icons were left out. `tree_mock.py` draws the screen as mock-ups (preview sheets
-  10 to 13), which Peter got before the screen was built; his word on the look had not come by the push.
+  10 to 13), which Peter got before the screen was built. His answer came after the first push: "yes look is
+  right for now".
 - **The screen** (PROGRESSION.md, "Building 1g", "Step 6 as built"). Per hero: the classes with their tiers and
   the points left, one class's tree (three paths, rows for tiers 5 to 25, a track with a mark per tier), an info
   panel for whatever the cursor is on (skills from the hero's own copy), raising a tier, the loadout, and
-  unlearning a class (it asks first). Every milestone row is locked today and says "Not written yet"; a class
+  unlearning a class (it asks first). The list on the left shows only the classes a hero has, with a "+  Add a
+  class" entry for the others (Peter, 2026-10-10: "only show 'what class you have' then do a '+' symbol to add
+  another class or profession"); professions join that list with 1g-3. Every milestone row is locked today and
+  says "Coming soon" (the hub's wording, Peter was asked); a class
   stops at tier 4 and the screen says why. It opens from the end panel (Skills; K or the controller's Y) to change
   a build, from the pause menu's Hero stats page to look only, and with `-fk-tree` before the first run. All it
   knows and does is a plain class in Core (`SkillTreeModel`), so its rules are tested without a scene.
@@ -737,14 +742,16 @@ pushes: 8ab5327 (the view), 74c75ad (the art tools and mock-ups), adceaf0 (the s
 - **Also found:** the test APK had grown from 41 to 60 and then 92 MB with the same 41.5 MB of content: Gradle
   patches its last package and leaves what it replaces in the file. `BuildTools.BuildAndroidDev` now removes that
   package first.
-- **Checks** (2026-10-10, on the last code commit, all measured in the session): 351 Core tests (18 new:
-  `SkillTreeModelTests`), 354 in Unity's EditMode, 48 PlayMode (12 new: six for the view, six for the
+- **Checks** (2026-10-10, on the last code commit, all measured in the session): 354 Core tests (21 new:
+  `SkillTreeModelTests`), 357 in Unity's EditMode, 49 PlayMode (13 new: six for the view, seven for the
   screen in the scene), the Windows build, the four autoplay runs without an error line (each now tours the tree
   from the pause menu, `01_tree_*.png`), and screenshots of the screen for every hero at 2340 x 1080 and in the
-  tablet's shape, with touch, keys and a controller (`C:\Users\peter\5Kingdoms\results\st1\tree`). A test APK is built from this state (`C:\Users\peter\5Kingdoms\Builds\Android\5Kingdoms-dev.apk`, 41.6 MB); it is not on the tablet: no device was connected (`adb install -r` when it is).
+  tablet's shape, with touch, keys and a controller (`C:\Users\peter\5Kingdoms\results\st2\tree`). A test APK is built from this state (`C:\Users\peter\5Kingdoms\Builds\Android\5Kingdoms-dev.apk`, 41.6 MB); it is not on the tablet: no device was connected (`adb install -r` when it is).
 - **Left:**
-  1. Peter's word on the look of the screen (the mock-ups and the screenshots are with him), and anything he
-     wants changed.
+  1. Peter's look at the real screen (the screenshots are with him): the look and the layout are approved from
+     the mock-ups, the class list with the "+" is built as he asked. Open with him: "Coming soon" on locked rows
+     (the hub's wording), and where the screen opens (the end panel's Skills button, the pause menu's Hero stats
+     page).
   2. Tiers 5 and 10 of Archer, Paladin and Fencer with their icons, then default builds for the balance report
      and the re-tune (the next session). The screen shows written rows already: its tests use made-up classes.
   3. The APK onto the tablet, and a look there at what the device reports (the log's "Screen:" line).

@@ -116,7 +116,9 @@ creatures beyond the pack come later.
     rounded, sabre-like guard around the hand, in the game and on the icon alike. Built on 2026-10-05 (856a412).
     Peter on the result: "Only one side of the sabre should have the hand(hilt guard) the side next to the hero
     should be flatter". So the guard curves around the hand on the outer side only, away from her body, and the
-    side toward her is flat. To do with playtest pass 1 (docs/design/HUD.md).
+    side toward her is flat. To do with playtest pass 1 (docs/design/HUD.md). On that version (2026-10-10) he
+    said the guard is fine "except i think it's reverse. have the blade face away from kristela instead of towards
+    her": the blade's edge and curve face outward, away from her body.
 - **Female heroes read as feminine, in any armor and with any weapon** (Peter, 2026-10-03, pointing at his chibi
   class sheet): for example long hair falling from under the helmet, lashes, a slimmer or skirted outline, softer
   trim, hair accessories. Kristela is the female hero today; Haiden and Uzuki are boys (Peter, 2026-10-03; older

@@ -161,13 +161,19 @@ whatever role they like.
     25000 HP fresh level-1 wins went from 28 to 46 of 600 (7.7%), so the Troll has 30000 HP now: 27 of 600 win
     (4.5%), and with levels kept the first clear comes on attempt 3.0 at Lv 9.6. Peter, 2026-10-10: "keep the
     troll hp for now. but we'll adjust later when we do more direct individual levels/stages".
-  - **Not built: the archer** (open on 2026-10-10: Peter has not decided). The 522 hits that are left all fall on
+  - **Not built: the archer** (decided on 2026-10-10: it waits for the Troll's leap). The 522 hits that are left all fall on
     Uzuki when he is the last hero standing: he backs into a wall or a corner and is slammed there. Tried in the
     simulator: letting him move to a tile with a way out changes nothing (in a true corner no tile next to him
     has one), and teaching him to back off toward open floor works too well: he beats the Troll alone, and fresh
     level-1 wins go to 476 of 600 even at 30000 HP. The Troll is slow and has no answer to an archer who keeps
-    his distance. That is a boss design question (a leap, a thrown rock, more speed once it is alone), for when
-    real bosses are designed. Uzuki's AI is as it was.
+    his distance. That is a gap in the boss, not in Uzuki's AI.
+    **Decided by Peter on 2026-10-10** ("yes, add leap for the troll"): **every boss gets at least one move that
+    reaches a hero who keeps his distance**, and the Troll's is a **leap**. *Proposed, to settle when it is
+    built:* it aims at the farthest hero in sight, winds up for one of the Troll's turns with the tiles it will
+    land on shown (so it can be dodged, like the slam), and comes more often once one hero is left. It is built
+    with the individual stages, together with the Troll's HP (above), unless Peter asks for it sooner. Uzuki's
+    footing (backing off toward open floor) comes with it: without the leap it wins the fight alone. Until then
+    Uzuki's AI is as it was.
   - The hero the player controls is never moved: every rule is in the party's AI (`HeroTactics`).
 
 **Targeting and input (decided).**

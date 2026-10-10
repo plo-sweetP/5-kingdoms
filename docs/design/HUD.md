@@ -137,6 +137,18 @@ settings"), so he compares them on the tablet itself.
 - `-fk-zoom near|far` picks the view at launch, and the log says "View: 2800 x 1752 at zoom 1, 27.4 tiles high
   (Far)." (or "(Near)", or "(Near, the only view on this screen)").
 
+**Peter on the Near and Far screenshots, 2026-10-10 (not built yet; the first step of the next build session):**
+- "default for tablet can be far". So **Far is the default on a tablet**; Near stays the default on a phone and on
+  PC. *Proposed* rule for what counts as a tablet: a touch device (Android, iOS) on which Near would draw a tile
+  larger than about 10 mm on the glass, going by the screen's reported dpi (the Tab S8+: about 12 mm; his phone:
+  about 8.6 mm). When the dpi isn't reported, Near. The default only counts until the player has picked a view in
+  Settings; a picked view is kept.
+- "numbers should match the ratio so it should be smaller? please make it match enough". So the damage numbers and
+  the words over a hero **scale with the view**: in Far they are drawn smaller, in about the same proportion to a
+  hero as in Near. *Proposed:* half the Near size where Far is half the zoom, but never below a size that still
+  reads easily on that device (the build session picks the floor and shows Peter Far in the tablet's shape and on
+  the phone). The message log and the HUD keep their size.
+
 ## Building it (playtest pass 1)
 One build session, after 1g part 1: both change the HUD, so not at the same time.
 1. What moves: the top-right row with the Pause button, the skill row, Auto's look.

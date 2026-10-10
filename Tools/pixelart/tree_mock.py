@@ -125,7 +125,8 @@ class State:
         self.picks = picks            # {milestone tier: path}
         self.written = written        # Whether the milestone rows have their options.
         self.selected = selected      # (milestone tier, path), or (tier, None) for the row as a whole.
-        self.classes = classes        # [(name, tier)], the first one shown in the tree.
+        self.classes = classes        # [(name, tier)]: the classes the hero has, the first one shown in the tree.
+        self.others = 4 - len(classes)   # How many the "+" entry lists.
         self.loadout = loadout        # Icon names: three skills, then the ultimate.
         self.info = info              # {'title', 'kind', 'body', 'note', 'button', 'ready'}
         self.points = level - sum(t for _, t in classes)
@@ -171,9 +172,13 @@ def draw(screen, state, pieces, glyphs, portraits, heroes):
         if chosen:
             s.fill(x0 + 6.0, y + 10.0, 6.0, 64.0, GOLD_TEXT)
         s.text(x0 + 26.0, y + 14.0, name, GOLD_TEXT if chosen else TEXT, 28)
-        s.text(x0 + 26.0, y + 50.0, 'Tier %d of 25' % tier if tier else 'Not learned', DIM, 20)
+        s.text(x0 + 26.0, y + 50.0, 'Tier %d of 25' % tier, DIM, 20)
         y += 92.0
-    y += 14.0
+    # Under the classes the hero has: the "+" that lists the ones it doesn't (Peter, 2026-10-10).
+    s.panel(by['panel_inset'], x0, y, left_w, 84.0, hexc('#b9bfcc'))
+    s.text(x0 + 26.0, y + 14.0, '+  Add a class', TEXT, 28)
+    s.text(x0 + 26.0, y + 50.0, '%d more to choose from' % state.others, DIM, 20)
+    y = top + 34.0 + 4 * 92.0 + 14.0                                   # The loadout keeps its place under four rows.
     s.text(x0 + 4.0, y, 'Loadout', DIM, 22)
     y += 34.0
     step = (left_w - 4 * 44 * s.s / s.k) / 3.0 + 44 * s.s / s.k       # Four spheres across the column.
@@ -260,7 +265,7 @@ def draw(screen, state, pieces, glyphs, portraits, heroes):
                 s.art(by['badge_upgrade'].image, cx + 36.0, cy - 34.0)
             s.text(cx, cy + 52.0, name, label, 20, 'centre', fit=column - 12.0)
         if not state.written:
-            s.text((path_x[0] + path_x[2]) / 2.0, cy + 52.0, 'Not written yet', FAINT, 20, 'centre')
+            s.text((path_x[0] + path_x[2]) / 2.0, cy + 52.0, 'Coming soon', FAINT, 20, 'centre')
     # The cursor around what is selected, like the reference's gold box.
     t, p = state.selected
     if p is None:
@@ -305,7 +310,7 @@ def draw(screen, state, pieces, glyphs, portraits, heroes):
 
 def states():
     """The two mock-ups' states: the tree with its options written (as drafted), and the tree as it is today."""
-    classes = [('Archer', 14), ('Paladin', 0), ('Fencer', 0), ('Monk', 0)]
+    classes = [('Archer', 14)]
     loadout = ('hunters_mark', 'power_shot', 'rolling_shot', 'volley')
     written = State('Uzuki', 16, 14, {5: 0, 10: 1}, True, (15, 2), classes, loadout, {
         'icon': 'attack_hunter_bow', 'title': 'Splitting Arrows', 'kind': ['Trickshot, tier 15', 'Upgrades Quick Shot'],
@@ -314,9 +319,9 @@ def states():
                  'Every tier of Archer: +0.4% ATK, +0.2% Crit Rate.'],
         'status': 'Costs 1 point. A pick stays until the class is unlearned.',
         'button': 'Learn', 'ready': True})
-    today = State('Uzuki', 6, 4, {}, False, (5, None), [('Archer', 4), ('Paladin', 0), ('Fencer', 0), ('Monk', 0)], loadout, {
+    today = State('Uzuki', 6, 4, {}, False, (5, None), [('Archer', 4)], loadout, {
         'icon': None, 'title': 'Tier 5', 'kind': ['Archer, a milestone', 'One of three options'],
-        'body': "Not written yet. The Archer's milestone options come with the next update, so the class stops at tier 4 for now.",
+        'body': "Coming soon. The Archer's options for tier 5 come with a later update, so the class stops at tier 4 for now.",
         'note': ['Your points keep. They can go into another class meanwhile, or wait.',
                  'Every tier of Archer: +0.4% ATK, +0.2% Crit Rate.'],
         'status': 'Tier 5 is locked.',

@@ -9,7 +9,8 @@ namespace FiveKingdoms.UI
 {
     /// <summary>
     /// The skill-tree screen (PROGRESSION.md, "Building 1g", step 6; ART.md, "Skill tree screen"), built in code like the
-    /// rest of the HUD. Per hero: the classes with their tiers and the points left, the tree of spheres for one class
+    /// rest of the HUD. Per hero: the classes it has with their tiers, a "+" for the ones it doesn't have (Peter,
+    /// 2026-10-10), the points left, the tree of spheres for one class
     /// (three paths side by side, rows for tiers 5 to 25, a track with a mark per tier), an info panel for whatever
     /// the cursor is on, the loadout, and unlearning a class. Everything it knows and does comes from a
     /// <see cref="SkillTreeModel"/>: this class only draws that model and passes on touches, keys and controller
@@ -70,6 +71,10 @@ namespace FiveKingdoms.UI
         Vector2 laidOutFor;
         float laidOutUnits;
         int choicesFrom;
+
+        /// <summary>The info panel's rows list classes (the "+" entry's) instead of skills for a slot, and how many there are.</summary>
+        bool rowsShowClasses;
+        int rowsCount;
 
         // What the layout worked out, for the cursor.
         float left, treeLeft, infoLeft, leftWidth, treeWidth, infoWidth, top, bottom, trackX, column, slotStep, boxTop, boxHeight;
@@ -184,6 +189,13 @@ namespace FiveKingdoms.UI
             Refresh();
         }
 
+        /// <summary>The cursor onto a class of the catalog, wherever it stands: in the hero's list or under the "+" (tests, the autoplay).</summary>
+        public void ShowClass(int classIndex)
+        {
+            Model.Show(Model.Classes[classIndex]);
+            Refresh();
+        }
+
         /// <summary>A touch on something: the cursor goes there; with <paramref name="press"/> it is pressed too (the kit's buttons).</summary>
         public void Tap(TreeFocus focus, bool press = false)
         {
@@ -280,7 +292,7 @@ namespace FiveKingdoms.UI
             for (int i = 0; i < ChoiceRows; i++)
             {
                 int index = i;
-                var row = NewRow("Choice" + i, () => Tap(TreeFocus.Choice(choicesFrom + index)));
+                var row = NewRow("Choice" + i, () => Tap(rowsShowClasses ? TreeFocus.Add(choicesFrom + index) : TreeFocus.Choice(choicesFrom + index)));
                 row.Icon = UiFactory.CreateIcon("Icon", row.Rect, null);
                 row.Icon.rectTransform.anchorMin = row.Icon.rectTransform.anchorMax = new Vector2(0f, 0.5f);
                 row.Icon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -293,7 +305,7 @@ namespace FiveKingdoms.UI
             moreChoices.raycastTarget = true;
             more.Pressed = () =>
             {
-                choicesFrom = choicesFrom + ChoiceRows < Model.Choices.Count ? choicesFrom + ChoiceRows : 0;
+                choicesFrom = choicesFrom + ChoiceRows < rowsCount ? choicesFrom + ChoiceRows : 0;
                 Refresh();
             };
             infoStatus = NewText("Status", 20, TextAnchor.UpperLeft, Dim);
@@ -571,17 +583,29 @@ namespace FiveKingdoms.UI
             pointsValue.text = hero.PointsFree.ToString();
             pointsValue.color = hero.PointsFree > 0 ? Gold : Dim;
 
+            // The list on the left: the classes the hero has, then the "+" for the ones it doesn't.
+            var learned = model.Learned;
+            int addIndex = model.AddIndex, listCount = model.ListCount;
             for (int i = 0; i < classRows.Count; i++)
             {
-                var definition = model.Classes[i];
-                bool chosen = i == model.ClassIndex;
                 var row = classRows[i];
-                int reached = hero.TierOf(definition);
+                row.Rect.gameObject.SetActive(i < listCount);
+                if (i >= listCount) continue;
+                // The "+" is the marked one while a class from its list is being looked at.
+                bool chosen = i == addIndex ? tier == 0 : learned[i] == shown;
                 row.Back.color = chosen ? Color.white : Unchosen;
                 row.Bar.enabled = chosen;
-                row.Name.text = definition.Name;
                 row.Name.color = chosen ? Gold : DungeonHud.TextColor;
-                row.Detail.text = reached > 0 ? $"Tier {reached} of {ClassDefinition.MaxTier}" : "Not learned";
+                if (i == addIndex)
+                {
+                    row.Name.text = "+  Add a class";
+                    row.Detail.text = chosen ? $"Looking at the {shown.Name}" : $"{model.Others.Count} more to choose from";
+                }
+                else
+                {
+                    row.Name.text = learned[i].Name;
+                    row.Detail.text = $"Tier {hero.TierOf(learned[i])} of {ClassDefinition.MaxTier}";
+                }
             }
 
             for (int i = 0; i < slots.Length; i++)
@@ -618,7 +642,7 @@ namespace FiveKingdoms.UI
                 int rowTier = SkillTreeModel.TierOfRow(row);
                 tierNumbers[row].color = rowTier <= tier ? Gold : Dim;
                 bool locked = model.OptionAt(row, 0) == null;
-                rowNotes[row].text = locked ? "Not written yet" : "";
+                rowNotes[row].text = locked ? "Coming soon" : "";
                 for (int path = 0; path < ClassDefinition.PathCount; path++)
                 {
                     var orb = orbs[row, path];
@@ -675,34 +699,50 @@ namespace FiveKingdoms.UI
             var tint = info.Path >= 0 ? PathColors[info.Path] : focus.Zone == TreeZone.Loadout || focus.Zone == TreeZone.Choices ? SlotTint : LockedTint;
             Show(infoOrb, tint, info.Icon, glow: info.Path >= 0, ring: false, shine: info.Icon != null, glyph: Color.white, locked: info.Locked);
 
-            // The skills that could go in the slot: a window of rows at the foot of the box, following the cursor.
+            // A window of rows at the foot of the box, following the cursor: the skills that could go in the slot, or,
+            // on the "+" and in its list, the classes the hero doesn't have.
             var choices = model.Choices;
-            if (focus.Zone == TreeZone.Choices)
+            rowsShowClasses = focus.Zone == TreeZone.Adding || focus.Zone == TreeZone.Classes && focus.Index == model.AddIndex;
+            var others = rowsShowClasses ? model.Others : null;
+            rowsCount = rowsShowClasses ? others.Count : choices.Count;
+            if (focus.Zone == TreeZone.Choices || focus.Zone == TreeZone.Adding)
                 choicesFrom = Mathf.Clamp(choicesFrom, Mathf.Max(0, focus.Index - ChoiceRows + 1), focus.Index);
-            choicesFrom = Mathf.Clamp(choicesFrom, 0, Mathf.Max(0, choices.Count - 1));
-            int shownRows = Mathf.Min(ChoiceRows, choices.Count - choicesFrom);
+            choicesFrom = Mathf.Clamp(choicesFrom, 0, Mathf.Max(0, rowsCount - 1));
+            int shownRows = Mathf.Min(ChoiceRows, rowsCount - choicesFrom);
             for (int i = 0; i < ChoiceRows; i++)
             {
                 var row = choiceRows[i];
                 bool used = i < shownRows;
                 row.Rect.gameObject.SetActive(used);
                 if (!used) continue;
-                var choice = choices[choicesFrom + i];
-                bool marked = focus == TreeFocus.Choice(choicesFrom + i);
-                bool fits = choice.Check == EquipCheck.Ok;
                 // The rows hang from the box's foot: with fewer than four, they close up at the bottom.
                 row.Rect.anchoredPosition = new Vector2(row.Rect.anchoredPosition.x, -Snap(boxTop + boxHeight - 12f - (shownRows - i) * 58f));
+                bool marked, fits = true;
+                if (rowsShowClasses)
+                {
+                    marked = focus == TreeFocus.Add(choicesFrom + i);
+                    row.Name.text = others[choicesFrom + i].Name;
+                    row.Detail.text = "not learned";
+                    row.Icon.enabled = false;
+                }
+                else
+                {
+                    var choice = choices[choicesFrom + i];
+                    marked = focus == TreeFocus.Choice(choicesFrom + i);
+                    fits = choice.Check == EquipCheck.Ok;
+                    row.Name.text = choice.Skill.Name;
+                    row.Detail.text = !fits ? (choice.Check == EquipCheck.WrongWeapon ? "other weapon" : "second Quick")
+                        : choice.From >= 0 ? $"in slot {choice.From + 1}" : "";
+                    row.Icon.enabled = true;
+                    SetArt(row.Icon, model.IconOf(choice.Skill));
+                    row.Icon.color = fits ? Color.white : Faint;
+                }
                 row.Back.color = marked ? Color.white : Unchosen;
                 row.Bar.enabled = marked;
-                row.Name.text = choice.Skill.Name;
                 row.Name.color = fits ? DungeonHud.TextColor : Faint;
-                row.Detail.text = !fits ? (choice.Check == EquipCheck.WrongWeapon ? "other weapon" : "second Quick")
-                    : choice.From >= 0 ? $"in slot {choice.From + 1}" : "";
-                SetArt(row.Icon, model.IconOf(choice.Skill));
-                row.Icon.color = fits ? Color.white : Faint;
             }
-            moreChoices.text = choices.Count > ChoiceRows ? $"{choicesFrom + 1}-{choicesFrom + shownRows} of {choices.Count}  (more)" : "";
-            moreChoices.gameObject.SetActive(choices.Count > ChoiceRows);
+            moreChoices.text = rowsCount > ChoiceRows ? $"{choicesFrom + 1}-{choicesFrom + shownRows} of {rowsCount}  (more)" : "";
+            moreChoices.gameObject.SetActive(rowsCount > ChoiceRows);
 
             float bodyHeight = boxHeight - 36f - (shownRows > 0 ? shownRows * 58f + 16f : 0f);
             Box(infoBody.rectTransform, infoLeft + 44f, boxTop + 18f, infoWidth - 88f, bodyHeight);
@@ -752,6 +792,7 @@ namespace FiveKingdoms.UI
                     Box(cursor.rectTransform, pathX[focus.Path] - half, rowY - 58f, 2f * half, 138f);
                     break;
                 case TreeZone.Choices:
+                case TreeZone.Adding:
                     int shown = focus.Index - choicesFrom;
                     if (shown >= 0 && shown < ChoiceRows) Around(choiceRows[shown].Rect, 4f);
                     break;

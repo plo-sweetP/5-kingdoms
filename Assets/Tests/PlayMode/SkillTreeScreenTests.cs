@@ -77,9 +77,9 @@ namespace FiveKingdoms.Tests
             // Tier 5 isn't written: the class stops here, and the screen says so where the player looks.
             tree.Activate();
             Assert.AreEqual(4, tree.Model.Hero.TierOf(ClassCatalog.Paladin));
-            StringAssert.Contains("Tier 5 isn't written yet", tree.InfoText);
+            StringAssert.Contains("Tier 5 is coming soon", tree.InfoText);
             tree.Tap(TreeFocus.Option(0, 0));
-            StringAssert.Contains("Not written yet.", tree.InfoText);
+            StringAssert.Contains("Coming soon.", tree.InfoText);
             Assert.AreEqual(OptionState.Locked, tree.Model.StateOf(0, 0));
             yield return null;
 
@@ -126,7 +126,8 @@ namespace FiveKingdoms.Tests
             controller.OpenSkillTree(hero: 2);
             var tree = controller.SkillTree;
             var hero = tree.Model.Hero;
-            tree.Tap(TreeFocus.Class(1));
+            tree.ShowClass(1); // The Paladin: Uzuki doesn't have it, so it stands under the "+".
+            Assert.AreEqual(TreeZone.Adding, tree.Model.Focus.Zone);
             tree.Activate();
             tree.Activate();
             var other = tree.Model.Class;
@@ -145,6 +146,36 @@ namespace FiveKingdoms.Tests
             Assert.AreEqual(3, hero.PointsFree);
             Assert.AreEqual(0, Saved(hero.Definition).TierOf(other), "saved");
             Assert.AreEqual(3, Saved(hero.Definition).PointsFree);
+        }
+
+        [UnityTest]
+        public IEnumerator TheListShowsTheHerosClassesAndThePlusAddsAnother()
+        {
+            yield return LoadBetweenRuns(level: 4);
+            var controller = Object.FindFirstObjectByType<DungeonController>();
+            controller.OpenSkillTree();
+            var tree = controller.SkillTree;
+            yield return null;
+            string Row(int index) => tree.transform.Find("SafeArea/Class" + index).Find("Name").GetComponent<UnityEngine.UI.Text>().text;
+            bool Shown(int index) => tree.transform.Find("SafeArea/Class" + index).gameObject.activeSelf;
+
+            // Haiden has the Paladin: that, and the "+" under it. The rows for classes he doesn't have are gone.
+            Assert.AreEqual("Paladin", Row(0));
+            Assert.AreEqual("+  Add a class", Row(1));
+            Assert.IsFalse(Shown(2));
+            Assert.IsFalse(Shown(3));
+
+            tree.Tap(TreeFocus.Class(1), press: true); // The "+": into the list of the others.
+            Assert.AreEqual(TreeFocus.Add(0), tree.Model.Focus);
+            StringAssert.Contains("Archer", tree.InfoText);
+            StringAssert.Contains("Not learned", tree.InfoText);
+            tree.Activate(); // Learn it.
+            Assert.AreEqual(1, tree.Model.Hero.TierOf(ClassCatalog.Archer));
+            yield return null;
+            Assert.AreEqual("Archer", Row(1));
+            Assert.AreEqual("+  Add a class", Row(2));
+            Assert.IsTrue(Shown(2));
+            Assert.AreEqual(1, Saved(tree.Model.Hero.Definition).TierOf(ClassCatalog.Archer), "saved");
         }
 
         [UnityTest]

@@ -31,10 +31,10 @@ namespace FiveKingdoms.Tests
                 Model.Changed += () => Changes++;
             }
 
-            /// <summary>Puts the cursor on a class and presses until it is at <paramref name="tier"/> (no milestone on the way).</summary>
+            /// <summary>Puts the cursor on a class (in the hero's list or under the "+") and presses until it is at <paramref name="tier"/> (no milestone on the way).</summary>
             public void RaiseTo(int classIndex, int tier)
             {
-                Model.Tap(TreeFocus.Class(classIndex));
+                Model.Show(Model.Classes[classIndex]);
                 while (Hero.TierOf(Model.Class) < tier)
                 {
                     int before = Hero.TierOf(Model.Class);
@@ -119,7 +119,7 @@ namespace FiveKingdoms.Tests
                 var info = model.Info;
                 Assert.AreEqual("Locked", info.Action, definition.Name);
                 Assert.IsFalse(info.Enabled);
-                StringAssert.Contains($"Tier 5 isn't written yet: the {own.Name} stops at tier 4 for now.", info.Status);
+                StringAssert.Contains($"Tier 5 is coming soon: the {own.Name} stops at tier 4 for now.", info.Status);
                 model.Activate();
                 Assert.AreEqual(4, hero.TierOf(own), "a locked tier takes no point");
                 Assert.AreEqual(6, hero.PointsFree);
@@ -139,14 +139,15 @@ namespace FiveKingdoms.Tests
                 info = model.Info;
                 Assert.AreEqual("Tier 5", info.Title);
                 Assert.IsTrue(info.Locked);
-                StringAssert.Contains("Not written yet.", info.Body);
+                StringAssert.Contains("Coming soon.", info.Body);
                 Assert.IsFalse(info.Enabled);
                 model.Activate();
                 Assert.AreEqual(4, hero.TierOf(own));
 
                 // The points aren't stuck: they go into any other class, four tiers each for now.
                 int other = (model.ClassIndex + 1) % model.Classes.Count;
-                model.Tap(TreeFocus.Class(other));
+                model.Show(model.Classes[other]);
+                Assert.AreEqual($"Learn the {model.Classes[other].Name}", model.Info.Action);
                 Assert.IsTrue(model.Info.Enabled);
                 model.Activate();
                 Assert.AreEqual(1, hero.TierOf(model.Classes[other]));
@@ -158,7 +159,7 @@ namespace FiveKingdoms.Tests
         {
             var screen = new Screen(ActorCatalog.Uzuki, 3);
             int before = screen.Hero.Kit.SpeedFor(ActorCatalog.Uzuki.Speed);
-            screen.Model.Tap(TreeFocus.Class(1)); // The Paladin, a slow class.
+            screen.Model.Show(ClassCatalog.Paladin); // A slow class, under the "+" until he has a tier of it.
             StringAssert.Contains("Speed -5 while it is Uzuki's highest class.", screen.Model.Info.Note);
             StringAssert.Contains("Its skills need a sword; Uzuki holds a bow.", screen.Model.Info.Note);
             Assert.AreEqual("Costs 1 point.", screen.Model.Info.Status, "level with his own class, the Archer still sets his speed");
@@ -479,6 +480,9 @@ namespace FiveKingdoms.Tests
             model.Activate();
             Assert.AreEqual(0, screen.Hero.TierOf(ClassCatalog.Fencer));
             Assert.AreEqual(4, screen.Hero.PointsFree);
+            Assert.AreEqual(0, model.Learned.Count, "her list is empty now: only the + is left on it");
+            Assert.AreEqual(0, model.AddIndex);
+            Assert.AreEqual(1, model.ListCount);
             CollectionAssert.AreEqual(ActorCatalog.Kristela.Skills.Select(skill => skill.Id), screen.Hero.LoadoutIds);
         }
 
@@ -524,20 +528,16 @@ namespace FiveKingdoms.Tests
             var model = screen.Model;
             Assert.AreEqual(TreeFocus.Class(0), model.Focus);
             model.Move(0, -1);
-            Assert.AreEqual(TreeFocus.Class(0), model.Focus, "nothing above the first class");
+            Assert.AreEqual(TreeFocus.Class(0), model.Focus, "nothing above his first class");
             model.Move(-1, 0);
             Assert.AreEqual(TreeFocus.Class(0), model.Focus);
 
-            // Down the classes: the tree follows the cursor.
+            // Down his list: the Archer, then the "+". The tree stays on the class it showed.
             model.Move(0, 1);
-            Assert.AreEqual(TreeFocus.Class(1), model.Focus);
-            Assert.AreSame(ClassCatalog.Paladin, model.Class);
+            Assert.AreEqual(TreeFocus.Class(model.AddIndex), model.Focus);
+            Assert.AreSame(ClassCatalog.Archer, model.Class);
             model.Move(0, 1);
-            model.Move(0, 1);
-            Assert.AreSame(Bulwark, model.Class);
-            model.Move(0, 1);
-            Assert.AreEqual(TreeFocus.Slot(0), model.Focus, "below the classes, the loadout");
-            Assert.AreSame(Bulwark, model.Class, "the tree stays on the class it showed");
+            Assert.AreEqual(TreeFocus.Slot(0), model.Focus, "below the list, the loadout");
 
             // Along the loadout, then into the tree at its middle row.
             model.Move(1, 0);
@@ -550,7 +550,7 @@ namespace FiveKingdoms.Tests
             Assert.AreEqual(TreeFocus.Slot(SkillTreeModel.UltimateSlot), model.Focus, "and back");
             model.Move(-1, 0);
             model.Move(0, -1);
-            Assert.AreEqual(TreeFocus.Class(3), model.Focus);
+            Assert.AreEqual(TreeFocus.Class(model.AddIndex), model.Focus, "up from the loadout, the foot of the list");
             model.Move(0, 1);
             model.Move(0, 1);
             Assert.AreEqual(TreeFocus.Unlearn, model.Focus);
@@ -571,7 +571,7 @@ namespace FiveKingdoms.Tests
             model.Move(-1, 0);
             model.Move(-1, 0);
             model.Move(-1, 0);
-            Assert.AreEqual(TreeFocus.Class(3), model.Focus, "the class whose tree it is");
+            Assert.AreEqual(TreeFocus.Class(0), model.Focus, "the class whose tree it is, in his list");
             model.Move(1, 0);
             Assert.AreEqual(TreeFocus.Option(0, 0), model.Focus, "into the tree at the next milestone's row");
             model.Move(0, 1);
@@ -581,10 +581,31 @@ namespace FiveKingdoms.Tests
             model.Move(-1, 0);
             Assert.AreEqual(TreeFocus.Unlearn, model.Focus);
 
+            // The "+" list: up and down in it (the tree follows), right into the tree and back, left or Back out of it.
+            model.Tap(TreeFocus.Class(model.AddIndex));
+            model.Activate();
+            Assert.AreEqual(TreeFocus.Add(0), model.Focus);
+            Assert.AreSame(ClassCatalog.Paladin, model.Class);
+            model.Move(0, 1);
+            Assert.AreEqual(TreeFocus.Add(1), model.Focus);
+            Assert.AreSame(Scout, model.Class);
+            for (int i = 0; i < 5; i++) model.Move(0, 1);
+            Assert.AreEqual(TreeFocus.Add(2), model.Focus);
+            Assert.AreSame(Bulwark, model.Class);
+            model.Move(1, 0);
+            Assert.AreEqual(TreeFocus.Option(0, 0), model.Focus);
+            model.Move(-1, 0);
+            Assert.AreEqual(TreeFocus.Add(2), model.Focus, "back to where the class stands: under the +");
+            model.Move(-1, 0);
+            Assert.AreEqual(TreeFocus.Class(model.AddIndex), model.Focus);
+            model.Activate();
+            Assert.IsTrue(model.Back());
+            Assert.AreEqual(TreeFocus.Class(model.AddIndex), model.Focus);
+
             // A step from the classes lands on the row the class has reached.
             screen.RaiseTo(ScoutIndex, 4);
             screen.Pick(0, 1);
-            model.Tap(TreeFocus.Class(ScoutIndex));
+            model.Show(Scout);
             model.Move(1, 0);
             Assert.AreEqual(TreeFocus.Option(1, 0), model.Focus);
 
@@ -604,6 +625,93 @@ namespace FiveKingdoms.Tests
             Assert.IsTrue(model.Back());
             Assert.AreEqual(TreeFocus.Slot(2), model.Focus);
             Assert.IsFalse(model.Back(), "nothing left to step out of: the screen closes");
+        }
+
+        // ---- The hero's list and the "+" (Peter, 2026-10-10) ----
+
+        [Test]
+        public void TheListShowsTheClassesTheHeroHasAndAPlusForTheRest()
+        {
+            var screen = new Screen(ActorCatalog.Uzuki, 6);
+            var model = screen.Model;
+            CollectionAssert.AreEqual(new[] { ClassCatalog.Archer }, model.Learned);
+            CollectionAssert.AreEqual(new[] { ClassCatalog.Paladin, Scout, Bulwark }, model.Others);
+            Assert.AreEqual(2, model.ListCount);
+            Assert.AreEqual(1, model.AddIndex);
+
+            // The "+": what it is for, and into its list.
+            model.Tap(TreeFocus.Class(model.AddIndex));
+            Assert.AreSame(ClassCatalog.Archer, model.Class, "the tree stays on the class it showed");
+            var info = model.Info;
+            Assert.AreEqual("Add a class", info.Title);
+            Assert.AreEqual("3 more to choose from", info.Kind);
+            Assert.AreEqual("Choose", info.Action);
+            Assert.IsTrue(info.Enabled);
+            model.Activate();
+            Assert.AreEqual(TreeFocus.Add(0), model.Focus);
+            Assert.AreSame(ClassCatalog.Paladin, model.Class, "the tree shows the class being looked at");
+            Assert.AreEqual(0, screen.Changes, "looking costs nothing");
+
+            model.Tap(TreeFocus.Add(1));
+            Assert.AreSame(Scout, model.Class);
+            info = model.Info;
+            Assert.AreEqual("Scout", info.Title);
+            StringAssert.Contains("Not learned", info.Kind);
+            Assert.AreEqual("Learn the Scout", info.Action);
+            Assert.AreEqual(1, model.Learned.Count, "looking at it doesn't put it in his list");
+
+            // Learning its first tier adds it to his list, and the cursor follows it there.
+            model.Activate();
+            Assert.AreEqual(1, screen.Hero.TierOf(Scout));
+            Assert.AreEqual("Uzuki learned the Scout.", model.Notice);
+            CollectionAssert.AreEqual(new[] { ClassCatalog.Archer, Scout }, model.Learned);
+            Assert.AreEqual(TreeFocus.Class(1), model.Focus);
+            Assert.AreEqual(2, model.AddIndex);
+            Assert.AreEqual("Raise to tier 2", model.Info.Action);
+            Assert.AreEqual(1, screen.Changes);
+        }
+
+        [Test]
+        public void AClassUnlearnedLeavesTheListAndWithEveryClassLearnedThePlusGoes()
+        {
+            var screen = new Screen(ActorCatalog.Uzuki, 6);
+            var model = screen.Model;
+            foreach (var definition in new[] { ClassCatalog.Paladin, Scout, Bulwark })
+            {
+                model.Show(definition);
+                model.Activate();
+            }
+            Assert.AreEqual(4, model.Learned.Count);
+            Assert.AreEqual(-1, model.AddIndex, "nothing left to add");
+            Assert.AreEqual(4, model.ListCount);
+            model.Tap(TreeFocus.Class(9));
+            Assert.AreEqual(TreeFocus.Class(3), model.Focus, "the list ends at his last class");
+
+            model.Show(Scout);
+            model.Tap(TreeFocus.Unlearn);
+            model.Activate();
+            model.Tap(TreeFocus.Confirm(true));
+            model.Activate();
+            CollectionAssert.AreEqual(new[] { ClassCatalog.Archer, ClassCatalog.Paladin, Bulwark }, model.Learned);
+            Assert.AreEqual(3, model.AddIndex, "the + is back, with the Scout under it");
+            CollectionAssert.AreEqual(new[] { Scout }, model.Others);
+            Assert.AreSame(Scout, model.Class, "its tree is still the one shown");
+        }
+
+        [Test]
+        public void DuringARunThePlusStillShowsTheOtherClasses()
+        {
+            var screen = new Screen(ActorCatalog.Uzuki, 6, readOnly: true);
+            var model = screen.Model;
+            model.Tap(TreeFocus.Class(model.AddIndex));
+            Assert.IsTrue(model.Info.Enabled, "looking is allowed");
+            model.Activate();
+            Assert.AreEqual(TreeFocus.Add(0), model.Focus);
+            Assert.AreEqual("Learn the Paladin", model.Info.Action);
+            Assert.IsFalse(model.Info.Enabled);
+            model.Activate();
+            Assert.AreEqual(0, screen.Hero.TierOf(ClassCatalog.Paladin));
+            Assert.AreEqual(0, screen.Changes);
         }
 
         [Test]

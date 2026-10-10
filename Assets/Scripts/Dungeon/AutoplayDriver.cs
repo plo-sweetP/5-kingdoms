@@ -306,7 +306,7 @@ namespace FiveKingdoms.Dungeon
             yield return Capture(prefix + "_5_unlearn");
             if (tree.Model.Confirming) tree.Back();
             tree.NextHero(1);
-            tree.Tap(TreeFocus.Class(1));
+            tree.Tap(TreeFocus.Class(tree.Model.AddIndex)); // The "+" and the classes it lists.
             yield return Capture(prefix + "_6_next_hero");
             Debug.Log($"[Autoplay tour] Skill tree toured ({(tree.Model.ReadOnly ? "looking only" : "changing")}): {tree.Model.Notice ?? "no notice"}");
             controller.CloseSkillTree();
@@ -315,8 +315,9 @@ namespace FiveKingdoms.Dungeon
 
         /// <summary>
         /// "-fk-demo tree": the skill tree for every hero in turn, as between runs, then quit: the screen's screenshots
-        /// without playing a run ("tree_<hero>_*.png"). Each hero's own class goes as far as it can, a second class gets
-        /// two tiers, and the row that isn't written, the loadout and the question before unlearning are shown.
+        /// without playing a run ("tree_<hero>_*.png"). Each hero's own class goes as far as it can, a second class is
+        /// added through the "+" and gets two tiers, and the row that isn't written, the loadout and the question before
+        /// unlearning are shown.
         /// </summary>
         IEnumerator TreeDemo()
         {
@@ -332,7 +333,11 @@ namespace FiveKingdoms.Dungeon
                 yield return Capture($"tree_{hero}_2_as_far_as_it_goes");
                 tree.Tap(TreeFocus.Option(0, 1));
                 yield return Capture($"tree_{hero}_3_locked_row");
-                tree.Tap(TreeFocus.Class((tree.Model.ClassIndex + 1) % tree.Model.Classes.Count));
+                // The "+" under the hero's classes, the class it lists first, then two tiers of that class.
+                tree.Tap(TreeFocus.Class(tree.Model.AddIndex));
+                yield return Capture($"tree_{hero}_4a_plus");
+                tree.Activate();
+                yield return Capture($"tree_{hero}_4b_looking_at_a_class");
                 tree.Activate();
                 tree.Activate();
                 yield return Capture($"tree_{hero}_4_second_class");

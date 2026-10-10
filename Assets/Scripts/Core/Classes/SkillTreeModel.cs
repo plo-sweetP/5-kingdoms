@@ -38,8 +38,14 @@ namespace FiveKingdoms.Core
     /// <summary>The parts of the skill-tree screen a cursor can stand on.</summary>
     public enum TreeZone
     {
-        /// <summary>The class list; Index is the class.</summary>
+        /// <summary>
+        /// The hero's list on the left: Index is the place in it, first the classes the hero has (Peter, 2026-10-10:
+        /// "only show what class you have"), then the "+" entry that adds another, while there is one to add.
+        /// </summary>
         Classes,
+
+        /// <summary>The classes the hero doesn't have yet, listed by the "+" entry; Index is the place in that list.</summary>
+        Adding,
 
         /// <summary>The loadout; Index is the slot (the three skills, then the ultimate).</summary>
         Loadout,
@@ -72,6 +78,7 @@ namespace FiveKingdoms.Core
         }
 
         public static TreeFocus Class(int index) => new TreeFocus(TreeZone.Classes, index);
+        public static TreeFocus Add(int index) => new TreeFocus(TreeZone.Adding, index);
         public static TreeFocus Slot(int slot) => new TreeFocus(TreeZone.Loadout, slot);
         public static TreeFocus Option(int row, int path) => new TreeFocus(TreeZone.Options, row, path);
         public static TreeFocus Choice(int index) => new TreeFocus(TreeZone.Choices, index);
@@ -115,6 +122,9 @@ namespace FiveKingdoms.Core
 
         /// <summary>The sphere shows a lock: a row that isn't written yet.</summary>
         public bool Locked { get; internal set; }
+
+        /// <summary>The button only moves the cursor (into a list to look at): it works during a run too.</summary>
+        internal bool Looks { get; set; }
     }
 
     /// <summary>A skill that could go in the loadout slot being changed.</summary>
@@ -180,9 +190,39 @@ namespace FiveKingdoms.Core
         public int HeroIndex { get; private set; }
         public HeroProgress Hero => Party[HeroIndex];
 
-        /// <summary>The class whose tree is shown.</summary>
+        /// <summary>The class whose tree is shown: one of the hero's, or one from the "+" list being looked at.</summary>
         public int ClassIndex { get; private set; }
         public ClassDefinition Class => Classes[ClassIndex];
+
+        /// <summary>The classes the hero has a tier of, in the order learned: the list on the left.</summary>
+        public IReadOnlyList<ClassDefinition> Learned
+        {
+            get
+            {
+                var learned = new List<ClassDefinition>();
+                foreach (var progress in Hero.Classes)
+                    if (progress.Tier > 0 && IndexOf(progress.Class) >= 0) learned.Add(progress.Class);
+                return learned;
+            }
+        }
+
+        /// <summary>The classes the hero doesn't have yet, in the catalog's order: what the "+" entry lists.</summary>
+        public IReadOnlyList<ClassDefinition> Others
+        {
+            get
+            {
+                var others = new List<ClassDefinition>();
+                foreach (var definition in Classes)
+                    if (Hero.TierOf(definition) == 0) others.Add(definition);
+                return others;
+            }
+        }
+
+        /// <summary>The place of the "+" entry in the list on the left, or -1 when the hero has every class.</summary>
+        public int AddIndex => Others.Count > 0 ? Learned.Count : -1;
+
+        /// <summary>How many entries the list on the left has: the hero's classes and, while there is one to add, the "+".</summary>
+        public int ListCount => Learned.Count + (Others.Count > 0 ? 1 : 0);
 
         public TreeFocus Focus { get; private set; }
 
@@ -252,11 +292,36 @@ namespace FiveKingdoms.Core
         public void SelectHero(int index)
         {
             HeroIndex = (index % Party.Count + Party.Count) % Party.Count;
+            // Its own class if it still has it, else the first it has, else its own again, to look at.
+            var learned = Learned;
             int own = IndexOf(Hero.Definition.StartingClass);
-            ClassIndex = own >= 0 ? own : 0;
+            var shown = own >= 0 && Hero.TierOf(Classes[own]) > 0 ? Classes[own] : learned.Count > 0 ? learned[0] : Classes[Math.Max(0, own)];
+            ClassIndex = IndexOf(shown);
             Question = null;
             Notice = null;
-            SetFocus(TreeFocus.Class(ClassIndex));
+            SetFocus(Home());
+        }
+
+        /// <summary>The cursor onto a class wherever it stands: in the hero's list, or in the "+" list of the ones it doesn't have.</summary>
+        public void Show(ClassDefinition definition)
+        {
+            if (Confirming || IndexOf(definition) < 0) return;
+            ClassIndex = IndexOf(definition);
+            SetFocus(Home());
+        }
+
+        /// <summary>Where the shown class stands on the left: its place in the hero's list, or in the "+" list.</summary>
+        TreeFocus Home()
+        {
+            int place = IndexIn(Learned, Class);
+            return place >= 0 ? TreeFocus.Class(place) : TreeFocus.Add(Math.Max(0, IndexIn(Others, Class)));
+        }
+
+        static int IndexIn(IReadOnlyList<ClassDefinition> list, ClassDefinition definition)
+        {
+            for (int i = 0; i < list.Count; i++)
+                if (list[i] == definition) return i;
+            return -1;
         }
 
         /// <summary>A touch or a click on something: the cursor goes there. Nothing is pressed.</summary>
@@ -274,11 +339,16 @@ namespace FiveKingdoms.Core
             {
                 case TreeZone.Classes:
                     if (dx > 0) focus = TreeFocus.Option(RowInReach(), 0);
-                    else if (dy > 0 && focus.Index == Classes.Count - 1) focus = TreeFocus.Slot(0);
+                    else if (dy > 0 && focus.Index == ListCount - 1) focus = TreeFocus.Slot(0);
                     else if (dy != 0) focus = TreeFocus.Class(Math.Max(0, focus.Index + dy));
                     break;
+                case TreeZone.Adding:
+                    if (dx < 0) focus = TreeFocus.Class(AddIndex);
+                    else if (dx > 0) focus = TreeFocus.Option(RowInReach(), 0);
+                    else if (dy != 0) focus = TreeFocus.Add(focus.Index + dy);
+                    break;
                 case TreeZone.Loadout:
-                    if (dy < 0) focus = TreeFocus.Class(Classes.Count - 1);
+                    if (dy < 0) focus = TreeFocus.Class(ListCount - 1);
                     else if (dy > 0) focus = TreeFocus.Unlearn;
                     else if (dx > 0 && focus.Index == Slots - 1) focus = TreeFocus.Option(2, 0);
                     else if (dx != 0) focus = TreeFocus.Slot(Math.Max(0, focus.Index + dx));
@@ -289,7 +359,7 @@ namespace FiveKingdoms.Core
                     break;
                 case TreeZone.Options:
                     if (dx < 0 && focus.Path == 0)
-                        focus = focus.Index <= 1 ? TreeFocus.Class(ClassIndex) : focus.Index == Rows - 1 ? TreeFocus.Unlearn : TreeFocus.Slot(Slots - 1);
+                        focus = focus.Index <= 1 ? Home() : focus.Index == Rows - 1 ? TreeFocus.Unlearn : TreeFocus.Slot(Slots - 1);
                     else
                         focus = TreeFocus.Option(focus.Index + dy, focus.Path + dx);
                     break;
@@ -319,6 +389,11 @@ namespace FiveKingdoms.Core
             if (Focus.Zone == TreeZone.Choices)
             {
                 SetFocus(TreeFocus.Slot(choiceSlot));
+                return true;
+            }
+            if (Focus.Zone == TreeZone.Adding)
+            {
+                SetFocus(TreeFocus.Class(AddIndex));
                 return true;
             }
             return false;
@@ -353,6 +428,11 @@ namespace FiveKingdoms.Core
             switch (focus.Zone)
             {
                 case TreeZone.Classes:
+                    if (focus.Index == AddIndex)
+                    {
+                        SetFocus(TreeFocus.Add(0)); // The "+": into the list of the classes the hero doesn't have.
+                        return;
+                    }
                     if (Hero.CheckRaise(Class) == RaiseCheck.NeedsPick)
                     {
                         SetFocus(TreeFocus.Option(RowInReach(), 0)); // "Choose at tier 5": over to the row.
@@ -360,6 +440,11 @@ namespace FiveKingdoms.Core
                     }
                     if (!Hero.Raise(Class)) return;
                     Notice = $"{Hero.Definition.Name}'s {Class.Name} is tier {Hero.TierOf(Class)} now.";
+                    break;
+                case TreeZone.Adding:
+                    if (!Hero.Raise(Class)) return;
+                    Notice = $"{Hero.Definition.Name} learned the {Class.Name}.";
+                    SetFocus(Home()); // It is one of the hero's classes now: the cursor follows it into the list.
                     break;
                 case TreeZone.Options:
                     var option = OptionAt(focus.Index, focus.Path);
@@ -404,15 +489,33 @@ namespace FiveKingdoms.Core
                     case TreeZone.Choices: info = ChoiceInfo(choices[Focus.Index]); break;
                     case TreeZone.Unlearn: info = UnlearnInfo(); break;
                     case TreeZone.Confirm: info = UnlearnInfo(); break;
+                    case TreeZone.Classes: info = Focus.Index == AddIndex ? AddInfo() : ClassInfo(); break;
                     default: info = ClassInfo(); break;
                 }
-                if (ReadOnly && info.Action != null)
+                if (ReadOnly && info.Action != null && !info.Looks)
                 {
                     info.Enabled = false;
                     info.Status = "A build changes between runs only: finish or leave this run first.";
                 }
                 return info;
             }
+        }
+
+        /// <summary>The "+" entry: what adding a class means, with the list of the ones the hero doesn't have.</summary>
+        TreeInfo AddInfo()
+        {
+            int count = Others.Count;
+            return new TreeInfo
+            {
+                Title = "Add a class",
+                Kind = count == 1 ? "1 more to choose from" : $"{count} more to choose from",
+                Body = "Any hero can learn any class. Its first tier costs a point like every other, and gives the class's stat bump.",
+                Note = $"Pick one below to see its tree. It joins {Hero.Definition.Name}'s classes once a tier of it is learned.",
+                Status = "Looking costs nothing.",
+                Action = "Choose",
+                Enabled = true,
+                Looks = true,
+            };
         }
 
         TreeInfo ClassInfo()
@@ -447,7 +550,7 @@ namespace FiveKingdoms.Core
             switch (hero.CheckRaise(definition))
             {
                 case RaiseCheck.Ok:
-                    info.Action = $"Raise to tier {next}";
+                    info.Action = next == 1 ? $"Learn the {definition.Name}" : $"Raise to tier {next}";
                     info.Enabled = true;
                     info.Status = "Costs 1 point." + SpeedChange(definition, null);
                     break;
@@ -458,10 +561,10 @@ namespace FiveKingdoms.Core
                     break;
                 case RaiseCheck.Locked:
                     info.Action = "Locked";
-                    info.Status = $"Tier {next} isn't written yet: the {definition.Name} stops at tier {definition.HighestOpenTier} for now.";
+                    info.Status = $"Tier {next} is coming soon: the {definition.Name} stops at tier {definition.HighestOpenTier} for now.";
                     break;
                 case RaiseCheck.NoPoints:
-                    info.Action = $"Raise to tier {next}";
+                    info.Action = next == 1 ? $"Learn the {definition.Name}" : $"Raise to tier {next}";
                     info.Status = "No points left: a hero gets one with every level.";
                     break;
                 default:
@@ -484,7 +587,7 @@ namespace FiveKingdoms.Core
                 {
                     Title = $"Tier {tier}",
                     Kind = $"{definition.Name}, a milestone\nOne of three options",
-                    Body = $"Not written yet. The {definition.Name}'s options for tier {tier} come with a later update, so the class " +
+                    Body = $"Coming soon. The {definition.Name}'s options for tier {tier} come with a later update, so the class " +
                            $"stops at tier {definition.HighestOpenTier} for now.",
                     Note = "Points keep: they can go into another class meanwhile, or wait.",
                     Status = $"Tier {tier} is locked.",
@@ -705,7 +808,10 @@ namespace FiveKingdoms.Core
         {
             switch (focus.Zone)
             {
-                case TreeZone.Classes: return TreeFocus.Class(Math.Max(0, Math.Min(Classes.Count - 1, focus.Index)));
+                case TreeZone.Classes: return TreeFocus.Class(Math.Max(0, Math.Min(ListCount - 1, focus.Index)));
+                case TreeZone.Adding:
+                    int others = Others.Count;
+                    return others == 0 ? TreeFocus.Class(0) : TreeFocus.Add(Math.Max(0, Math.Min(others - 1, focus.Index)));
                 case TreeZone.Loadout: return TreeFocus.Slot(Math.Max(0, Math.Min(Slots - 1, focus.Index)));
                 case TreeZone.Options:
                     return TreeFocus.Option(Math.Max(0, Math.Min(Rows - 1, focus.Index)), Math.Max(0, Math.Min(ClassDefinition.PathCount - 1, focus.Path)));
@@ -720,7 +826,9 @@ namespace FiveKingdoms.Core
 
         void SetFocus(TreeFocus focus)
         {
-            if (focus.Zone == TreeZone.Classes) ClassIndex = focus.Index;
+            // The tree follows the cursor through the hero's classes and through the "+" list; on the "+" itself it stays.
+            if (focus.Zone == TreeZone.Classes && focus.Index < Learned.Count) ClassIndex = IndexOf(Learned[focus.Index]);
+            else if (focus.Zone == TreeZone.Adding) ClassIndex = IndexOf(Others[focus.Index]);
             Focus = focus;
             Rebuild();
         }

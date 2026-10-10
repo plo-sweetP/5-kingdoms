@@ -216,9 +216,9 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, packs; shots at anything in sight, deliberate two-step attacks, stuns as timeline delays | **Done** (parts 1 and 2, and Peter's answers at the first playtest checkpoint) |
 | A1 | Art pass 1 ([docs/design/ART.md](docs/design/ART.md)): the current game on the Tiny Swords art (heroes built from layers with their own faces and hair under the helmets, equipment looks for GEAR.md's weapons and armor sets, ring auras, skill animations, monsters from the Enemy Pack, the outdoor dungeon, the HUD) | **Done** (2026-10-04; new bosses and creatures come with row 7) |
 | C1 | Corridor tactics for the party's AI (PROGRESSION.md, "Doorways and corridors"): hold the door, rotate the front, enter a room when it's safe or there's room; then a balance re-check | **Done** (2026-10-04; the Troll went from 16000 to 24000 HP) |
-| 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; Kristela's Fencer kit (she was a Monk until 2026-10-05); tiers 5 and 10 of Archer, Paladin and Fencer | **In progress.** Done and on main (2026-10-05): the three follow-ups, the classes core (rules, the hero's own kit and loadout, save version 2, free respec), Kristela's Fencer kit with the Piercer Blade, and the class stat bumps (the Troll went from 24000 to 25000 HP). **Left:** the skill-tree screen, tiers 5 and 10, the balance with default builds ("Progress" below says where each stands) |
+| 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; Kristela's Fencer kit (she was a Monk until 2026-10-05); tiers 5 and 10 of Archer, Paladin and Fencer | **In progress.** Done and on main (2026-10-05): the three follow-ups, the classes core (rules, the hero's own kit and loadout, save version 2, free respec), Kristela's Fencer kit with the Piercer Blade, and the class stat bumps (the Troll went from 24000 to 25000 HP). Done on 2026-10-10: the skill-tree screen (to change a build between runs from the end panel, to look at during a run from the hero stats page). **Left:** tiers 5 and 10, the balance with default builds ("Progress" below says where each stands) |
 | 1g-2 | Classes core, part 2: tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries), relearning after a respec from level 20, prerequisites and kingdom locks | |
-| P1 | Playtest pass 1 ([docs/design/HUD.md](docs/design/HUD.md)), Peter's notes from the tablet: the top-right buttons in one row, a minimap with fog, the skills in a row along the bottom, a pause menu (with Reset level for testing), Auto hides the D-pad and greys the buttons out, holy light on Divine Strike, footing in the boss fight for the party's AI | After 1g-1: both change the HUD (listed here, a row down, so the 1g-1 row can be edited without a conflict). **Started 2026-10-05:** built so far: the top-right row with the Pause button, the skill row along the bottom, Auto's look and rule, the pause menu (Resume, Restart, Settings, Hero stats, Exit, Reset level for testing), the minimap with its fog (explored tiles in Core; small, large or off in Settings; the party in orange), the guard of Kristela's blade on its outer side only, and holy light on Divine Strike. The skill row along the bottom was built and taken back: Peter chose the arc again (1ae0d46). **Part two, 2026-10-10:** footing in the boss fight (the party's AI keeps out of the Troll's wind-up and stands where it has a way out; the Troll has 30000 HP), and View: Near / Far in Settings. Left: Far as the tablet's default and smaller damage numbers in Far (Peter, 2026-10-10; the first step of the next build session), and the APK onto the tablet. The archer's footing waits for the Troll's leap (decided 2026-10-10: every boss gets a move that reaches a hero who keeps his distance; built with the individual stages). Decided by Peter on 2026-10-10: the wind-up rule stays, and the Troll keeps its 30000 HP for now. See "Progress" |
+| P1 | Playtest pass 1 ([docs/design/HUD.md](docs/design/HUD.md)), Peter's notes from the tablet: the top-right buttons in one row, a minimap with fog, the skills in a row along the bottom, a pause menu (with Reset level for testing), Auto hides the D-pad and greys the buttons out, holy light on Divine Strike, footing in the boss fight for the party's AI | After 1g-1: both change the HUD (listed here, a row down, so the 1g-1 row can be edited without a conflict). **Started 2026-10-05:** built so far: the top-right row with the Pause button, the skill row along the bottom, Auto's look and rule, the pause menu (Resume, Restart, Settings, Hero stats, Exit, Reset level for testing), the minimap with its fog (explored tiles in Core; small, large or off in Settings; the party in orange), the guard of Kristela's blade on its outer side only, and holy light on Divine Strike. The skill row along the bottom was built and taken back: Peter chose the arc again (1ae0d46). **Part two, 2026-10-10:** footing in the boss fight (the party's AI keeps out of the Troll's wind-up and stands where it has a way out; the Troll has 30000 HP), and View: Near / Far in Settings. Built later that day (8ab5327): Far is the tablet's default, and the numbers and words over the actors scale with the view. Left: the APK onto the tablet (no device was connected). The archer's footing waits for the Troll's leap (decided 2026-10-10: every boss gets a move that reaches a hero who keeps his distance; built with the individual stages). Decided by Peter on 2026-10-10: the wind-up rule stays, and the Troll keeps its 30000 HP for now. See "Progress" |
 | 1g-3 | Professions: potions and meals as items, the Alchemist, Blacksmith and Chef paths (farm paths locked until the farm exists) | |
 | 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
 | 1i | Hero screen between runs: equipment, class and profession tiers, loadout (until the farm exists) | |
@@ -620,7 +620,7 @@ Fencer kit", built as written. She fights as a Fencer now; the Monk's kit stays 
   EditMode, 28 PlayMode, the Windows build, the four autoplay runs and a phone-size one (2340x1080, Kristela
   leading, straight to the boss: won) without an error line. The golden replay is unchanged.
 - **What is left of part 1, in the order to build it:**
-  1. The skill-tree screen. Its art is drafted on `wip/1g-1-skill-tree-art`; the Fencer's five icons are on main
+  1. The skill-tree screen (built on 2026-10-10: "The view follow-ups and the skill-tree screen" below). Its art was drafted on `wip/1g-1-skill-tree-art`; the Fencer's five icons were on main
      (`Tools/pixelart/icons.py`, `skill_icons()`: the weapon attack's is keyed by its weapon, `attack_piercer_blade`,
      since Thrust and Sword Slash are both sword attacks). The HUD still names skills in words.
   2. Tier 5, then tier 10, of Archer, Paladin and Fencer; then default builds for the balance report and the
@@ -695,8 +695,8 @@ the spec is docs/design/HUD.md. Built:
   window at the tablet's zooms) and at 2340 x 1080 (`C:\Users\peter\5Kingdoms\results\p1b\view`). A test APK is built from this state (`C:\Users\peter\5Kingdoms\Builds\Android\5Kingdoms-dev.apk`, 60 MB); it is not on the tablet yet: no device was connected (`adb install -r` when it is).
 - **Left of P1** (Peter's answers of 2026-10-10 on the screenshots and the reports):
   1. "default for tablet can be far", and the damage numbers and the words over a hero smaller in Far ("numbers
-     should match the ratio ... please make it match enough"): HUD.md, "The view on the tablet". Not built yet:
-     the first step of the next build session, with a new APK.
+     should match the ratio ... please make it match enough"): HUD.md, "The view on the tablet". Built the same
+     day: "The view follow-ups and the skill-tree screen" below.
   2. The archer's footing waits for the Troll's leap ("yes, add leap for the troll"; PROGRESSION.md, "Not
      built: the archer"): every boss gets a move that reaches a hero who keeps his distance. All 522 slam hits
      that are left fall on Uzuki as the last hero standing, backed into a corner, and an archer taught to keep
@@ -706,6 +706,50 @@ the spec is docs/design/HUD.md. Built:
 - **Decided by Peter on 2026-10-10**, on this session's reports: the rule that keeps heroes out of a wind-up
   stays ("yes, keep the wind up rule."), and the Troll's 30000 HP stays for now ("keep the troll hp for now. but
   we'll adjust later when we do more direct individual levels/stages").
+
+**The view follow-ups and the skill-tree screen (2026-10-10, roadmap rows P1 and 1g-1).** One build session, three
+pushes: 8ab5327 (the view), 74c75ad (the art tools and mock-ups), adceaf0 (the screen).
+- **The view** (HUD.md, "The view on the tablet"). A tablet starts in Far, a phone and a PC in Near, until the
+  player picks a view in Settings; a picked view is kept. A tablet is a touch screen at least 600 dp on its
+  shorter side by the reported dpi (Android's own line, about 95 mm), used instead of the proposed "a Near tile
+  larger than about 10 mm": Unity may report Android's density setting, by which the Tab S8+ sits right on that
+  line, while by the shorter side it is 820 to 1050 dp and the phone 350 to 460. The numbers and words over the
+  actors scale with the view like the sprites: half the size where Far is half the zoom, on a phone never below
+  three quarters (its smallest words stay about 1.5 mm high). `-fk-device desktop|phone|tablet` shows a device's
+  looks in a PC window. Not checked on the tablet itself: none was connected.
+- **The screen's art** (ART.md, "Skill tree screen"; `Tools/pixelart/tree.py`, `icons.py`): a dark panel with gold
+  trim, spheres drawn in greys that the game tints per path (blue, green, purple) with glow, gold ring and glint
+  apart, the lines between them, a mark per tier for the track, a gold cursor box, a lock, badges, and a 24 px
+  icon for every skill, ultimate and weapon attack of the three kits. The panel, spheres, lock and badges come
+  from the draft branch; its Monk icons were left out. `tree_mock.py` draws the screen as mock-ups (preview sheets
+  10 to 13), which Peter got before the screen was built; his word on the look had not come by the push.
+- **The screen** (PROGRESSION.md, "Building 1g", "Step 6 as built"). Per hero: the classes with their tiers and
+  the points left, one class's tree (three paths, rows for tiers 5 to 25, a track with a mark per tier), an info
+  panel for whatever the cursor is on (skills from the hero's own copy), raising a tier, the loadout, and
+  unlearning a class (it asks first). Every milestone row is locked today and says "Not written yet"; a class
+  stops at tier 4 and the screen says why. It opens from the end panel (Skills; K or the controller's Y) to change
+  a build, from the pause menu's Hero stats page to look only, and with `-fk-tree` before the first run. All it
+  knows and does is a plain class in Core (`SkillTreeModel`), so its rules are tested without a scene.
+- **Balance.** A player can now put points into tiers 1 to 4 of several classes and gets their stat bumps, while
+  the balance report still plays heroes at tier 1 of their own class. Not re-tuned for it: default builds for the
+  report come with tiers 5 and 10. The report at 600 seeds is unchanged: 27 of 600 fresh level-1 runs win (4.5%),
+  first clear on attempt 3.0 at Lv 9.6.
+- **Also found:** the test APK had grown from 41 to 60 and then 92 MB with the same 41.5 MB of content: Gradle
+  patches its last package and leaves what it replaces in the file. `BuildTools.BuildAndroidDev` now removes that
+  package first.
+- **Checks** (2026-10-10, on the last code commit, all measured in the session): 351 Core tests (18 new:
+  `SkillTreeModelTests`), 354 in Unity's EditMode, 48 PlayMode (12 new: six for the view, six for the
+  screen in the scene), the Windows build, the four autoplay runs without an error line (each now tours the tree
+  from the pause menu, `01_tree_*.png`), and screenshots of the screen for every hero at 2340 x 1080 and in the
+  tablet's shape, with touch, keys and a controller (`C:\Users\peter\5Kingdoms\results\st1\tree`). A test APK is built from this state (`C:\Users\peter\5Kingdoms\Builds\Android\5Kingdoms-dev.apk`, 41.6 MB); it is not on the tablet: no device was connected (`adb install -r` when it is).
+- **Left:**
+  1. Peter's word on the look of the screen (the mock-ups and the screenshots are with him), and anything he
+     wants changed.
+  2. Tiers 5 and 10 of Archer, Paladin and Fencer with their icons, then default builds for the balance report
+     and the re-tune (the next session). The screen shows written rows already: its tests use made-up classes.
+  3. The APK onto the tablet, and a look there at what the device reports (the log's "Screen:" line).
+  4. Screens narrower than 16:10 (a 4:3 tablet) need a narrower layout of the screen; a list of more than four
+     skills for a slot pages with "more"; the class list has room for about five classes.
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

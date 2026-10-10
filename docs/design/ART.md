@@ -237,6 +237,17 @@ Uzuki a step behind, facing outward) with one change: Kristela's blade thinner, 
   rows for tiers 5, 10, 15, 20 and 25, round glowing icons in a color per path, connecting lines, an info panel and
   the points left. The same round, glowing look for the skill buttons. The reference's painted gold-vine frames need
   bought or generated art.
+  **Built on 2026-10-10** (`Tools/pixelart/tree.py`, `icons.py`, `tree_mock.py`; Peter had the mock-ups, his word on
+  the look is still open): a dark panel with a bevelled gold trim and a stud in each corner (`panel_dark`), a
+  sunken box (`panel_inset`), a sphere in two sizes drawn in bands of grey with the pack's outline, which the game
+  tints (blue #5aa9ee, green #7ccb62, purple #bb82f0 for the three paths; `SkillTreeScreen.PathColors`), with its
+  glow, gold ring and white glint as pieces of their own, a line piece for the connections, a small and a large
+  diamond for the tier track, a gold box for the cursor, a padlock, an upgrade arrow and a tick. Skill icons are
+  24 px white glyphs in the pack's outline, `Icons/skill_<skill id>` (a weapon attack by its weapon), one for
+  every skill, ultimate and weapon attack of the three kits and a plain diamond for one not drawn yet. All of it
+  is drawn like the HUD's slim frame, in flat colours: the kit has no dark panel, and the painted vines are not
+  pixel art. Still later: the same look for the HUD's skill buttons, and icons for the options of tiers 5 and up
+  (five drafts are in `icons.py`, shown on preview sheet 10 only).
 - **More places:** cave and other biome recolors per kingdom, the main menu, the farm.
 - **Size pass:** remove Unity packages and modules the game doesn't use, strip managed code, check the build report.
 

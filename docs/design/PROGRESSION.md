@@ -518,10 +518,45 @@ where this spec left room:
 - **Speed** with two classes at the same tier: the hero's own class counts, then the one learned first.
 - The real classes give **no stat bump yet**: it comes with the content, so that this half changed nothing in play.
 
-**Left of part 1**, in this order, in fresh sessions: Kristela's Fencer kit (the first item of step 7) together
-with the class stat bumps and one re-tune; then the skill-tree screen (step 6; drafted art is on the branch
-`wip/1g-1-skill-tree-art`, not reviewed, its icons drawn for the Monk); then tiers 5 and 10 of Archer, Paladin
-and Fencer with default builds for `-balance` and the re-tune (step 8).
+**Left of part 1** (2026-10-10): tiers 5 and 10 of Archer, Paladin and Fencer with default builds for `-balance`
+and the re-tune (steps 7 and 8). Kristela's Fencer kit with the class stat bumps was built on 2026-10-05, the
+skill-tree screen on 2026-10-10.
+
+**Step 6 as built (2026-10-10): the skill-tree screen** (`SkillTreeModel`, `TreeText`, `SkillTreeScreen`). What the
+build session settled where the spec left room; Peter had the mock-ups and has not answered on the look yet.
+- **One screen.** On top a tab per hero (level, free points), the points left and Close. On the left the classes
+  with their tiers (Archer, Paladin, Fencer, Monk: any hero can put points into any of them), the loadout (three
+  skills and the ultimate) and Unlearn. In the middle the tree of the class the cursor chose: three paths side by
+  side in blue, green and purple, rows for tiers 5, 10, 15, 20 and 25, and on its left a track with a mark per
+  tier (gold: reached, white: next), so the tiers between milestones have a place. On the right an info panel
+  for whatever the cursor is on, with one button.
+- **A sphere's states:** picked (gold ring, a tick), can be picked now (it glows), further down (dimmed), not
+  taken (grey: another option of its row was picked), not written yet (a lock; the row says so). A green arrow
+  marks an option that upgrades a skill.
+- **The cursor is the selection.** A tap puts it on a class, a sphere, a loadout slot or a skill in a list; the
+  info panel's button presses. With keys or a controller the arrows, WASD, the D-pad or the stick move it, Enter,
+  Space or A press, Q and E or L1 and R1 switch hero, Esc, B or Start step back and then close.
+- **Raising.** On a class the button raises it a tier for a point, at once and without a question. When the next
+  tier is a milestone the button leads to its row, and the pick is the press on one of its three spheres; a pick
+  stays until the class is unlearned, and the panel says so before. Unlearning asks first (Cancel is marked).
+- **What the info panel says:** for a class, what every tier gives and what that comes to, a note when its skills
+  need a weapon the hero doesn't hold, and its speed modifier; when a tier would make another class the hero's
+  highest, what that does to SPD (the highest class sets the modifier: Uzuki with more Paladin than Archer drops
+  from 95 to 85). For an option, its sentence, then the skill as the hero has it now and as it would be, written
+  from the hero's own copy (`SkillText.Describe`); for an upgrade of a skill the hero doesn't know, that it
+  teaches the skill instead. For a loadout slot, the skill in it and the list of the hero's other skills, each
+  with why it can't go there (another weapon, a second Quick skill) or what happens if it does (trades places,
+  or the old one leaves the loadout).
+- **Locked rows.** Every milestone row is unwritten today: three locks, "Not written yet", and the panel explains
+  that the class stops at tier 4 for now and that points keep or can go into another class.
+- **Where it opens.** The end panel has a Skills button (K, the controller's Y) and lists who has points to
+  spend: there a build can change, and every change is saved at once. The pause menu's Hero stats page has a
+  Skill tree button: during a run the screen only shows, and says that a build changes between runs. `-fk-tree
+  [hero]` opens it before the first run, for screenshots and tests.
+- **Balance.** Points can go into tiers 1 to 4 of several classes, each with its stat bumps; `-balance` still
+  plays tier 1 of the hero's own class only, and nothing was re-tuned (default builds come with tiers 5 and 10).
+- **Not built:** a layout for screens narrower than 16:10; scrolling a long list of skills by touch (it pages
+  with "more" past four); the round, glowing look for the HUD's own skill buttons (ART.md, "Later").
 
 **Part 2 (1g-2):** tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries); relearning after a
 respec from level 20; prerequisites and kingdom locks for advanced and inherited classes.

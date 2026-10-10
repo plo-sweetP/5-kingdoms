@@ -19,7 +19,8 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
 - `Tools/pixelart/` — the art build (Python 3.7, stdlib only): `build_art.py` (run this), `ase.py` (reads .aseprite),
   `px.py` / `draw.py` (images, shapes, the pack's outline), `rigs.py` (the hero bodies and weapons), `heads.py` (the
   heroes' heads, armor sets, cosmetic head pieces), `looks.py` (stacks a look, like `HeroComposer`), `monsters.py`,
-  `terrain.py`, `fx.py`, `ui.py`, `icons.py`, `sheets.py` (preview sheets). The packs stay outside the repo
+  `terrain.py`, `fx.py`, `ui.py`, `tree.py` (the skill tree's pieces), `icons.py` (gear icons, skill icons),
+  `sheets.py` (preview sheets), `tree_mock.py` (mock-ups of the skill-tree screen). The packs stay outside the repo
   (`C:\Users\peter\5Kingdoms\ArtPacks\TinySwords\`, i.e. `5Kingdoms\ArtPacks\TinySwords` in the user's profile
   folder, or `--pack`): never commit their files (docs/THIRD_PARTY.md).
 - `Tools/CoreTests/` — runs the Core tests outside Unity.
@@ -34,21 +35,26 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
   caught by a slam); how far partners stray from the leader: `-- -spread`
 - Rebuild the art, ~10 s: `python Tools/pixelart/build_art.py` (add `--preview <folder>` for the review sheets:
   heroes, weapons, armor sets, head pieces, rings, animation strips, icons, the Fencer kit's skill icons and
-  effects, Divine Strike's holy light; `--only preview` skips writing the art)
+  effects, Divine Strike's holy light, the skill tree's pieces and mock-ups of its screen; `--only preview` skips
+  writing the art)
 - Unity tests: `Unity.exe -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults results.xml`
 - Windows build: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildWindowsDev`
 - Android test APK, ~6 min: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildAndroidDev`
   (writes `Builds/Android/5Kingdoms-dev.apk`: a development build, IL2CPP, ARM64, Android 7.1 and up; the editor's
   Android module brings the SDK, NDK and JDK). It leaves the project on the Android target: switch back afterwards
   with `Unity.exe -batchmode -quit -projectPath . -buildTarget StandaloneWindows64`. The log's "Host type is not
-  matching any asset type" lines come from the render pipeline package in every build and can be ignored.
+  matching any asset type" lines come from the render pipeline package in every build and can be ignored. The build
+  removes Gradle's last package first (`BuildTools.GradlePackage`): patched in place, the same 41 MB of content had
+  grown to 92 MB over three builds.
 - Autoplay smoke test: `Builds/Windows/5Kingdoms.exe -screen-fullscreen 0 -fk-autoplay <screenshot folder>`
   (add `-fk-floors 1 -fk-level 10` to go straight to the boss; autoplay always uses its own throwaway save, and
   aims each targeted action once the way a player does, saving `aim_*.png`; it saves `door_*.png` the first times
   the leader holds a doorway or the front rotates, `rest*.png` when it waits for the party to heal up, and
   `keep_clear*.png` when a hero waits out of a boss's wind-up; with
   `-fk-demo view` it stages foes five tiles up and down a
-  corridor, then one three tiles away, and captures how the camera shows them instead)
+  corridor, then one three tiles away, and captures how the camera shows them instead; every run also tours the skill tree from the pause menu,
+  saving `01_tree_*.png`, and with `-fk-demo tree -fk-tree -fk-level 10` it only captures the tree for every hero, as
+  between runs, and quits)
 
 Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway save), `-fk-save PATH`,
 `-fk-input keyboard|gamepad` (start with that HUD layout, e.g. to screenshot the skill row), `-fk-minimap off|small|large`
@@ -60,7 +66,9 @@ instead of the player's setting: Near is the zoom the rule picks, Far one whole 
 has one; the log's "View: W x H at zoom N, T tiles high (Near)" line says which is on), `-fk-device desktop|phone|tablet`
 (the kind of screen instead of what the device reports, to see the phone's or the tablet's looks in a PC window: the
 view it starts in and how small the numbers over the actors get; the log's "Screen: N dpi, Tablet; starts in Far
-(this screen's default)" line says what was used), and `-fk-look` to try other looks, e.g.
+(this screen's default)" line says what was used), `-fk-tree [hero]` (the skill tree first, as between runs: a build
+can be changed there and the run starts when it closes; it edits the real save unless `-fk-level` or `-fk-save` is
+given), and `-fk-look` to try other looks, e.g.
 `-fk-look "haiden=great_sword,mage_robe;uzuki=mage_staff,bare;kristela=crown;all=hawks_eye"`: per hero or `all`, any
 of a weapon, an armor set, `bare` (no head piece), a cosmetic head piece (`hair_bow`, `crown`, `headband`) and a ring
 set; the ids are in `art_manifest.json`. PlayMode tests set `DungeonController.Overrides` instead. The real save is
@@ -128,6 +136,18 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   and the minimap) are kept in PlayerPrefs, read and written only with the real save (`UsesRealSave`). The hero stats page writes each skill's
   description from the hero's own copy (`SkillText.Describe`): a new `SkillEffect` or skill field needs its
   sentence there.
+- The skill-tree screen (PROGRESSION.md, "Building 1g", "Step 6 as built"; `SkillTreeModel`, `TreeText`,
+  `SkillTreeScreen`; `SkillTreeModelTests`, `SkillTreeScreenTests`): everything the screen knows and does is the
+  model's, plain C# in Core (where the cursor stands, what the info panel says, what pressing does), and goes
+  through `HeroProgress`; the screen only draws the model and passes on touches, keys and controller buttons. A
+  tap puts the cursor somewhere and the info panel's button presses; raising a tier asks nothing, unlearning asks
+  first. A build changes between runs only: the end panel's Skills button (K, the controller's Y) opens the
+  screen to change one, the pause menu's Hero stats page to look (`SkillTreeModel.ReadOnly`), `-fk-tree` before
+  the first run; the controller saves on every change (`BuildChanged`). Its pieces are white or grey art the
+  game tints (`Tools/pixelart/tree.py`; `SkillTreeScreen.PathColors` and `tree.PATH_COLORS` must agree), and a
+  skill's icon is `Icons/skill_<skill id>` (a weapon attack by its weapon: `skill_attack_<weapon id>`;
+  `skill_unknown` where none is drawn): a new skill needs its icon in `icons.py`. A new thing the screen can stand
+  on or say needs its case in the model and a test there.
 - The minimap (HUD.md, "Minimap"; `Minimap`, `MinimapFogTests`) only draws what the rules say: explored tiles are
   Core state (`DungeonRun.IsExplored`, updated by `Explore` after every `Execute` and on a new floor: a room as a
   whole once a hero stands in it or one step from it, a corridor two steps around a hero, never part of a room),

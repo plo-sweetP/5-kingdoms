@@ -137,7 +137,7 @@ settings"), so he compares them on the tablet itself.
 - `-fk-zoom near|far` picks the view at launch, and the log says "View: 2800 x 1752 at zoom 1, 27.4 tiles high
   (Far)." (or "(Near)", or "(Near, the only view on this screen)").
 
-**Peter on the Near and Far screenshots, 2026-10-10 (not built yet; the first step of the next build session):**
+**Peter on the Near and Far screenshots, 2026-10-10 (built the same day, 8ab5327; "As built" follows the two points):**
 - "default for tablet can be far". So **Far is the default on a tablet**; Near stays the default on a phone and on
   PC. *Proposed* rule for what counts as a tablet: a touch device (Android, iOS) on which Near would draw a tile
   larger than about 10 mm on the glass, going by the screen's reported dpi (the Tab S8+: about 12 mm; his phone:
@@ -148,6 +148,37 @@ settings"), so he compares them on the tablet itself.
   hero as in Near. *Proposed:* half the Near size where Far is half the zoom, but never below a size that still
   reads easily on that device (the build session picks the floor and shows Peter Far in the tablet's shape and on
   the phone). The message log and the HUD keep their size.
+
+**As built (2026-10-10, 8ab5327):**
+- A tablet starts in Far, a phone and a PC in Near, until the player picks a view in Settings; a picked view is
+  kept (the old "always wide" setting, switched on, counts as Far). What a tablet is: a touch screen at least
+  600 dp (1/160 inch by the reported dpi, about 95 mm) on its shorter side, Android's own line between phones
+  and tablets (`PixelCamera.ScreenKindFor`). The proposed tile size was not used: by Android's density setting,
+  which Unity may report instead of the panel's dpi, the Tab S8+ comes to about 10.2 mm, right on the line; by
+  the shorter side it is 820 to 1050 dp and the phone 350 to 460 either way. No dpi reported: a phone, so Near.
+  Not checked on the tablet (none was connected); the log's "Screen: N dpi, Tablet; starts in Far (this screen's
+  default)" line says what a device reported.
+- The numbers and words over the actors scale with the view (`PixelCamera.WorldTextScale`): half the size where
+  Far is half the zoom, two thirds where it is two thirds. The floor: on a phone never below three quarters of
+  the Near size, which keeps its smallest words about 1.5 mm high; a tablet and a monitor draw them more than
+  twice as large and need none. Their outline thins with them. The message log and the HUD keep their size.
+- `-fk-device desktop|phone|tablet` shows a device's looks in a PC window. Screenshots of both views in the
+  phone's size and the tablet's shape: `C:\Users\peter\5Kingdoms\results\v1\view`.
+
+## The skill-tree screen (built 2026-10-10)
+The spec and what was settled are in PROGRESSION.md ("Building 1g", "Step 6 as built"); the art in ART.md. For the
+HUD it means:
+- The end panel has two buttons, Try Again and **Skills** (K on the keyboard, Y on a controller), and a line that
+  says who has points to spend. The pause menu's Hero stats page has a **Skill tree** button; from there the
+  screen only shows.
+- The screen covers everything and is laid out in the canvas's units from the width it gets: a block of at most
+  2012 units in the middle (380 for the classes and the loadout, 480 to 600 for the info panel, the tree between
+  them), inside the safe area. It fits the phone (2340 x 1080) and the tablet (2800 x 1752); a 4:3 screen is too
+  narrow for it as it is.
+- Its art sits on whole screen pixels like the rest of the HUD (`UiFactory`, `UiArtScaler`); the spheres are 44
+  art pixels across, so 88 screen pixels on a 1080p phone and 132 on the tablet.
+- Touch: a tap puts the cursor (a gold box) on something, the button in the info panel presses. Keys and a
+  controller move the cursor and press on it; the left column says which keys.
 
 ## Building it (playtest pass 1)
 One build session, after 1g part 1: both change the HUD, so not at the same time.

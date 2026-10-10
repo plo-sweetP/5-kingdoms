@@ -57,7 +57,10 @@ Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway 
 camera while aiming: `zoomout` is the game's behavior, `wide` is always one zoom step out and is kept for a player
 setting later, `lead` slides to the targets however far and is for debugging only), `-fk-zoom near|far` (the view,
 instead of the player's setting: Near is the zoom the rule picks, Far one whole step further out where the screen
-has one; the log's "View: W x H at zoom N, T tiles high (Near)" line says which is on), and `-fk-look` to try other looks, e.g.
+has one; the log's "View: W x H at zoom N, T tiles high (Near)" line says which is on), `-fk-device desktop|phone|tablet`
+(the kind of screen instead of what the device reports, to see the phone's or the tablet's looks in a PC window: the
+view it starts in and how small the numbers over the actors get; the log's "Screen: N dpi, Tablet; starts in Far
+(this screen's default)" line says what was used), and `-fk-look` to try other looks, e.g.
 `-fk-look "haiden=great_sword,mage_robe;uzuki=mage_staff,bare;kristela=crown;all=hawks_eye"`: per hero or `all`, any
 of a weapon, an armor set, `bare` (no head piece), a cosmetic head piece (`hair_bow`, `crown`, `headband`) and a ring
 set; the ids are in `art_manifest.json`. PlayMode tests set `DungeonController.Overrides` instead. The real save is
@@ -188,7 +191,11 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
 - The view (HUD.md, "The view on the tablet"; Peter, 2026-10-10): Near is the whole zoom nearest to 11 tiles high
   (`PixelCamera.NearZoomFor`), Far (`PixelCamera.Far`, a choice in Settings) is one whole step further out, and a
   screen that already plays at 1x has no Far (`FarAvailable`: the choice is greyed out). The HUD keeps its size
-  in both. Check anything drawn in the dungeon in both views, on the phone's and the tablet's shape.
+  in both. Check anything drawn in the dungeon in both views, on the phone's and the tablet's shape. A tablet
+  starts in Far, a phone and a PC in Near, until the player picks a view (`PixelCamera.ScreenKindFor`: a tablet is
+  a touch screen at least 600 dp on its shorter side by the reported dpi; `FarByDefault`). The numbers and words
+  over the actors scale with the view like the sprites (`PixelCamera.WorldTextScale`, `DungeonHud.ShowFloatingText`:
+  half in a Far view at half the zoom, never below three quarters on a phone); the HUD and the message log don't.
 - The camera while aiming (`PixelCamera.Frame`, Peter's choice on 2026-10-04): every target stays in view and out
   from under the HUD. It works from the chosen view: from 1x there is no step out left, so it only slides. The camera moves no further than it must; when that would slide the party out of the middle
   third of the screen, or the targets don't fit, it steps out one whole zoom level until the aim ends. Never slide

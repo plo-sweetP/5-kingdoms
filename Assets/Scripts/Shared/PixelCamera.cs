@@ -24,6 +24,22 @@ namespace FiveKingdoms
     }
 
     /// <summary>
+    /// What kind of screen the game is on, for the two things that go by it (docs/design/HUD.md, "The view on the
+    /// tablet"): the view a device starts in, and how small the numbers over the actors may get in the Far view.
+    /// </summary>
+    public enum ScreenKind
+    {
+        /// <summary>No touch screen: a PC's monitor.</summary>
+        Desktop,
+
+        /// <summary>A touch device held in the hand, and any touch device that doesn't report its dpi.</summary>
+        Phone,
+
+        /// <summary>A touch device with a screen at least <see cref="PixelCamera.TabletShortSideDp"/> on its shorter side.</summary>
+        Tablet,
+    }
+
+    /// <summary>
     /// Orthographic camera that keeps pixel art crisp on any screen: it picks the whole-number zoom that shows closest
     /// to <see cref="TilesHigh"/> tiles vertically (the Near view), or one whole step further out when the player
     /// chose the Far view (<see cref="Far"/>; docs/design/HUD.md, "The view on the tablet"), and snaps to screen
@@ -58,6 +74,24 @@ namespace FiveKingdoms
         /// changes nothing. The camera while aiming works from the chosen view.
         /// </summary>
         public bool Far;
+
+        /// <summary>The screen the game is on; `-fk-device` says another one (the phone's and the tablet's looks in a PC window).</summary>
+        public ScreenKind Kind = ScreenKind.Desktop;
+
+        /// <summary>
+        /// Where a tablet begins: a touch screen at least this many dp (1/160 inch by the reported dpi) on its shorter
+        /// side, about 95 mm. It is Android's own line between phones and tablets, and far from both of Peter's
+        /// devices whichever dpi a device reports, its density setting or the panel's own: the Tab S8+ comes to 820
+        /// to 1050 dp, his phone to 350 to 460.
+        /// </summary>
+        public const float TabletShortSideDp = 600f;
+
+        /// <summary>
+        /// The least the numbers and words over the actors shrink to on a phone, as a share of their Near size. A
+        /// phone's smallest words are about 2 mm high in Near, so this keeps them at 1.5 mm; a tablet and a monitor
+        /// draw them more than twice that size and need no floor.
+        /// </summary>
+        public const float PhoneTextFloor = 0.75f;
 
         /// <summary>
         /// What the HUD covers at the screen's edges, as shares of the screen's height (the HUD's size follows the
@@ -157,6 +191,36 @@ namespace FiveKingdoms
 
         /// <summary>Whether a screen has a Far view at all: one whole step out of a Near view above 1x.</summary>
         public static bool HasFarView(int screenHeight, float tilesHigh) => NearZoomFor(screenHeight, tilesHigh) > 1;
+
+        /// <summary>The kind of screen, from what the device reports. A touch device that reports no dpi counts as a phone.</summary>
+        public static ScreenKind ScreenKindFor(bool touchDevice, int screenWidth, int screenHeight, float dpi)
+        {
+            if (!touchDevice) return ScreenKind.Desktop;
+            if (dpi <= 0f) return ScreenKind.Phone;
+            return Mathf.Min(screenWidth, screenHeight) * 160f / dpi >= TabletShortSideDp ? ScreenKind.Tablet : ScreenKind.Phone;
+        }
+
+        /// <summary>
+        /// The view a device starts in until the player picks one in Settings (Peter, 2026-10-10): Far on a tablet,
+        /// where the Near view's heroes look too big, Near on a phone and on a PC.
+        /// </summary>
+        public static bool FarByDefault(ScreenKind kind, int screenHeight, float tilesHigh) =>
+            kind == ScreenKind.Tablet && HasFarView(screenHeight, tilesHigh);
+
+        /// <summary>
+        /// How large the numbers and words over the actors are drawn at a zoom, as a share of their size in the Near
+        /// view (Peter, 2026-10-10: "numbers should match the ratio"): the same share as the sprites, so half where
+        /// Far is half the zoom, but on a phone never below <see cref="PhoneTextFloor"/>.
+        /// </summary>
+        public static float WorldTextScaleFor(ScreenKind kind, int zoom, int nearZoom)
+        {
+            float matched = Mathf.Clamp01(zoom / (float)Mathf.Max(1, nearZoom));
+            return kind == ScreenKind.Phone ? Mathf.Max(matched, PhoneTextFloor) : matched;
+        }
+
+        /// <summary>That share for this camera's view (the player's choice, not the step out while aiming).</summary>
+        public float WorldTextScale =>
+            WorldTextScaleFor(Kind, BaseZoomFor(Mode, Screen.height, TilesHigh, Far), NearZoomFor(Screen.height, TilesHigh));
 
         /// <summary>
         /// The framing rule on its own, for any screen (the tests check it for the phone, the tablet and small

@@ -98,6 +98,7 @@ namespace FiveKingdoms.UI
         RectTransform timelineRoot;
         Text timelineHeader;
         Camera worldCamera;
+        PixelCamera pixelCamera;
         RectTransform canvasRect, safeArea, floatingLayer, logRoot, touchControls;
         Text floorText, bossName, keysText, bannerTitle, bannerSubtitle, endTitle, endDetail, aimPrompt;
         Image bossFill;
@@ -389,12 +390,18 @@ namespace FiveKingdoms.UI
         /// <summary>A number or word that pops up at a world position and drifts upward (damage, heals, level up).</summary>
         public void ShowFloatingText(Vector3 worldPosition, string value, Color color, float scale = 1f)
         {
-            var text = UiFactory.CreateText("Float", floatingLayer, value, Mathf.RoundToInt(44 * scale), TextAnchor.MiddleCenter, color);
+            // It scales with the view like the sprites it belongs to (HUD.md, "The view on the tablet"); the HUD doesn't.
+            float withView = pixelCamera != null ? pixelCamera.WorldTextScale : 1f;
+            var text = UiFactory.CreateText("Float", floatingLayer, value, FloatingTextSize(scale, withView), TextAnchor.MiddleCenter, color);
             text.fontStyle = FontStyle.Bold;
+            text.GetComponent<Outline>().effectDistance = new Vector2(2f, -2f) * Mathf.Max(0.5f, withView);
             text.rectTransform.sizeDelta = new Vector2(300f, 80f);
             floating.Add(new FloatingText { Text = text, World = worldPosition, Life = 0.8f });
             PositionFloating(floating[floating.Count - 1]);
         }
+
+        /// <summary>The font size of a number or word over an actor: <paramref name="scale"/> is the word's own, <paramref name="withView"/> the view's (<see cref="PixelCamera.WorldTextScale"/>).</summary>
+        public static int FloatingTextSize(float scale, float withView) => Mathf.RoundToInt(44 * scale * withView);
 
         public void ShowBanner(string title, string subtitle)
         {
@@ -510,6 +517,7 @@ namespace FiveKingdoms.UI
         void Build(Camera camera)
         {
             worldCamera = camera;
+            pixelCamera = camera != null ? camera.GetComponent<PixelCamera>() : null;
             canvasRect = (RectTransform)transform;
             // Floating numbers sit below the controls and ignore the safe area so they line up with the world.
             floatingLayer = UiFactory.Stretch(UiFactory.CreateRect("FloatingText", canvasRect));

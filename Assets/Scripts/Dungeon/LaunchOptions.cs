@@ -44,6 +44,12 @@ namespace FiveKingdoms.Dungeon
         /// </summary>
         public bool? FarView;
 
+        /// <summary>
+        /// The kind of screen instead of what the device reports: a PC window that shows the phone's or the tablet's
+        /// looks (the view a device starts in, how small the numbers over the actors get in Far).
+        /// </summary>
+        public ScreenKind? Device;
+
         /// <summary>The run's seed, for the same floors every launch (comparing screenshots, chasing a bug).</summary>
         public int? Seed;
 
@@ -52,7 +58,7 @@ namespace FiveKingdoms.Dungeon
 
         /// <summary>
         /// Flags: -fk-floors N, -fk-level N, -fk-save PATH, -fk-input touch|keyboard|gamepad, -fk-leader ID,
-        /// -fk-look LOOKS, -fk-view lead|zoomout|wide, -fk-zoom near|far, -fk-seed N, -fk-minimap off|small|large, and
+        /// -fk-look LOOKS, -fk-view lead|zoomout|wide, -fk-zoom near|far, -fk-device desktop|phone|tablet, -fk-seed N, -fk-minimap off|small|large, and
         /// -fk-autoplay FOLDER (which also uses a fresh save inside FOLDER, so smoke tests never touch the player's save).
         /// </summary>
         /// <summary>"-fk-zoom near" or "-fk-zoom far"; anything else leaves the view to the player's setting.</summary>
@@ -74,6 +80,7 @@ namespace FiveKingdoms.Dungeon
                 Looks = StringArg(args, "-fk-look"),
                 View = Enum.TryParse(StringArg(args, "-fk-view"), ignoreCase: true, out ViewMode view) ? view : (ViewMode?)null,
                 FarView = FarViewArg(StringArg(args, "-fk-zoom")),
+                Device = Enum.TryParse(StringArg(args, "-fk-device"), ignoreCase: true, out ScreenKind device) ? device : (ScreenKind?)null,
                 Seed = IntArg(args, "-fk-seed"),
                 Minimap = Enum.TryParse(StringArg(args, "-fk-minimap"), ignoreCase: true, out MinimapSize minimap) ? minimap : (MinimapSize?)null,
             };

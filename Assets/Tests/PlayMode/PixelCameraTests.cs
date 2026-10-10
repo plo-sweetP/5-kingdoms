@@ -239,6 +239,63 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
+        public void ATabletIsATouchScreenAtLeast600DpOnItsShorterSide()
+        {
+            // The Tab S8+ by its panel's dpi and by Android's density setting: a tablet either way.
+            Assert.AreEqual(ScreenKind.Tablet, PixelCamera.ScreenKindFor(true, TabS8Plus.x, TabS8Plus.y, 266f));
+            Assert.AreEqual(ScreenKind.Tablet, PixelCamera.ScreenKindFor(true, TabS8Plus.x, TabS8Plus.y, 340f));
+            Assert.AreEqual(ScreenKind.Tablet, PixelCamera.ScreenKindFor(true, TabS8Plus.y, TabS8Plus.x, 266f), "the shorter side, whichever way it is held");
+            // Peter's phone at its two resolutions, by the panel's dpi and by the density setting: a phone every way.
+            var s22AtFullHd = new Vector2Int(2316, 1080);
+            foreach (float dpi in new[] { 375f, 450f, 500f })
+                Assert.AreEqual(ScreenKind.Phone, PixelCamera.ScreenKindFor(true, s22AtFullHd.x, s22AtFullHd.y, dpi), $"FHD+ at {dpi} dpi");
+            foreach (float dpi in new[] { 500f, 600f })
+                Assert.AreEqual(ScreenKind.Phone, PixelCamera.ScreenKindFor(true, S22Ultra.x, S22Ultra.y, dpi), $"WQHD+ at {dpi} dpi");
+            Assert.AreEqual(ScreenKind.Phone, PixelCamera.ScreenKindFor(true, TabS8Plus.x, TabS8Plus.y, 0f), "no dpi reported: a phone, so Near");
+            Assert.AreEqual(ScreenKind.Desktop, PixelCamera.ScreenKindFor(false, 2560, 1440, 96f), "a PC, however large its monitor");
+        }
+
+        [Test]
+        public void FarIsTheDefaultOnATabletOnly()
+        {
+            Assert.IsTrue(PixelCamera.FarByDefault(ScreenKind.Tablet, TabS8Plus.y, TilesHigh));
+            Assert.IsFalse(PixelCamera.FarByDefault(ScreenKind.Phone, Phone.y, TilesHigh));
+            Assert.IsFalse(PixelCamera.FarByDefault(ScreenKind.Phone, S22Ultra.y, TilesHigh));
+            Assert.IsFalse(PixelCamera.FarByDefault(ScreenKind.Desktop, 1440, TilesHigh));
+            Assert.IsFalse(PixelCamera.FarByDefault(ScreenKind.Tablet, 800, TilesHigh), "a tablet that plays at 1x has no Far view");
+        }
+
+        [Test]
+        public void AViewPickedInSettingsIsKeptOverTheDefault()
+        {
+            Assert.AreEqual(false, FiveKingdoms.Dungeon.DungeonController.PickedView(hasPick: true, far: false, alwaysWide: false), "Near, picked on a tablet, stays");
+            Assert.AreEqual(true, FiveKingdoms.Dungeon.DungeonController.PickedView(hasPick: true, far: true, alwaysWide: false));
+            Assert.AreEqual(false, FiveKingdoms.Dungeon.DungeonController.PickedView(hasPick: true, far: false, alwaysWide: true), "the newer setting counts");
+            Assert.AreEqual(true, FiveKingdoms.Dungeon.DungeonController.PickedView(hasPick: false, far: false, alwaysWide: true), "\"always wide\" was this same view");
+            Assert.IsNull(FiveKingdoms.Dungeon.DungeonController.PickedView(hasPick: false, far: false, alwaysWide: false), "nobody picked: the screen's default");
+        }
+
+        [Test]
+        public void TheNumbersOverTheActorsScaleWithTheView()
+        {
+            // Half the zoom, half the size: the same proportion to a hero as in Near.
+            Assert.AreEqual(1f, PixelCamera.WorldTextScaleFor(ScreenKind.Tablet, 2, 2));
+            Assert.AreEqual(0.5f, PixelCamera.WorldTextScaleFor(ScreenKind.Tablet, 1, 2));
+            Assert.AreEqual(0.5f, PixelCamera.WorldTextScaleFor(ScreenKind.Desktop, 1, 2));
+            Assert.AreEqual(2f / 3f, PixelCamera.WorldTextScaleFor(ScreenKind.Tablet, 2, 3), 0.0001f, "a 4K screen: 3x Near, 2x Far");
+            // On a phone they stop at three quarters: the smallest words stay about 1.5 mm high.
+            Assert.AreEqual(1f, PixelCamera.WorldTextScaleFor(ScreenKind.Phone, 2, 2));
+            Assert.AreEqual(PixelCamera.PhoneTextFloor, PixelCamera.WorldTextScaleFor(ScreenKind.Phone, 1, 2));
+            Assert.AreEqual(1f, PixelCamera.WorldTextScaleFor(ScreenKind.Phone, 1, 1), "a screen with one view only");
+            Assert.AreEqual(1f, PixelCamera.WorldTextScaleFor(ScreenKind.Desktop, 3, 2), "never larger than in Near");
+
+            Assert.AreEqual(44, FiveKingdoms.UI.DungeonHud.FloatingTextSize(1f, 1f), "a damage number in Near");
+            Assert.AreEqual(22, FiveKingdoms.UI.DungeonHud.FloatingTextSize(1f, 0.5f), "and in the tablet's Far view");
+            Assert.AreEqual(33, FiveKingdoms.UI.DungeonHud.FloatingTextSize(1f, PixelCamera.PhoneTextFloor), "and in the phone's");
+            Assert.AreEqual(23, FiveKingdoms.UI.DungeonHud.FloatingTextSize(0.7f, PixelCamera.PhoneTextFloor), "the smallest word on the phone");
+        }
+
+        [Test]
         public void TheLaunchFlagPicksTheView()
         {
             Assert.AreEqual(true, FiveKingdoms.Dungeon.LaunchOptions.FarViewArg("far"));

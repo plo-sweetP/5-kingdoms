@@ -157,7 +157,13 @@ namespace FiveKingdoms.Dungeon
             hud.PauseMenu.MinimapChanged += SetMinimap;
             minimap = options.Minimap ?? (UsesRealSave ? (MinimapSize)Mathf.Clamp(PlayerPrefs.GetInt(MinimapKey, (int)MinimapSize.Small), 0, 2) : MinimapSize.Small);
             hud.SetMinimap(minimap);
-            pixelCamera.Far = options.FarView ?? (UsesRealSave && PlayerPrefs.GetInt(FarViewKey, PlayerPrefs.GetInt(WideViewKey, 0)) == 1);
+            pixelCamera.Kind = options.Device ?? PixelCamera.ScreenKindFor(Application.isMobilePlatform, Screen.width, Screen.height, Screen.dpi);
+            // A view picked in Settings is kept; until then a tablet starts in Far (HUD.md, "The view on the tablet").
+            bool? picked = UsesRealSave ? PickedView(PlayerPrefs.HasKey(FarViewKey), PlayerPrefs.GetInt(FarViewKey, 0) == 1, PlayerPrefs.GetInt(WideViewKey, 0) == 1) : null;
+            pixelCamera.Far = options.FarView ?? picked ?? PixelCamera.FarByDefault(pixelCamera.Kind, Screen.height, pixelCamera.TilesHigh);
+            // In the player's log, next to the camera's "View:" line: what the device reported and what came of it.
+            Debug.Log($"Screen: {Screen.dpi:0} dpi, {pixelCamera.Kind}; starts in {(pixelCamera.Far ? "Far" : "Near")} (" +
+                      (options.FarView.HasValue ? "the launch flag" : picked.HasValue ? "picked in Settings" : "this screen's default") + ").");
             hud.TacticCycleRequested += CycleTactic;
             if (options.StartInputMode.HasValue)
             {
@@ -504,6 +510,12 @@ namespace FiveKingdoms.Dungeon
             PlayerPrefs.SetInt(MinimapKey, (int)size);
             PlayerPrefs.Save();
         }
+
+        /// <summary>
+        /// The view the player picked in Settings, or null while nobody has: then the screen's default counts (Far on a
+        /// tablet). <paramref name="alwaysWide"/> is the setting Far replaced: switched on, it was this same view.
+        /// </summary>
+        public static bool? PickedView(bool hasPick, bool far, bool alwaysWide) => hasPick ? far : alwaysWide ? true : (bool?)null;
 
         /// <summary>Settings, "View": Near or Far. It applies at once (the camera picks it up on its next frame).</summary>
         void SetFarView(bool far)

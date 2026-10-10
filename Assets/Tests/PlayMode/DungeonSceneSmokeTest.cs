@@ -234,6 +234,44 @@ namespace FiveKingdoms.Tests
         }
 
         [UnityTest]
+        public IEnumerator ATabletStartsInTheFarViewAndTheNumbersOverTheActorsShrinkWithIt()
+        {
+            DungeonController.Overrides = new LaunchOptions { SavePath = savePath, FreshSave = true, Device = ScreenKind.Tablet };
+            yield return LoadDungeon();
+            var view = Object.FindFirstObjectByType<PixelCamera>();
+            var hud = Object.FindFirstObjectByType<DungeonHud>();
+            Assert.AreEqual(ScreenKind.Tablet, view.Kind);
+            Assert.AreEqual(view.FarAvailable, view.Far, "Far wherever this window has one: nobody picked a view");
+
+            // A screen with two views, whatever window the tests run in: Near at 2x, Far at 1x.
+            view.TilesHigh = Screen.height / (SpriteLibrary.PixelsPerUnit * 2f);
+            view.Far = true;
+            Assert.AreEqual(22, FloatingTextSizeOf(hud, "far"), "half the zoom, half the size");
+            view.Kind = ScreenKind.Phone;
+            Assert.AreEqual(33, FloatingTextSizeOf(hud, "phone"), "a phone's numbers stop at three quarters");
+            view.Far = false;
+            Assert.AreEqual(44, FloatingTextSizeOf(hud, "near"));
+        }
+
+        [UnityTest]
+        public IEnumerator APhoneStartsInTheNearView()
+        {
+            DungeonController.Overrides = new LaunchOptions { SavePath = savePath, FreshSave = true, Device = ScreenKind.Phone };
+            yield return LoadDungeon();
+            Assert.IsFalse(Object.FindFirstObjectByType<PixelCamera>().Far);
+        }
+
+        /// <summary>Shows a number over the leader and returns the font size it was drawn at.</summary>
+        static int FloatingTextSizeOf(DungeonHud hud, string value)
+        {
+            hud.ShowFloatingText(Vector3.zero, value, Color.white);
+            foreach (var text in hud.GetComponentsInChildren<UnityEngine.UI.Text>())
+                if (text.text == value) return text.fontSize;
+            Assert.Fail($"no floating text \"{value}\"");
+            return 0;
+        }
+
+        [UnityTest]
         public IEnumerator TheWeaponAttackIsAimedInTwoStepsAndATapOnAnEnemyAttacksIt()
         {
             DungeonController.Overrides = new LaunchOptions { SavePath = savePath, FreshSave = true };

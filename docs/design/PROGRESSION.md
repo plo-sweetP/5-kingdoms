@@ -143,6 +143,7 @@ whatever role they like.
     lands. Kristela fell to a slam 209 times in 600 fights. So the first rule is one this list did not have:
   - **Stay out of a wind-up.** No hero's AI walks, dashes or lunges into the reach of a slam that is winding up.
     It waits out of reach until the slam has landed, with "Keeping clear" over its head and a line in the log.
+    Peter, 2026-10-10: "yes, keep the wind up rule."
   - **One more blow.** A hero in the wind-up that is up again before the slam lands strikes first and steps out
     on that next turn (the "while doing damage" of Peter's note).
   - **Stand where there is a way out.** Stepping out, a hero leaves an ally the tile that is its only way out,
@@ -158,14 +159,15 @@ whatever role they like.
     the aura. Riposte against a slam is new: she used to fight on.
   - **What it did** (600 seeds): slams that hit a hero 1080 -> 523; a melee hero 561 -> 1. With the Troll at
     25000 HP fresh level-1 wins went from 28 to 46 of 600 (7.7%), so the Troll has 30000 HP now: 27 of 600 win
-    (4.5%), and with levels kept the first clear comes on attempt 3.0 at Lv 9.6.
-  - **Not built: the archer** (open, Peter's to decide). The 522 hits that are left all fall on Uzuki when she
-    is the last hero standing: she backs into a wall or a corner and is slammed there. Tried in the simulator:
-    letting her move to a tile with a way out changes nothing (in a true corner no tile next to her has one), and
-    teaching her to back off toward open floor works too well: she beats the Troll alone, and fresh level-1 wins
-    go to 476 of 600 even at 30000 HP. The Troll is slow and has no answer to an archer who keeps her distance.
-    That is a boss design question (a leap, a thrown rock, more speed once it is alone), for when real bosses
-    are designed.
+    (4.5%), and with levels kept the first clear comes on attempt 3.0 at Lv 9.6. Peter, 2026-10-10: "keep the
+    troll hp for now. but we'll adjust later when we do more direct individual levels/stages".
+  - **Not built: the archer** (open on 2026-10-10: Peter has not decided). The 522 hits that are left all fall on
+    Uzuki when he is the last hero standing: he backs into a wall or a corner and is slammed there. Tried in the
+    simulator: letting him move to a tile with a way out changes nothing (in a true corner no tile next to him
+    has one), and teaching him to back off toward open floor works too well: he beats the Troll alone, and fresh
+    level-1 wins go to 476 of 600 even at 30000 HP. The Troll is slow and has no answer to an archer who keeps
+    his distance. That is a boss design question (a leap, a thrown rock, more speed once it is alone), for when
+    real bosses are designed. Uzuki's AI is as it was.
   - The hero the player controls is never moved: every rule is in the party's AI (`HeroTactics`).
 
 **Targeting and input (decided).**

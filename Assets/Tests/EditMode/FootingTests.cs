@@ -249,7 +249,7 @@ namespace FiveKingdoms.Tests
 
             var shot = PartnerBrain.Decide(run, uzuki);
             Assert.IsFalse(shot.KeepingClear);
-            Assert.IsTrue(shot.Targeted, "she shoots from out of reach");
+            Assert.IsTrue(shot.Targeted, "he shoots from out of reach");
             Assert.IsTrue(AutoPilot.Decide(run).KeepingClear, "he has nothing that reaches");
 
             haiden.Hp = haiden.MaxHp / 4;

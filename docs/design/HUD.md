@@ -93,6 +93,14 @@ Peter: "if auto play is enabled. Please hide the dpad and grey out the skills op
 - This replaces the rule of 2026-10-02 that skills stay usable by hand while Auto plays (GAME_PLAN.md, "Progress",
   milestone 1b). Peter confirmed it on 2026-10-05: "Auto blocks the skills".
 
+## The view on the tablet
+Peter, 2026-10-10, on the tablet layout: "for the tablet, pls zoom out a bit more. the characters look a bit too
+big". The camera only zooms in whole steps (ART.md, "Rules for all art"), so on a tablet-sized screen the view
+goes **one whole zoom step further out** than the rule picks today, and the aiming camera's step-out works from
+there. *Proposed:* decide it by the screen's height in tiles, so the phone's 2x view (about 8.4 tiles high) doesn't
+change. The build session says what zoom the Tab S8+ (2800 x 1752) gets before and after and how many tiles that
+shows, and Peter judges it on the tablet itself.
+
 ## Building it (playtest pass 1)
 One build session, after 1g part 1: both change the HUD, so not at the same time.
 1. What moves: the top-right row with the Pause button, the skill row, Auto's look.

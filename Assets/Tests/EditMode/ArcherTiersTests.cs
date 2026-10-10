@@ -33,39 +33,11 @@ namespace FiveKingdoms.Tests
         static ClassOption Option(string id) => ClassCatalog.Archer.FindOption(id, out _);
 
         /// <summary>Uzuki at <paramref name="level"/> with his Archer tiers raised as far as his points go, taking <paramref name="picks"/>.</summary>
-        internal static HeroProgress Archer(int level, params string[] picks)
-        {
-            var hero = new HeroProgress(ActorCatalog.Uzuki, level);
-            while (hero.PointsFree > 0)
-            {
-                int next = hero.TierOf(ClassCatalog.Archer) + 1;
-                var milestone = ClassDefinition.IsMilestone(next) ? ClassCatalog.Archer.MilestoneAt(next) : null;
-                var pick = milestone?.Options.FirstOrDefault(option => picks.Contains(option.Id));
-                if (!hero.Raise(ClassCatalog.Archer, pick)) break;
-            }
-            return hero;
-        }
+        static HeroProgress Archer(int level, params string[] picks) => TestHeroes.Built(ActorCatalog.Uzuki, level, picks);
 
-        /// <summary>A run with one built hero on a hand-drawn floor: no random enemies, no regeneration, no boss.</summary>
-        internal static DungeonRun Run(HeroProgress hero, params string[] rows)
-        {
-            var config = new DungeonRunConfig
-            {
-                MapFactory = (floor, seed) => DungeonMap.FromAscii(rows),
-                Populate = false,
-                RegenIntervalAv = 0,
-                Boss = null,
-            };
-            return new DungeonRun(7, config, new[] { hero });
-        }
+        static DungeonRun Run(HeroProgress hero, params string[] rows) => TestRuns.With(hero, rows);
 
-        internal static int Slot(Actor hero, SkillDefinition skill)
-        {
-            var skills = hero.Skills;
-            for (int i = 0; i < skills.Count; i++)
-                if (skills[i].Id == skill.Id) return i;
-            return -1;
-        }
+        static int Slot(Actor hero, SkillDefinition skill) => TestHeroes.Slot(hero, skill);
 
         static List<AttackEvent> ShotsBy(DungeonRun run, Actor shooter) =>
             run.Events.OfType<AttackEvent>().Where(attack => attack.AttackerId == shooter.Id).ToList();

@@ -1350,6 +1350,13 @@ namespace FiveKingdoms.Core
             }
             if (skill.Shove && target.IsAlive && State == RunState.InProgress) Push(target, dir, 1);
             if (target.IsAlive) ApplyOnHit(user, target, skill, first: true);
+            if (skill.StatusAround && skill.Status.HasValue && State == RunState.InProgress)
+            {
+                // Challenge: everyone else next to the user gets the status too (a shout, so no corner stops it).
+                foreach (var foe in actors.ToArray())
+                    if (foe.Team != user.Team && foe != target && GridPos.ChebyshevDistance(foe.Pos, user.Pos) == 1)
+                        AddStatus(foe, skill.Status.Value, user, skill.StatusPower, skill.StatusTurns, endsOnSourceTurn: false);
+            }
 
             if (!skill.Pierce || State != RunState.InProgress || !Map.IsCornerClear(target.Pos == behind ? user.Pos : target.Pos, dir)) return;
             var second = ActorAt(behind);

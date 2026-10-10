@@ -657,7 +657,7 @@ namespace FiveKingdoms.Core
                 if (run.CheckSkillAt(hero, slot, target.Pos) != SkillCheck.Ready) continue;
                 bool fresh = skill.Status.HasValue && target.FindStatus(skill.Status.Value) == null ||
                              (skill.StunChance > 0 || skill.DelayPercent > 0) && run.CanDelay(target);
-                if (fresh && WorthAStatus(hero, target) && control < 0) control = slot;
+                if ((fresh && WorthAStatus(hero, target) || PullsAFoeOffAnAlly(run, hero, skill)) && control < 0) control = slot;
                 int power = PowerOn(run, hero, skill, target);
                 if (power <= strongestPower) continue;
                 strongestPower = power;
@@ -672,6 +672,22 @@ namespace FiveKingdoms.Core
             if (run.AttackTargetAt(hero, target.Pos) == null) return false; // Only skills reach that one.
             command = HeroCommand.AttackAt(target.Pos);
             return true;
+        }
+
+        /// <summary>
+        /// Whether a taunt that reaches every foe next to the hero (the Paladin's Challenge) would turn one of them
+        /// from an ally to the hero: a foe beside the hero that isn't taunted and is going for someone else
+        /// (<see cref="EnemyBrain.TargetOf"/>). Then the blow is worth it whatever its target: it is the tank's job.
+        /// </summary>
+        static bool PullsAFoeOffAnAlly(DungeonRun run, Actor hero, SkillDefinition skill)
+        {
+            if (!skill.StatusAround || skill.Status != StatusKind.Taunt) return false;
+            foreach (var foe in run.Actors)
+            {
+                if (foe.Team == hero.Team || GridPos.ChebyshevDistance(foe.Pos, hero.Pos) != 1) continue;
+                if (foe.FindStatus(StatusKind.Taunt) == null && EnemyBrain.TargetOf(run, foe) != hero) return true;
+            }
+            return false;
         }
 
         /// <summary>

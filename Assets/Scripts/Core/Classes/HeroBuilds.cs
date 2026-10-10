@@ -34,8 +34,9 @@ namespace FiveKingdoms.Core
                 if (ClassDefinition.IsMilestone(next))
                 {
                     var milestone = own.MilestoneAt(next);
-                    if (milestone == null) break;
-                    option = milestone.Options[PathAt(paths, next)];
+                    int path = PathAt(paths, next);
+                    if (milestone == null || path == Stop) break;
+                    option = milestone.Options[path];
                 }
                 if (!hero.Raise(own, option)) break;
                 spent++;
@@ -90,6 +91,12 @@ namespace FiveKingdoms.Core
             return equipped;
         }
 
+        /// <summary>
+        /// In place of a path: the build stops before this milestone and keeps the rest of its points ("none" on a
+        /// tool's command line), to measure what a milestone adds.
+        /// </summary>
+        public const int Stop = -1;
+
         /// <summary>The path a build takes at a milestone tier.</summary>
         public static int PathAt(IReadOnlyList<int> paths, int tier)
         {
@@ -100,8 +107,8 @@ namespace FiveKingdoms.Core
         /// <summary>
         /// Reads a build as the tools take it on the command line: "uzuki:hunter" (that path at every milestone) or
         /// "uzuki:marksman,hunter" (tier 5, then tier 10 and after). A path is named as its class names it, without
-        /// regard to case or spaces, and its first letters are enough ("eng" for En Garde). False, with what was
-        /// wrong, when the hero or a path isn't known.
+        /// regard to case or spaces, and its first letters are enough ("eng" for En Garde); "none" stops the build
+        /// before that milestone (<see cref="Stop"/>). False, with what was wrong, when the hero or a path isn't known.
         /// </summary>
         public static bool TryParse(string text, out ActorDefinition hero, out int[] paths, out string error)
         {
@@ -125,8 +132,9 @@ namespace FiveKingdoms.Core
             paths = new int[names.Length];
             for (int i = 0; i < names.Length; i++)
             {
-                paths[i] = PathNamed(hero.StartingClass, names[i]);
-                if (paths[i] >= 0) continue;
+                bool stops = Squeeze(names[i]) == "none";
+                paths[i] = stops ? Stop : PathNamed(hero.StartingClass, names[i]);
+                if (paths[i] >= 0 || stops) continue;
                 error = $"The {hero.StartingClass.Name} has no path \"{names[i]}\": {string.Join(", ", hero.StartingClass.Paths)}.";
                 return false;
             }

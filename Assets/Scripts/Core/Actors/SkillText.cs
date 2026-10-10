@@ -74,7 +74,10 @@ namespace FiveKingdoms.Core
                 if (skill.StunChance > 0)
                     parts.Add($"{skill.StunChance}% chance to stun: the foe's next turn comes {skill.StunPercent}% of a turn later.");
                 if (skill.DelayPercent > 0) parts.Add($"Slows each foe hit: its next turn comes {skill.DelayPercent}% of a turn later.");
-                if (skill.Status == StatusKind.Taunt) parts.Add($"Taunts the foe: for {Turns(skill.StatusTurns)} it goes for the hero.");
+                if (skill.Status == StatusKind.Taunt)
+                    parts.Add(skill.StatusAround
+                        ? $"Taunts the foe and every other foe next to the hero: for {Turns(skill.StatusTurns)} they go for the hero."
+                        : $"Taunts the foe: for {Turns(skill.StatusTurns)} it goes for the hero.");
                 if (skill.Element != Element.None) parts.Add($"{skill.Element} damage.");
             }
 

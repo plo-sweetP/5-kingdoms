@@ -22,5 +22,35 @@ namespace FiveKingdoms.Tests
             expReward: 0, speed: 95, skills: new[] { SkillCatalog.PiercingPunch, SkillCatalog.KiHeal, SkillCatalog.StunStrike },
             ultimate: SkillCatalog.FlurryOfBlows, hpGrowth: 45, atkGrowth: 11, defGrowth: 8, weapon: WeaponCatalog.Gauntlets,
             startingClass: ClassCatalog.Monk);
+
+        /// <summary>
+        /// A hero at <paramref name="level"/> with its own class raised as far as its points and the written tiers go,
+        /// taking at each milestone the option among <paramref name="picks"/> (by id). A milestone none of them
+        /// belongs to stops it there, with the rest of the points free.
+        /// </summary>
+        public static HeroProgress Built(ActorDefinition definition, int level, params string[] picks)
+        {
+            var hero = new HeroProgress(definition, level);
+            var own = definition.StartingClass;
+            while (hero.PointsFree > 0)
+            {
+                int next = hero.TierOf(own) + 1;
+                ClassOption pick = null;
+                if (ClassDefinition.IsMilestone(next))
+                    foreach (var option in own.MilestoneAt(next)?.Options ?? System.Array.Empty<ClassOption>())
+                        if (System.Array.IndexOf(picks, option.Id) >= 0) pick = option;
+                if (!hero.Raise(own, pick)) break;
+            }
+            return hero;
+        }
+
+        /// <summary>The slot of <paramref name="skill"/> (by id: a hero's own copy counts) in a hero's loadout, or -1.</summary>
+        public static int Slot(Actor hero, SkillDefinition skill)
+        {
+            var skills = hero.Skills;
+            for (int i = 0; i < skills.Count; i++)
+                if (skills[i].Id == skill.Id) return i;
+            return -1;
+        }
     }
 }

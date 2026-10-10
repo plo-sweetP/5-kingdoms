@@ -865,7 +865,17 @@ namespace FiveKingdoms.Dungeon
                     Effects.Explosion(effectRoot, targetTile);
                     Effects.Burst(effectRoot, targetTile, FireColor, 10, 3f);
                 }
-                else if (skill.Shove) Effects.Ring(effectRoot, targetTile, Color.white);
+                else if (skill.Shove)
+                {
+                    Effects.Ring(effectRoot, targetTile, Color.white);
+                    // Challenge: the bash is a shout to everyone around him, in the taunt's colour.
+                    if (skill.StatusAround)
+                    {
+                        Effects.Ring(effectRoot, attacker.transform.position, WarningColor);
+                        Effects.Shockwave(effectRoot, attacker.transform.position, WarningColor, 14, 2.5f);
+                        hud.ShowFloatingText(attacker.TextAnchor + Vector3.up * 0.25f, "Challenge!", WarningColor, 0.9f);
+                    }
+                }
                 else if (skill.Pierce)
                 {
                     Effects.Ring(effectRoot, targetTile, SpiritColor);

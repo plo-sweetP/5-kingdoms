@@ -74,13 +74,22 @@ namespace FiveKingdoms.Tests
             Assert.AreEqual(4, Saved(leader).TierOf(ClassCatalog.Paladin), "every change is saved at once");
             Assert.AreEqual(2, Saved(leader).PointsFree);
 
-            // Tier 5 isn't written: the class stops here, and the screen says so where the player looks.
+            // Tier 5 is a milestone: the button leads to its row, and the pick is the press on one of its spheres.
+            StringAssert.Contains("Choose at tier 5", tree.InfoText + tree.Model.Info.Action);
             tree.Activate();
-            Assert.AreEqual(4, tree.Model.Hero.TierOf(ClassCatalog.Paladin));
-            StringAssert.Contains("Tier 5 is coming soon", tree.InfoText);
-            tree.Tap(TreeFocus.Option(0, 0));
+            Assert.AreEqual(4, tree.Model.Hero.TierOf(ClassCatalog.Paladin), "nothing is spent before the pick");
+            Assert.AreEqual(TreeZone.Options, tree.Model.Focus.Zone);
+            tree.Tap(TreeFocus.Option(0, 1));
+            var option = ClassCatalog.Paladin.MilestoneAt(5).Options[1];
+            StringAssert.Contains(option.Name, tree.InfoText);
+            Assert.AreEqual(OptionState.Open, tree.Model.StateOf(0, 1));
+            yield return null;
+
+            // A row that isn't written yet says so where the player looks: the last one always is, for now.
+            int lastRow = SkillTreeModel.Rows - 1;
+            tree.Tap(TreeFocus.Option(lastRow, 0));
             StringAssert.Contains("Coming soon.", tree.InfoText);
-            Assert.AreEqual(OptionState.Locked, tree.Model.StateOf(0, 0));
+            Assert.AreEqual(OptionState.Locked, tree.Model.StateOf(lastRow, 0));
             yield return null;
 
             tree.Back();

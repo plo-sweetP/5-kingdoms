@@ -205,10 +205,33 @@ namespace FiveKingdoms.Core
                         teaches: SkillCatalog.BouncingShot)),
             });
 
-        /// <summary>Haiden's class: a holy warrior in armor, protection and some healing. A heavy, slower class.</summary>
+        /// <summary>
+        /// Haiden's class: a holy warrior in armor, protection and some healing. A heavy, slower class. Its paths: the
+        /// Guardian (protection), Devotion (healing) and the Crusader (damage).
+        /// </summary>
         public static readonly ClassDefinition Paladin = new ClassDefinition("paladin", "Paladin", WeaponFamily.Sword, speedModifier: -5,
             paths: new[] { "Guardian", "Devotion", "Crusader" },
-            bumps: new[] { new StatBump(StatKind.Hp, 4), new StatBump(StatKind.Def, 4) });
+            bumps: new[] { new StatBump(StatKind.Hp, 4), new StatBump(StatKind.Def, 4) },
+            milestones: new[]
+            {
+                new ClassMilestone(5,
+                    new ClassOption("paladin_challenge", "Challenge", 0,
+                        "Shoulder Bash becomes a challenge to everyone near: it also taunts every other foe next to the hero, and the taunt lasts 2 turns (was 1).",
+                        upgrades: SkillCatalog.ShoulderBash, change: skill =>
+                        {
+                            skill.StatusAround = true;
+                            skill.StatusTurns = 2;
+                        }),
+                    // The draft's 30% was a must-pick: with the balance report's players a level-5 party won 62% of its
+                    // runs with it, 38% without, 40% with either of the other two. Every 1% of heal is worth over two
+                    // points there; 24% (47%) is in line with the other classes' best options.
+                    new ClassOption("paladin_greater_heal", "Greater Heal", 1,
+                        "Heal mends more: 24% of the hero's max HP (was 20%).",
+                        upgrades: SkillCatalog.PaladinHeal, change: skill => skill.Power = 24),
+                    new ClassOption("paladin_searing_smite", "Searing Smite", 2,
+                        "Divine Strike burns hotter: it hits for 320% ATK (was 250%).",
+                        upgrades: SkillCatalog.DivineStrike, change: skill => skill.Power = 320)),
+            });
 
         /// <summary>
         /// Kristela's class since 2026-10-05 (Peter: "I'm not feeling the monk abilities for her"): a light blade,

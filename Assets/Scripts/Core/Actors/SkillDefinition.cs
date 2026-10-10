@@ -221,6 +221,12 @@ namespace FiveKingdoms.Core
         public int StatusPower { get; internal set; }
         public int StatusTurns { get; internal set; }
 
+        /// <summary>
+        /// Strikes: the status also lands on every other foe next to the user, whether or not the blow reached it
+        /// (the Paladin's Challenge: Shoulder Bash taunts them all). Only a class option sets it.
+        /// </summary>
+        public bool StatusAround { get; internal set; }
+
         /// <summary>A counter stance: what it takes off a boss's hits instead of StatusPower, in percent.</summary>
         public int BossStatusPower { get; internal set; }
 

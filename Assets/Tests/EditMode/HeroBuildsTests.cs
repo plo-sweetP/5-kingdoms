@@ -74,6 +74,23 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
+        public void ABuildCanStopBeforeAMilestone()
+        {
+            // To measure what a milestone adds: the same hero without it, its other points unspent.
+            var hero = new HeroProgress(Scout, level: 12);
+            Assert.AreEqual(3, HeroBuilds.Spend(hero, new[] { HeroBuilds.Stop }));
+            Assert.AreEqual(4, hero.TierOf(ClassRulesTests.Scout));
+            Assert.AreEqual(8, hero.PointsFree);
+
+            var later = new HeroProgress(Scout, level: 12);
+            HeroBuilds.Spend(later, new[] { 1, HeroBuilds.Stop });
+            Assert.AreEqual(9, later.TierOf(ClassRulesTests.Scout), "the first milestone taken, the second left");
+
+            Assert.IsTrue(HeroBuilds.TryParse("uzuki:hunter,none", out _, out var paths, out string error), error);
+            CollectionAssert.AreEqual(new[] { 1, HeroBuilds.Stop }, paths);
+        }
+
+        [Test]
         public void AMonsterHasNothingToSpend()
         {
             Assert.AreEqual(0, HeroBuilds.Spend(new HeroProgress(ActorCatalog.Spider, level: 9)));

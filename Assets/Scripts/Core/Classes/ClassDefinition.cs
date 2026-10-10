@@ -179,8 +179,8 @@ namespace FiveKingdoms.Core
     /// <summary>
     /// The classes heroes can learn. Part 1 of milestone 1g has the starting party's three and the Monk (PROGRESSION.md,
     /// "Starting class content"); the other base classes, the advanced and the inherited ones come later. Each has
-    /// its "Every tier" stat bumps (in tenths of a percent a tier, so 4 is +10% at tier 25; never SPD); the
-    /// milestones' options are not written yet, so a class stops at tier 4 for now.
+    /// its "Every tier" stat bumps (in tenths of a percent a tier, so 4 is +10% at tier 25; never SPD). Tier 5 is
+    /// written for the Archer, the Paladin and the Fencer, which stop at tier 9; the Monk stops at tier 4.
     /// </summary>
     public static class ClassCatalog
     {
@@ -239,7 +239,34 @@ namespace FiveKingdoms.Core
         /// </summary>
         public static readonly ClassDefinition Fencer = new ClassDefinition("fencer", "Fencer", WeaponFamily.Sword, speedModifier: 5,
             paths: new[] { "Duelist", "Footwork", "En Garde" },
-            bumps: new[] { new StatBump(StatKind.CritRate, 2), new StatBump(StatKind.CritDmg, 4) });
+            bumps: new[] { new StatBump(StatKind.CritRate, 2), new StatBump(StatKind.CritDmg, 4) },
+            milestones: new[]
+            {
+                // Peter, 2026-10-10: "fencer options are fine as drafted". All three upgrade her starting kit.
+                new ClassMilestone(5,
+                    new ClassOption("fencer_precise_thrusts", "Precise Thrusts", 0,
+                        "Triple Thrust finds the gaps: each of its hits has +15% Crit Rate, and the third hits for 130% ATK (was 90%).",
+                        upgrades: SkillCatalog.TripleThrust, change: skill =>
+                        {
+                            skill.CritRateBonus = 150;
+                            skill.LastHitPower = 130;
+                        }),
+                    new ClassOption("fencer_long_lunge", "Long Lunge", 1,
+                        "Lunge carries further and hits harder: a foe up to 4 tiles away (was 3), for 240% ATK (was 200%).",
+                        upgrades: SkillCatalog.Lunge, change: skill =>
+                        {
+                            skill.DashTiles = 3;
+                            skill.Power = 240;
+                        }),
+                    new ClassOption("fencer_sharp_riposte", "Sharp Riposte", 2,
+                        "Riposte answers harder and turns more aside: the counter hits for 320% ATK (was 250%), and the stance takes 60% off a hit (was 50%), 30% off a boss's (was 25%).",
+                        upgrades: SkillCatalog.Riposte, change: skill =>
+                        {
+                            skill.Power = 320;
+                            skill.StatusPower = 60;
+                            skill.BossStatusPower = 30;
+                        })),
+            });
 
         /// <summary>
         /// Fast unarmed martial arts, many hits. A quick class. No starting hero has it since Kristela became a Fencer;

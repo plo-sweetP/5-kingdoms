@@ -71,14 +71,15 @@ namespace FiveKingdoms.Core
         /// <param name="extraDamage">Flat damage added before the multipliers (set bonuses, weapon passives).</param>
         /// <param name="damageBonus">DMG bonus in tenths of a percent.</param>
         /// <param name="reachPercent">The ranged and point-blank cuts (<see cref="ReachPercent"/>); 100 for melee.</param>
+        /// <param name="critRateBonus">Crit Rate this hit has on top of the attacker's, in tenths of a percent (a skill's own).</param>
         public static DamageRoll RollDamage(Actor attacker, Actor defender, Rng rng, int skillPercent, int extraDamage = 0,
-            int damageBonus = 0, Element element = Element.None, int reachPercent = 100)
+            int damageBonus = 0, Element element = Element.None, int reachPercent = 100, int critRateBonus = 0)
         {
             long damage = (long)attacker.Attack * skillPercent / 100 + extraDamage;
             damage = damage * reachPercent / 100;
             damage = damage * (1000 + damageBonus) / 1000;
             damage = damage * rng.Range(SpreadMinPercent, SpreadMaxPercent + 1) / 100;
-            bool critical = rng.Range(0, 1000) < attacker.CritRate;
+            bool critical = rng.Range(0, 1000) < attacker.CritRate + critRateBonus;
             if (critical) damage = damage * (1000 + attacker.CritDmg) / 1000;
             long k = DefenseConstant(attacker.Level);
             damage = damage * k / (k + Math.Max(0, defender.Defense));

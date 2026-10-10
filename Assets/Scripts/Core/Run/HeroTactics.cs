@@ -698,7 +698,7 @@ namespace FiveKingdoms.Core
         /// </summary>
         public static int PowerOn(DungeonRun run, Actor hero, SkillDefinition skill, Actor target)
         {
-            int power = skill.Power * skill.Hits;
+            int power = skill.TotalPower;
             if (DungeonRun.IsMultishot(hero, skill)) return power * hero.Weapon.PassivePower / 100 * 2;
             if (skill.Bounces <= 0) return power;
             var hit = new List<Actor> { target };

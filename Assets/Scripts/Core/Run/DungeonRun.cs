@@ -1346,7 +1346,9 @@ namespace FiveKingdoms.Core
                     user.Facing = victimDir;
                 }
                 events.Add(new AttackEvent(user.Id, victim.Id, victimDir, victim.Pos));
-                ApplyDamage(user, victim, CombatRules.RollDamage(user, victim, Random, percent, element: skill.Element));
+                // The last hit can be the heavy one (Precise Thrusts), and each can have the skill's own crit bonus.
+                int power = hit == skill.Hits - 1 && skill.Hits > 1 && skill.LastHitPower > 0 ? skill.LastHitPower : percent;
+                ApplyDamage(user, victim, CombatRules.RollDamage(user, victim, Random, power, element: skill.Element, critRateBonus: skill.CritRateBonus));
             }
             if (skill.Shove && target.IsAlive && State == RunState.InProgress) Push(target, dir, 1);
             if (target.IsAlive) ApplyOnHit(user, target, skill, first: true);

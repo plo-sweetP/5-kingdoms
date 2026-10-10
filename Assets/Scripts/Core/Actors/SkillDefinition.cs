@@ -189,6 +189,21 @@ namespace FiveKingdoms.Core
         public int Hits { get; internal set; }
 
         /// <summary>
+        /// Strikes: extra Crit Rate for each of this skill's hits, in tenths of a percent (the Fencer's Precise
+        /// Thrusts: 150). Only a class option sets it.
+        /// </summary>
+        public int CritRateBonus { get; internal set; }
+
+        /// <summary>
+        /// Strikes with several hits: what the last one hits for instead of Power, in percent of ATK (Precise Thrusts:
+        /// the third thrust). 0: the same as the others. Only a class option sets it.
+        /// </summary>
+        public int LastHitPower { get; internal set; }
+
+        /// <summary>What all its hits on one foe come to, in percent of ATK.</summary>
+        public int TotalPower => LastHitPower > 0 && Hits > 1 ? Power * (Hits - 1) + LastHitPower : Power * Hits;
+
+        /// <summary>
         /// Strikes with several hits: when the target falls, the hits that are left go to another foe next to the user
         /// (Flurry of Blows). Without it they are all for the one target (Triple Thrust).
         /// </summary>

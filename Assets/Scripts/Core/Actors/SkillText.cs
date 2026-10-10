@@ -13,7 +13,9 @@ namespace FiveKingdoms.Core
         public static string Describe(SkillDefinition skill)
         {
             var parts = new List<string>();
-            string hits = skill.Hits > 1 ? $"{skill.Hits} hits of {skill.Power}% ATK each" : $"A hit of {skill.Power}% ATK";
+            string hits = skill.Hits <= 1 ? $"A hit of {skill.Power}% ATK"
+                : skill.LastHitPower > 0 ? $"{skill.Hits} hits of {skill.Power}% ATK each, the last one of {skill.LastHitPower}%,"
+                : $"{skill.Hits} hits of {skill.Power}% ATK each";
             string theirs = skill.HealsFromUser ? "the hero's" : "their own";
             switch (skill.Effect)
             {
@@ -21,6 +23,7 @@ namespace FiveKingdoms.Core
                     parts.Add(skill.DashTiles > 0
                         ? $"{hits} on a foe up to {skill.StrikeReach} tiles away in a straight line: the hero dashes up to it first."
                         : $"{hits} on a foe next to the hero.");
+                    if (skill.CritRateBonus > 0) parts.Add($"Each hit has +{TreeText.Tenths(skill.CritRateBonus)}% Crit Rate.");
                     if (skill.MovesOn) parts.Add("When that foe falls, the hits that are left go to another one next to the hero.");
                     if (skill.Pierce) parts.Add("Also hits the foe right behind it.");
                     if (skill.Shove) parts.Add($"Shoves it one tile back; if it can't move, the hit does {skill.WallBonusPercent}% more.");

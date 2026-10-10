@@ -925,6 +925,7 @@ namespace FiveKingdoms.Core
         {
             actor.TurnsTaken++;
             ExpireStatusesFrom(actor);
+            if (actor.Team == Team.Hero) NoteFooting(actor);
             var aura = actor.FindStatus(StatusKind.Aura);
             if (aura == null) return;
             foreach (var covered in AlliesWithin(actor, AuraRadius))
@@ -932,6 +933,22 @@ namespace FiveKingdoms.Core
             if (--aura.TurnsLeft > 0) return;
             actor.Statuses.Remove(aura);
             events.Add(new StatusEndedEvent(actor.Id, StatusKind.Aura));
+        }
+
+        /// <summary>
+        /// How a hero stands toward a boss's wind-up as its turn begins (<see cref="SlamFooting"/>): in the slam's reach
+        /// with a way out or without one, or out of reach. Kept for the slam to report (<see cref="SlamCaughtEvent"/>).
+        /// </summary>
+        void NoteFooting(Actor hero)
+        {
+            hero.Footing = SlamFooting.OutOfReach;
+            foreach (var foe in actors)
+            {
+                if (foe.Team == hero.Team || !foe.Charging) continue;
+                if (GridPos.ChebyshevDistance(hero.Pos, foe.Pos) > EnemyBrain.SlamRadius) continue;
+                hero.Footing = HeroTactics.HasWayOut(this, hero, foe) ? SlamFooting.WayOut : SlamFooting.Cornered;
+                if (hero.Footing == SlamFooting.Cornered) return;
+            }
         }
 
         /// <summary>
@@ -1023,6 +1040,8 @@ namespace FiveKingdoms.Core
                     break;
                 case IntentKind.Charge:
                     enemy.Charging = true;
+                    foreach (var actor in actors)
+                        if (actor.Team != enemy.Team) actor.Footing = SlamFooting.NoTurn;
                     events.Add(new BossActionEvent(enemy.Id, BossAction.Charge));
                     kind = ActionKind.Special;
                     break;
@@ -1686,6 +1705,9 @@ namespace FiveKingdoms.Core
         {
             boss.Charging = false;
             boss.SpecialCooldown = EnemyBrain.SlamCooldown;
+            foreach (var target in actors)
+                if (target.Team != boss.Team && GridPos.ChebyshevDistance(boss.Pos, target.Pos) <= EnemyBrain.SlamRadius)
+                    events.Add(new SlamCaughtEvent(boss.Id, target.Id, target.Footing, DamageTakenPercent(target, boss) < 100));
             events.Add(new BossActionEvent(boss.Id, BossAction.Slam));
             foreach (var target in actors.ToArray())
             {

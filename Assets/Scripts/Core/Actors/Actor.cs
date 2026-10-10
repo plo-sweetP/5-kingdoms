@@ -135,6 +135,12 @@ namespace FiveKingdoms.Core
         /// </summary>
         public int RestedTurns { get; set; }
 
+        /// <summary>
+        /// Party AI: how the hero stood toward a boss's wind-up when its latest turn began. The slam says it of
+        /// everyone it catches (<see cref="SlamCaughtEvent"/>).
+        /// </summary>
+        public SlamFooting Footing { get; set; }
+
         /// <summary>Own turns it has started so far (heroes: this run).</summary>
         public int TurnsTaken { get; set; }
 

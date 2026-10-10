@@ -218,11 +218,41 @@ namespace FiveKingdoms.CoreTests
                                       string.Join(" ", run.Party.Select(m => $"{m.Name[0]}{m.Pos}{(m == run.Hero ? "*" : "")} {(m.IsAlive ? m.Hp * 100 / m.MaxHp + "%" : "down")}")) +
                                       $" foes={run.Actors.Count(a => a.Team == Team.Enemy)} after us: " +
                                       string.Join(" ", run.Actors.Where(a => a.Team == Team.Enemy && a.Alerted).Select(a => a.Pos)) +
-                                      string.Concat(run.Events.OfType<SwappedEvent>().Select(swap => $" swap {swap.ActorId}<>{swap.OtherId}")));
+                                      string.Concat(run.Events.OfType<SwappedEvent>().Select(swap => $" swap {swap.ActorId}<>{swap.OtherId}")) +
+                                      (run.IsBossFloor ? BossFightTrail(run) : ""));
                 if (action >= fromAction && action - fromAction < mapActions) PrintAround(run, 9, 6);
             }
             Console.WriteLine($"{run.State} on B{run.Floor}F after turn {run.Turn}");
             return 0;
+        }
+
+        /// <summary>
+        /// For a party trace on the boss floor: where the boss stands, and what happened in this action in order: who
+        /// moved where, who used what, the boss's wind-ups and slams, and how each hero a slam caught was standing.
+        /// </summary>
+        static string BossFightTrail(DungeonRun run)
+        {
+            string Name(int actorId)
+            {
+                foreach (var member in run.Party)
+                    if (member.Id == actorId) return member.Name.Substring(0, 1);
+                return run.Boss != null && run.Boss.Id == actorId ? "T" : "s";
+            }
+
+            var trail = new List<string>();
+            foreach (var e in run.Events)
+                switch (e)
+                {
+                    case MovedEvent moved: trail.Add($"{Name(moved.ActorId)}>{moved.To}"); break;
+                    case DashedEvent dashed: trail.Add($"{Name(dashed.ActorId)}>>{dashed.To}"); break;
+                    case SkillUsedEvent used: trail.Add($"{Name(used.ActorId)}:{used.Skill.Name}"); break;
+                    case AttackEvent attack when attack.TargetId >= 0: trail.Add($"{Name(attack.AttackerId)}x{Name(attack.TargetId)}"); break;
+                    case BossActionEvent boss: trail.Add($"T:{boss.Action}"); break;
+                    case SlamCaughtEvent caught: trail.Add($"caught {Name(caught.TargetId)} ({caught.Footing}{(caught.Braced ? ", braced" : "")})"); break;
+                    case DiedEvent died: trail.Add($"{Name(died.ActorId)} falls"); break;
+                }
+            var troll = run.Boss;
+            return troll == null ? "" : $" | T{troll.Pos} {troll.Hp * 100 / troll.MaxHp}%{(troll.Charging ? " winding up" : "")}: {string.Join(", ", trail)}";
         }
 
         /// <summary>
@@ -304,11 +334,13 @@ namespace FiveKingdoms.CoreTests
             var hpAtBossStart = new long[Party.Length];
             var packFights = new FightStats(Party.Length);
             var bossFight = new FightStats(Party.Length);
+            var footing = new SlamStats(Party.Length);
             for (int seed = 1; seed <= seeds; seed++)
             {
                 var config = tuning();
                 config.Party = Party;
                 var run = new DungeonRun(seed, config);
+                footing.BeginRun();
                 for (int i = 0; i < 5000 && run.State == RunState.InProgress; i++)
                 {
                     bool wasBossFloor = run.IsBossFloor;
@@ -318,6 +350,7 @@ namespace FiveKingdoms.CoreTests
                     if (command.Holding) holds++;
                     if (command.Resting) rests++;
                     round.End(run, run.Execute(command));
+                    footing.After(run);
                     // Heals used between fights: by the leader's own action, or by partners before a fight (re)started.
                     bool quiet = !fighting;
                     foreach (var e in run.Events)
@@ -421,6 +454,7 @@ namespace FiveKingdoms.CoreTests
             packFights.Print(Party);
             Console.WriteLine("In the boss fight:");
             bossFight.Print(Party);
+            footing.Print(Party);
             CampaignReport(players: seeds / 2, maxAttempts: 10, tuning);
             return 0;
         }
@@ -576,15 +610,18 @@ namespace FiveKingdoms.CoreTests
         static int BossReport(int level, int seeds, Func<DungeonRunConfig> tuning)
         {
             int won = 0, ultimates = 0, turns = 0;
+            var footing = new SlamStats(Party.Length);
             for (int seed = 1; seed <= seeds; seed++)
             {
                 var party = Party.Select(definition => new HeroProgress(definition, level)).ToArray();
                 var config = tuning();
                 config.FloorCount = 1;
                 var run = new DungeonRun(seed, config, party);
+                footing.BeginRun();
                 for (int i = 0; i < 2000 && run.State == RunState.InProgress; i++)
                 {
                     run.Execute(AutoPilot.Decide(run));
+                    footing.After(run);
                     ultimates += run.Events.Count(e => e is SkillUsedEvent used && used.Skill.IsUltimate);
                 }
                 if (run.State == RunState.Won) won++;
@@ -592,7 +629,125 @@ namespace FiveKingdoms.CoreTests
             }
             Console.WriteLine($"Starting party at Lv {level} against the Troll: won {won} of {seeds} " +
                               $"(leader turns {turns / (float)seeds:0}, ultimates per hero {ultimates / 3f / seeds:0.00})");
+            footing.Print(Party);
             return 0;
+        }
+
+        /// <summary>
+        /// Footing in the boss fight (PROGRESSION.md, "Footing in a boss fight"), for the balance report: how many of
+        /// the boss's slams hit a hero, and how many of those heroes had no way out when their last turn began (the
+        /// rules say so with each <see cref="SlamCaughtEvent"/>). Next to it, how often a hero next to the boss stands on
+        /// a tile with no way out at all, sampled after each action of the leader's.
+        /// </summary>
+        sealed class SlamStats
+        {
+            readonly long[] caught, alone, cornered, corneredBraced, noTurn, cameBack, hpShare, felled, beside, besideCornered;
+            readonly HashSet<int> pending = new HashSet<int>();
+            int fights, windUps, slams, slamsThatHit, slamsOnCornered;
+            bool fighting, slamHits, slamCorners;
+
+            public SlamStats(int partySize)
+            {
+                caught = new long[partySize];
+                alone = new long[partySize];
+                cornered = new long[partySize];
+                corneredBraced = new long[partySize];
+                noTurn = new long[partySize];
+                cameBack = new long[partySize];
+                hpShare = new long[partySize];
+                felled = new long[partySize];
+                beside = new long[partySize];
+                besideCornered = new long[partySize];
+            }
+
+            /// <summary>A boss fight is a run in which the boss winds up at least once.</summary>
+            public void BeginRun()
+            {
+                fighting = slamHits = slamCorners = false;
+                pending.Clear();
+            }
+
+            /// <summary>Call after each action.</summary>
+            public void After(DungeonRun run)
+            {
+                int IndexOf(int actorId)
+                {
+                    for (int member = 0; member < run.Party.Count; member++)
+                        if (run.Party[member].Id == actorId) return member;
+                    return -1;
+                }
+
+                foreach (var e in run.Events)
+                {
+                    switch (e)
+                    {
+                        case SlamCaughtEvent hit when IndexOf(hit.TargetId) >= 0:
+                            int target = IndexOf(hit.TargetId);
+                            caught[target]++;
+                            if (!run.Party.Any(member => member.IsAlive && member.Id != hit.TargetId)) alone[target]++;
+                            slamHits = true;
+                            if (hit.Footing == SlamFooting.NoTurn) noTurn[target]++;
+                            if (hit.Footing == SlamFooting.OutOfReach) cameBack[target]++;
+                            if (hit.Footing == SlamFooting.Cornered)
+                            {
+                                cornered[target]++;
+                                slamCorners = true;
+                                if (hit.Braced) corneredBraced[target]++;
+                            }
+                            pending.Add(hit.TargetId);
+                            break;
+                        case BossActionEvent boss when boss.Action == BossAction.Charge:
+                            windUps++;
+                            if (!fighting) fights++;
+                            fighting = true;
+                            break;
+                        case BossActionEvent boss when boss.Action == BossAction.Slam:
+                            slams++;
+                            if (slamHits) slamsThatHit++;
+                            if (slamCorners) slamsOnCornered++;
+                            slamHits = slamCorners = false;
+                            break;
+                        // The slam's own hits follow it at once; a counter's blow in between lands on the boss.
+                        case DamageEvent damage when pending.Remove(damage.TargetId):
+                            int struck = IndexOf(damage.TargetId);
+                            hpShare[struck] += damage.Amount * 100 / run.Party[struck].MaxHp;
+                            if (damage.HpAfter == 0) felled[struck]++;
+                            break;
+                        case AttackEvent attack when IndexOf(attack.AttackerId) < 0:
+                            pending.Clear();
+                            break;
+                    }
+                }
+
+                var troll = run.Boss;
+                if (troll == null || !run.InCombat) return;
+                for (int member = 0; member < run.Party.Count; member++)
+                {
+                    var hero = run.Party[member];
+                    if (!hero.IsAlive || GridPos.ChebyshevDistance(hero.Pos, troll.Pos) > EnemyBrain.SlamRadius) continue;
+                    beside[member]++;
+                    if (!HeroTactics.HasWayOut(run, hero, troll)) besideCornered[member]++;
+                }
+            }
+
+            public void Print(ActorDefinition[] party)
+            {
+                float per = Math.Max(1, fights);
+                Console.WriteLine($"Footing in the boss fight ({fights} fights in which the boss wound up): {windUps} wind-ups, {slams} slams; " +
+                                  $"{slamsThatHit} slams hit a hero ({slamsThatHit / per:0.00} a fight), {slamsOnCornered} of them a hero that had no way out " +
+                                  $"({slamsOnCornered / per:0.00} a fight)");
+                for (int member = 0; member < party.Length; member++)
+                {
+                    long hits = Math.Max(1, caught[member]);
+                    long stayed = caught[member] - cornered[member] - noTurn[member] - cameBack[member];
+                    Console.WriteLine($"  {party[member].Name,-9} hit by {caught[member]} slams ({caught[member] / per:0.00} a fight, {alone[member]} as the last one standing): {cornered[member]} with no way out " +
+                                      $"({cornered[member] / per:0.00} a fight; {corneredBraced[member]} of them behind a guard, a stance or an aura), " +
+                                      $"{noTurn[member]} without a turn since the wind-up, {cameBack[member]} that began its last turn out of reach " +
+                                      $"and came in, {stayed} that had a way out and stayed; a hit took {hpShare[member] / hits}% of its HP " +
+                                      $"and felled it {felled[member]} times; next to the boss it had no way out in " +
+                                      $"{besideCornered[member] * 100f / Math.Max(1, beside[member]):0.0}% of {beside[member]} rounds");
+                }
+            }
         }
 
         /// <summary>Levels carried between runs, as in the real game: how many attempts until the party's first clear.</summary>

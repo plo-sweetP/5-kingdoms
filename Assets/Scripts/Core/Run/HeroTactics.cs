@@ -968,6 +968,52 @@ namespace FiveKingdoms.Core
             return best >= 0;
         }
 
+        /// <summary>
+        /// Footing next to a boss (PROGRESSION.md, "Footing in a boss fight"): true when <paramref name="hero"/> has a
+        /// way out of the slam of <paramref name="boss"/>: a free tile beside it that the slam doesn't reach, and that
+        /// no other hero in the slam's reach needs as its only way out. A hero out of the slam's reach has one.
+        /// </summary>
+        public static bool HasWayOut(DungeonRun run, Actor hero, Actor boss)
+        {
+            if (GridPos.ChebyshevDistance(hero.Pos, boss.Pos) > EnemyBrain.SlamRadius) return true;
+            foreach (var dir in Directions.All)
+            {
+                if (!IsWayOut(run, hero.Pos, dir, boss.Pos)) continue;
+                var exit = hero.Pos + dir.ToOffset();
+                bool needed = false;
+                foreach (var other in run.Actors)
+                {
+                    if (other == hero || other.Team != hero.Team) continue;
+                    if (GridPos.ChebyshevDistance(other.Pos, boss.Pos) > EnemyBrain.SlamRadius) continue;
+                    if (WaysOut(run, other.Pos, boss.Pos, out var only) == 1 && only == exit) needed = true;
+                }
+                if (!needed) return true;
+            }
+            return false;
+        }
+
+        /// <summary>How many free tiles beside <paramref name="from"/> are out of a slam's reach; <paramref name="last"/> is one of them.</summary>
+        static int WaysOut(DungeonRun run, GridPos from, GridPos threat, out GridPos last)
+        {
+            last = from;
+            int ways = 0;
+            foreach (var dir in Directions.All)
+            {
+                if (!IsWayOut(run, from, dir, threat)) continue;
+                last = from + dir.ToOffset();
+                ways++;
+            }
+            return ways;
+        }
+
+        /// <summary>A step from <paramref name="from"/> onto a free tile that a slam from <paramref name="threat"/> doesn't reach.</summary>
+        static bool IsWayOut(DungeonRun run, GridPos from, Direction8 dir, GridPos threat)
+        {
+            var next = from + dir.ToOffset();
+            return run.Map.CanStep(from, dir) && run.ActorAt(next) == null &&
+                   GridPos.ChebyshevDistance(next, threat) > EnemyBrain.SlamRadius;
+        }
+
         /// <summary>Positions of every foe on the floor.</summary>
         public static List<GridPos> FoePositions(DungeonRun run, Actor hero)
         {

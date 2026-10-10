@@ -185,6 +185,45 @@ namespace FiveKingdoms.Core
     }
 
     /// <summary>
+    /// How a hero stood toward a boss's wind-up when its latest turn began (PROGRESSION.md, "Footing in a boss fight").
+    /// </summary>
+    public enum SlamFooting
+    {
+        /// <summary>It has had no turn since the wind-up began.</summary>
+        NoTurn,
+
+        /// <summary>Out of the slam's reach.</summary>
+        OutOfReach,
+
+        /// <summary>In reach, with a way out (<see cref="HeroTactics.HasWayOut"/>).</summary>
+        WayOut,
+
+        /// <summary>In reach with no way out: its back to a wall, a pillar or a corner, or boxed in.</summary>
+        Cornered,
+    }
+
+    /// <summary>
+    /// The slam that follows catches this hero (the BossActionEvent comes next, then the DamageEvents).
+    /// <see cref="Footing"/> says how it stood when its last turn began, so the balance report can count the slams
+    /// that hit a hero who had no way out; <see cref="Braced"/>: it takes the blow behind a guard, a stance or an aura.
+    /// </summary>
+    public sealed class SlamCaughtEvent : GameEvent
+    {
+        public readonly int BossId;
+        public readonly int TargetId;
+        public readonly SlamFooting Footing;
+        public readonly bool Braced;
+
+        public SlamCaughtEvent(int bossId, int targetId, SlamFooting footing, bool braced)
+        {
+            BossId = bossId;
+            TargetId = targetId;
+            Footing = footing;
+            Braced = braced;
+        }
+    }
+
+    /// <summary>
     /// A skill or ultimate was used; its effects (attack, heal, dash, charge) follow as their own events. Carries the
     /// hero and skill, so a presentation layer can show a manga panel or an ultimate's cutscene.
     /// </summary>

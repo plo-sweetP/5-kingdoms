@@ -1,8 +1,8 @@
 # HUD and menus (design, 2026-10-05)
 
-Status: **Peter's notes from his first runs on the tablet (2026-10-04), not built.** They are one build task,
-"playtest pass 1" (see "Building it"). Items marked *proposed* are the planning hub's defaults for details he didn't
-give; the build session shows him screenshots before they are final.
+Status: **Peter's notes from his first runs on the tablet (2026-10-04), built in part.** They are one build task,
+"playtest pass 1" (see "Building it", which says what is built). Items marked *proposed* are the planning hub's
+defaults for details he didn't give; the build session shows him screenshots before they are final.
 
 ## The layout today (phone, touch)
 Top left: the party cards, and under them the turn order. Top centre: the floor banner. Top right: Wait and Berry
@@ -97,9 +97,29 @@ Peter: "if auto play is enabled. Please hide the dpad and grey out the skills op
 Peter, 2026-10-10, on the tablet layout: "for the tablet, pls zoom out a bit more. the characters look a bit too
 big". The camera only zooms in whole steps (ART.md, "Rules for all art"), so on a tablet-sized screen the view
 goes **one whole zoom step further out** than the rule picks today, and the aiming camera's step-out works from
-there. *Proposed:* decide it by the screen's height in tiles, so the phone's 2x view (about 8.4 tiles high) doesn't
-change. The build session says what zoom the Tab S8+ (2800 x 1752) gets before and after and how many tiles that
-shows, and Peter judges it on the tablet itself.
+there.
+
+The numbers (the build session's arithmetic, 2026-10-10): the rule picks the whole zoom nearest to 11 tiles high
+(`BaseZoomFor`). On the Tab S8+ (2800 x 1752) that is zoom 2: 13.7 tiles high, a tile about 12 mm, heroes 42%
+larger on the glass than on his phone. One step out is zoom 1: 27.4 tiles high, a tile about 6 mm, heroes 29%
+smaller than on the phone, almost the whole floor in view. Nothing in between exists.
+
+**Decided by Peter on 2026-10-10: both views, as a choice in Settings** ("build both zoom levels into the
+settings"), so he compares them on the tablet itself.
+- Settings gets **View: Near / Far**. Near is what the rule picks today. Far is one whole zoom step further out.
+  *Proposed:* Near stays the default until Peter has compared them; then he picks the tablet's default.
+- *Proposed:* the choice is offered on every screen where Far exists, the phone included (there Far is zoom 1,
+  about 17 tiles high). Where the rule already picks zoom 1 there is no step further out: the choice is greyed out.
+- It applies at once when it is changed in the pause menu, and it is kept with the other settings (PlayerPrefs,
+  only with the real save).
+- The camera while aiming works from the chosen view: from Near it steps out as today; from zoom 1 there is no
+  further step, so it only slides as far as it must. Never a fraction.
+- The HUD doesn't change with the view: buttons, the minimap and the party cards keep their size. What is drawn in
+  the dungeon (damage numbers, the words over a hero, status icons, the aiming highlight) gets smaller with it, so
+  the build session checks that it can still be read in Far and shows Peter screenshots of both views in the
+  tablet's shape.
+- A launch flag picks the view for screenshots and tests, and the log's "View: W x H at zoom N, T tiles high" line
+  says which one is on.
 
 ## Building it (playtest pass 1)
 One build session, after 1g part 1: both change the HUD, so not at the same time.
@@ -110,6 +130,10 @@ One build session, after 1g part 1: both change the HUD, so not at the same time
    blade on its outer side only (ART.md, "Heroes built from layers").
 5. Footing in a boss fight for the party's AI (PROGRESSION.md, "Ranged vs melee"): measured first, as with the
    corridor tactics.
+6. The view: Near and Far in Settings ("The view on the tablet").
+
+Steps 1 to 4 are built and on main (2026-10-10, 1f8db05; GAME_PLAN.md, "Progress"). Steps 5 and 6 and the APK go
+to a second build session.
 
 Checks: every layout (touch, keyboard, gamepad) at phone and tablet sizes, on screenshots at 2340 x 1080 as well as
 in the usual windows, and a new APK installed on the tablet over adb.

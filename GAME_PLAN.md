@@ -661,8 +661,9 @@ the spec is docs/design/HUD.md. Built:
      new count in `-balance`, then the rules, then the balance targets and `-spread`.
   2. The tablet's view (HUD.md, "The view on the tablet"). The rule picks the zoom nearest to 11 tiles high, which
      is zoom 2 on the Tab S8+ (2800 x 1752): 13.7 tiles high and 21.9 wide. One whole step out is zoom 1: 27.4 by
-     43.8 tiles, almost the whole floor, with heroes half the size. Peter decides with those numbers; the player's
-     log now says what a device plays at ("View: ... at zoom N, ... tiles high").
+     43.8 tiles, almost the whole floor, with heroes half the size. The player's log now says what a device plays
+     at ("View: ... at zoom N, ... tiles high"). **Peter, 2026-10-10: both, as a choice in Settings** (View: Near /
+     Far), so he compares them on the tablet.
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

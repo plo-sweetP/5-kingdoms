@@ -276,4 +276,11 @@ def build(wardrobe, folder):
     sheet.row([(frame(looks.Look('kristela', 'piercer_blade', 'light_warrior'), start, wide, 3), 'Kristela with the Piercer Blade')] +
               [(frame(looks.Look('haiden', 'piercer_blade', 'heavy_armor'), start, wide, 3), 'On Haiden')], 'In the dungeon')
     save(sheet, '08-fencer-kit.png')
+
+    # 9. Haiden's Divine Strike: the holy light around the swing and on the target (on dark, as in the dungeon).
+    dark = lambda image, k=2: cell(image, (0, 0, image.w, image.h), k, hexc('#3b4a54'))
+    sheet = Sheet("HAIDEN'S DIVINE STRIKE", 'Holy light: a gold-white crescent with the swing and a burst of light on the target.')
+    sheet.row([(dark(image), 'Arc %d' % (i + 1)) for i, image in enumerate(fx.holy_arc_frames())], "The swing's light")
+    sheet.row([(dark(image), 'Burst %d' % (i + 1)) for i, image in enumerate(fx.holy_burst_frames())], 'On the target')
+    save(sheet, '09-divine-strike.png')
     return paths

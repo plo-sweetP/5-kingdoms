@@ -1833,6 +1833,32 @@
    "w": 64
   },
   {
+   "columns": 4,
+   "count": 4,
+   "fps": 20,
+   "h": 96,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/holy_arc",
+   "path": "Effects/holy_arc",
+   "pivotX": 48,
+   "pivotY": 48,
+   "w": 96
+  },
+  {
+   "columns": 5,
+   "count": 5,
+   "fps": 18,
+   "h": 96,
+   "impact": -1,
+   "loop": false,
+   "name": "Effects/holy_burst",
+   "path": "Effects/holy_burst",
+   "pivotX": 48,
+   "pivotY": 48,
+   "w": 96
+  },
+  {
    "columns": 8,
    "count": 8,
    "fps": 14,

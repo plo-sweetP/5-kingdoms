@@ -48,6 +48,16 @@ namespace FiveKingdoms.Dungeon
         public static void Slash(Transform parent, Vector3 position, Color tint, bool flipX = false) =>
             Play(parent, "Effects/slash", position, tint, flipX: flipX);
 
+        /// <summary>
+        /// Divine Strike's holy light (ART.md, "Skill animations"): a broad gold-white crescent with the swing and light
+        /// bursting on the target. The art keeps its own colours.
+        /// </summary>
+        public static void HolyStrike(Transform parent, Vector3 position, bool flipX)
+        {
+            Play(parent, "Effects/holy_arc", position, flipX: flipX);
+            Play(parent, "Effects/holy_burst", position);
+        }
+
         /// <summary>A glint that opens and closes (the rings' twinkle), e.g. on a blade held ready.</summary>
         public static void Glint(Transform parent, Vector3 position, Color tint) => Play(parent, "Effects/twinkle", position, tint);
 

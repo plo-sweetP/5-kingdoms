@@ -250,13 +250,16 @@ PIERCER_WIDTH = 0.5
 def piercer(image, origin, angle, along=1.22):
     """
     The pack's sword as the Piercer Blade (Peter, 2026-10-05: "closer to a fencer blade than a long sword. So thinner
-    and change the hilt to look rounder and more like a sabre"): the blade a little longer and half as wide, a round
-    gold shell where it begins, and a knuckle bow curving from the shell around the hand to the pommel.
+    and change the hilt to look rounder and more like a sabre"): the blade a little longer and half as wide, a gold
+    shell where it begins, and a knuckle bow curving from the shell around the hand to the pommel. The guard is on
+    the knuckle side only, the outer side; toward her body it is flush with the blade (Peter on the first one: "Only
+    one side of the sabre should have the hand(hilt guard) the side next to the hero should be flatter").
     """
     ux, uy = math.cos(angle), math.sin(angle)
     ox, oy = origin
     w = image.w
     along_of = lambda i: (i % w + 0.5 - ox) * ux + (i // w + 0.5 - oy) * uy
+    across_of = lambda i: -(i % w + 0.5 - ox) * uy + (i // w + 0.5 - oy) * ux
     hilt = [along_of(i) for i, p in enumerate(image.px) if p in GUARD_COLORS]
     blade = [along_of(i) for i, p in enumerate(image.px) if p in BLADE_COLORS]
     if not hilt or not blade:
@@ -264,6 +267,8 @@ def piercer(image, origin, angle, along=1.22):
     pommel, shell = min(hilt) * along, min(blade) * along + 0.5
     middle, reach = (pommel + shell) / 2.0, max(3.0, (shell - pommel) / 2.0 + 0.5)
     light, dark = GUARD_GOLD
+    inner = min(across_of(i) for i, p in enumerate(image.px) if p in BLADE_COLORS) * PIERCER_WIDTH   # The thin blade's inner edge.
+    blade_out = {SILVER[color] for color in BLADE_COLORS}
 
     def guard(out):
         for y in range(int(oy) - 14, int(oy) + 15):
@@ -272,8 +277,12 @@ def piercer(image, origin, angle, along=1.22):
                     continue
                 vx, vy = x + 0.5 - ox, y + 0.5 - oy
                 t, s = vx * ux + vy * uy, -vx * uy + vy * ux
-                if ((t - shell) / 1.7) ** 2 + (s / 3.6) ** 2 <= 1.0:                       # The shell, seen from the side.
-                    out.px[y * out.w + x] = light if s <= 0.3 else dark
+                if s < inner - 0.2 and (t <= shell + 2.0 or out.px[y * out.w + x] not in blade_out):
+                    out.px[y * out.w + x] = 0                                               # Toward her body: nothing of the hilt past the blade's edge.
+                    continue
+                # The shell, seen from the side: it swells toward the knuckles and stops at the blade's inner edge.
+                if s >= inner - 0.2 and ((t - shell) / 1.7) ** 2 + ((s - 1.2) / 4.4) ** 2 <= 1.0:
+                    out.px[y * out.w + x] = light if s <= 1.5 else dark
                 elif s > 0.8 and 0.6 <= math.hypot((t - middle) / reach, s / 4.6) <= 1.0:   # The bow, on the knuckle side.
                     out.px[y * out.w + x] = dark
     return reshape(image, origin, angle, along, PIERCER_WIDTH, SILVER, extra=guard)

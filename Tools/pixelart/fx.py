@@ -201,6 +201,67 @@ def slash():
     return Strip('slash', slash_frames(), (32, 32), loop=False, fps=22)
 
 
+HOLY_LIGHT, HOLY_GOLD = hexc('#fffaba'), hexc('#f3d34a')
+
+
+def holy_arc_frames():
+    """
+    Divine Strike's swing wrapped in holy light (Peter, 2026-10-05: "add a holy light effect to the swing animation"):
+    a broad crescent, white at its heart and gold at its rim with a soft glow around it. It sweeps, flares, then
+    fades. It lies like the plain cut (from the top left round to the right) and is half as large again.
+    """
+    size = 96
+    frames = []
+    for sweep, thick, alpha in ((0.45, 9.0, 255), (1.0, 12.0, 255), (1.0, 8.0, 220), (1.0, 3.5, 130)):
+        image = Image(size, size)
+        for y in range(size):
+            for x in range(size):
+                dx, dy = x + 0.5 - 27, y + 0.5 - 69
+                k = (105.0 - math.degrees(math.atan2(-dy, dx))) / 130.0
+                if not 0.0 <= k <= sweep:
+                    continue
+                half = thick * math.sin(math.pi * k) / 2.0 + 0.2
+                d = abs(math.hypot(dx, dy) - 45.0)
+                if d <= half * 0.45:
+                    image.px[y * size + x] = with_alpha(WHITE, alpha)
+                elif d <= half:
+                    image.px[y * size + x] = with_alpha(HOLY_LIGHT, alpha)
+                elif d <= half + 3.0:
+                    image.px[y * size + x] = with_alpha(HOLY_GOLD, int(alpha * 0.45))
+        frames.append(image)
+    return frames
+
+
+def holy_burst_frames():
+    """Divine Strike's light bursting on its target, in place of the plain fire burst: a white heart with gold rays, four long and four short, that reach out and thin away."""
+    size = 96
+    frames = []
+    for reach, core, alpha in ((16, 8, 255), (32, 10, 255), (42, 8, 235), (46, 5, 165), (48, 2, 90)):
+        image = Image(size, size)
+        for y in range(size):
+            for x in range(size):
+                dx, dy = x + 0.5 - size / 2.0, y + 0.5 - size / 2.0
+                d = math.hypot(dx, dy)
+                if d <= core:
+                    image.px[y * size + x] = with_alpha(WHITE, alpha)
+                    continue
+                if d <= core + 2.5:
+                    image.px[y * size + x] = with_alpha(HOLY_LIGHT, alpha)
+                    continue
+                eighths = math.atan2(dy, dx) / (math.pi / 4.0)
+                ray = int(round(eighths))
+                long_ray = ray % 2 == 0
+                limit = reach if long_ray else reach * 0.62
+                if d > limit:
+                    continue
+                off = abs(eighths - ray) * (math.pi / 4.0) * d          # How far from the ray's own line.
+                width = max(0.7, (3.0 if long_ray else 2.0) * (1.0 - d / limit))
+                if off <= width:
+                    image.px[y * size + x] = with_alpha(HOLY_LIGHT if off <= width * 0.5 else HOLY_GOLD, alpha)
+        frames.append(image)
+    return frames
+
+
 # ---- status icons: 24 px, outlined ----
 
 def _icon(draw):
@@ -291,6 +352,8 @@ def build(pack):
     # Of the pack's particle effects the game uses the first dust puff and the first explosion; the file also has a
     # second of each (frames 8-17 and 26-35), three fires (36-65) and a water splash (66-74).
     strips = [arrow(pack), heal(pack), reticle(pack), berry(), snare(), punch(), ring(), twinkle(), thrust(), slash(),
+              Strip('holy_arc', holy_arc_frames(), (48, 48), loop=False, fps=20),
+              Strip('holy_burst', holy_burst_frames(), (48, 48), loop=False, fps=18),
               particle(pack, 'dust', 0, 7), particle(pack, 'explosion', 18, 25)]
     for name, image in status_icons().items():
         strips.append(Strip('status_' + name, [image], (image.w // 2, image.h // 2), loop=False))

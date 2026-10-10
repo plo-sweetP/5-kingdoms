@@ -33,7 +33,7 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
   `key=value` overrides as for `-balance`); how far partners stray from the leader: `-- -spread`
 - Rebuild the art, ~10 s: `python Tools/pixelart/build_art.py` (add `--preview <folder>` for the review sheets:
   heroes, weapons, armor sets, head pieces, rings, animation strips, icons, the Fencer kit's skill icons and
-  effects; `--only preview` skips writing the art)
+  effects, Divine Strike's holy light; `--only preview` skips writing the art)
 - Unity tests: `Unity.exe -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults results.xml`
 - Windows build: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildWindowsDev`
 - Android test APK, ~6 min: `Unity.exe -batchmode -quit -projectPath . -executeMethod BuildTools.BuildAndroidDev`

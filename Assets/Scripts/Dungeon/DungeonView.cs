@@ -43,6 +43,7 @@ namespace FiveKingdoms.Dungeon
         static readonly Color FlurryGhostColor = new Color(1f, 0.9f, 0.6f, 0.6f);
         static readonly Color DustColor = new Color(0.78f, 0.7f, 0.58f);
         static readonly Color FireColor = new Color(1f, 0.6f, 0.25f);
+        static readonly Color HolyColor = new Color(1f, 0.93f, 0.6f);
         static readonly Color SlowColor = new Color(0.6f, 0.85f, 1f);
         static readonly Color GuardColor = new Color(0.55f, 0.75f, 1f);
         static readonly Color MarkColor = new Color(1f, 0.45f, 0.4f);
@@ -789,6 +790,9 @@ namespace FiveKingdoms.Dungeon
             string swing = counter ? "attack2" : skill == null || flurry ? "attack" : skill.Shove ? "guard" : "attack2";
             attacker.Play(swing, ActorView.LungeTime, "attack", "cast");
             if (flurry) attacker.LeaveAfterimage(effectRoot, FlurryGhostColor);
+            // Divine Strike: holy light on the blade as the swing begins, then around its arc and on the target.
+            bool holy = skill != null && skill.Id == SkillCatalog.DivineStrike.Id;
+            if (holy) Effects.Glint(effectRoot, attacker.transform.position + Vector3.up * 0.45f + direction * 0.3f, HolyColor);
 
             yield return attacker.Lunge(direction, skill != null || counter ? LungeDistance * 1.3f : LungeDistance);
             var targetTile = attacker.transform.position + new Vector3(offset.X, offset.Y, 0f);
@@ -805,7 +809,12 @@ namespace FiveKingdoms.Dungeon
             if (counter) Effects.Slash(effectRoot, targetTile, UltimateTextColor);
             if (skill != null)
             {
-                if (skill.Element == Element.Fire)
+                if (holy)
+                {
+                    Effects.HolyStrike(effectRoot, targetTile, flipX: offset.X < 0);
+                    Effects.Burst(effectRoot, targetTile, HolyColor, 12, 3f);
+                }
+                else if (skill.Element == Element.Fire)
                 {
                     Effects.Explosion(effectRoot, targetTile);
                     Effects.Burst(effectRoot, targetTile, FireColor, 10, 3f);

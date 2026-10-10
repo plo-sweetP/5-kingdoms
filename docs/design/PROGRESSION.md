@@ -324,6 +324,61 @@ hub's first drafts (*proposed*), to tune with `-balance`:
     same rule applies when monsters and bosses stun heroes later.
 - Transformation ultimates last a set number of the hero's own turns, so the timeline shows when they end.
 
+## Attached skills (Peter, 2026-10-10; not built)
+Peter, when the first class options were about to give heroes more skills than slots: "when a new skill is
+selected, you can go into that which skill does it replace > 'if there are extra skills' those can buff the active
+skill. so there's no 'dead' skills that's never used but selected. esp if it's from other classes. it can add more
+dmg, utility, or other effects depending which of the 3 skills the chose in the leftover skills". The rules below
+are the hub's proposal, to which he said "yes to all three" (attach to one skill; one fixed bonus per skill; its
+own build session after tiers 5 and 10).
+
+- A skill the hero knows that is not in the loadout is a **leftover**. The player can **attach** it to one of the
+  three active skills, and it buffs that skill. One attached skill per active skill, so at most three; further
+  leftovers wait until the player rearranges.
+- Every skill has **one fixed bonus that it gives when attached**, written on the skill ("Attached: ..."), the
+  same whichever active skill carries it. It is more damage, a utility (reach, less time), or a small version of
+  the skill's own effect (a slow, a bounce, a heal).
+- **Weapon ties don't count for an attached skill.** A sword skill that Uzuki learned from the Paladin can't go in
+  his loadout while he holds a bow, but it can still buff one of his shots. That is the point: no skill a hero
+  paid for is dead.
+- **Kept small:** an attached skill is worth about a fifth of using it, so which three skills are active stays
+  the main choice. Delays and advances stay inside their budgets ("Classes"), and an attached slow goes through
+  the same rule as any delay.
+- Changed **between runs only**, on the skill-tree screen, with the loadout. What is attached is saved (a new
+  save version with a migration: nothing attached).
+
+*Proposed details, to settle when it is built:*
+- Only the three skills take an attached skill: not the weapon attack, and not the ultimate (alternate ultimates
+  at tier 20 bring that question back in 1g-2).
+- A bonus that needs a hit (damage, a slow, a bounce) can only go on an active skill that strikes; the screen
+  greys out the others and says why.
+- An attached Quick skill doesn't count against the one Quick skill of a loadout.
+- The hero's own copy of the active skill carries the bonus (`SkillDefinition.Change`), never the catalog skill,
+  and its description says so (`SkillText.Describe`; the Hero stats page shows what is attached to what).
+- The balance report's default builds attach leftovers by a simple rule, so `-balance` plays them.
+
+**First bonuses (the hub's draft, numbers to tune; Peter has not seen this table):**
+
+| Skill | Attached, it gives the active skill |
+|---|---|
+| Hunter's Mark | +10% damage to a marked foe |
+| Power Shot | +15% damage |
+| Rolling Shot | takes 10% less time |
+| Crippling Shot | its target's next turn comes 10% later |
+| Bouncing Shot | one bounce to a second foe for 40% |
+| Heal | heals the user for 4% of max HP |
+| Divine Strike | +15% damage |
+| Shoulder Bash | its target's next turn comes 10% later |
+| Shield Wall | the user takes 10% less damage until the next turn |
+| Healing Word | heals the most hurt ally within 3 tiles for 3% of the user's max HP |
+| Sweeping Slash | the foes next to the target take 30% |
+| Triple Thrust | +10% Crit Rate |
+| Lunge | reaches 1 tile further |
+| Riposte | the user takes 10% less damage until the next turn |
+| Feint | the target takes +8% from the user's next strike on it |
+| Fleche | the user's next turn comes 8% sooner |
+| Parry | the user takes 10% less damage until the next turn |
+
 ## Starting class content (drafts, 2026-10-03)
 Numbers are first drafts to tune with `-balance`. At today's levels (1-10) players reach tiers 5 and 10, so those
 matter most for now. Each option either upgrades a skill of the class or teaches a new one.
@@ -578,6 +633,11 @@ build session settled where the spec left room.
   plays tier 1 of the hero's own class only, and nothing was re-tuned (default builds come with tiers 5 and 10).
 - **Not built:** a layout for screens narrower than 16:10; scrolling a long list of skills by touch (it pages
   with "more" past four); the round, glowing look for the HUD's own skill buttons (ART.md, "Later").
+
+**Part 1b: attached skills** ("Attached skills" above; Peter, 2026-10-10: "build it after tiers 5 and 10"). Its own
+build session, before part 2: the attached bonus on every skill of the three classes, attaching on the skill-tree
+screen's loadout, the save version with its migration, the descriptions, default attachments for `-balance`, and
+the re-tune.
 
 **Part 2 (1g-2):** tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries); relearning after a
 respec from level 20; prerequisites and kingdom locks for advanced and inherited classes.

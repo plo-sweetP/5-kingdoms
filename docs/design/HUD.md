@@ -73,8 +73,9 @@ levels."
 - **Resume.**
 - **Restart:** the run starts again on the first floor. It asks first. *Proposed:* the EXP earned so far is kept,
   as after a defeat.
-- **Settings.** *Proposed first set:* the camera while aiming (step out when needed, or always wide: ART.md's
-  options B and C) and the minimap (on or off, small or large). Sound comes with audio.
+- **Settings.** The view (Near or Far, see "The view on the tablet") and the minimap (small, large or off).
+  Sound comes with audio. (The first set had "Camera while aiming: steps out when needed / always wide" in the
+  view's place; Far took it over on 2026-10-10: "always wide" was the same view one zoom step out.)
 - **Hero stats** (Peter, 2026-10-05: "a stats screen. It is per hero that list out the hero gear, stat attributes
   and list of skills. So they can read the skills description and ultimates"): a read-only page per hero with the
   gear (the weapon now, the other slots from 1h), level and EXP, HP, ATK, DEF, SPD, Crit Rate and Crit DMG, and
@@ -121,6 +122,21 @@ settings"), so he compares them on the tablet itself.
 - A launch flag picks the view for screenshots and tests, and the log's "View: W x H at zoom N, T tiles high" line
   says which one is on.
 
+**As built (2026-10-10, playtest pass 1, part two):**
+- Settings has **View: Near / Far** (`PixelCamera.Far`). It took the place of "Camera while aiming: steps out when
+  needed / always wide": that second choice was this same view one step out, so two settings would have said one
+  thing. A device that had "always wide" on starts in Far.
+- The choice is offered wherever the Near view plays above 1x (the phone and the tablet: 2x Near, 1x Far). Where
+  the rule already picks 1x the button reads Near and is greyed out.
+- Near is the default. The choice is kept in PlayerPrefs (`fk.view.far`), with the real save only.
+- While aiming, the camera works from the chosen view: from 2x it steps out a whole step when the targets don't
+  fit, from 1x it only slides, as far as it must.
+- The HUD is the same size in both views. In the dungeon, the damage numbers and the words over a hero are drawn
+  by the HUD, so they keep their size too; the sprites, the status icons over the heads and the aiming highlight
+  are half as large in Far.
+- `-fk-zoom near|far` picks the view at launch, and the log says "View: 2800 x 1752 at zoom 1, 27.4 tiles high
+  (Far)." (or "(Near)", or "(Near, the only view on this screen)").
+
 ## Building it (playtest pass 1)
 One build session, after 1g part 1: both change the HUD, so not at the same time.
 1. What moves: the top-right row with the Pause button, the skill row, Auto's look.
@@ -132,8 +148,8 @@ One build session, after 1g part 1: both change the HUD, so not at the same time
    corridor tactics.
 6. The view: Near and Far in Settings ("The view on the tablet").
 
-Steps 1 to 4 are built and on main (2026-10-10, 1f8db05; GAME_PLAN.md, "Progress"). Steps 5 and 6 and the APK go
-to a second build session.
+Steps 1 to 4 are built and on main (2026-10-10, 1f8db05; GAME_PLAN.md, "Progress"). Steps 5 and 6 were built by a
+second session the same day (PROGRESSION.md, "Footing in a boss fight"; "The view on the tablet" above).
 
 Checks: every layout (touch, keyboard, gamepad) at phone and tablet sizes, on screenshots at 2340 x 1080 as well as
 in the usual windows, and a new APK installed on the tablet over adb.

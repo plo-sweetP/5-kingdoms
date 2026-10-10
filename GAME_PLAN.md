@@ -216,7 +216,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | C1 | Corridor tactics for the party's AI (PROGRESSION.md, "Doorways and corridors"): hold the door, rotate the front, enter a room when it's safe or there's room; then a balance re-check | **Done** (2026-10-04; the Troll went from 16000 to 24000 HP) |
 | 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; Kristela's Fencer kit (she was a Monk until 2026-10-05); tiers 5 and 10 of Archer, Paladin and Fencer | **In progress.** Done and on main (2026-10-05): the three follow-ups, the classes core (rules, the hero's own kit and loadout, save version 2, free respec), Kristela's Fencer kit with the Piercer Blade, and the class stat bumps (the Troll went from 24000 to 25000 HP). **Left:** the skill-tree screen, tiers 5 and 10, the balance with default builds ("Progress" below says where each stands) |
 | 1g-2 | Classes core, part 2: tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries), relearning after a respec from level 20, prerequisites and kingdom locks | |
-| P1 | Playtest pass 1 ([docs/design/HUD.md](docs/design/HUD.md)), Peter's notes from the tablet: the top-right buttons in one row, a minimap with fog, the skills in a row along the bottom, a pause menu (with Reset level for testing), Auto hides the D-pad and greys the buttons out, holy light on Divine Strike, footing in the boss fight for the party's AI | After 1g-1: both change the HUD (listed here, a row down, so the 1g-1 row can be edited without a conflict). **Started 2026-10-05:** built so far: the top-right row with the Pause button, the skill row along the bottom, Auto's look and rule, the pause menu (Resume, Restart, Settings, Hero stats, Exit, Reset level for testing), the minimap with its fog (explored tiles in Core; small, large or off in Settings; the party in orange), the guard of Kristela's blade on its outer side only, and holy light on Divine Strike. The skill row along the bottom was built and taken back: Peter chose the arc again (1ae0d46). Left: the footing in the boss fight, the tablet's view (one zoom step out is Peter's to judge), and the new APK onto the tablet. See "Progress" |
+| P1 | Playtest pass 1 ([docs/design/HUD.md](docs/design/HUD.md)), Peter's notes from the tablet: the top-right buttons in one row, a minimap with fog, the skills in a row along the bottom, a pause menu (with Reset level for testing), Auto hides the D-pad and greys the buttons out, holy light on Divine Strike, footing in the boss fight for the party's AI | After 1g-1: both change the HUD (listed here, a row down, so the 1g-1 row can be edited without a conflict). **Started 2026-10-05:** built so far: the top-right row with the Pause button, the skill row along the bottom, Auto's look and rule, the pause menu (Resume, Restart, Settings, Hero stats, Exit, Reset level for testing), the minimap with its fog (explored tiles in Core; small, large or off in Settings; the party in orange), the guard of Kristela's blade on its outer side only, and holy light on Divine Strike. The skill row along the bottom was built and taken back: Peter chose the arc again (1ae0d46). **Part two, 2026-10-10:** footing in the boss fight (the party's AI keeps out of the Troll's wind-up and stands where it has a way out; the Troll has 30000 HP), and View: Near / Far in Settings. Left: Peter compares the two views on the tablet and picks its default, and decides whether the archer gets footing rules too (that needs a boss that answers an archer who keeps her distance). See "Progress" |
 | 1g-3 | Professions: potions and meals as items, the Alchemist, Blacksmith and Chef paths (farm paths locked until the farm exists) | |
 | 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
 | 1i | Hero screen between runs: equipment, class and profession tiers, loadout (until the farm exists) | |
@@ -656,14 +656,47 @@ the spec is docs/design/HUD.md. Built:
   The balance report was not run: no AI or combat rule changed, and the golden replay is unchanged. A test APK is
   built from this state (`C:\Users\peter\5Kingdoms\Builds\Android\5Kingdoms-dev.apk`); it is not on the tablet
   yet (no device was connected).
-- **Left of P1:**
-  1. Footing in a boss fight for the party's AI (PROGRESSION.md, "Footing in a boss fight"): measure first with a
-     new count in `-balance`, then the rules, then the balance targets and `-spread`.
-  2. The tablet's view (HUD.md, "The view on the tablet"). The rule picks the zoom nearest to 11 tiles high, which
-     is zoom 2 on the Tab S8+ (2800 x 1752): 13.7 tiles high and 21.9 wide. One whole step out is zoom 1: 27.4 by
-     43.8 tiles, almost the whole floor, with heroes half the size. The player's log now says what a device plays
-     at ("View: ... at zoom N, ... tiles high"). **Peter, 2026-10-10: both, as a choice in Settings** (View: Near /
-     Far), so he compares them on the tablet.
+
+**Playtest pass 1, part two (2026-10-10, roadmap row P1).** The two items part one left, by a second build session.
+- **Footing in the boss fight, measured first** (1fd164b; PROGRESSION.md, "Footing in a boss fight"). `-balance` and
+  `-boss` count the boss's slams that hit a hero, per fight and per hero, and how that hero stood when its last
+  turn began: the rules say it with each `SlamCaughtEvent`. The baseline (600 seeds, the Troll at 25000 HP): 1080 of
+  4957 slams hit a hero. Haiden 310 times, 14 of them with no way out; Kristela 251 times, never with no way out,
+  and she fell to it 209 times; Uzuki 522 times, every one with no way out and as the last hero standing. The 547
+  other hits on the two melee heroes were on a hero that had stepped out of the wind-up (or had not been in it)
+  and walked back in on its next turn: the Troll is slower than they are.
+- **The rules** (a5add8b; AI only, the hero the player controls is never moved). No hero's AI walks, dashes or
+  lunges into a slam that is winding up: it waits out of reach ("Keeping clear" and a line in the log). A hero in
+  the wind-up that is up again before the slam strikes once more and steps out on that next turn. Stepping out, it
+  leaves an ally the tile that is its only way out, and a hero standing on such a tile makes way. Partners come
+  in, and a Lunge lands, where there is a way out; a melee hero next to the boss with none moves over on a quiet
+  turn. With the slam coming and no way out: a dash or a roll out of reach, a swap with an ally that can take the
+  blow when the hero can't (never the leader), else a guard, Riposte or the aura.
+- **What it did** (600 seeds): slams that hit a hero 1080 -> 523; a melee hero 561 -> 1. Fresh level-1 wins rose
+  from 28 to 46 of 600 with the Troll at 25000 HP, so **the Troll has 30000 HP**: 27 of 600 win (4.5%), first clear
+  on attempt 3.0 at Lv 9.6 (before: 4.7%, attempt 3.1, Lv 9.7); with Kristela leading 19 of 600 and attempt 2.9 at
+  Lv 9.5; at Lv 10 the party beats the Troll 598 times in 600. Partners stay 2.19 steps from the leader on average
+  in fights, at most 11. While a slam winds up, a fight has 0.5 plain waits for Haiden and 0.1 for Kristela: the
+  turn mostly goes to the step out. The golden replay was re-recorded on purpose (the lone hero no longer walks
+  into a wind-up, and moves off a tile with no way out).
+- **The view** (da1179f; HUD.md, "The view on the tablet"). Settings has View: Near / Far. Near is the zoom the
+  rule picks, Far one whole step out (the Tab S8+: zoom 2 or 1, 13.7 or 27.4 tiles high; a 1080p phone: zoom 2 or
+  1). It took the place of "Camera while aiming: steps out when needed / always wide", which was the same view one
+  step out. It applies at once, is kept in PlayerPrefs with the real save only, Near is the default, and where a
+  screen already plays at 1x the choice is greyed out. While aiming the camera works from the chosen view. The
+  HUD is the same size in both. `-fk-zoom near|far` picks it at launch, and the log says which is on. Seen on the
+  screenshots: in Far the damage numbers and the words over a hero keep their size (the HUD draws them), so they
+  can be read, and they cover more of heroes half as large; the status icons and the aiming highlight are half the
+  size and still clear.
+- **Checks** (2026-10-10, on the last commit): 333 Core tests (30 new: footing), 336 in Unity's EditMode, 36 PlayMode (7 new: the view), the Windows build, the
+  four autoplay runs without an error line, and screenshots of Near and Far in the tablet's shape (a 2240 x 1402
+  window at the tablet's zooms) and at 2340 x 1080 (`C:\Users\peter\5Kingdoms\results\p1b\view`). A test APK is built from this state (`C:\Users\peter\5Kingdoms\Builds\Android\5Kingdoms-dev.apk`, 60 MB); it is not on the tablet yet: no device was connected (`adb install -r` when it is).
+- **Left of P1, for Peter:**
+  1. Compare Near and Far on the tablet and pick the tablet's default (Near is the default everywhere now). If the
+     damage numbers cover too much in Far, they can be drawn a step smaller there.
+  2. The archer's footing (PROGRESSION.md, "Not built: the archer"): all 522 slam hits that are left fall on Uzuki
+     as the last hero standing, backed into a corner. An archer taught to keep off the walls beats the Troll alone
+     (476 of 600 fresh runs in the simulator), so this waits for a boss that answers her.
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

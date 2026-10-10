@@ -128,19 +128,45 @@ whatever role they like.
 - **Heroes heal between fights** (Peter, 2026-10-04; to build in 1g part 1): outside a fight, AI heroes (partners
   and the Auto leader) use their heals to top the party up before moving on. It needs a re-tune: when the C1 session
   tried it by accident, fresh level-1 wins went from 18 to 38 of 200, mostly through the boss fight.
-- **Footing in a boss fight** (Peter's note from the tablet, 2026-10-04; to build in playtest pass 1, AI only):
-  "when fighting the boss ... if the melle characters get stuck against the wall or the pillar. They are do not
-  know to move or escape the bad situation. Can u help them navigate them out of those situations while doing
-  damage?"
-  - A melee hero next to a boss stands on a tile **with a way out**: a free tile beside it that the boss's slam
-    doesn't reach, and that no other hero needs as its only way out.
-  - A hero without one (its back to a wall, a pillar or a corner, or boxed in by allies) moves to a tile next to
-    the boss that has one, on a turn when the boss isn't winding up. Where it can, it gets there with a skill that
-    moves and strikes at once (Kristela's Lunge), so the turn isn't lost; otherwise it gives up one attack.
-  - When the slam is coming and there is still no way out, it uses what it has (Riposte, a guard, the aura, a
-    swap with an ally whose tile is out of reach) instead of only standing there.
-  - Measured first, as with the corridor tactics: `-balance` gains a count of the slams that hit a hero who had no
-    way out, and the rules' numbers come from the run simulations. The hero the player controls is never moved.
+- **Footing in a boss fight** (Peter's note from the tablet, 2026-10-04; built in playtest pass 1, part two, on
+  2026-10-10; AI only): "when fighting the boss ... if the melle characters get stuck against the wall or the
+  pillar. They are do not know to move or escape the bad situation. Can u help them navigate them out of those
+  situations while doing damage?"
+  - **A way out** (`HeroTactics.HasWayOut`): a free tile beside the hero that the boss's slam doesn't reach, and
+    that no other hero needs as its only way out.
+  - **Measured first**, as with the corridor tactics. `-balance` counts, per boss fight and per hero, the slams
+    that hit a hero and how that hero stood when its last turn began (the rules say it with each
+    `SlamCaughtEvent`: with a way out, with none, out of reach, or no turn since the wind-up). Before any rule
+    changed (600 seeds): 1080 of 4957 slams hit a hero. The two melee heroes took 561 of those hits, and only 14
+    with no way out. Every other one hit a hero that had stepped out of the wind-up, or had not been in it, and
+    walked in on its next turn: the Troll is slower than they are, so they are often up again before the slam
+    lands. Kristela fell to a slam 209 times in 600 fights. So the first rule is one this list did not have:
+  - **Stay out of a wind-up.** No hero's AI walks, dashes or lunges into the reach of a slam that is winding up.
+    It waits out of reach until the slam has landed, with "Keeping clear" over its head and a line in the log.
+  - **One more blow.** A hero in the wind-up that is up again before the slam lands strikes first and steps out
+    on that next turn (the "while doing damage" of Peter's note).
+  - **Stand where there is a way out.** Stepping out, a hero leaves an ally the tile that is its only way out,
+    and a hero that stands on such a tile makes way for it. Partners come in, and a Lunge lands, where there is
+    a way out. A melee hero next to the boss with none (its back to a wall, a pillar or a corner, or boxed in by
+    allies) moves over to a tile next to the boss that has one, on a turn when the boss isn't winding up, giving
+    up one attack. (Settled while building: a Lunge can't make that move. It runs along a line to the boss, and
+    from a tile with no way out there is no step back onto another line. It picks its landing instead.)
+  - **When the slam is coming and there is no way out**, the hero uses what it has: a dash or a roll that ends
+    out of reach; a swap with an ally out of reach that can take the blow (only when the slam would fell the hero
+    and the ally keeps at least 30% of its HP; never with the leader; "I've got this!" and a line in the log);
+    else a guard, Riposte (25% less from a boss, and answered; only when the slam lands before her next turn) or
+    the aura. Riposte against a slam is new: she used to fight on.
+  - **What it did** (600 seeds): slams that hit a hero 1080 -> 523; a melee hero 561 -> 1. With the Troll at
+    25000 HP fresh level-1 wins went from 28 to 46 of 600 (7.7%), so the Troll has 30000 HP now: 27 of 600 win
+    (4.5%), and with levels kept the first clear comes on attempt 3.0 at Lv 9.6.
+  - **Not built: the archer** (open, Peter's to decide). The 522 hits that are left all fall on Uzuki when she
+    is the last hero standing: she backs into a wall or a corner and is slammed there. Tried in the simulator:
+    letting her move to a tile with a way out changes nothing (in a true corner no tile next to her has one), and
+    teaching her to back off toward open floor works too well: she beats the Troll alone, and fresh level-1 wins
+    go to 476 of 600 even at 30000 HP. The Troll is slow and has no answer to an archer who keeps her distance.
+    That is a boss design question (a leap, a thrown rock, more speed once it is alone), for when real bosses
+    are designed.
+  - The hero the player controls is never moved: every rule is in the party's AI (`HeroTactics`).
 
 **Targeting and input (decided).**
 - **Two steps for skills and ultimates:** tap the skill, the tiles it can reach light up (Fire Emblem style) with

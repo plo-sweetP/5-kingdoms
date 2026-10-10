@@ -637,14 +637,16 @@ namespace FiveKingdoms.CoreTests
         /// Footing in the boss fight (PROGRESSION.md, "Footing in a boss fight"), for the balance report: how many of
         /// the boss's slams hit a hero, and how many of those heroes had no way out when their last turn began (the
         /// rules say so with each <see cref="SlamCaughtEvent"/>). Next to it, how often a hero next to the boss stands on
-        /// a tile with no way out at all, sampled after each action of the leader's.
+        /// a tile with no way out at all, sampled after each action of the leader's; and what the heroes' turns went to
+        /// while a slam was winding up: an attack or a skill, a step, or a plain wait out of its reach.
         /// </summary>
         sealed class SlamStats
         {
             readonly long[] caught, alone, cornered, corneredBraced, noTurn, cameBack, hpShare, felled, beside, besideCornered;
+            readonly long[] windUpActs, windUpSteps, windUpWaits;
             readonly HashSet<int> pending = new HashSet<int>();
             int fights, windUps, slams, slamsThatHit, slamsOnCornered;
-            bool fighting, slamHits, slamCorners;
+            bool fighting, slamHits, slamCorners, windingUp;
 
             public SlamStats(int partySize)
             {
@@ -658,12 +660,15 @@ namespace FiveKingdoms.CoreTests
                 felled = new long[partySize];
                 beside = new long[partySize];
                 besideCornered = new long[partySize];
+                windUpActs = new long[partySize];
+                windUpSteps = new long[partySize];
+                windUpWaits = new long[partySize];
             }
 
             /// <summary>A boss fight is a run in which the boss winds up at least once.</summary>
             public void BeginRun()
             {
-                fighting = slamHits = slamCorners = false;
+                fighting = slamHits = slamCorners = windingUp = false;
                 pending.Clear();
             }
 
@@ -675,6 +680,36 @@ namespace FiveKingdoms.CoreTests
                     for (int member = 0; member < run.Party.Count; member++)
                         if (run.Party[member].Id == actorId) return member;
                     return -1;
+                }
+
+                // What the heroes do between a wind-up and its slam. A skill's own blows follow its SkillUsedEvent.
+                int skillUser = -1, swappedAway = -1;
+                foreach (var e in run.Events)
+                {
+                    switch (e)
+                    {
+                        case BossActionEvent boss:
+                            windingUp = boss.Action == BossAction.Charge || windingUp && boss.Action != BossAction.Slam;
+                            skillUser = -1;
+                            break;
+                        case SkillUsedEvent used when windingUp && IndexOf(used.ActorId) >= 0:
+                            skillUser = used.ActorId;
+                            windUpActs[IndexOf(used.ActorId)]++;
+                            break;
+                        case AttackEvent blow when windingUp && IndexOf(blow.AttackerId) >= 0:
+                            if (blow.AttackerId != skillUser) windUpActs[IndexOf(blow.AttackerId)]++;
+                            break;
+                        case SwappedEvent swap:
+                            swappedAway = swap.OtherId;
+                            break;
+                        case MovedEvent moved when windingUp && IndexOf(moved.ActorId) >= 0:
+                            if (moved.ActorId == swappedAway) swappedAway = -1;
+                            else if (moved.ActorId != skillUser) windUpSteps[IndexOf(moved.ActorId)]++;
+                            break;
+                        case HeroWaitedEvent waited when waited.Reason == WaitReason.KeepsClear && IndexOf(waited.ActorId) >= 0:
+                            windUpWaits[IndexOf(waited.ActorId)]++;
+                            break;
+                    }
                 }
 
                 foreach (var e in run.Events)
@@ -747,6 +782,9 @@ namespace FiveKingdoms.CoreTests
                                       $"and felled it {felled[member]} times; next to the boss it had no way out in " +
                                       $"{besideCornered[member] * 100f / Math.Max(1, beside[member]):0.0}% of {beside[member]} rounds");
                 }
+                Console.WriteLine("  While a slam winds up, a fight: " + string.Join("; ", party.Select((definition, member) =>
+                    $"{definition.Name} {windUpActs[member] / per:0.0} attacks or skills, {windUpSteps[member] / per:0.0} steps, " +
+                    $"{windUpWaits[member] / per:0.0} waits out of its reach")));
             }
         }
 

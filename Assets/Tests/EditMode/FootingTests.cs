@@ -235,6 +235,30 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
+        public void OutOfReachAHeroStillUsesItsTurnWhereItCan()
+        {
+            // Waiting is only for a hero with nothing to do from where it stands: a heal or a shot comes first.
+            var run = Run(new[] { ActorCatalog.Haiden, ActorCatalog.Uzuki }, Arena);
+            var haiden = run.Party[0];
+            var uzuki = run.Party[1];
+            Place(haiden, 1, 2);
+            Place(uzuki, 1, 3);
+            var troll = Troll(run, 3, 2);
+            troll.Charging = true;
+            troll.SpecialCooldown = 99;
+
+            var shot = PartnerBrain.Decide(run, uzuki);
+            Assert.IsFalse(shot.KeepingClear);
+            Assert.IsTrue(shot.Targeted, "she shoots from out of reach");
+            Assert.IsTrue(AutoPilot.Decide(run).KeepingClear, "he has nothing that reaches");
+
+            haiden.Hp = haiden.MaxHp / 4;
+            var heal = AutoPilot.Decide(run);
+            Assert.AreEqual(HeroCommandKind.Skill, heal.Kind);
+            Assert.AreEqual(SkillEffect.Heal, haiden.Skills[heal.Slot].Effect, "hurt, he heals instead of waiting");
+        }
+
+        [Test]
         public void ByHandAHeroMayWalkIntoAWindUp()
         {
             var (run, boss) = BossEastOfHero(1);

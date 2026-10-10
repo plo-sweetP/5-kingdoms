@@ -28,7 +28,10 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
 ## Commands (from the repo root)
 - Core tests, ~2 s: `dotnet run --project Tools/CoreTests` (add a name filter as an argument to run a subset)
 - Balance report: `dotnet run --project Tools/CoreTests -- -balance` (try numbers with `key=value` overrides, see
-  `TuningFrom`; `seeds=600` for a steadier number; `-lead kristela` puts another hero in front); the party straight
+  `TuningFrom`; `seeds=600` for a steadier number; `-lead kristela` puts another hero in front; the heroes spend
+  their points as `HeroBuilds` says: their own class as far as it is open, on the Guardian, Duelist and Marksman
+  paths, and `build=uzuki:hunter` plays another path, `build=uzuki:marksman,hunter` one per milestone, `build=none`
+  leaves the points unspent; `level=6` starts the "fresh" runs at that level, to measure a build); the party straight
   at the boss: `-- -boss <level>`; print a floor: `-- -map <seed>`; trace the autopilot: `-- -trace <seed> <fromAction>`
   (solo) or `-- -party <seed> <fromAction>` (add `map=N` to draw the floor around the leader for N actions, and
   `key=value` overrides as for `-balance`; on the boss floor each line lists who moved, struck, wound up and was
@@ -89,8 +92,9 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   the ultimate's charge rates) and `EnemyBrain` (boss moves); check `-balance` after changing them (it reports fresh
   runs, ultimates per fight, the heroes that fall before the boss, the HP they bring into a fight, what each hero
   does with its turns in fights, the boss's slams that hit a hero and how that hero stood, and a campaign with
-  levels kept between runs). The targets: about 2-5% of fresh level-1 runs win, and with levels kept
-  the first clear comes around the third attempt at Lv 9-10. The autopilot and the partners' AI (`HeroTactics`) are
+  levels kept between runs, the points spent between runs on each hero's default build). The targets: about 2-5%
+  of fresh level-1 runs win, and with levels kept the first clear comes around the third attempt at Lv 9-10. A
+  level-1 hero has no point to spend, so class content moves only the campaign and `level=N` runs. The autopilot and the partners' AI (`HeroTactics`) are
   the balance report's players, so a new skill or item needs AI rules too.
 - There is no mana (PROGRESSION.md, "Skill resources"): skills sit out the hero's next turn, each hero has an
   always-ready weapon attack, and ultimates need a full charge meter (`Actor.Charge`).

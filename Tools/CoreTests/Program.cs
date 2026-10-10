@@ -17,6 +17,34 @@ namespace FiveKingdoms.CoreTests
         /// <summary>The party the reports play, leader first: the starting party, or with "-lead ID" that hero in front.</summary>
         static ActorDefinition[] Party = ActorCatalog.StartingParty;
 
+        /// <summary>
+        /// The builds the reports play, by hero id: "build=uzuki:hunter" puts that hero on another path than its
+        /// default (<see cref="HeroBuilds"/>), "build=uzuki:marksman,hunter" names one per milestone. "build=none"
+        /// leaves every point unspent: tier 1 of the hero's own class, as the reports played before there were builds.
+        /// </summary>
+        static readonly Dictionary<string, int[]> Builds = new Dictionary<string, int[]>();
+        static bool SpendsPoints = true;
+
+        /// <summary>"level=N": the level the "fresh" runs of the balance report start at, to measure a build that needs points.</summary>
+        static int StartLevel = 1;
+
+        /// <summary>A hero for a report: at <paramref name="level"/>, with its points spent on its build.</summary>
+        static HeroProgress NewHero(ActorDefinition definition, int level)
+        {
+            var hero = new HeroProgress(definition, level);
+            Spend(hero);
+            return hero;
+        }
+
+        /// <summary>The party for a report, leader first, each hero with its build.</summary>
+        static HeroProgress[] NewParty(int level = 1) => Party.Select(definition => NewHero(definition, level)).ToArray();
+
+        /// <summary>Spends a hero's free points on its build: between the runs of a campaign, as a player would.</summary>
+        static void Spend(HeroProgress hero)
+        {
+            if (SpendsPoints) HeroBuilds.Spend(hero, Builds.TryGetValue(hero.Definition.Id, out var paths) ? paths : null);
+        }
+
         static int Main(string[] args)
         {
             int leadIndex = Array.IndexOf(args, "-lead");
@@ -36,6 +64,19 @@ namespace FiveKingdoms.CoreTests
             foreach (string arg in args)
                 if (arg.StartsWith("map=")) mapActions = int.Parse(arg.Substring(4));
             args = args.Where(arg => !arg.StartsWith("map=")).ToArray();
+            foreach (string arg in args)
+            {
+                if (arg.StartsWith("level=")) StartLevel = int.Parse(arg.Substring(6));
+                if (arg == "build=none") SpendsPoints = false;
+                if (!arg.StartsWith("build=") || arg == "build=none") continue;
+                if (!HeroBuilds.TryParse(arg.Substring(6), out var hero, out var paths, out string error))
+                {
+                    Console.WriteLine($"{arg}: {error}");
+                    return 2;
+                }
+                Builds[hero.Id] = paths;
+            }
+            args = args.Where(arg => !arg.StartsWith("build=") && !arg.StartsWith("level=")).ToArray();
             if (args.Contains("-balance")) return BalanceReport(seeds, TuningFrom(args));
             if (args.Contains("-spread")) return SpreadReport(seeds, TuningFrom(args));
             int bossIndex = Array.IndexOf(args, "-boss");
@@ -202,7 +243,7 @@ namespace FiveKingdoms.CoreTests
         /// </summary>
         static int TraceParty(int seed, int fromAction, int mapActions, Func<DungeonRunConfig> tuning)
         {
-            var run = new DungeonRun(seed, tuning(), Party.Select(d => new HeroProgress(d)).ToArray());
+            var run = new DungeonRun(seed, tuning(), NewParty(StartLevel));
             int floor = 0;
             for (int action = 0; action < 3000 && run.State == RunState.InProgress; action++)
             {
@@ -268,9 +309,7 @@ namespace FiveKingdoms.CoreTests
             var worst = new List<(int Steps, string Where)>();
             for (int seed = 1; seed <= seeds; seed++)
             {
-                var config = tuning();
-                config.Party = Party;
-                var run = new DungeonRun(seed, config);
+                var run = new DungeonRun(seed, tuning(), NewParty(StartLevel));
                 (int Steps, string Where) farthest = (0, null);
                 for (int action = 0; action < 5000 && run.State == RunState.InProgress; action++)
                 {
@@ -337,9 +376,7 @@ namespace FiveKingdoms.CoreTests
             var footing = new SlamStats(Party.Length);
             for (int seed = 1; seed <= seeds; seed++)
             {
-                var config = tuning();
-                config.Party = Party;
-                var run = new DungeonRun(seed, config);
+                var run = new DungeonRun(seed, tuning(), NewParty(StartLevel));
                 footing.BeginRun();
                 for (int i = 0; i < 5000 && run.State == RunState.InProgress; i++)
                 {
@@ -429,7 +466,8 @@ namespace FiveKingdoms.CoreTests
                 floorsReached[run.Floor]++;
             }
             string names = string.Join(", ", Party.Select(definition => definition.Name));
-            Console.WriteLine($"Fresh level-1 party ({names}; the first leads), autopilot over {seeds} seeds: won {won}, lost {lost}, stalled {stalled}");
+            Console.WriteLine($"Builds at Lv {StartLevel}: {string.Join("; ", NewParty(StartLevel).Select(HeroBuilds.Describe))}");
+            Console.WriteLine($"Fresh level-{StartLevel} party ({names}; the first leads), autopilot over {seeds} seeds: won {won}, lost {lost}, stalled {stalled}");
             Console.WriteLine($"Average: floor {floorSum / (float)seeds:0.0}, level {levelSum / (float)seeds:0.0}, turns {turnSum / (float)seeds:0}, " +
                               $"heroes fallen {fallenSum / (float)seeds:0.0} of 3");
             for (int f = 1; f < floorsReached.Length; f++) Console.WriteLine($"  ended on B{f}F: {floorsReached[f]}");
@@ -613,7 +651,7 @@ namespace FiveKingdoms.CoreTests
             var footing = new SlamStats(Party.Length);
             for (int seed = 1; seed <= seeds; seed++)
             {
-                var party = Party.Select(definition => new HeroProgress(definition, level)).ToArray();
+                var party = NewParty(level);
                 var config = tuning();
                 config.FloorCount = 1;
                 var run = new DungeonRun(seed, config, party);
@@ -627,6 +665,7 @@ namespace FiveKingdoms.CoreTests
                 if (run.State == RunState.Won) won++;
                 turns += run.Turn;
             }
+            Console.WriteLine($"Builds: {string.Join("; ", NewParty(level).Select(HeroBuilds.Describe))}");
             Console.WriteLine($"Starting party at Lv {level} against the Troll: won {won} of {seeds} " +
                               $"(leader turns {turns / (float)seeds:0}, ultimates per hero {ultimates / 3f / seeds:0.00})");
             footing.Print(Party);
@@ -793,11 +832,14 @@ namespace FiveKingdoms.CoreTests
         {
             int cleared = 0, attemptsSum = 0, levelSum = 0;
             var clearedOnAttempt = new int[maxAttempts + 1];
+            var tierSum = new long[Party.Length];
             for (int player = 1; player <= players; player++)
             {
-                var party = Party.Select(definition => new HeroProgress(definition)).ToArray();
+                var party = NewParty();
                 for (int attempt = 1; attempt <= maxAttempts; attempt++)
                 {
+                    // Between runs each hero spends the points its new levels brought, on its build.
+                    foreach (var hero in party) Spend(hero);
                     var run = new DungeonRun(player * 1000 + attempt, tuning(), party);
                     for (int i = 0; i < 5000 && run.State == RunState.InProgress; i++) run.Execute(AutoPilot.Decide(run));
                     if (run.State != RunState.Won) continue;
@@ -805,12 +847,17 @@ namespace FiveKingdoms.CoreTests
                     attemptsSum += attempt;
                     levelSum += party.Max(hero => hero.Level);
                     clearedOnAttempt[attempt]++;
+                    for (int member = 0; member < party.Length; member++)
+                        tierSum[member] += party[member].TierOf(party[member].Definition.StartingClass);
                     break;
                 }
             }
             Console.WriteLine();
             Console.WriteLine($"Levels kept between runs, {players} autopilot parties, up to {maxAttempts} attempts each:");
             Console.WriteLine($"  {cleared} beat the Troll; on average on attempt {attemptsSum / (float)Math.Max(1, cleared):0.0}, at Lv {levelSum / (float)Math.Max(1, cleared):0.0}");
+            Console.WriteLine("  points spent between runs, each hero on its own class; its tier in the winning run: " +
+                              string.Join(", ", Party.Select((definition, member) =>
+                                  $"{definition.Name} {definition.StartingClass.Name} {tierSum[member] / (float)Math.Max(1, cleared):0.0}")));
             for (int a = 1; a <= maxAttempts; a++)
                 if (clearedOnAttempt[a] > 0) Console.WriteLine($"  first clear on attempt {a}: {clearedOnAttempt[a]}");
         }

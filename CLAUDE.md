@@ -110,9 +110,9 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   and the rest of its points free. Loading relearns a build tier by tier (`HeroProgress.Restore`), so what the
   rules no longer allow is dropped and its points stay free. A change to what is saved needs a new version and a
   migration test in `SaveSystemTests`.
-- The HUD (docs/design/HUD.md; `DungeonHud`, `PauseMenu`): Wait, Berry, Auto and Pause in a row top-right, and for
-  touch the ultimate, skills 3-2-1 and the attack in a row along the bottom (`LayoutBottom` moves the log, the
-  aiming prompt and Descend where a narrow screen leaves no room beside the row). While Auto plays, the D-pad is
+- The HUD (docs/design/HUD.md; `DungeonHud`, `PauseMenu`): Wait, Berry, Auto and Pause in a row top-right; for
+  touch the attack bottom-right with the skills and the ultimate in an arc around it (Peter tried a row along the
+  bottom on 2026-10-05 and went back to the arc: don't flatten it again). While Auto plays, the D-pad is
   hidden and the leader's buttons are greyed out: only `SwitchLeader` gets past `DungeonController.ChooseCommand`.
   The pause menu (the Pause button, Esc, the gamepad's Start; "Go down" is R3) stops everything, Auto included; its
   Exit ends the run as `RunState.Left` (`DungeonRun.Leave`), and its Reset level (testing) writes level 1 to the

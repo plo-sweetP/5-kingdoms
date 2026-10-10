@@ -15,8 +15,8 @@ namespace FiveKingdoms.UI
     /// <summary>
     /// Landscape HUD for the dungeon, built in code (docs/design/HUD.md). The party's HP, ultimate charge, EXP and levels
     /// and the floor across the top, plus a boss bar on boss floors; Wait, Berry, Auto and Pause in a row top-right;
-    /// D-pad bottom-left; the ultimate, the three skills and the weapon attack in a row along the bottom, the attack in
-    /// the corner (each starts aiming: pick it, then the target); a message log; an aiming prompt; floating numbers;
+    /// D-pad bottom-left; the weapon attack bottom-right with the three skills and the ultimate in an arc around it,
+    /// within the thumb's reach (each starts aiming: pick it, then the target); a message log; an aiming prompt; floating numbers;
     /// fades, floor banner and end-of-run panel. The D-pad and attack button hide while a keyboard or controller is in
     /// use (PC, Steam Deck); the skill buttons stay, in a row with their keys, since they also show cooldowns, Quick
     /// tags and the charge. While Auto plays, the D-pad is hidden and every button that acts for the leader is greyed.
@@ -60,18 +60,13 @@ namespace FiveKingdoms.UI
         static readonly string[] KeyboardSkillKeys = { "1", "2", "3", "4" };
         static readonly string[] GamepadSkillKeys = { "LB", "LT", "RT", "RB" };
 
-        // Skill buttons (three skills, then the ultimate). Touch: one row along the bottom edge, from the corner under
-        // the right thumb leftwards: the attack, skills 1 to 3, the ultimate, standing on one line. Keys and controllers
-        // have no attack button and keep their row in key order.
-        static readonly Vector2 AttackPosition = new Vector2(-150f, 150f);
-        const float AttackSize = 200f;
-        static readonly Vector2[] TouchSkillPositions = { new Vector2(-336f, 120f), new Vector2(-492f, 120f), new Vector2(-648f, 120f), new Vector2(-809f, 125f) };
+        // Skill buttons (three skills, then the ultimate): around the attack button for thumbs, or in a row for keys.
+        // The arc is Peter's choice (HUD.md, 2026-10-05: he tried a row along the bottom and went back to the arc, "the
+        // more reachable orientation"). Its top, 555 units up, stays under the minimap on every screen.
+        static readonly Vector2[] TouchSkillPositions = { new Vector2(-470f, 120f), new Vector2(-455f, 335f), new Vector2(-330f, 485f), new Vector2(-135f, 460f) };
         static readonly float[] TouchSkillSizes = { 140f, 140f, 140f, 150f };
         static readonly Vector2[] RowSkillPositions = { new Vector2(-560f, 100f), new Vector2(-420f, 100f), new Vector2(-280f, 100f), new Vector2(-125f, 108f) };
         static readonly float[] RowSkillSizes = { 124f, 124f, 124f, 140f };
-        const float TouchRowWidth = 884f; // From the screen's right edge to the ultimate's left edge.
-        const float TouchRowTop = 250f;
-        const float DPadRight = 480f;
 
         // The top-right row, right to left: Pause, Auto, Berry, Wait.
         static readonly Vector2 TopButtonSize = new Vector2(124f, 80f);
@@ -113,8 +108,6 @@ namespace FiveKingdoms.UI
         HoldButton berryButton, descendButton, againButton, autoButton, attackButton, waitButton, pauseButton;
         readonly HoldButton[] skillButtons = new HoldButton[4]; // Three skills, then the ultimate.
         readonly bool[] skillUsable = new bool[4];              // What the rules say; Auto greys them all the same.
-        float laidOutWidth = -1f;
-        bool logRaised;
         readonly Text[] skillKeys = new Text[4];
         readonly GameObject[] quickTags = new GameObject[3];
         bool autoPilotOn;
@@ -303,16 +296,11 @@ namespace FiveKingdoms.UI
             bossMaxHp = Mathf.Max(1, maxHp);
             bossPanel.SetActive(true);
             SetBossHp(hp);
-            PlaceAimPrompt();
         }
 
         public void SetBossHp(int hp) => bossFill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(hp / (float)bossMaxHp), 1f);
 
-        public void HideBoss()
-        {
-            bossPanel.SetActive(false);
-            PlaceAimPrompt();
-        }
+        public void HideBoss() => bossPanel.SetActive(false);
 
         /// <summary>
         /// Shows whether the auto-pilot is playing (the Auto button is gold while it does). While it plays the D-pad is
@@ -362,7 +350,9 @@ namespace FiveKingdoms.UI
             inputMode = mode;
             bool touch = mode == InputMode.Touch;
             touchControls.gameObject.SetActive(touch);
-            LayoutBottom();
+            // Between the D-pad and the buttons for touch; without the D-pad, bottom-left, clear of the skill row.
+            UiFactory.Place(logRoot, touch ? new Vector2(0.5f, 0f) : Vector2.zero, touch ? new Vector2(-LogWidth / 2f, 40f) : new Vector2(32f, 40f),
+                new Vector2(LogWidth, LogLines * LogLineHeight), Vector2.zero);
             for (int i = 0; i < skillButtons.Length; i++)
             {
                 float size = touch ? TouchSkillSizes[i] : RowSkillSizes[i];
@@ -374,41 +364,6 @@ namespace FiveKingdoms.UI
             keysText.text = mode == InputMode.Gamepad ? GamepadHint : desktop || mode == InputMode.Keyboard ? KeyboardHint : "";
             descendButton.SetLabel(mode == InputMode.Gamepad ? "Descend (R3)" : mode == InputMode.Keyboard ? "Descend (Enter)" : "Descend");
             againButton.SetLabel(mode == InputMode.Gamepad ? "Try Again (A)" : mode == InputMode.Keyboard ? "Try Again (R)" : "Try Again");
-        }
-
-        /// <summary>
-        /// The bottom edge. With keys or a controller there is no D-pad and the log starts at the left edge. For touch
-        /// the log lies between the D-pad and the skill row where the screen is wide enough (a phone); on a narrower
-        /// one (a tablet) it moves up above the row, the aiming prompt goes to the top of the screen
-        /// (<see cref="PlaceAimPrompt"/>), and the Descend button takes the gap between the D-pad and the row.
-        /// </summary>
-        void LayoutBottom()
-        {
-            laidOutWidth = safeArea.rect.width;
-            var size = new Vector2(LogWidth, LogLines * LogLineHeight);
-            var bottomCentre = new Vector2(0.5f, 0f);
-            float gap = laidOutWidth - TouchRowWidth - DPadRight;
-            bool touch = inputMode == InputMode.Touch;
-            bool raised = logRaised = touch && gap < LogWidth + 48f;
-            if (!touch) UiFactory.Place(logRoot, Vector2.zero, new Vector2(32f, 40f), size, Vector2.zero);
-            else if (!raised) UiFactory.Place(logRoot, Vector2.zero, new Vector2(DPadRight + (gap - LogWidth) / 2f, 40f), size, Vector2.zero);
-            else UiFactory.Place(logRoot, new Vector2(1f, 0f), new Vector2(-40f - LogWidth, TouchRowTop + 18f), size, Vector2.zero);
-
-            PlaceAimPrompt();
-            var descend = (RectTransform)descendButton.transform;
-            if (raised && gap >= descend.sizeDelta.x + 24f) UiFactory.Place(descend, Vector2.zero, new Vector2(DPadRight + gap / 2f, 100f), descend.sizeDelta);
-            else UiFactory.Place(descend, bottomCentre, new Vector2(0f, 260f), descend.sizeDelta);
-        }
-
-        /// <summary>
-        /// The aiming prompt: under the party's feet, over the log. Where the log has moved up (a tablet) that place is
-        /// the log's, and the prompt stands at the top instead, under the floor (under the boss bar on a boss floor).
-        /// </summary>
-        void PlaceAimPrompt()
-        {
-            var size = new Vector2(900f, 44f);
-            if (!logRaised) UiFactory.Place(aimPrompt.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 380f), size);
-            else UiFactory.Place(aimPrompt.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, bossPanel.activeSelf ? -226f : -134f), size);
         }
 
         public void AddMessage(string message, Color? color = null)
@@ -494,7 +449,6 @@ namespace FiveKingdoms.UI
 
         void Update()
         {
-            if (!Mathf.Approximately(safeArea.rect.width, laidOutWidth)) LayoutBottom(); // Another screen size, or a notch's side.
             float now = Time.unscaledTime;
             foreach (var line in log)
             {
@@ -612,7 +566,7 @@ namespace FiveKingdoms.UI
 
         void BuildLog()
         {
-            logRoot = UiFactory.CreateRect("Log", safeArea); // Placed by LayoutBottom.
+            logRoot = UiFactory.CreateRect("Log", safeArea); // Placed by SetInputMode.
         }
 
         void BuildControls()
@@ -624,7 +578,7 @@ namespace FiveKingdoms.UI
             DPad = DPad.Create(touchControls, bottomLeft, new Vector2(270f, 270f), 420f);
             DPad.DisabledPressed += ShowAutoPilotBlocked;
 
-            attackButton = HoldButton.Create(touchControls, "Attack", "ATK", bottomRight, AttackPosition, new Vector2(AttackSize, AttackSize), AttackArt, 36);
+            attackButton = HoldButton.Create(touchControls, "Attack", "ATK", bottomRight, new Vector2(-230f, 230f), new Vector2(230f, 230f), AttackArt, 40);
             attackButton.Pressed += () => CommandRequested?.Invoke(HeroCommand.Attack);
             attackButton.DisabledPressed += ShowAutoPilotBlocked;
 
@@ -656,7 +610,8 @@ namespace FiveKingdoms.UI
             }
 
             aimPrompt = UiFactory.CreateText("AimPrompt", safeArea, "", 30, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.6f));
-            aimPrompt.gameObject.SetActive(false); // Placed by LayoutBottom, like the Descend button.
+            UiFactory.Place(aimPrompt.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 380f), new Vector2(900f, 44f));
+            aimPrompt.gameObject.SetActive(false);
 
             // One row along the top edge: icon buttons, so it stays short enough for the minimap under it.
             Vector2 TopButton(int fromRight) =>

@@ -9,10 +9,10 @@ namespace FiveKingdoms.UI
 
     /// <summary>
     /// The minimap (HUD.md, "Minimap"): the whole floor, see-through, top right under the button row. It shows what
-    /// the run says the party has explored (<see cref="DungeonRun.IsExplored"/>) and marks the hero the player
-    /// controls (white, blinking slowly), the partners (blue), the foes the party sees right now (red,
-    /// <see cref="DungeonRun.PartySees"/>), items on explored tiles (yellow) and the way down once its tile is explored
-    /// (green, pointing down). Three texels a tile, so the marks have shapes; a texel covers a whole number of screen
+    /// the run says the party has explored (<see cref="DungeonRun.IsExplored"/>) and marks the party in orange
+    /// (Peter, 2026-10-05: "to better see it"), the hero the player controls blinking slowly, the foes the party sees
+    /// right now in red (<see cref="DungeonRun.PartySees"/>), items on explored tiles in yellow (a small diamond) and
+    /// the way down once its tile is explored (green, pointing down). Three texels a tile, so the marks have shapes; a texel covers a whole number of screen
     /// pixels (6 a tile on a 1080p screen for Small, 9 for Large). It takes no input.
     /// </summary>
     public sealed class Minimap : MonoBehaviour
@@ -23,7 +23,7 @@ namespace FiveKingdoms.UI
 
         static readonly Color32 VeilColor = new Color32(10, 13, 23, 90);       // The dark veil: about 35%.
         static readonly Color32 FloorColor = new Color32(206, 214, 220, 153);  // Explored floor: about 60%.
-        static readonly Color32 PartnerColor = new Color32(92, 158, 242, 255);
+        static readonly Color32 PartyColor = new Color32(255, 132, 24, 255);
         static readonly Color32 EnemyColor = new Color32(235, 72, 62, 255);
         static readonly Color32 ItemColor = new Color32(255, 214, 64, 255);
         static readonly Color32 StairsColor = new Color32(120, 255, 170, 255);
@@ -49,7 +49,7 @@ namespace FiveKingdoms.UI
             UiFactory.Place(map.rect, new Vector2(1f, 1f), topRight, Vector2.zero, new Vector2(1f, 1f));
             map.image = map.gameObject.AddComponent<RawImage>();
             map.image.raycastTarget = false;
-            map.leader = UiFactory.CreateImage("Leader", map.transform, null, Color.white);
+            map.leader = UiFactory.CreateImage("Leader", map.transform, null, PartyColor);
             map.leader.rectTransform.anchorMin = map.leader.rectTransform.anchorMax = map.leader.rectTransform.pivot = Vector2.zero;
             return map;
         }
@@ -84,7 +84,7 @@ namespace FiveKingdoms.UI
             foreach (var actor in run.Actors)
             {
                 if (!actor.IsAlive || actor == run.Hero) continue;
-                if (actor.Team == Team.Hero) Stamp(actor.Pos, Full, PartnerColor);
+                if (actor.Team == Team.Hero) Stamp(actor.Pos, Full, PartyColor);
                 else if (run.PartySees(actor.Pos)) Stamp(actor.Pos, Full, EnemyColor);
             }
             texture.SetPixels32(pixels);
@@ -130,7 +130,9 @@ namespace FiveKingdoms.UI
             if (Screen.height != appliedHeight) Layout();
             // The player's own hero blinks slowly, so it is found at a glance among the partners.
             float wave = 0.5f + 0.5f * Mathf.Cos(Time.unscaledTime * 2f * Mathf.PI / BlinkSeconds);
-            leader.color = new Color(1f, 1f, 1f, Mathf.Lerp(0.35f, 1f, wave));
+            Color color = PartyColor;
+            color.a = Mathf.Lerp(0.3f, 1f, wave);
+            leader.color = color;
         }
 
         void OnDestroy()

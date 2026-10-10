@@ -216,7 +216,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | C1 | Corridor tactics for the party's AI (PROGRESSION.md, "Doorways and corridors"): hold the door, rotate the front, enter a room when it's safe or there's room; then a balance re-check | **Done** (2026-10-04; the Troll went from 16000 to 24000 HP) |
 | 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; Kristela's Fencer kit (she was a Monk until 2026-10-05); tiers 5 and 10 of Archer, Paladin and Fencer | **In progress.** Done and on main (2026-10-05): the three follow-ups, the classes core (rules, the hero's own kit and loadout, save version 2, free respec), Kristela's Fencer kit with the Piercer Blade, and the class stat bumps (the Troll went from 24000 to 25000 HP). **Left:** the skill-tree screen, tiers 5 and 10, the balance with default builds ("Progress" below says where each stands) |
 | 1g-2 | Classes core, part 2: tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries), relearning after a respec from level 20, prerequisites and kingdom locks | |
-| P1 | Playtest pass 1 ([docs/design/HUD.md](docs/design/HUD.md)), Peter's notes from the tablet: the top-right buttons in one row, a minimap with fog, the skills in a row along the bottom, a pause menu (with Reset level for testing), Auto hides the D-pad and greys the buttons out, holy light on Divine Strike, footing in the boss fight for the party's AI | After 1g-1: both change the HUD (listed here, a row down, so the 1g-1 row can be edited without a conflict). **Started 2026-10-05:** built so far: the top-right row with the Pause button, the skill row along the bottom, Auto's look and rule, the pause menu (Resume, Restart, Settings, Hero stats, Exit, Reset level for testing), the minimap with its fog (explored tiles in Core; small, large or off in Settings; the party in orange), the guard of Kristela's blade on its outer side only, and holy light on Divine Strike. The skill row along the bottom was built and taken back: Peter chose the arc again (1ae0d46). Left: the footing in the boss fight |
+| P1 | Playtest pass 1 ([docs/design/HUD.md](docs/design/HUD.md)), Peter's notes from the tablet: the top-right buttons in one row, a minimap with fog, the skills in a row along the bottom, a pause menu (with Reset level for testing), Auto hides the D-pad and greys the buttons out, holy light on Divine Strike, footing in the boss fight for the party's AI | After 1g-1: both change the HUD (listed here, a row down, so the 1g-1 row can be edited without a conflict). **Started 2026-10-05:** built so far: the top-right row with the Pause button, the skill row along the bottom, Auto's look and rule, the pause menu (Resume, Restart, Settings, Hero stats, Exit, Reset level for testing), the minimap with its fog (explored tiles in Core; small, large or off in Settings; the party in orange), the guard of Kristela's blade on its outer side only, and holy light on Divine Strike. The skill row along the bottom was built and taken back: Peter chose the arc again (1ae0d46). Left: the footing in the boss fight, the tablet's view (one zoom step out is Peter's to judge), and the new APK onto the tablet. See "Progress" |
 | 1g-3 | Professions: potions and meals as items, the Alchemist, Blacksmith and Chef paths (farm paths locked until the farm exists) | |
 | 1h | Gear (GEAR.md steps 4-10): items, rarity, item level, upgrades, Tuning Stones, first sets, weapons, unappraised boxes, salvage, Blacksmith crafting, monster slots, `-gear` report with the speed and crit budget tests | |
 | 1i | Hero screen between runs: equipment, class and profession tiers, loadout (until the farm exists) | |
@@ -623,6 +623,46 @@ Fencer kit", built as written. She fights as a Fencer now; the Monk's kit stays 
      since Thrust and Sword Slash are both sword attacks). The HUD still names skills in words.
   2. Tier 5, then tier 10, of Archer, Paladin and Fencer; then default builds for the balance report and the
      re-tune to the targets in CLAUDE.md.
+
+**Playtest pass 1 (2026-10-05 and 2026-10-10, roadmap row P1).** Peter's notes from his first runs on the tablet;
+the spec is docs/design/HUD.md. Built:
+- **The top-right row.** Wait, Berry, Auto and a new Pause button in one row of icon buttons: an hourglass, berries
+  with the count, AUTO lit gold while it plays, a pause sign (the glyphs are drawn by `Tools/pixelart/ui.py`).
+- **The skill row, built and taken back.** The attack, the skills and the ultimate went into one row along the
+  bottom (feeea98). On the screenshots Peter chose the arc again ("the more reachable orientation u had before"),
+  so the arc is back as it was (1ae0d46). Its top stays under the minimap in both sizes, on the phone and the tablet.
+- **Auto.** While Auto plays, the D-pad is hidden and the attack, the skills, the ultimate, Wait and Berry are
+  greyed out and don't act; only switching the leader gets through (`DungeonController.ChooseCommand`). This
+  replaces 1b's rule that skills stay usable by hand (Peter, 2026-10-05: "Auto blocks the skills").
+- **The pause menu** (`PauseMenu`): the Pause button, Esc or the gamepad's Start, and nothing acts while it is
+  open. Resume. Restart (asks first; levels and EXP are kept). Settings: the camera while aiming and the minimap's
+  size, kept in PlayerPrefs and only with the real save. Hero stats: a read-only page per hero with its classes,
+  level and EXP, the weapon, HP, ATK, DEF, SPD, Crit Rate and Crit DMG, and the weapon attack, the skills and the
+  ultimate, each with a description written from the skill's own numbers (`SkillText.Describe`; skills had no
+  description text). Exit (asks first): the run ends as `RunState.Left` with the usual end panel. Reset level
+  (testing only, labelled so): every hero back to level 1 with no EXP, the save written, the run restarted. The
+  gamepad's "Go down" moved from Start to R3.
+- **The minimap** (`Minimap`): the whole floor, top right under the row, see-through, no input. What the party has
+  explored is Core state (`DungeonRun.IsExplored`): a room as a whole once a hero stands in it or one step from it,
+  a corridor two steps around a hero, never part of a room, and a new floor starts empty. The party is marked in
+  orange (the hero the player controls blinks), the foes the party sees right now in red, items in yellow, the way
+  down in green. Small (6 px a tile on a 1080p screen) is the default; Large (9 px) and Off are in Settings.
+- **Art.** The guard of Kristela's blade is on its outer side only and flush with the blade toward her body, and
+  the blade's edge and curve face away from her. Divine Strike has holy light: a glint on the blade as the swing
+  begins, a gold-white crescent with the swing and a burst of light on the target instead of the fire burst.
+- **Checks** (2026-10-10, on 16bcca6): 303 Core tests (9 new: 4 for what the menu asks of the rules, 5 for the fog),
+  306 in Unity's EditMode, 29 PlayMode (1 new, the pause menu), the Windows build, the four autoplay runs without
+  an error line, and screenshots of every layout: touch at 2340x1080 and in the tablet's shape, keyboard, gamepad.
+  The balance report was not run: no AI or combat rule changed, and the golden replay is unchanged. A test APK is
+  built from this state (`C:\Users\peter\5Kingdoms\Builds\Android\5Kingdoms-dev.apk`); it is not on the tablet
+  yet (no device was connected).
+- **Left of P1:**
+  1. Footing in a boss fight for the party's AI (PROGRESSION.md, "Footing in a boss fight"): measure first with a
+     new count in `-balance`, then the rules, then the balance targets and `-spread`.
+  2. The tablet's view (HUD.md, "The view on the tablet"). The rule picks the zoom nearest to 11 tiles high, which
+     is zoom 2 on the Tab S8+ (2800 x 1752): 13.7 tiles high and 21.9 wide. One whole step out is zoom 1: 27.4 by
+     43.8 tiles, almost the whole floor, with heroes half the size. Peter decides with those numbers; the player's
+     log now says what a device plays at ("View: ... at zoom N, ... tiles high").
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

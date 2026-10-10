@@ -139,7 +139,8 @@ def _darker(color):
 
 
 # ---- Skill icons: 24 px white glyphs in the pack's outline, to sit on a round button or on a sphere of the tree ----
-# The Fencer's five are here; the rest of the set is drafted on the branch wip/1g-1-skill-tree-art (same helpers).
+# One for every skill, ultimate and weapon attack the three heroes have, and a fallback. DRAFT_GLYPHS are for options
+# that aren't written yet: the tree's preview sheet shows them, the art build doesn't write them.
 
 INK, SHADE = hexc('#ffffff'), hexc('#bcc7d4')
 GLYPH = 24
@@ -197,17 +198,175 @@ def _blade_dance(c):
     c.ellipse(12, 12, 2.0, 2.0, INK)
 
 
+def _arrow(c, x0, y0, x1, y1, width=2, head=5.0, color=INK):
+    """A shaft with a triangular head at (x1, y1)."""
+    c.line(x0, y0, x1, y1, color, width)
+    length = math.hypot(x1 - x0, y1 - y0) or 1.0
+    ux, uy = (x1 - x0) / length, (y1 - y0) / length
+    bx, by = x1 - ux * head, y1 - uy * head
+    half = head * 0.7
+    c.polygon([(x1 + ux * 1.5 + 0.5, y1 + uy * 1.5 + 0.5), (bx - uy * half + 0.5, by + ux * half + 0.5),
+               (bx + uy * half + 0.5, by - ux * half + 0.5)], color)
+
+
+def _ring(c, cx, cy, radius, thickness, color=INK, squash=1.0, keep=None):
+    """A circle's outline (an ellipse with `squash` under 1); `keep(angle in degrees)` leaves gaps."""
+    for y in range(GLYPH):
+        for x in range(GLYPH):
+            dx, dy = x + 0.5 - cx, (y + 0.5 - cy) / squash
+            if radius - thickness <= math.hypot(dx, dy) <= radius and (keep is None or keep(math.degrees(math.atan2(dy, dx)))):
+                c.set(x, y, color)
+
+
+def _shield(c, x, y, w, h, color=INK, shade=SHADE):
+    """A heater shield: flat top, pointed foot, its right half in shade."""
+    middle = x + w / 2.0
+    c.polygon([(x, y), (x + w, y), (x + w, y + h * 0.5), (middle, y + h), (x, y + h * 0.5)], color)
+    c.polygon([(middle, y), (x + w, y), (x + w, y + h * 0.5), (middle, y + h)], shade, only=(color,))
+
+
+def _plus(c, cx, cy, arm, width, color=INK):
+    c.rect(cx - width // 2, cy - arm, width, 2 * arm, color)
+    c.rect(cx - arm, cy - width // 2, 2 * arm, width, color)
+
+
+def _sword(c, tip=1, guard=15):
+    c.polygon([(12, tip), (15, tip + 4), (15, guard), (9, guard), (9, tip + 4)], INK)
+    c.polygon([(12, tip), (15, tip + 4), (15, guard), (12, guard)], SHADE, only=(INK,))
+    c.rect(6, guard, 12, 2, INK)
+    c.rect(11, guard + 2, 2, 5, SHADE)
+    c.rect(10, guard + 6, 4, 2, INK)
+
+
+# Uzuki's Archer kit.
+
+def _quick_shot(c):
+    c.curve([(7, 1), (14, 6), (16, 12), (14, 17), (7, 22)], INK, 2)     # The bow, drawn...
+    c.line(7, 1, 7, 22, SHADE, 1)
+    _arrow(c, 3, 12, 21, 12, width=2, head=5.0)                          # ...and the arrow on it.
+
+
+def _hunters_mark(c):
+    _ring(c, 12, 12, 8.6, 2.6)
+    for x, y, w, h in ((11, 0, 2, 7), (11, 17, 2, 7), (0, 11, 7, 2), (17, 11, 7, 2)):
+        c.rect(x, y, w, h, INK)
+    c.rect(11, 11, 2, 2, SHADE)
+
+
+def _power_shot(c):
+    _arrow(c, 4, 20, 18, 6, width=3, head=9.0)
+    c.line(2, 13, 6, 9, SHADE, 2)                        # It leaves the string hard.
+    c.line(11, 22, 15, 18, SHADE, 2)
+
+
+def _rolling_shot(c):
+    _ring(c, 11, 13, 8.5, 2.6, keep=lambda a: not -75 < a < -5)
+    c.polygon([(13, 2), (21, 5), (14, 11)], INK)         # The roll's arrowhead, where the circle opens.
+    c.rect(10, 12, 3, 3, SHADE)
+
+
+def _volley(c):
+    _arrow(c, 5, 1, 5, 13, head=5.0)
+    _arrow(c, 12, 5, 12, 20, head=6.0)
+    _arrow(c, 19, 1, 19, 13, head=5.0)
+
+
+# Haiden's Paladin kit.
+
+def _sword_slash(c):
+    c.line(8, 15, 20, 3, INK, 3)
+    c.line(9, 16, 20, 5, SHADE, 1)
+    c.line(4, 11, 12, 19, INK, 2)
+    c.line(3, 20, 6, 17, SHADE, 2)
+    c.rect(1, 20, 3, 3, INK)
+
+
+def _heal(c):
+    _plus(c, 12, 12, 9, 6)
+    c.rect(9, 19, 6, 2, SHADE)
+    c.rect(3, 13, 6, 2, SHADE)
+    c.rect(15, 13, 6, 2, SHADE)
+
+
+def _divine_strike(c):
+    _sword(c, tip=4, guard=15)
+    for x0, y0, x1, y1 in ((3, 2, 6, 5), (20, 2, 17, 5), (1, 9, 5, 9), (22, 9, 18, 9)):   # It lights up.
+        c.line(x0, y0, x1, y1, INK, 2)
+    c.rect(11, 0, 2, 2, INK)
+
+
+def _shoulder_bash(c):
+    _shield(c, 2, 3, 13, 18)
+    for x0, y0, x1, y1 in ((18, 6, 22, 3), (18, 12, 23, 12), (18, 18, 22, 21)):
+        c.line(x0, y0, x1, y1, INK, 2)
+
+
+def _aura(c):
+    _ring(c, 12, 12, 11.5, 2.4)
+    _shield(c, 7, 6, 10, 13)
+
+
+def _unknown(c):
+    c.polygon([(12, 3), (21, 12), (12, 21), (3, 12)], INK)
+    c.polygon([(12, 12), (21, 12), (12, 21)], SHADE, only=(INK,))
+
+
+# Drafts for options that aren't written yet (PROGRESSION.md, "Starting class content").
+
+def _crippling_shot(c):
+    _arrow(c, 2, 16, 14, 4, width=2, head=6.0)
+    c.curve([(12, 13), (16, 17), (20, 13)], INK, 2)      # Two chevrons down: slower.
+    c.curve([(12, 18), (16, 22), (20, 18)], SHADE, 2)
+
+
+def _bouncing_shot(c):
+    c.curve([(2, 20), (8, 8), (14, 18)], SHADE, 2)
+    _arrow(c, 14, 18, 20, 5, width=2, head=5.0)
+    c.rect(7, 6, 3, 3, INK)
+    c.rect(13, 18, 3, 3, INK)
+
+
+def _snare(c):
+    _ring(c, 12, 15, 10.0, 2.6, squash=0.55)
+    c.rect(3, 6, 2, 8, SHADE)
+    c.rect(19, 6, 2, 8, SHADE)
+    c.rect(10, 7, 4, 3, INK)
+
+
+def _deadeye(c):
+    c.polygon([(1, 12), (7, 6), (17, 6), (23, 12), (17, 18), (7, 18)], INK)     # An eye...
+    c.ellipse(12, 12, 4.2, 4.2, SHADE, only=(INK,))
+    c.erase(11, 11, 2, 2)                                                        # ...on its mark.
+
+
+def _mastery(c):
+    _star(c, 12, 12, 11.5)
+    _star(c, 12, 12, 5.0, SHADE)
+
+
 # By skill id (SkillCatalog); a weapon attack by its weapon's id.
+ARCHER_ICONS = (('attack_hunter_bow', 'Quick Shot'), ('hunters_mark', "Hunter's Mark"), ('power_shot', 'Power Shot'),
+                ('rolling_shot', 'Rolling Shot'), ('volley', 'Volley'))
+PALADIN_ICONS = (('attack_long_sword', 'Sword Slash'), ('paladin_heal', 'Heal'), ('divine_strike', 'Divine Strike'),
+                 ('shoulder_bash', 'Shoulder Bash'), ('aura_of_protection', 'Aura of Protection'))
 FENCER_ICONS = (('attack_piercer_blade', 'Thrust'), ('triple_thrust', 'Triple Thrust'), ('lunge', 'Lunge'),
                 ('riposte', 'Riposte'), ('blade_dance', 'Blade Dance'))
-SKILL_GLYPHS = {'attack_piercer_blade': _thrust, 'triple_thrust': _triple_thrust, 'lunge': _lunge, 'riposte': _riposte,
-                'blade_dance': _blade_dance}
+SKILL_GLYPHS = {'attack_hunter_bow': _quick_shot, 'hunters_mark': _hunters_mark, 'power_shot': _power_shot,
+                'rolling_shot': _rolling_shot, 'volley': _volley,
+                'attack_long_sword': _sword_slash, 'paladin_heal': _heal, 'divine_strike': _divine_strike,
+                'shoulder_bash': _shoulder_bash, 'aura_of_protection': _aura,
+                'attack_piercer_blade': _thrust, 'triple_thrust': _triple_thrust, 'lunge': _lunge, 'riposte': _riposte,
+                'blade_dance': _blade_dance,
+                'unknown': _unknown}
+DRAFT_GLYPHS = {'crippling_shot': _crippling_shot, 'bouncing_shot': _bouncing_shot, 'snare': _snare, 'deadeye': _deadeye,
+                'mastery': _mastery}
 
 
-def skill_icons():
-    """{skill id: icon}: a white glyph with the pack's outline, 28 px with it. No screen shows them yet, so the art build doesn't write them."""
+def skill_icons(drafts=False):
+    """{skill id: icon}: a white glyph with the pack's outline, 28 px with it. With `drafts`, the unwritten options' too."""
     out = {}
-    for name, draw in SKILL_GLYPHS.items():
+    glyphs = dict(SKILL_GLYPHS, **DRAFT_GLYPHS) if drafts else SKILL_GLYPHS
+    for name, draw in glyphs.items():
         c = Canvas(GLYPH, GLYPH)
         draw(c)
         out[name] = c.part().image

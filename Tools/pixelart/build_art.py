@@ -235,7 +235,7 @@ def main():
     if args.only != 'preview':
         export(pack, wardrobe)
     if args.preview:
-        for path in sheets.build(wardrobe, args.preview):
+        for path in sheets.build(wardrobe, args.preview, pack):
             print('Preview: %s' % path)
     print('Done in %.1fs; %d pack files read' % (time.time() - started, len(pack.used)))
 

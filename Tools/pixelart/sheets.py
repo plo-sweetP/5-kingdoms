@@ -143,8 +143,8 @@ def anim_start(rig, name):
     raise KeyError(name)
 
 
-def build(wardrobe, folder):
-    """Write every preview sheet into `folder`; returns the file paths."""
+def build(wardrobe, folder, pack=None):
+    """Write every preview sheet into `folder`; returns the file paths. The skill-tree mock-ups need the pack (the HUD kit)."""
     os.makedirs(folder, exist_ok=True)
     w = wardrobe
     paths = []
@@ -283,4 +283,47 @@ def build(wardrobe, folder):
     sheet.row([(dark(image), 'Arc %d' % (i + 1)) for i, image in enumerate(fx.holy_arc_frames())], "The swing's light")
     sheet.row([(dark(image), 'Burst %d' % (i + 1)) for i, image in enumerate(fx.holy_burst_frames())], 'On the target')
     save(sheet, '09-divine-strike.png')
+
+    # 10. The skill tree's pieces: every skill icon of the three kits, and a sphere in each state.
+    import tree
+    import tree_mock
+    glyphs = icons.skill_icons(drafts=True)
+    by = {piece.name: piece.image for piece in tree.pieces()}
+    night = hexc('#232838')
+
+    def orb(colour, icon=None, glow=False, ring=False, shine=True, icon_tint=None, lock=False):
+        out = Image(64, 64, fill=night)
+        if glow:
+            out.paste(tinted(by['sphere_glow'], colour), -2, -2)
+        if ring:
+            out.paste(by['sphere_ring'], 5, 5)
+        out.paste(tinted(by['sphere'], colour), 10, 10)
+        if shine:
+            out.paste(by['sphere_shine'], 10, 10)
+        top = by['lock'] if lock else glyphs[icon]
+        top = tinted(top, icon_tint) if icon_tint else top
+        out.paste(top, 32 - top.w // 2, 32 - top.h // 2)
+        return out.scaled(3)
+
+    sheet = Sheet('SKILL TREE: ICONS AND SPHERES', 'A 24 px icon per skill, ultimate and weapon attack, on a sphere, 3 times its size.')
+    kits = (("Uzuki's Archer kit", icons.ARCHER_ICONS, 0), ("Haiden's Paladin kit", icons.PALADIN_ICONS, 1), ("Kristela's Fencer kit", icons.FENCER_ICONS, 2))
+    for label, kit, path in kits:
+        sheet.row([(orb(tree.PATH_COLORS[path], key, shine=True), name) for key, name in kit], label)
+    blue = tree.PATH_COLORS[0]
+    sheet.row([(orb(blue, 'power_shot', glow=True, ring=True), 'Picked'), (orb(blue, 'power_shot', glow=True), 'Can be picked'),
+               (orb(tree_mock.dimmed(blue, 0.5), 'power_shot', shine=False, icon_tint=hexc('#aab1c2')), 'Further down'),
+               (orb(tree_mock.PASSED, 'power_shot', shine=False, icon_tint=hexc('#8a91a3')), 'Not taken'),
+               (orb(tree_mock.LOCKED, lock=True, shine=False, icon_tint=hexc('#9aa3b5')), 'Not written yet')], 'A sphere in each state')
+    drafts = (('crippling_shot', 'Crippling Shot'), ('bouncing_shot', 'Bouncing Shot'), ('snare', 'Snare'), ('deadeye', 'Deadeye'), ('mastery', 'A mastery'))
+    sheet.row([(orb(tree.PATH_COLORS[i % 3], key, glow=True), name) for i, (key, name) in enumerate(drafts)],
+              'Drafts for options that are not written yet (preview only)')
+    save(sheet, '10-skill-tree-pieces.png')
+
+    # 11-13. The skill-tree screen as the game will lay it out: on the phone with the Archer's options written (as
+    # drafted), on the phone as it is today (rows locked), and on the tablet.
+    if pack is not None:
+        for number, (name, image) in enumerate(tree_mock.build(pack, w).items(), 11):
+            path = os.path.join(folder, '%d-%s.png' % (number, name))
+            image.save(path)
+            paths.append(path)
     return paths

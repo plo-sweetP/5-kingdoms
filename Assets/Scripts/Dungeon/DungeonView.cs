@@ -379,7 +379,8 @@ namespace FiveKingdoms.Dungeon
         /// <summary>
         /// A shot: the draw (the bow's own animation, its release timed to the moment the arrow leaves), an arrow flying
         /// straight to the tile it lands on (at any angle, not only along the 8 directions), then the hit there. Power
-        /// Shot draws longer and its arrow trails; a skill's arrow glows.
+        /// Shot draws longer and its arrow trails; a skill's arrow glows. Crippling Shot is aimed low: its arrow
+        /// lands at the foe's feet and kicks up dust there, and the slow that follows says the rest.
         /// </summary>
         IEnumerator AnimateShot(DungeonRun run, ActorView shooter, AttackEvent attack, DamageEvent hit)
         {
@@ -387,6 +388,8 @@ namespace FiveKingdoms.Dungeon
             var direction = (to - shooter.transform.position).normalized;
             bool skillShot = activeSkill != null && activeSkill.Effect == SkillEffect.Shot && attack.AttackerId == activeSkillUser;
             bool heavy = skillShot && activeSkill.Knockback > 0;
+            bool low = skillShot && activeSkill.DelayPercent > 0 && hit != null;
+            if (low) to += Vector3.down * 0.25f;
             float draw = heavy ? HeavyDrawTime : ActorView.LungeTime;
             shooter.Play("attack", draw, "cast");
             if (heavy)
@@ -405,10 +408,29 @@ namespace FiveKingdoms.Dungeon
                 yield break;
             }
             ShowDamage(run, hit, direction);
-            if (skillShot) Effects.Burst(effectRoot, to, SpiritColor, 8, 2.5f);
+            if (skillShot) Effects.Burst(effectRoot, to, low ? SlowColor : SpiritColor, 8, low ? 1.5f : 2.5f);
             if (heavy) Effects.Ring(effectRoot, to, SpiritColor);
+            if (low) Effects.Dust(effectRoot, TileCenter(attack.To));
             if (actors.TryGetValue(hit.TargetId, out var target))
                 hud.AddMessage(DescribeHit(shooter, target, hit), target.IsHero ? HeroHurtColor : DungeonHud.TextColor);
+            yield return new WaitForSeconds(hit.Critical ? 0.12f : 0.05f);
+        }
+
+        /// <summary>
+        /// A Bouncing Shot's arrow flies on: no new draw, it glances off the foe it hit (a glint there) and streaks to
+        /// the next one, trailing.
+        /// </summary>
+        IEnumerator AnimateBounce(DungeonRun run, ActorView shooter, AttackEvent attack, DamageEvent hit)
+        {
+            var from = TileCenter(attack.From.Value) + Vector3.up * 0.15f;
+            var to = TileCenter(attack.To);
+            Effects.Glint(effectRoot, from, SpiritColor);
+            yield return Effects.Arrow(effectRoot, from, to, SpiritColor, ArrowTimePerTile * Mathf.Max(1f, (to - from).magnitude), trail: true);
+            if (hit == null) yield break;
+            ShowDamage(run, hit, (to - from).normalized);
+            Effects.Burst(effectRoot, to, SpiritColor, 6, 2f);
+            if (actors.TryGetValue(hit.TargetId, out var target))
+                hud.AddMessage($"The arrow bounces on: {DescribeHit(shooter, target, hit)}", target.IsHero ? HeroHurtColor : DungeonHud.TextColor);
             yield return new WaitForSeconds(hit.Critical ? 0.12f : 0.05f);
         }
 
@@ -788,6 +810,11 @@ namespace FiveKingdoms.Dungeon
         IEnumerator AnimateAttack(DungeonRun run, AttackEvent attack, DamageEvent hit)
         {
             if (!actors.TryGetValue(attack.AttackerId, out var attacker)) yield break;
+            if (attack.From.HasValue)
+            {
+                yield return AnimateBounce(run, attacker, attack, hit); // The arrow's own way: its shooter doesn't turn.
+                yield break;
+            }
             attacker.SetFacing(attack.Direction);
             var offset = attack.Direction.ToOffset();
             var direction = new Vector3(offset.X, offset.Y, 0f).normalized;

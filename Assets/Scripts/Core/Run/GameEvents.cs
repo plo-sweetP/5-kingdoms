@@ -58,8 +58,16 @@ namespace FiveKingdoms.Core
         /// <summary>The tile it lands on: the target's, or where a missed shot stopped.</summary>
         public readonly GridPos To;
 
-        public AttackEvent(int attackerId, int targetId, Direction8 direction, GridPos to, bool ranged = false, int distance = 1)
+        /// <summary>
+        /// Where a shot comes from when that isn't its shooter: an arrow that bounced flies on from the foe it hit
+        /// before (Bouncing Shot). Null otherwise.
+        /// </summary>
+        public readonly GridPos? From;
+
+        public AttackEvent(int attackerId, int targetId, Direction8 direction, GridPos to, bool ranged = false, int distance = 1,
+            GridPos? from = null)
         {
+            From = from;
             AttackerId = attackerId;
             TargetId = targetId;
             Direction = direction;

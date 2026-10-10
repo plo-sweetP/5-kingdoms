@@ -25,8 +25,39 @@ namespace FiveKingdoms.CoreTests
         static readonly Dictionary<string, int[]> Builds = new Dictionary<string, int[]>();
         static bool SpendsPoints = true;
 
+        /// <summary>
+        /// "equip=uzuki:hunters_mark,crippling_shot,rolling_shot": the loadout that hero takes instead of its build's
+        /// own, slot by slot, as far as it knows those skills.
+        /// </summary>
+        static readonly Dictionary<string, string[]> Loadouts = new Dictionary<string, string[]>();
+
         /// <summary>"level=N": the level the "fresh" runs of the balance report start at, to measure a build that needs points.</summary>
         static int StartLevel = 1;
+
+        /// <summary>"-brief": the balance report in a few lines (wins, what was used, the campaign), to compare builds side by side.</summary>
+        static bool Brief;
+
+        /// <summary>"-fresh": the balance report without its campaign, which takes most of its time.</summary>
+        static bool FreshOnly;
+
+        /// <summary>
+        /// Changes one number of a catalog skill for this run of the tool only (the reports' way to try a number, like
+        /// the key=value overrides of <see cref="TuningFrom"/>): "skill.crippling_shot.DelayPercent=25". The game never
+        /// does this: there a skill only changes on a hero's own copy.
+        /// </summary>
+        static bool TrySkillOverride(string arg)
+        {
+            var parts = arg.Split('=');
+            var path = parts[0].Split('.');
+            if (parts.Length != 2 || path.Length != 3 || !int.TryParse(parts[1], out int value)) return false;
+            var skill = typeof(SkillCatalog).GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Select(field => field.GetValue(null)).OfType<SkillDefinition>().FirstOrDefault(candidate => candidate.Id == path[1]);
+            var property = typeof(SkillDefinition).GetProperty(path[2]);
+            if (skill == null || property == null || property.PropertyType != typeof(int) || property.GetSetMethod(nonPublic: true) == null) return false;
+            property.SetValue(skill, value);
+            Console.WriteLine($"Skill override: {skill.Name}'s {property.Name} is {value}");
+            return true;
+        }
 
         /// <summary>A hero for a report: at <paramref name="level"/>, with its points spent on its build.</summary>
         static HeroProgress NewHero(ActorDefinition definition, int level)
@@ -43,7 +74,11 @@ namespace FiveKingdoms.CoreTests
         static void Spend(HeroProgress hero)
         {
             if (SpendsPoints) HeroBuilds.Spend(hero, Builds.TryGetValue(hero.Definition.Id, out var paths) ? paths : null);
+            if (Loadouts.TryGetValue(hero.Definition.Id, out var skills)) HeroBuilds.Equip(hero, skills);
         }
+
+        /// <summary>A hero's build and loadout in a line, for the reports' headers.</summary>
+        static string Describe(HeroProgress hero) => $"{HeroBuilds.Describe(hero)} [{string.Join(", ", hero.Kit.Skills.Select(skill => skill.ShortName))}]";
 
         static int Main(string[] args)
         {
@@ -67,6 +102,16 @@ namespace FiveKingdoms.CoreTests
             foreach (string arg in args)
             {
                 if (arg.StartsWith("level=")) StartLevel = int.Parse(arg.Substring(6));
+                if (arg.StartsWith("equip="))
+                {
+                    var parts = arg.Substring(6).Split(':');
+                    if (parts.Length != 2 || ActorCatalog.Find(parts[0]) == null)
+                    {
+                        Console.WriteLine($"{arg}: write equip=uzuki:hunters_mark,power_shot,rolling_shot");
+                        return 2;
+                    }
+                    Loadouts[parts[0]] = parts[1].Split(',');
+                }
                 if (arg == "build=none") SpendsPoints = false;
                 if (!arg.StartsWith("build=") || arg == "build=none") continue;
                 if (!HeroBuilds.TryParse(arg.Substring(6), out var hero, out var paths, out string error))
@@ -76,7 +121,18 @@ namespace FiveKingdoms.CoreTests
                 }
                 Builds[hero.Id] = paths;
             }
-            args = args.Where(arg => !arg.StartsWith("build=") && !arg.StartsWith("level=")).ToArray();
+            args = args.Where(arg => !arg.StartsWith("build=") && !arg.StartsWith("level=") && !arg.StartsWith("equip=")).ToArray();
+            // "skill.bouncing_shot.Power=200": a catalog skill with one number changed, to try it before it goes in the catalog.
+            foreach (string arg in args.Where(arg => arg.StartsWith("skill.")))
+            {
+                if (TrySkillOverride(arg)) continue;
+                Console.WriteLine($"{arg}: write skill.<skill id>.<Property>=<number>, e.g. skill.bouncing_shot.Power=200");
+                return 2;
+            }
+            args = args.Where(arg => !arg.StartsWith("skill.")).ToArray();
+            Brief = args.Contains("-brief");
+            FreshOnly = args.Contains("-fresh");
+            args = args.Where(arg => arg != "-brief" && arg != "-fresh").ToArray();
             if (args.Contains("-balance")) return BalanceReport(seeds, TuningFrom(args));
             if (args.Contains("-spread")) return SpreadReport(seeds, TuningFrom(args));
             int bossIndex = Array.IndexOf(args, "-boss");
@@ -466,10 +522,25 @@ namespace FiveKingdoms.CoreTests
                 floorsReached[run.Floor]++;
             }
             string names = string.Join(", ", Party.Select(definition => definition.Name));
-            Console.WriteLine($"Builds at Lv {StartLevel}: {string.Join("; ", NewParty(StartLevel).Select(HeroBuilds.Describe))}");
+            Console.WriteLine($"Builds at Lv {StartLevel}: {string.Join("; ", NewParty(StartLevel).Select(Describe))}");
             Console.WriteLine($"Fresh level-{StartLevel} party ({names}; the first leads), autopilot over {seeds} seeds: won {won}, lost {lost}, stalled {stalled}");
             Console.WriteLine($"Average: floor {floorSum / (float)seeds:0.0}, level {levelSum / (float)seeds:0.0}, turns {turnSum / (float)seeds:0}, " +
                               $"heroes fallen {fallenSum / (float)seeds:0.0} of 3");
+            string skillsUsed = "Skills used a run: " +
+                                string.Join(", ", skillUses.OrderByDescending(pair => pair.Value).Select(pair => $"{pair.Key} {pair.Value / (float)seeds:0.0}")) +
+                                $"; a counter stance was answered {counters / (float)seeds:0.0} times a run";
+            if (Brief)
+            {
+                Console.WriteLine($"Reached the boss floor: {reachedBoss}; heroes fallen before it: {fallenEarly}; ultimates per hero in the boss fight " +
+                                  $"{bossUltimates / 3f / Math.Max(1, bossFights):0.00}");
+                Console.WriteLine($"Before the boss: {fights / (float)seeds:0.0} fights a run of {packFights.Rounds / (float)Math.Max(1, fights):0.00} rounds of blows each, " +
+                                  $"{packFights.HitsTaken / (float)seeds:0.0} enemy attackers-rounds on heroes a run; HP into the boss fight: " +
+                                  string.Join(", ", Party.Select((definition, member) => $"{definition.Name} {hpAtBossStart[member] / Math.Max(1, bossFights)}%")) +
+                                  $"; the boss fight: {bossFight.Rounds / (float)Math.Max(1, bossFights):0.0} rounds");
+                Console.WriteLine(skillsUsed);
+                CampaignReport(players: seeds / 2, maxAttempts: 10, tuning);
+                return 0;
+            }
             for (int f = 1; f < floorsReached.Length; f++) Console.WriteLine($"  ended on B{f}F: {floorsReached[f]}");
             Console.WriteLine($"Reached the boss floor: {reachedBoss}; still standing on arrival: " +
                               string.Join(", ", Party.Select((definition, member) => $"{definition.Name} {standingAtBoss[member] * 100 / Math.Max(1, reachedBoss)}%")));
@@ -485,9 +556,7 @@ namespace FiveKingdoms.CoreTests
                               string.Join(", ", Party.Select((definition, member) => $"{definition.Name} {hpAtFightStart[member] / Math.Max(1, fights)}%")) +
                               "; into the boss fight: " +
                               string.Join(", ", Party.Select((definition, member) => $"{definition.Name} {hpAtBossStart[member] / Math.Max(1, bossFights)}%")));
-            Console.WriteLine("Skills used a run: " +
-                              string.Join(", ", skillUses.OrderByDescending(pair => pair.Value).Select(pair => $"{pair.Key} {pair.Value / (float)seeds:0.0}")) +
-                              $"; a counter stance was answered {counters / (float)seeds:0.0} times a run");
+            Console.WriteLine(skillsUsed);
             Console.WriteLine("In the fights before the boss (a round is one action of the leader's in which blows were exchanged):");
             packFights.Print(Party);
             Console.WriteLine("In the boss fight:");
@@ -517,6 +586,12 @@ namespace FiveKingdoms.CoreTests
                 crowded = new long[partySize];
                 hits = new long[partySize];
             }
+
+            /// <summary>Rounds in which blows were exchanged, over all fights.</summary>
+            public long Rounds => fightRounds;
+
+            /// <summary>How many times a hero was attacked by a different enemy in a round, summed over the heroes and the rounds.</summary>
+            public long HitsTaken => hits.Sum();
 
             /// <summary>Call before an action; <see cref="Round.End"/> after it. Rounds outside a fight count nothing.</summary>
             public Round Begin(DungeonRun run) => new Round(this, run);
@@ -665,7 +740,7 @@ namespace FiveKingdoms.CoreTests
                 if (run.State == RunState.Won) won++;
                 turns += run.Turn;
             }
-            Console.WriteLine($"Builds: {string.Join("; ", NewParty(level).Select(HeroBuilds.Describe))}");
+            Console.WriteLine($"Builds: {string.Join("; ", NewParty(level).Select(Describe))}");
             Console.WriteLine($"Starting party at Lv {level} against the Troll: won {won} of {seeds} " +
                               $"(leader turns {turns / (float)seeds:0}, ultimates per hero {ultimates / 3f / seeds:0.00})");
             footing.Print(Party);
@@ -830,6 +905,7 @@ namespace FiveKingdoms.CoreTests
         /// <summary>Levels carried between runs, as in the real game: how many attempts until the party's first clear.</summary>
         static void CampaignReport(int players, int maxAttempts, Func<DungeonRunConfig> tuning)
         {
+            if (FreshOnly) return;
             int cleared = 0, attemptsSum = 0, levelSum = 0;
             var clearedOnAttempt = new int[maxAttempts + 1];
             var tierSum = new long[Party.Length];

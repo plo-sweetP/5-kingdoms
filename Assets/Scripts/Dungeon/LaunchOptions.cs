@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using FiveKingdoms.Core;
 using FiveKingdoms.UI;
 using UnityEngine;
 
@@ -16,6 +17,13 @@ namespace FiveKingdoms.Dungeon
 
         /// <summary>Start the hero at this level. Uses a throwaway save so a real save is never touched.</summary>
         public int? StartLevel;
+
+        /// <summary>
+        /// With <see cref="StartLevel"/>: the heroes' points are spent before the run, as the balance report's players
+        /// spend them (<see cref="HeroBuilds"/>): "default" for each hero's default path, or builds by hero for the
+        /// others, e.g. "uzuki:hunter;kristela:footwork,engarde". Null leaves the points free, to spend on the tree.
+        /// </summary>
+        public string Builds;
 
         public string SavePath;
 
@@ -64,7 +72,8 @@ namespace FiveKingdoms.Dungeon
 
         /// <summary>
         /// Flags: -fk-floors N, -fk-level N, -fk-save PATH, -fk-input touch|keyboard|gamepad, -fk-leader ID,
-        /// -fk-look LOOKS, -fk-view lead|zoomout|wide, -fk-zoom near|far, -fk-device desktop|phone|tablet, -fk-tree [HERO], -fk-seed N, -fk-minimap off|small|large, and
+        /// -fk-look LOOKS, -fk-view lead|zoomout|wide, -fk-zoom near|far, -fk-device desktop|phone|tablet, -fk-tree [HERO], -fk-seed N, -fk-minimap off|small|large,
+        /// -fk-build default|BUILDS (with -fk-level), and
         /// -fk-autoplay FOLDER (which also uses a fresh save inside FOLDER, so smoke tests never touch the player's save).
         /// </summary>
         /// <summary>"-fk-zoom near" or "-fk-zoom far"; anything else leaves the view to the player's setting.</summary>
@@ -80,6 +89,7 @@ namespace FiveKingdoms.Dungeon
             {
                 FloorCount = IntArg(args, "-fk-floors"),
                 StartLevel = IntArg(args, "-fk-level"),
+                Builds = StringArg(args, "-fk-build"),
                 SavePath = StringArg(args, "-fk-save"),
                 StartInputMode = Enum.TryParse(StringArg(args, "-fk-input"), ignoreCase: true, out InputMode mode) ? mode : (InputMode?)null,
                 Leader = StringArg(args, "-fk-leader")?.ToLowerInvariant(),
@@ -103,6 +113,20 @@ namespace FiveKingdoms.Dungeon
                 options.FreshSave = true;
             }
             return options;
+        }
+
+        /// <summary>
+        /// A hero for a launch at <see cref="StartLevel"/>, with its points spent as <see cref="Builds"/> says: on the
+        /// build that names it, else on its default path. With no builds given the points stay free.
+        /// </summary>
+        public HeroProgress Built(HeroProgress hero)
+        {
+            if (Builds == null) return hero;
+            int[] paths = null;
+            foreach (string build in Builds.Split(';'))
+                if (HeroBuilds.TryParse(build.Trim(), out var named, out var chosen, out _) && named == hero.Definition) paths = chosen;
+            HeroBuilds.Spend(hero, paths);
+            return hero;
         }
 
         static string StringArg(string[] args, string flag)

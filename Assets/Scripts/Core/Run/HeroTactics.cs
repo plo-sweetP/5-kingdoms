@@ -655,9 +655,10 @@ namespace FiveKingdoms.Core
                 var skill = skills[slot];
                 if (!skill.DealsDamage || skill.RollTiles > 0) continue; // Rolls are for getting out of melee.
                 if (run.CheckSkillAt(hero, slot, target.Pos) != SkillCheck.Ready) continue;
-                bool fresh = skill.Status.HasValue && target.FindStatus(skill.Status.Value) == null || skill.StunChance > 0 && run.CanDelay(target);
+                bool fresh = skill.Status.HasValue && target.FindStatus(skill.Status.Value) == null ||
+                             (skill.StunChance > 0 || skill.DelayPercent > 0) && run.CanDelay(target);
                 if (fresh && WorthAStatus(hero, target) && control < 0) control = slot;
-                int power = skill.Power * skill.Hits;
+                int power = PowerOn(run, hero, skill, target);
                 if (power <= strongestPower) continue;
                 strongestPower = power;
                 strongest = slot;
@@ -671,6 +672,31 @@ namespace FiveKingdoms.Core
             if (run.AttackTargetAt(hero, target.Pos) == null) return false; // Only skills reach that one.
             command = HeroCommand.AttackAt(target.Pos);
             return true;
+        }
+
+        /// <summary>
+        /// What a damaging skill used on <paramref name="target"/> right now comes to, in percent of ATK over all its
+        /// hits, for comparing it with the hero's other attacks: its hits on the target (both arrows of a shot that a
+        /// Multishot bow doubles), and for an arrow that bounces the hits of the bounces it would make from there
+        /// (none with no other foe near: then a plain shot is better).
+        /// </summary>
+        public static int PowerOn(DungeonRun run, Actor hero, SkillDefinition skill, Actor target)
+        {
+            int power = skill.Power * skill.Hits;
+            if (DungeonRun.IsMultishot(hero, skill)) return power * hero.Weapon.PassivePower / 100 * 2;
+            if (skill.Bounces <= 0) return power;
+            var hit = new List<Actor> { target };
+            var from = target.Pos;
+            for (int bounce = 0, percent = skill.Power; bounce < skill.Bounces; bounce++)
+            {
+                var next = run.NextBounce(hero, from, skill.BounceRange, hit);
+                if (next == null) break;
+                percent = percent * skill.BouncePercent / 100;
+                power += percent;
+                hit.Add(next);
+                from = next.Pos;
+            }
+            return power;
         }
 
         // ---- Doorways and corridors (PROGRESSION.md, "Doorways and corridors") ----

@@ -104,8 +104,12 @@ namespace FiveKingdoms.Core
             HealTarget healTarget = HealTarget.Self, bool healsFromUser = false,
             bool pierce = false, bool shove = false, int wallBonusPercent = 0, int knockback = 0,
             int stunChance = 0, int stunPercent = CombatRules.MaxDelayPercent, int rollTiles = 0, TrapKind leavesTrap = TrapKind.None,
-            WeaponFamily weapon = WeaponFamily.None, int dashTiles = 0, bool movesOn = false, int bossStatusPower = 0)
+            WeaponFamily weapon = WeaponFamily.None, int dashTiles = 0, bool movesOn = false, int bossStatusPower = 0,
+            int bounces = 0, int bounceRange = 0, int bouncePercent = 0)
         {
+            Bounces = bounces;
+            BounceRange = bounceRange;
+            BouncePercent = bouncePercent;
             Id = id;
             Name = name;
             ShortName = shortName;
@@ -244,6 +248,16 @@ namespace FiveKingdoms.Core
         /// </summary>
         public int StunPercent { get; internal set; }
 
+        /// <summary>
+        /// Shots: after its hit the arrow bounces on, up to this many times, each time to the nearest foe it hasn't hit
+        /// yet within <see cref="BounceRange"/> tiles of the last one (and in sight of it), for
+        /// <see cref="BouncePercent"/>% of the hit before (Bouncing Shot). It is one arrow: a Multishot bow doesn't
+        /// double it.
+        /// </summary>
+        public int Bounces { get; internal set; }
+        public int BounceRange { get; internal set; }
+        public int BouncePercent { get; internal set; }
+
         /// <summary>Moves (rolls) this many tiles the way it's aimed before acting.</summary>
         public int RollTiles { get; internal set; }
 
@@ -304,6 +318,24 @@ namespace FiveKingdoms.Core
         /// <summary>Ultimate: arrows rain on a 3x3 area around a foe in sight, two hits of 200% ATK on every foe there.</summary>
         public static readonly SkillDefinition Volley = new SkillDefinition("volley", "Volley", "Volley",
             SkillEffect.Area, power: 200, ultimate: true, reach: AttackReach.Area, hits: 2, range: RangedReach, radius: 1, weapon: WeaponFamily.Bow);
+
+        // The Archer's milestone skills (PROGRESSION.md, "Starting class content").
+
+        /// <summary>
+        /// Hunter, tier 5: a shot (180% ATK) that slows what it hits: its next turn comes 30% of a turn later (a boss's
+        /// 25%, and nothing is delayed twice before it acts).
+        /// </summary>
+        public static readonly SkillDefinition CripplingShot = new SkillDefinition("crippling_shot", "Crippling Shot", "Cripple",
+            SkillEffect.Shot, power: 180, reach: AttackReach.Ranged, range: RangedReach, delayPercent: 30, weapon: WeaponFamily.Bow);
+
+        /// <summary>
+        /// Trickshot, tier 5: one arrow (200% ATK) that bounces on to up to 2 more foes, each within 3 tiles of the last
+        /// one hit and in sight of it, for 70% of the hit before (140%, then 98%). The draft's 160% made it weaker
+        /// than his Quick Shot on anything but a group; at 200% it is that shot on a lone foe and more on a group.
+        /// </summary>
+        public static readonly SkillDefinition BouncingShot = new SkillDefinition("bouncing_shot", "Bouncing Shot", "Bounce",
+            SkillEffect.Shot, power: 200, reach: AttackReach.Ranged, range: RangedReach, weapon: WeaponFamily.Bow,
+            bounces: 2, bounceRange: 3, bouncePercent: 70);
 
         // ---- Haiden, Paladin: a tank first, with some healing. ----
 

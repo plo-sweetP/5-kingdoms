@@ -42,17 +42,39 @@ namespace FiveKingdoms.Tests
         public void PartyRunsLedByKristelaKeepTheWorldConsistent() =>
             Soak(seed => new DungeonRun(seed, new DungeonRunConfig { Party = new[] { ActorCatalog.Kristela, ActorCatalog.Haiden, ActorCatalog.Uzuki } }));
 
+        /// <summary>
+        /// The classes' milestone options in play (PROGRESSION.md, "Starting class content"): the party at a level that
+        /// reaches every milestone written so far, each hero on the same path of its own class, with what that path
+        /// teaches in its loadout (<see cref="HeroBuilds"/>). Every path is played, so the AI's rule for each option
+        /// is too: a refused command or an attack at nothing fails here.
+        /// </summary>
+        [Test]
+        public void PartyRunsOnEveryPathKeepTheWorldConsistent()
+        {
+            const int Level = 12, SeedsAPath = 14;
+            for (int path = 0; path < ClassDefinition.PathCount; path++)
+            {
+                int played = path;
+                Soak(seed => new DungeonRun(seed + 100 * played, new DungeonRunConfig(), ActorCatalog.StartingParty.Select(definition =>
+                {
+                    var hero = new HeroProgress(definition, Level);
+                    HeroBuilds.Spend(hero, new[] { played });
+                    return hero;
+                }).ToArray()), SeedsAPath);
+            }
+        }
+
         /// <summary>How often the rules under test came up in a soak.</summary>
         sealed class Totals
         {
             public int Delays, OffLineShots, DoorsHeld, FrontRotations, Rests;
         }
 
-        static Totals Soak(System.Func<int, DungeonRun> start)
+        static Totals Soak(System.Func<int, DungeonRun> start, int seeds = Seeds)
         {
             var totals = new Totals();
             int deepestFloor = 0;
-            for (int seed = 1; seed <= Seeds; seed++)
+            for (int seed = 1; seed <= seeds; seed++)
             {
                 var run = start(seed);
                 var swaps = new Dictionary<(int, int), List<int>>();

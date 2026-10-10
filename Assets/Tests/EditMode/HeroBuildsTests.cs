@@ -1,3 +1,4 @@
+using System.Linq;
 using FiveKingdoms.Core;
 using NUnit.Framework;
 
@@ -92,6 +93,31 @@ namespace FiveKingdoms.Tests
                     Assert.AreEqual(HeroBuilds.DefaultPath, hero.PickAt(definition.StartingClass, tier).Path, $"{definition.Name}, tier {tier}");
                 StringAssert.StartsWith($"{definition.Name}: {definition.StartingClass.Name} {open}", HeroBuilds.Describe(hero));
             }
+        }
+
+        [Test]
+        public void ABuildPutsTheSkillAnOptionTeachesInTheLoadout()
+        {
+            // A new skill only goes in by itself while a slot is free; a build gives up one of its three for it.
+            var hunter = new HeroProgress(ActorCatalog.Uzuki, level: 5);
+            HeroBuilds.Spend(hunter, new[] { 1 });
+            CollectionAssert.AreEqual(new[] { "crippling_shot", "power_shot", "rolling_shot" }, hunter.LoadoutIds, "in Hunter's Mark's place");
+            StringAssert.Contains("Crippling Shot", string.Join(", ", hunter.Kit.Skills.Select(skill => skill.Name)));
+
+            var marksman = new HeroProgress(ActorCatalog.Uzuki, level: 5);
+            HeroBuilds.Spend(marksman);
+            CollectionAssert.AreEqual(new[] { "hunters_mark", "power_shot", "rolling_shot" }, marksman.LoadoutIds, "an upgrade changes no slot");
+        }
+
+        [Test]
+        public void AToolCanGiveABuildAnotherLoadout()
+        {
+            var hunter = new HeroProgress(ActorCatalog.Uzuki, level: 5);
+            HeroBuilds.Spend(hunter, new[] { 1 });
+            Assert.AreEqual(3, HeroBuilds.Equip(hunter, new[] { "hunters_mark", "crippling_shot", "rolling_shot" }));
+            CollectionAssert.AreEqual(new[] { "hunters_mark", "crippling_shot", "rolling_shot" }, hunter.LoadoutIds);
+            Assert.AreEqual(0, HeroBuilds.Equip(hunter, new[] { "bouncing_shot" }), "a skill the hero hasn't learned stays out");
+            CollectionAssert.AreEqual(new[] { "hunters_mark", "crippling_shot", "rolling_shot" }, hunter.LoadoutIds);
         }
 
         [Test]

@@ -39,8 +39,55 @@ namespace FiveKingdoms.Core
                 }
                 if (!hero.Raise(own, option)) break;
                 spent++;
+                if (option != null) TakeUp(hero, option);
             }
             return spent;
+        }
+
+        /// <summary>
+        /// The skill a build takes out of the loadout for the one an option teaches, by the option's id: a new skill
+        /// only goes in by itself while a slot is free, and a build that left it out would play as if the option had
+        /// not been picked. Chosen with the balance report (PROGRESSION.md, "Starting class content").
+        /// </summary>
+        static readonly Dictionary<string, string> Replaces = new Dictionary<string, string>
+        {
+            { "archer_crippling_shot", "hunters_mark" },
+            { "archer_bouncing_shot", "hunters_mark" },
+        };
+
+        /// <summary>Puts the skill <paramref name="option"/> teaches into the loadout, in the place of the one the build gives up for it.</summary>
+        static void TakeUp(HeroProgress hero, ClassOption option)
+        {
+            var taught = option.Teaches;
+            if (taught == null || taught.IsUltimate || Array.IndexOf(Loadout(hero), taught.Id) >= 0) return;
+            if (!Replaces.TryGetValue(option.Id, out string gives)) return;
+            int slot = Array.IndexOf(Loadout(hero), gives);
+            if (slot >= 0) hero.Equip(slot, taught);
+        }
+
+        static string[] Loadout(HeroProgress hero)
+        {
+            var ids = new string[hero.LoadoutIds.Count];
+            for (int slot = 0; slot < ids.Length; slot++) ids[slot] = hero.LoadoutIds[slot];
+            return ids;
+        }
+
+        /// <summary>
+        /// Puts the skills named by <paramref name="skillIds"/> into the loadout, slot by slot, where the hero knows
+        /// them and the rules allow it (a tool's "equip=uzuki:hunters_mark,crippling_shot,rolling_shot": another
+        /// loadout than the build's own). Returns how many went in.
+        /// </summary>
+        public static int Equip(HeroProgress hero, IReadOnlyList<string> skillIds)
+        {
+            int equipped = 0;
+            for (int slot = 0; slot < HeroProgress.LoadoutSkills && slot < skillIds.Count; slot++)
+            {
+                SkillDefinition known = null;
+                foreach (var skill in hero.KnownSkills)
+                    if (skill.Id == skillIds[slot]) known = skill;
+                if (known != null && hero.Equip(slot, known)) equipped++;
+            }
+            return equipped;
         }
 
         /// <summary>The path a build takes at a milestone tier.</summary>

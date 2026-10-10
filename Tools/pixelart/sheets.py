@@ -314,7 +314,9 @@ def build(wardrobe, folder, pack=None):
                (orb(tree_mock.dimmed(blue, 0.5), 'power_shot', shine=False, icon_tint=hexc('#aab1c2')), 'Further down'),
                (orb(tree_mock.PASSED, 'power_shot', shine=False, icon_tint=hexc('#8a91a3')), 'Not taken'),
                (orb(tree_mock.LOCKED, lock=True, shine=False, icon_tint=hexc('#9aa3b5')), 'Not written yet')], 'A sphere in each state')
-    drafts = (('crippling_shot', 'Crippling Shot'), ('bouncing_shot', 'Bouncing Shot'), ('snare', 'Snare'), ('deadeye', 'Deadeye'), ('mastery', 'A mastery'))
+    sheet.row([(orb(tree.PATH_COLORS[path], key, glow=True), name) for key, name, path in icons.MILESTONE_ICONS],
+              "The skills the classes' milestones teach")
+    drafts = (('snare', 'Snare'), ('deadeye', 'Deadeye'), ('mastery', 'A mastery'))
     sheet.row([(orb(tree.PATH_COLORS[i % 3], key, glow=True), name) for i, (key, name) in enumerate(drafts)],
               'Drafts for options that are not written yet (preview only)')
     save(sheet, '10-skill-tree-pieces.png')

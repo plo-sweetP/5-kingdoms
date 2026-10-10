@@ -1499,7 +1499,8 @@ namespace FiveKingdoms.Core
         /// the first at the aimed target, the second at another foe in sight within range if there is one, else the same
         /// target. Each arrow rolls damage and crit on its own; a slow or knockback (straight away from the shooter, to the
         /// nearest of the 8 directions) lands only once per target. Shots take the ranged cuts (point-blank if a foe is next
-        /// to the shooter as it fires). Nothing in sight after a roll: no shot.
+        /// to the shooter as it fires). Nothing in sight after a roll: no shot. An arrow that bounces (Bouncing Shot) is
+        /// one arrow, whatever the bow: after its hit it flies on from foe to foe (<see cref="Bounce"/>).
         /// </summary>
         void ResolveShot(Actor user, SkillDefinition skill, AimAt aim)
         {
@@ -1507,8 +1508,7 @@ namespace FiveKingdoms.Core
             if (first == null) return;
             user.Facing = Directions.Approximate(user.Pos, first.Pos);
             var weapon = user.Weapon;
-            bool multishot = weapon != null && weapon.Passive == WeaponPassive.Multishot &&
-                             skill.Kind == DamageKind.Physical && skill.Reach == AttackReach.Ranged;
+            bool multishot = IsMultishot(user, skill);
             int arrows = multishot ? 2 : 1;
             int percent = multishot ? skill.Power * weapon.PassivePower / 100 : skill.Power;
             int reach = ReachPercent(user, skill.IsRanged);
@@ -1531,6 +1531,58 @@ namespace FiveKingdoms.Core
                 ApplyOnHit(user, target, skill, first: firstHit);
                 if (firstHit && skill.Knockback > 0 && State == RunState.InProgress) Push(target, direction, skill.Knockback);
             }
+            if (skill.Bounces > 0) Bounce(user, skill, first.Pos, hit, reach);
+        }
+
+        /// <summary>
+        /// Whether <paramref name="user"/>'s bow doubles <paramref name="skill"/> (Multishot: two arrows at the weapon's
+        /// PassivePower% each): a ranged physical shot that doesn't bounce.
+        /// </summary>
+        public static bool IsMultishot(Actor user, SkillDefinition skill) =>
+            user.Weapon != null && user.Weapon.Passive == WeaponPassive.Multishot && skill.Effect == SkillEffect.Shot &&
+            skill.Bounces == 0 && skill.Kind == DamageKind.Physical && skill.Reach == AttackReach.Ranged;
+
+        /// <summary>
+        /// The arrow flies on (Bouncing Shot): from the tile of the foe it hit last to the next one
+        /// (<see cref="NextBounce"/>), up to the skill's Bounces times, each hit for BouncePercent% of the one before
+        /// and with the same ranged cuts as the shot itself. Each bounce rolls its damage and its crit on its own and
+        /// charges the meter like any hit.
+        /// </summary>
+        void Bounce(Actor user, SkillDefinition skill, GridPos from, List<Actor> hit, int reach)
+        {
+            int percent = skill.Power;
+            for (int bounce = 0; bounce < skill.Bounces && State == RunState.InProgress && user.IsAlive; bounce++)
+            {
+                var target = NextBounce(user, from, skill.BounceRange, hit);
+                if (target == null) return;
+                percent = percent * skill.BouncePercent / 100;
+                events.Add(new AttackEvent(user.Id, target.Id, Directions.Approximate(from, target.Pos), target.Pos, ranged: true,
+                    distance: GridPos.ChebyshevDistance(from, target.Pos), from: from));
+                hit.Add(target);
+                from = target.Pos;
+                ApplyDamage(user, target, CombatRules.RollDamage(user, target, Random, percent, element: skill.Element, reachPercent: reach));
+                if (target.IsAlive) ApplyOnHit(user, target, skill, first: true);
+            }
+        }
+
+        /// <summary>
+        /// Where a bouncing arrow goes from <paramref name="from"/>: the nearest foe of <paramref name="user"/> within
+        /// <paramref name="range"/> tiles of that tile and in sight of it that this shot hasn't hit (the lower id
+        /// between equals). Null when there is none: the arrow stops.
+        /// </summary>
+        public Actor NextBounce(Actor user, GridPos from, int range, List<Actor> exclude)
+        {
+            Actor next = null;
+            int best = int.MaxValue;
+            foreach (var actor in actors)
+            {
+                if (actor.Team == user.Team || exclude.Contains(actor) || !InShotReach(from, actor.Pos, range)) continue;
+                int distance = GridPos.ChebyshevDistance(from, actor.Pos);
+                if (distance > best || distance == best && actor.Id > next.Id) continue;
+                best = distance;
+                next = actor;
+            }
+            return next;
         }
 
         /// <summary>

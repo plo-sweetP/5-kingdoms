@@ -139,8 +139,9 @@ def _darker(color):
 
 
 # ---- Skill icons: 24 px white glyphs in the pack's outline, to sit on a round button or on a sphere of the tree ----
-# One for every skill, ultimate and weapon attack the three heroes have, and a fallback. DRAFT_GLYPHS are for options
-# that aren't written yet: the tree's preview sheet shows them, the art build doesn't write them.
+# One for every skill, ultimate and weapon attack the three heroes have, for every skill a class's milestone teaches,
+# and a fallback. DRAFT_GLYPHS are for options that aren't written yet: the tree's preview sheet shows them, the art
+# build doesn't write them.
 
 INK, SHADE = hexc('#ffffff'), hexc('#bcc7d4')
 GLYPH = 24
@@ -311,7 +312,7 @@ def _unknown(c):
     c.polygon([(12, 12), (21, 12), (12, 21)], SHADE, only=(INK,))
 
 
-# Drafts for options that aren't written yet (PROGRESSION.md, "Starting class content").
+# The skills the classes' milestones teach (PROGRESSION.md, "Starting class content"): the Archer's.
 
 def _crippling_shot(c):
     _arrow(c, 2, 16, 14, 4, width=2, head=6.0)
@@ -325,6 +326,8 @@ def _bouncing_shot(c):
     c.rect(7, 6, 3, 3, INK)
     c.rect(13, 18, 3, 3, INK)
 
+
+# Drafts for options that aren't written yet.
 
 def _snare(c):
     _ring(c, 12, 15, 10.0, 2.6, squash=0.55)
@@ -357,9 +360,11 @@ SKILL_GLYPHS = {'attack_hunter_bow': _quick_shot, 'hunters_mark': _hunters_mark,
                 'shoulder_bash': _shoulder_bash, 'aura_of_protection': _aura,
                 'attack_piercer_blade': _thrust, 'triple_thrust': _triple_thrust, 'lunge': _lunge, 'riposte': _riposte,
                 'blade_dance': _blade_dance,
+                'crippling_shot': _crippling_shot, 'bouncing_shot': _bouncing_shot,
                 'unknown': _unknown}
-DRAFT_GLYPHS = {'crippling_shot': _crippling_shot, 'bouncing_shot': _bouncing_shot, 'snare': _snare, 'deadeye': _deadeye,
-                'mastery': _mastery}
+# (skill id, name, the path that teaches it), for the preview sheet.
+MILESTONE_ICONS = (('crippling_shot', 'Crippling Shot', 1), ('bouncing_shot', 'Bouncing Shot', 2))
+DRAFT_GLYPHS = {'snare': _snare, 'deadeye': _deadeye, 'mastery': _mastery}
 
 
 def skill_icons(drafts=False):

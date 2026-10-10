@@ -31,6 +31,9 @@ namespace FiveKingdoms.Core
                     parts.Add($"{shot} at a foe in sight within {Tiles(skill.Range)}.");
                     if (skill.LeavesTrap == TrapKind.Snare) parts.Add("Leaves a snare where the hero stood.");
                     if (skill.Knockback > 0) parts.Add($"Knocks the foe back {Tiles(skill.Knockback)}.");
+                    if (skill.Bounces > 0)
+                        parts.Add($"The arrow then bounces to up to {skill.Bounces} more {(skill.Bounces == 1 ? "foe" : "foes")}, each within " +
+                                  $"{Tiles(skill.BounceRange)} of the last one hit, for {skill.BouncePercent}% of the hit before. It is one arrow, whatever the bow.");
                     break;
                 case SkillEffect.Area:
                     parts.Add($"{hits} on every foe within {Tiles(skill.Radius)} of a foe in sight up to {Tiles(skill.Range)} away.");

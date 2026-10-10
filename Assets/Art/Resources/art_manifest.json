@@ -2340,6 +2340,22 @@
   {
    "bottom": 0,
    "left": 0,
+   "name": "skill_bouncing_shot",
+   "path": "Icons/skill_bouncing_shot",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
+   "name": "skill_crippling_shot",
+   "path": "Icons/skill_crippling_shot",
+   "right": 0,
+   "top": 0
+  },
+  {
+   "bottom": 0,
+   "left": 0,
    "name": "skill_divine_strike",
    "path": "Icons/skill_divine_strike",
    "right": 0,

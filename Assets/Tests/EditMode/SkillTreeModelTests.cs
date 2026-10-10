@@ -107,44 +107,54 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
-        public void TheRealClassesStopAtTierFourAndTheScreenSaysWhy()
+        public void TheRealClassesStopWhereTheirContentDoesAndTheScreenSaysWhy()
         {
-            foreach (var definition in ActorCatalog.StartingParty)
+            // The starting party's classes, and the Monk, whose milestones aren't written at all: it stops at tier 4.
+            foreach (var definition in ActorCatalog.StartingParty.Append(TestHeroes.Monk))
             {
-                var hero = new HeroProgress(definition, 10);
+                var hero = new HeroProgress(definition, 30);
+                HeroBuilds.Spend(hero); // Its own class, as far as it goes.
                 var model = new SkillTreeModel(new[] { hero });
                 var own = model.Class;
-                while (hero.TierOf(own) < 4) model.Activate();
+                int open = own.HighestOpenTier, locked = open + 1, lockedRow = locked / ClassDefinition.MilestoneEvery - 1;
+                Assert.AreEqual(open, hero.TierOf(own), definition.Name);
+                Assert.IsTrue(ClassDefinition.IsMilestone(locked), "a class stops before a milestone that isn't written");
 
                 var info = model.Info;
                 Assert.AreEqual("Locked", info.Action, definition.Name);
                 Assert.IsFalse(info.Enabled);
-                StringAssert.Contains($"Tier 5 is coming soon: the {own.Name} stops at tier 4 for now.", info.Status);
+                StringAssert.Contains($"Tier {locked} is coming soon: the {own.Name} stops at tier {open} for now.", info.Status);
                 model.Activate();
-                Assert.AreEqual(4, hero.TierOf(own), "a locked tier takes no point");
-                Assert.AreEqual(6, hero.PointsFree);
-                Assert.AreEqual(TierState.Reached, model.StateOf(4));
-                Assert.AreEqual(TierState.Locked, model.StateOf(5));
-                Assert.AreEqual(TierState.Locked, model.StateOf(6), "and everything after it");
+                Assert.AreEqual(open, hero.TierOf(own), "a locked tier takes no point");
+                Assert.AreEqual(30 - open, hero.PointsFree);
+                Assert.AreEqual(TierState.Reached, model.StateOf(open));
+                Assert.AreEqual(TierState.Locked, model.StateOf(locked));
+                Assert.AreEqual(TierState.Locked, model.StateOf(locked + 1), "and everything after it");
 
                 for (int row = 0; row < SkillTreeModel.Rows; row++)
                 {
                     for (int path = 0; path < ClassDefinition.PathCount; path++)
                     {
+                        if (row < lockedRow)
+                        {
+                            Assert.AreEqual(path == HeroBuilds.DefaultPath ? OptionState.Picked : OptionState.Passed, model.StateOf(row, path));
+                            Assert.IsNotNull(model.OptionAt(row, path));
+                            continue;
+                        }
                         Assert.AreEqual(OptionState.Locked, model.StateOf(row, path));
                         Assert.IsNull(model.OptionAt(row, path));
                     }
                 }
-                model.Tap(TreeFocus.Option(0, 1));
+                model.Tap(TreeFocus.Option(lockedRow, 1));
                 info = model.Info;
-                Assert.AreEqual("Tier 5", info.Title);
+                Assert.AreEqual($"Tier {locked}", info.Title);
                 Assert.IsTrue(info.Locked);
                 StringAssert.Contains("Coming soon.", info.Body);
                 Assert.IsFalse(info.Enabled);
                 model.Activate();
-                Assert.AreEqual(4, hero.TierOf(own));
+                Assert.AreEqual(open, hero.TierOf(own));
 
-                // The points aren't stuck: they go into any other class, four tiers each for now.
+                // The points aren't stuck: they go into any other class, as far as that one is written.
                 int other = (model.ClassIndex + 1) % model.Classes.Count;
                 model.Show(model.Classes[other]);
                 Assert.AreEqual($"Learn the {model.Classes[other].Name}", model.Info.Action);
@@ -514,7 +524,8 @@ namespace FiveKingdoms.Tests
 
             // Looking around still works.
             model.Tap(TreeFocus.Option(0, 0));
-            Assert.AreEqual("Tier 5", model.Info.Title);
+            Assert.AreEqual(ClassCatalog.Archer.MilestoneAt(5).Options[0].Name, model.Info.Title);
+            Assert.IsFalse(model.Info.Enabled, "nothing is picked during a run");
             model.Move(1, 0);
             Assert.AreEqual(TreeFocus.Option(0, 1), model.Focus);
         }

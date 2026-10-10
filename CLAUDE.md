@@ -59,7 +59,10 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
   saving `01_tree_*.png`, and with `-fk-demo tree -fk-tree -fk-level 10` it only captures the tree for every hero, as
   between runs, and quits)
 
-Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway save), `-fk-save PATH`,
+Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway save), `-fk-build default` with it
+(the heroes' points spent as the balance report spends them, `HeroBuilds`; or builds by hero, e.g.
+`-fk-build "uzuki:hunter;kristela:footwork"`, the others on their default path; without it the points stay free),
+`-fk-save PATH`,
 `-fk-input keyboard|gamepad` (start with that HUD layout, e.g. to screenshot the skill row), `-fk-minimap off|small|large`
 (instead of the player's setting), `-fk-leader kristela|uzuki`
 (someone other than Haiden leads), `-fk-seed N` (the same floors every launch), `-fk-view zoomout|wide|lead` (the

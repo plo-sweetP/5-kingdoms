@@ -184,10 +184,26 @@ namespace FiveKingdoms.Core
     /// </summary>
     public static class ClassCatalog
     {
-        /// <summary>Uzuki's class: ranged physical damage, traps and control. A light, quick class.</summary>
+        /// <summary>
+        /// Uzuki's class: ranged physical damage, traps and control. A light, quick class. Its paths: the Marksman
+        /// (one target), the Hunter (traps and control) and the Trickshot (several targets).
+        /// </summary>
         public static readonly ClassDefinition Archer = new ClassDefinition("archer", "Archer", WeaponFamily.Bow, speedModifier: 5,
             paths: new[] { "Marksman", "Hunter", "Trickshot" },
-            bumps: new[] { new StatBump(StatKind.Atk, 4), new StatBump(StatKind.CritRate, 2) });
+            bumps: new[] { new StatBump(StatKind.Atk, 4), new StatBump(StatKind.CritRate, 2) },
+            milestones: new[]
+            {
+                new ClassMilestone(5,
+                    new ClassOption("archer_deadly_mark", "Deadly Mark", 0,
+                        "Hunter's Mark bites deeper: the marked foe takes 40% more damage from the hunter (was 25%).",
+                        upgrades: SkillCatalog.HuntersMark, change: skill => skill.Power = 40),
+                    new ClassOption("archer_crippling_shot", "Crippling Shot", 1,
+                        "A new skill: a shot that slows what it hits, so its next turn comes later.",
+                        teaches: SkillCatalog.CripplingShot),
+                    new ClassOption("archer_bouncing_shot", "Bouncing Shot", 2,
+                        "A new skill: one arrow that bounces on from foe to foe, a little weaker each time.",
+                        teaches: SkillCatalog.BouncingShot)),
+            });
 
         /// <summary>Haiden's class: a holy warrior in armor, protection and some healing. A heavy, slower class.</summary>
         public static readonly ClassDefinition Paladin = new ClassDefinition("paladin", "Paladin", WeaponFamily.Sword, speedModifier: -5,

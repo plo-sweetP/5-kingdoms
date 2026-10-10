@@ -205,6 +205,17 @@ namespace FiveKingdoms.Dungeon
                     // the heal sparkles, the afterimages, the arrow rain.
                     yield return new WaitForSeconds(skill.IsUltimate ? 0.55f : skill.Effect == SkillEffect.Strike ? 0.24f : skill.Effect == SkillEffect.Heal ? 0.2f : 0.08f);
                     yield return Capture($"{(skill.IsUltimate ? "ultimate" : "skill")}_{skill.Id}_action{actions}");
+                    if (skill.Effect == SkillEffect.Shot && skill.RollTiles == 0 && (skill.Bounces > 0 || skill.DelayPercent > 0))
+                    {
+                        // A shot that does more than hit, a little later: its arrow landing (a slow), then flying on (a bounce).
+                        yield return new WaitForSeconds(0.3f);
+                        yield return Capture($"skill_{skill.Id}_lands_action{actions}");
+                        for (int bounce = 1; bounce <= skill.Bounces; bounce++)
+                        {
+                            yield return new WaitForSeconds(0.05f);
+                            yield return Capture($"skill_{skill.Id}_bounce{bounce}_action{actions}");
+                        }
+                    }
                 }
                 else if (boss != null && boss.Charging && chargeShots < 2)
                 {

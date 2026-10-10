@@ -135,7 +135,7 @@ namespace FiveKingdoms.Dungeon
             if (options.FreshSave) SaveSystem.Delete();
             var roster = ActorCatalog.StartingParty;
             party = options.StartLevel.HasValue
-                ? roster.Select(definition => new HeroProgress(definition, options.StartLevel.Value)).ToArray()
+                ? roster.Select(definition => options.Built(new HeroProgress(definition, options.StartLevel.Value))).ToArray()
                 : SaveSystem.LoadParty(roster);
             // -fk-leader: someone else leads this session (saves don't depend on the order).
             int leader = Array.FindIndex(party, hero => hero.Definition.Id == options.Leader);

@@ -30,7 +30,8 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
   `TuningFrom`; `seeds=600` for a steadier number; `-lead kristela` puts another hero in front); the party straight
   at the boss: `-- -boss <level>`; print a floor: `-- -map <seed>`; trace the autopilot: `-- -trace <seed> <fromAction>`
   (solo) or `-- -party <seed> <fromAction>` (add `map=N` to draw the floor around the leader for N actions, and
-  `key=value` overrides as for `-balance`); how far partners stray from the leader: `-- -spread`
+  `key=value` overrides as for `-balance`; on the boss floor each line lists who moved, struck, wound up and was
+  caught by a slam); how far partners stray from the leader: `-- -spread`
 - Rebuild the art, ~10 s: `python Tools/pixelart/build_art.py` (add `--preview <folder>` for the review sheets:
   heroes, weapons, armor sets, head pieces, rings, animation strips, icons, the Fencer kit's skill icons and
   effects, Divine Strike's holy light; `--only preview` skips writing the art)
@@ -44,7 +45,8 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
 - Autoplay smoke test: `Builds/Windows/5Kingdoms.exe -screen-fullscreen 0 -fk-autoplay <screenshot folder>`
   (add `-fk-floors 1 -fk-level 10` to go straight to the boss; autoplay always uses its own throwaway save, and
   aims each targeted action once the way a player does, saving `aim_*.png`; it saves `door_*.png` the first times
-  the leader holds a doorway or the front rotates, and `rest*.png` when it waits for the party to heal up; with
+  the leader holds a doorway or the front rotates, `rest*.png` when it waits for the party to heal up, and
+  `keep_clear*.png` when a hero waits out of a boss's wind-up; with
   `-fk-demo view` it stages foes five tiles up and down a
   corridor, then one three tiles away, and captures how the camera shows them instead)
 
@@ -53,7 +55,9 @@ Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway 
 (instead of the player's setting), `-fk-leader kristela|uzuki`
 (someone other than Haiden leads), `-fk-seed N` (the same floors every launch), `-fk-view zoomout|wide|lead` (the
 camera while aiming: `zoomout` is the game's behavior, `wide` is always one zoom step out and is kept for a player
-setting later, `lead` slides to the targets however far and is for debugging only), and `-fk-look` to try other looks, e.g.
+setting later, `lead` slides to the targets however far and is for debugging only), `-fk-zoom near|far` (the view,
+instead of the player's setting: Near is the zoom the rule picks, Far one whole step further out where the screen
+has one; the log's "View: W x H at zoom N, T tiles high (Near)" line says which is on), and `-fk-look` to try other looks, e.g.
 `-fk-look "haiden=great_sword,mage_robe;uzuki=mage_staff,bare;kristela=crown;all=hawks_eye"`: per hero or `all`, any
 of a weapon, an armor set, `bare` (no head piece), a cosmetic head piece (`hair_bow`, `crown`, `headband`) and a ring
 set; the ids are in `art_manifest.json`. PlayMode tests set `DungeonController.Overrides` instead. The real save is
@@ -73,7 +77,8 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
 - Balance numbers live in `DungeonRunConfig`, `ActorCatalog`, `SkillCatalog`, `CombatRules` (damage, the ranged cuts,
   the ultimate's charge rates) and `EnemyBrain` (boss moves); check `-balance` after changing them (it reports fresh
   runs, ultimates per fight, the heroes that fall before the boss, the HP they bring into a fight, what each hero
-  does with its turns in fights, and a campaign with levels kept between runs). The targets: about 2-5% of fresh level-1 runs win, and with levels kept
+  does with its turns in fights, the boss's slams that hit a hero and how that hero stood, and a campaign with
+  levels kept between runs). The targets: about 2-5% of fresh level-1 runs win, and with levels kept
   the first clear comes around the third attempt at Lv 9-10. The autopilot and the partners' AI (`HeroTactics`) are
   the balance report's players, so a new skill or item needs AI rules too.
 - There is no mana (PROGRESSION.md, "Skill resources"): skills sit out the hero's next turn, each hero has an
@@ -116,8 +121,8 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   hidden and the leader's buttons are greyed out: only `SwitchLeader` gets past `DungeonController.ChooseCommand`.
   The pause menu (the Pause button, Esc, the gamepad's Start; "Go down" is R3) stops everything, Auto included; its
   Exit ends the run as `RunState.Left` (`DungeonRun.Leave`), and its Reset level (testing) writes level 1 to the
-  save: the player's own action, while tests and tools keep to their own save file. Its settings are kept in
-  PlayerPrefs, read and written only with the real save (`UsesRealSave`). The hero stats page writes each skill's
+  save: the player's own action, while tests and tools keep to their own save file. Its settings (View: Near / Far,
+  and the minimap) are kept in PlayerPrefs, read and written only with the real save (`UsesRealSave`). The hero stats page writes each skill's
   description from the hero's own copy (`SkillText.Describe`): a new `SkillEffect` or skill field needs its
   sentence there.
 - The minimap (HUD.md, "Minimap"; `Minimap`, `MinimapFogTests`) only draws what the rules say: explored tiles are
@@ -148,9 +153,20 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   with no heal of its own goes and stands next to the one that can heal it (`TrySeekHealer`), and the autopilot's
   leader waits for all of that (`HeroCommand.Rest`, `HeroTactics.TryRest`), for at most `RestPatience` turns in a row
   without a heal landing on anyone (`Actor.RestedTurns`). The player's own leader is never made to wait.
+- Footing in a boss fight (PROGRESSION.md, "Footing in a boss fight"; AI only; `FootingTests`): a way out of a
+  slam is `HeroTactics.HasWayOut` (a free tile beside the hero out of the slam's reach that no other hero needs as
+  its only one). Both brains pass their choice through `HeroTactics.KeepClear`: no hero's AI walks, dashes or
+  lunges into a slam that is winding up (`HeroCommand.KeepClear`), so a new way of moving needs its case in
+  `HeroTactics.Destination`. `TryDodge` steps out on the last turn before the slam (a hero that is up again first
+  strikes once more), leaves an ally its only way out, and with no way out uses what the hero has
+  (`TryWeatherTheSlam`: a dash, a swap with an ally that can take the blow, `DungeonRun.IsShelterSwap`, never the
+  leader; a guard, Riposte, the aura). A melee hero next to a boss on a tile with no way out moves over on a
+  quiet turn (`TryFindFooting`). The slam says how each hero it catches stood (`SlamCaughtEvent`, from
+  `Actor.Footing`), which is what `-balance` counts. The archer is left out on purpose: one that keeps off the
+  walls beats the Troll alone (PROGRESSION.md).
 - What the party's AI is up to is said by the rules, never guessed by the view: `HeroWaitedEvent` (it holds a door,
-  or rests; with the turns in a row so far) and `SwappedEvent.Reason` (`Rotate`, `Safety`, `Engage`, `Regroup`,
-  `Passing`). `DungeonView.ShowWait / ShowSwap` turn them into a word over the hero and a line in the log, so nobody
+  rests, or keeps clear of a wind-up; with the turns in a row so far) and `SwappedEvent.Reason` (`Rotate`,
+  `Safety`, `Shelter`, `Engage`, `Regroup`, `Passing`). `DungeonView.ShowWait / ShowSwap` turn them into a word over the hero and a line in the log, so nobody
   thinks a hero is stuck. A new reason to stand still needs its event and its line.
 - Shots reach any foe within range that `DungeonMap.HasLineOfSight` sees (walls and wall corners block, actors
   don't; it's symmetric). Use `DungeonRun.InShotReach / FoesInSight / ShotTargetAt`, not line walks.
@@ -169,8 +185,12 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
 - Animations never set the pace: `ActorView.Play(name, impactAfter)` times an attack so its impact frame lands when
   the turn's hit does, and nothing waits for an animation to finish. A sprite taller than about 1.6 tiles turns
   see-through while an actor stands behind it (`DungeonView.UpdateSeeThrough`).
+- The view (HUD.md, "The view on the tablet"; Peter, 2026-10-10): Near is the whole zoom nearest to 11 tiles high
+  (`PixelCamera.NearZoomFor`), Far (`PixelCamera.Far`, a choice in Settings) is one whole step further out, and a
+  screen that already plays at 1x has no Far (`FarAvailable`: the choice is greyed out). The HUD keeps its size
+  in both. Check anything drawn in the dungeon in both views, on the phone's and the tablet's shape.
 - The camera while aiming (`PixelCamera.Frame`, Peter's choice on 2026-10-04): every target stays in view and out
-  from under the HUD. The camera moves no further than it must; when that would slide the party out of the middle
+  from under the HUD. It works from the chosen view: from 1x there is no step out left, so it only slides. The camera moves no further than it must; when that would slide the party out of the middle
   third of the screen, or the targets don't fit, it steps out one whole zoom level until the aim ends. Never slide
   the party toward the edge of the screen, and never zoom by a fraction.
 - Combat turn order lives in `Core/Run/Timeline.cs` (Honkai Star Rail-style action value). Game time is exact `AvTime`

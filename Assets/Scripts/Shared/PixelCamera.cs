@@ -25,8 +25,10 @@ namespace FiveKingdoms
 
     /// <summary>
     /// Orthographic camera that keeps pixel art crisp on any screen: it picks the whole-number zoom that shows closest
-    /// to <see cref="TilesHigh"/> tiles vertically and snaps to screen pixels. It follows a target smoothly, can shake,
-    /// and while the player aims it frames the targets so that none of them is off screen.
+    /// to <see cref="TilesHigh"/> tiles vertically (the Near view), or one whole step further out when the player
+    /// chose the Far view (<see cref="Far"/>; docs/design/HUD.md, "The view on the tablet"), and snaps to screen
+    /// pixels. It follows a target smoothly, can shake, and while the player aims it frames the targets so that none
+    /// of them is off screen.
     /// </summary>
     [RequireComponent(typeof(Camera))]
     public sealed class PixelCamera : MonoBehaviour
@@ -47,8 +49,15 @@ namespace FiveKingdoms
         public Transform Target;
         public float TilesHigh = 11f;
         public float FollowSharpness = 14f;
-        /// <summary>The game's view behavior; `-fk-view` sets another one (later a player setting).</summary>
+        /// <summary>The game's view behavior while aiming; `-fk-view` sets another one (for debugging).</summary>
         public ViewMode Mode = ViewMode.ZoomOut;
+
+        /// <summary>
+        /// The player's view (Settings, "View"): Near is the zoom the rule picks, Far is one whole step further out.
+        /// On a screen where the rule already picks 1x there is no Far view (<see cref="FarAvailable"/>) and this
+        /// changes nothing. The camera while aiming works from the chosen view.
+        /// </summary>
+        public bool Far;
 
         /// <summary>
         /// What the HUD covers at the screen's edges, as shares of the screen's height (the HUD's size follows the
@@ -82,11 +91,15 @@ namespace FiveKingdoms
         int zoom = 1;
         float worldPerScreenPixel = 1f;
         ViewMode appliedMode;
+        bool appliedFar;
         Vector3? framed;      // Where the camera looks while aiming, instead of at the target.
         bool framedWide;      // The aim's targets need the zoomed-out view.
 
         /// <summary>Screen pixels per art pixel right now (a whole number).</summary>
         public int Zoom => zoom;
+
+        /// <summary>Whether this screen has a Far view: only where the Near view plays above 1x.</summary>
+        public bool FarAvailable => HasFarView(Screen.height, TilesHigh);
 
         void Awake()
         {
@@ -128,13 +141,22 @@ namespace FiveKingdoms
 
         /// <summary>
         /// The whole-number zoom a screen plays at: the one that shows closest to <paramref name="tilesHigh"/> tiles top
-        /// to bottom (2x on a 1080p phone), one step further out in <see cref="ViewMode.Wide"/>.
+        /// to bottom (2x on a 1080p phone), one step further out in the Far view (<paramref name="far"/>), and one
+        /// more in <see cref="ViewMode.Wide"/>. Never below 1x, never a fraction.
         /// </summary>
-        public static int BaseZoomFor(ViewMode mode, int screenHeight, float tilesHigh)
+        public static int BaseZoomFor(ViewMode mode, int screenHeight, float tilesHigh, bool far = false)
         {
-            int zoom = Mathf.Max(1, Mathf.RoundToInt(screenHeight / (SpriteLibrary.PixelsPerUnit * tilesHigh)));
+            int zoom = NearZoomFor(screenHeight, tilesHigh);
+            if (far && zoom > 1) zoom--;
             return mode == ViewMode.Wide && zoom > 1 ? zoom - 1 : zoom;
         }
+
+        /// <summary>The zoom of the Near view: the whole number that shows closest to <paramref name="tilesHigh"/> tiles top to bottom.</summary>
+        public static int NearZoomFor(int screenHeight, float tilesHigh) =>
+            Mathf.Max(1, Mathf.RoundToInt(screenHeight / (SpriteLibrary.PixelsPerUnit * tilesHigh)));
+
+        /// <summary>Whether a screen has a Far view at all: one whole step out of a Near view above 1x.</summary>
+        public static bool HasFarView(int screenHeight, float tilesHigh) => NearZoomFor(screenHeight, tilesHigh) > 1;
 
         /// <summary>
         /// The framing rule on its own, for any screen (the tests check it for the phone, the tablet and small
@@ -191,7 +213,7 @@ namespace FiveKingdoms
 
         void LateUpdate()
         {
-            if (Screen.height != screenHeight || Mode != appliedMode) UpdateZoom();
+            if (Screen.height != screenHeight || Mode != appliedMode || Far != appliedFar) UpdateZoom();
             var goal = framed ?? (Target != null ? Target.position : focus);
             focus = Vector3.Lerp(focus, goal, 1f - Mathf.Exp(-FollowSharpness * Time.deltaTime));
             Apply();
@@ -201,16 +223,26 @@ namespace FiveKingdoms
         {
             screenHeight = Screen.height;
             appliedMode = Mode;
+            bool farBefore = appliedFar;
+            appliedFar = Far;
             int before = baseZoom;
-            baseZoom = BaseZoomFor(Mode, screenHeight, TilesHigh);
+            baseZoom = BaseZoomFor(Mode, screenHeight, TilesHigh, Far);
             // In the player's log: what a device really plays at (a tablet's view is judged from this, HUD.md).
-            if (baseZoom != before || appliedHeightLogged != screenHeight)
+            if (baseZoom != before || appliedHeightLogged != screenHeight || Far != farBefore)
             {
                 appliedHeightLogged = screenHeight;
-                Debug.Log($"View: {Screen.width} x {screenHeight} at zoom {baseZoom}, " +
-                          $"{screenHeight / (float)(SpriteLibrary.PixelsPerUnit * baseZoom):0.0} tiles high.");
+                Debug.Log(DescribeView(Screen.width, screenHeight, TilesHigh, Mode, Far));
             }
             SetZoom(framedWide && baseZoom > 1 ? baseZoom - 1 : baseZoom);
+        }
+
+        /// <summary>The log's line about the view: "View: W x H at zoom N, T tiles high (Near)", or Far, or that the screen has one view only.</summary>
+        public static string DescribeView(int screenWidth, int screenHeight, float tilesHigh, ViewMode mode, bool far)
+        {
+            int zoom = BaseZoomFor(mode, screenHeight, tilesHigh, far);
+            string view = !HasFarView(screenHeight, tilesHigh) ? "Near, the only view on this screen" : far ? "Far" : "Near";
+            return $"View: {screenWidth} x {screenHeight} at zoom {zoom}, " +
+                   $"{screenHeight / (float)(SpriteLibrary.PixelsPerUnit * zoom):0.0} tiles high ({view}).";
         }
 
         void SetZoom(int value)

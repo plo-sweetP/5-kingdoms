@@ -170,5 +170,82 @@ namespace FiveKingdoms.Tests
             Assert.AreEqual(2, lead.Zoom, "Lead stays at 2x");
             Assert.AreEqual(Hero.y + 2.5f, lead.Position.y, 0.001f, "and slides toward the marked target");
         }
+
+        // ---- The view: Near and Far (docs/design/HUD.md, "The view on the tablet") ----
+
+        /// <summary>The same aim from the Far view.</summary>
+        static PixelCamera.Framing AimFromFar(Vector2Int screen, params Vector2[] targets)
+        {
+            var points = Points(targets);
+            int baseZoom = PixelCamera.BaseZoomFor(ViewMode.ZoomOut, screen.y, TilesHigh, far: true);
+            return PixelCamera.FrameFor(ViewMode.ZoomOut, screen.y, screen.x / (float)screen.y, baseZoom, points, points[1]);
+        }
+
+        [Test]
+        public void TheFarViewIsOneWholeStepOutWhereTheScreenHasOne()
+        {
+            Assert.AreEqual(1, PixelCamera.BaseZoomFor(ViewMode.ZoomOut, TabS8Plus.y, TilesHigh, far: true), "the tablet: 2x Near, 1x Far");
+            Assert.AreEqual(1, PixelCamera.BaseZoomFor(ViewMode.ZoomOut, Phone.y, TilesHigh, far: true), "the phone too");
+            Assert.AreEqual(2, PixelCamera.BaseZoomFor(ViewMode.ZoomOut, 2160, TilesHigh, far: true), "a 4K screen: 3x Near, 2x Far");
+            Assert.AreEqual(1, PixelCamera.BaseZoomFor(ViewMode.ZoomOut, 900, TilesHigh, far: true), "never below 1x");
+            Assert.IsTrue(PixelCamera.HasFarView(TabS8Plus.y, TilesHigh));
+            Assert.IsTrue(PixelCamera.HasFarView(Phone.y, TilesHigh));
+            Assert.IsFalse(PixelCamera.HasFarView(900, TilesHigh), "at 1x there is no step further out: the choice is greyed out");
+            Assert.IsFalse(PixelCamera.HasFarView(720, TilesHigh));
+        }
+
+        [Test]
+        public void FromAFarViewAt1xTheCameraOnlySlides()
+        {
+            // Five tiles up and five down fit the tablet's Far view as it stands.
+            var both = new[] { new Vector2(0f, 5f), new Vector2(0f, -5f) };
+            var framing = AimFromFar(TabS8Plus, both);
+            Assert.AreEqual(1, framing.Zoom);
+            AssertStaysOnHero(framing, "nothing to move for");
+
+            // A target far to the side: no step out is left, so it slides, and no further than it must.
+            var side = new[] { new Vector2(17f, 0f) };
+            var slid = AimFromFar(TabS8Plus, side);
+            Assert.AreEqual(1, slid.Zoom, "never below 1x, never a fraction");
+            AssertAllOnScreen(slid, TabS8Plus, side);
+            Assert.Greater(slid.Position.x, Hero.x);
+            Assert.Less(slid.Position.x, Hero.x + 17f);
+
+            var phone = AimFromFar(Phone, new Vector2(0f, 5f));
+            Assert.AreEqual(1, phone.Zoom);
+            AssertAllOnScreen(phone, Phone, new Vector2(0f, 5f));
+        }
+
+        [Test]
+        public void FromAFarViewAbove1xTheCameraStillStepsOutWhileAiming()
+        {
+            var screen = new Vector2Int(3840, 2160);
+            var near = AimFromFar(screen, new Vector2(0f, 3f));
+            Assert.AreEqual(2, near.Zoom, "close targets: the Far view as it is");
+            var far = AimFromFar(screen, new Vector2(0f, 9f), new Vector2(0f, -9f));
+            Assert.AreEqual(1, far.Zoom, "as from Near: one whole step out when they don't fit");
+            AssertAllOnScreen(far, screen, new Vector2(0f, 9f), new Vector2(0f, -9f));
+        }
+
+        [Test]
+        public void TheLogSaysWhichViewIsOn()
+        {
+            Assert.AreEqual("View: 2800 x 1752 at zoom 2, 13.7 tiles high (Near).",
+                PixelCamera.DescribeView(2800, 1752, TilesHigh, ViewMode.ZoomOut, far: false));
+            Assert.AreEqual("View: 2800 x 1752 at zoom 1, 27.4 tiles high (Far).",
+                PixelCamera.DescribeView(2800, 1752, TilesHigh, ViewMode.ZoomOut, far: true));
+            Assert.AreEqual("View: 1440 x 900 at zoom 1, 14.1 tiles high (Near, the only view on this screen).",
+                PixelCamera.DescribeView(1440, 900, TilesHigh, ViewMode.ZoomOut, far: true));
+        }
+
+        [Test]
+        public void TheLaunchFlagPicksTheView()
+        {
+            Assert.AreEqual(true, FiveKingdoms.Dungeon.LaunchOptions.FarViewArg("far"));
+            Assert.AreEqual(true, FiveKingdoms.Dungeon.LaunchOptions.FarViewArg("Far"));
+            Assert.AreEqual(false, FiveKingdoms.Dungeon.LaunchOptions.FarViewArg("near"));
+            Assert.IsNull(FiveKingdoms.Dungeon.LaunchOptions.FarViewArg(null), "no flag: the player's setting");
+            Assert.IsNull(FiveKingdoms.Dungeon.LaunchOptions.FarViewArg("wide"));
+        }
     }
 }

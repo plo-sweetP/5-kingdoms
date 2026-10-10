@@ -57,6 +57,9 @@ namespace FiveKingdoms.Dungeon
         Vector2Int menuStick;
 
         /// <summary>The settings page's choice for the camera while aiming, kept on this device (not in the save).</summary>
+        const string FarViewKey = "fk.view.far";
+
+        /// <summary>The setting Far replaced ("Camera while aiming: always wide", until 2026-10-10): read once as its first value.</summary>
         const string WideViewKey = "fk.view.wide";
         const string MinimapKey = "fk.minimap";
         MinimapSize minimap = MinimapSize.Small;
@@ -150,11 +153,11 @@ namespace FiveKingdoms.Dungeon
             hud.PauseMenu.RestartConfirmed += RestartRun;
             hud.PauseMenu.ExitConfirmed += LeaveRun;
             hud.PauseMenu.ResetLevelConfirmed += ResetLevels;
-            hud.PauseMenu.WideViewChanged += SetWideView;
+            hud.PauseMenu.ViewChanged += SetFarView;
             hud.PauseMenu.MinimapChanged += SetMinimap;
             minimap = options.Minimap ?? (UsesRealSave ? (MinimapSize)Mathf.Clamp(PlayerPrefs.GetInt(MinimapKey, (int)MinimapSize.Small), 0, 2) : MinimapSize.Small);
             hud.SetMinimap(minimap);
-            if (!options.View.HasValue && UsesRealSave && PlayerPrefs.GetInt(WideViewKey, 0) == 1) pixelCamera.Mode = ViewMode.Wide;
+            pixelCamera.Far = options.FarView ?? (UsesRealSave && PlayerPrefs.GetInt(FarViewKey, PlayerPrefs.GetInt(WideViewKey, 0)) == 1);
             hud.TacticCycleRequested += CycleTactic;
             if (options.StartInputMode.HasValue)
             {
@@ -458,7 +461,7 @@ namespace FiveKingdoms.Dungeon
             paused = on;
             if (on) EndAiming();
             hud.SetPaused(on);
-            if (on) hud.PauseMenu.Open(run, party, pixelCamera.Mode == ViewMode.Wide, minimap);
+            if (on) hud.PauseMenu.Open(run, party, pixelCamera.Far, pixelCamera.FarAvailable, minimap);
             else hud.PauseMenu.Close();
         }
 
@@ -502,11 +505,12 @@ namespace FiveKingdoms.Dungeon
             PlayerPrefs.Save();
         }
 
-        void SetWideView(bool wide)
+        /// <summary>Settings, "View": Near or Far. It applies at once (the camera picks it up on its next frame).</summary>
+        void SetFarView(bool far)
         {
-            pixelCamera.Mode = wide ? ViewMode.Wide : ViewMode.ZoomOut;
+            pixelCamera.Far = far;
             if (!UsesRealSave) return;
-            PlayerPrefs.SetInt(WideViewKey, wide ? 1 : 0);
+            PlayerPrefs.SetInt(FarViewKey, far ? 1 : 0);
             PlayerPrefs.Save();
         }
 

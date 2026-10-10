@@ -38,6 +38,12 @@ namespace FiveKingdoms.Dungeon
         /// <summary>How the camera keeps targets in view: lead (default), zoomout or wide (ART.md, "View size").</summary>
         public ViewMode? View;
 
+        /// <summary>
+        /// The view instead of the player's setting (HUD.md, "The view on the tablet"): false for Near, true for Far
+        /// (one whole zoom step further out, where the screen has one).
+        /// </summary>
+        public bool? FarView;
+
         /// <summary>The run's seed, for the same floors every launch (comparing screenshots, chasing a bug).</summary>
         public int? Seed;
 
@@ -46,9 +52,15 @@ namespace FiveKingdoms.Dungeon
 
         /// <summary>
         /// Flags: -fk-floors N, -fk-level N, -fk-save PATH, -fk-input touch|keyboard|gamepad, -fk-leader ID,
-        /// -fk-look LOOKS, -fk-view lead|zoomout|wide, -fk-seed N, -fk-minimap off|small|large, and -fk-autoplay FOLDER (which also uses a fresh save
-        /// inside FOLDER, so smoke tests never touch the player's save).
+        /// -fk-look LOOKS, -fk-view lead|zoomout|wide, -fk-zoom near|far, -fk-seed N, -fk-minimap off|small|large, and
+        /// -fk-autoplay FOLDER (which also uses a fresh save inside FOLDER, so smoke tests never touch the player's save).
         /// </summary>
+        /// <summary>"-fk-zoom near" or "-fk-zoom far"; anything else leaves the view to the player's setting.</summary>
+        public static bool? FarViewArg(string value) =>
+            string.Equals(value, "far", StringComparison.OrdinalIgnoreCase) ? true
+            : string.Equals(value, "near", StringComparison.OrdinalIgnoreCase) ? false
+            : (bool?)null;
+
         public static LaunchOptions FromCommandLine()
         {
             var args = Environment.GetCommandLineArgs();
@@ -61,6 +73,7 @@ namespace FiveKingdoms.Dungeon
                 Leader = StringArg(args, "-fk-leader")?.ToLowerInvariant(),
                 Looks = StringArg(args, "-fk-look"),
                 View = Enum.TryParse(StringArg(args, "-fk-view"), ignoreCase: true, out ViewMode view) ? view : (ViewMode?)null,
+                FarView = FarViewArg(StringArg(args, "-fk-zoom")),
                 Seed = IntArg(args, "-fk-seed"),
                 Minimap = Enum.TryParse(StringArg(args, "-fk-minimap"), ignoreCase: true, out MinimapSize minimap) ? minimap : (MinimapSize?)null,
             };

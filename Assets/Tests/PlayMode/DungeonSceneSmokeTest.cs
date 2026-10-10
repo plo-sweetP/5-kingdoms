@@ -184,6 +184,56 @@ namespace FiveKingdoms.Tests
         }
 
         [UnityTest]
+        public IEnumerator TheViewSettingSwitchesBetweenNearAndFarAtOnce()
+        {
+            DungeonController.Overrides = new LaunchOptions { SavePath = savePath, FreshSave = true };
+            yield return LoadDungeon();
+            var controller = Object.FindFirstObjectByType<DungeonController>();
+            var menu = Object.FindFirstObjectByType<DungeonHud>().PauseMenu;
+            var view = Object.FindFirstObjectByType<PixelCamera>();
+            Assert.IsFalse(view.Far, "Near is the default");
+
+            // A screen with two views, whatever window the tests run in: Near at 2x, Far at 1x.
+            view.TilesHigh = Screen.height / (SpriteLibrary.PixelsPerUnit * 2f);
+            Assert.IsTrue(view.FarAvailable);
+
+            controller.Paused = true;
+            menu.Move(2);       // Settings.
+            menu.Activate();
+            menu.Activate();    // View is its first choice: Far.
+            Assert.IsTrue(view.Far);
+            yield return null;
+            Assert.AreEqual(1, view.Zoom, "it applies at once, behind the menu");
+            menu.Activate();    // And back to Near.
+            Assert.IsFalse(view.Far);
+            yield return null;
+            Assert.AreEqual(2, view.Zoom);
+            controller.Paused = false;
+
+            // A screen that already plays at 1x has no step further out: the choice is greyed out and does nothing.
+            view.TilesHigh = Screen.height / SpriteLibrary.PixelsPerUnit;
+            Assert.IsFalse(view.FarAvailable);
+            controller.Paused = true;
+            menu.Move(2);
+            menu.Activate();
+            menu.Activate();
+            Assert.IsFalse(view.Far);
+            controller.Paused = false;
+            Assert.IsFalse(controller.Paused);
+        }
+
+        [UnityTest]
+        public IEnumerator TheLaunchFlagStartsInTheFarView()
+        {
+            DungeonController.Overrides = new LaunchOptions { SavePath = savePath, FreshSave = true, FarView = true };
+            yield return LoadDungeon();
+            var view = Object.FindFirstObjectByType<PixelCamera>();
+            Assert.IsTrue(view.Far);
+            yield return null;
+            Assert.AreEqual(PixelCamera.BaseZoomFor(view.Mode, Screen.height, view.TilesHigh, far: true), view.Zoom);
+        }
+
+        [UnityTest]
         public IEnumerator TheWeaponAttackIsAimedInTwoStepsAndATapOnAnEnemyAttacksIt()
         {
             DungeonController.Overrides = new LaunchOptions { SavePath = savePath, FreshSave = true };

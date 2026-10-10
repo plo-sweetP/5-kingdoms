@@ -27,8 +27,8 @@ namespace FiveKingdoms.UI
         public event Action ExitConfirmed;
         public event Action ResetLevelConfirmed;
 
-        /// <summary>The camera while aiming was switched: true for always wide, false to step out only when needed (ART.md's options C and B).</summary>
-        public event Action<bool> WideViewChanged;
+        /// <summary>The view was switched (HUD.md, "The view on the tablet"): true for Far, false for Near.</summary>
+        public event Action<bool> ViewChanged;
 
         /// <summary>The minimap was switched to another size, or off.</summary>
         public event Action<MinimapSize> MinimapChanged;
@@ -47,7 +47,7 @@ namespace FiveKingdoms.UI
         DungeonRun run;
         IReadOnlyList<HeroProgress> party;
         int shownHero;
-        bool wideView;
+        bool farView, farAvailable;
 
         public bool IsOpen => gameObject.activeSelf;
 
@@ -65,12 +65,16 @@ namespace FiveKingdoms.UI
             return menu;
         }
 
-        /// <summary>Opens on the main page. <paramref name="party"/>: the heroes' saved progress, for their classes.</summary>
-        public void Open(DungeonRun run, IReadOnlyList<HeroProgress> party, bool wideView, MinimapSize minimap)
+        /// <summary>
+        /// Opens on the main page. <paramref name="party"/>: the heroes' saved progress, for their classes.
+        /// <paramref name="farAvailable"/>: whether this screen has a Far view; without one the choice is greyed out.
+        /// </summary>
+        public void Open(DungeonRun run, IReadOnlyList<HeroProgress> party, bool farView, bool farAvailable, MinimapSize minimap)
         {
             this.run = run;
             this.party = party;
-            this.wideView = wideView;
+            this.farView = farView;
+            this.farAvailable = farAvailable;
             this.minimap = minimap;
             shownHero = 0;
             for (int i = 0; i < run.Party.Count; i++)
@@ -191,13 +195,13 @@ namespace FiveKingdoms.UI
         void BuildSettings(Transform root)
         {
             var panel = NewPage(root, Page.Settings, new Vector2(1100f, 650f), "Settings");
-            var label = UiFactory.CreateText("ViewLabel", panel, "Camera while aiming", 32, TextAnchor.MiddleLeft, DungeonHud.TextColor);
+            var label = UiFactory.CreateText("ViewLabel", panel, "View", 32, TextAnchor.MiddleLeft, DungeonHud.TextColor);
             UiFactory.Place(label.rectTransform, new Vector2(0f, 1f), new Vector2(100f, -230f), new Vector2(420f, 60f), new Vector2(0f, 0.5f));
             viewButton = AddButton(Page.Settings, panel, "", new Vector2(1f, 1f), new Vector2(-330f, -230f), new Vector2(460f, 90f), "button_dark", () =>
             {
-                wideView = !wideView;
+                farView = !farView;
                 RefreshSettings();
-                WideViewChanged?.Invoke(wideView);
+                ViewChanged?.Invoke(farView);
             });
             var mapLabel = UiFactory.CreateText("MinimapLabel", panel, "Minimap", 32, TextAnchor.MiddleLeft, DungeonHud.TextColor);
             UiFactory.Place(mapLabel.rectTransform, new Vector2(0f, 1f), new Vector2(100f, -340f), new Vector2(420f, 60f), new Vector2(0f, 0.5f));
@@ -212,7 +216,9 @@ namespace FiveKingdoms.UI
 
         void RefreshSettings()
         {
-            viewButton.SetLabel(wideView ? "Always wide" : "Steps out when needed");
+            // Where the screen already plays at 1x there is no step further out: Near, greyed out.
+            viewButton.Interactable = farAvailable;
+            viewButton.SetLabel(farView && farAvailable ? "Far" : "Near");
             minimapButton.SetLabel(minimap.ToString());
         }
 

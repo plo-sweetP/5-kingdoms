@@ -216,7 +216,7 @@ From PROGRESSION.md; answers the old open question on stamina and timers.
 | 1f | Party of 3 (**first playtest checkpoint**): Uzuki (Archer, Hunter Bow), Haiden (Paladin, Long Sword), Kristela (Monk, Gauntlets) with the approved kits and ultimates; no mana; AI partners with follow/attack/hold tactics and battle formation, switching control, corridor follow and swap, everyone on the AV timeline; traps, statuses, packs; shots at anything in sight, deliberate two-step attacks, stuns as timeline delays | **Done** (parts 1 and 2, and Peter's answers at the first playtest checkpoint) |
 | A1 | Art pass 1 ([docs/design/ART.md](docs/design/ART.md)): the current game on the Tiny Swords art (heroes built from layers with their own faces and hair under the helmets, equipment looks for GEAR.md's weapons and armor sets, ring auras, skill animations, monsters from the Enemy Pack, the outdoor dungeon, the HUD) | **Done** (2026-10-04; new bosses and creatures come with row 7) |
 | C1 | Corridor tactics for the party's AI (PROGRESSION.md, "Doorways and corridors"): hold the door, rotate the front, enter a room when it's safe or there's room; then a balance re-check | **Done** (2026-10-04; the Troll went from 16000 to 24000 HP) |
-| 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; Kristela's Fencer kit (she was a Monk until 2026-10-05); tiers 5 and 10 of Archer, Paladin and Fencer | **In progress.** Done and on main (2026-10-05): the three follow-ups, the classes core (rules, the hero's own kit and loadout, save version 2, free respec), Kristela's Fencer kit with the Piercer Blade, and the class stat bumps (the Troll went from 24000 to 25000 HP). Done on 2026-10-10: the skill-tree screen (to change a build between runs from the end panel, to look at during a run from the hero stats page). **Left:** tiers 5 and 10, the balance with default builds ("Progress" below says where each stands) |
+| 1g-1 | Classes core, part 1 (PROGRESSION.md, "Building 1g"): three small follow-ups from the playtest (heroes heal between fights, a note when a hero waits at a door, the test sandbox moved to an ordinary folder); points and tiers 1-25, stat bumps, milestones with three options, per-hero kits and loadout, save migration, free respec; the skill-tree screen of spheres; Kristela's Fencer kit (she was a Monk until 2026-10-05); tiers 5 and 10 of Archer, Paladin and Fencer | **In progress.** Done and on main (2026-10-05): the three follow-ups, the classes core (rules, the hero's own kit and loadout, save version 2, free respec), Kristela's Fencer kit with the Piercer Blade, and the class stat bumps (the Troll went from 24000 to 25000 HP). Done on 2026-10-10: the skill-tree screen (to change a build between runs from the end panel, to look at during a run from the hero stats page). Also on 2026-10-10: default builds for the balance report, and tier 5 of the Archer, the Paladin and the Fencer, on target without a re-tune. **Left:** tier 5's screenshots and APK for Peter, tier 10 ("Progress" below says where each stands) |
 | 1g-1b | Attached skills (PROGRESSION.md, "Attached skills"): a skill a hero knows but doesn't carry is attached to one of the three active skills and buffs it, so no learned skill is dead, skills from other classes included | After tiers 5 and 10 (Peter, 2026-10-10) |
 | 1g-2 | Classes core, part 2: tiers 15, 20 and 25 of the three classes (alternate ultimates, masteries), relearning after a respec from level 20, prerequisites and kingdom locks | |
 | P1 | Playtest pass 1 ([docs/design/HUD.md](docs/design/HUD.md)), Peter's notes from the tablet: the top-right buttons in one row, a minimap with fog, the skills in a row along the bottom, a pause menu (with Reset level for testing), Auto hides the D-pad and greys the buttons out, holy light on Divine Strike, footing in the boss fight for the party's AI | After 1g-1: both change the HUD (listed here, a row down, so the 1g-1 row can be edited without a conflict). **Started 2026-10-05:** built so far: the top-right row with the Pause button, the skill row along the bottom, Auto's look and rule, the pause menu (Resume, Restart, Settings, Hero stats, Exit, Reset level for testing), the minimap with its fog (explored tiles in Core; small, large or off in Settings; the party in orange), the guard of Kristela's blade on its outer side only, and holy light on Divine Strike. The skill row along the bottom was built and taken back: Peter chose the arc again (1ae0d46). **Part two, 2026-10-10:** footing in the boss fight (the party's AI keeps out of the Troll's wind-up and stands where it has a way out; the Troll has 30000 HP), and View: Near / Far in Settings. Built later that day (8ab5327): Far is the tablet's default, and the numbers and words over the actors scale with the view. Left: the APK onto the tablet (no device was connected). The archer's footing waits for the Troll's leap (decided 2026-10-10: every boss gets a move that reaches a hero who keeps his distance; built with the individual stages). Decided by Peter on 2026-10-10: the wind-up rule stays, and the Troll keeps its 30000 HP for now. See "Progress" |
@@ -758,6 +758,82 @@ to the class list, the same day).
   3. The APK onto the tablet, and a look there at what the device reports (the log's "Screen:" line).
   4. Screens narrower than 16:10 (a 4:3 tablet) need a narrower layout of the screen; a list of more than four
      skills for a slot pages with "more"; the class list has room for about five classes.
+
+**Default builds and tier 5 of the three classes (2026-10-10, roadmap row 1g-1, steps 7 and 8 begun).**
+One build session; it stopped at its context limit with tier 5 written and measured for all three classes
+(PROGRESSION.md, "Tier 5 as built", has what was settled where the drafts left room). Every number below was
+measured in that session.
+- **Default builds** (`HeroBuilds`). The balance report's heroes spend their points the way a player would: their
+  own class as far as it is written, one path per milestone, by default the Guardian (Haiden), the Duelist
+  (Kristela) and the Marksman (Uzuki). The campaign spends each run's new points before the next. A level-1 hero
+  has one point and it is in tier 1, so class content can never move the "fresh level-1" number: it shows in the
+  campaign and in runs started at a higher level. New arguments for `-balance` (CLAUDE.md): `build=uzuki:hunter`,
+  `build=uzuki:marksman,hunter`, a path named `none` (stop before that milestone), `build=none`, `level=5`,
+  `equip=uzuki:skill,skill,skill`, `skill.<id>.<Property>=N` (try a number without a rebuild), `-brief`, `-fresh`.
+  In the game `-fk-build default` or `-fk-build "uzuki:hunter;..."` with `-fk-level` plays a build.
+- **The Archer's tier 5:** Deadly Mark (Hunter's Mark +40%), Crippling Shot (new: 180%, the target's next turn
+  30% later, a boss's 25%), Bouncing Shot (new: one arrow, 200%, then up to two more foes within 3 tiles for 70%
+  of the hit before). The class goes to tier 9.
+- **The Paladin's tier 5:** Challenge (Shoulder Bash also taunts every other foe next to him, 2 turns), Greater
+  Heal (24% of his max HP, was 20%), Searing Smite (Divine Strike 320%, was 250%). The class goes to tier 9.
+- **The Fencer's tier 5** (Peter, 2026-10-10: "fencer options are fine as drafted"): Precise Thrusts (each hit
+  of Triple Thrust +15% Crit Rate, the third 130%), Long Lunge (4 tiles, 240%), Sharp Riposte (the counter 320%,
+  the stance cuts 60%, 30% of a boss's hit). The class goes to tier 9.
+- **Each option** has its rule on the hero's own copy of the skill, tests (`ArcherTiersTests`,
+  `PaladinTiersTests`, `FencerTiersTests`), an AI rule where a sensible player would play differently (a slow
+  counts as control; a skill is weighed by what it would do where it is aimed, `HeroTactics.PowerOn`; Challenge
+  when a foe next to Haiden is after an ally), its sentence (`SkillText.Describe`, the tree's info panel), an icon (the two new
+  skills; an upgrade shows its skill's icon with the screen's arrow) and an effect in the view. A soak test plays
+  the party on every path.
+- **What changed from the drafts, and why:** Bouncing Shot's first hit is 200%, not 160% (at 160% it was weaker
+  than his Quick Shot on anything but a group). Greater Heal is 24%, not 30%: at 30% a level-5 party won 62% of
+  its runs, against 38% without a pick and 40% with either of the Paladin's other options.
+- **How options are measured:** a party at level 5 (the level where runs are won about four times in ten), 1000
+  seeds, the other two heroes without a pick; one option against no pick. Noise is about 1.6 points.
+
+  | Pick | Level-5 wins of 1000 | First clear, levels kept (300 parties) |
+  |---|---|---|
+  | Uzuki: none | 384 | attempt 2.9 at Lv 9.5 |
+  | Uzuki: Deadly Mark | 433 | 2.8 at Lv 9.4 |
+  | Uzuki: Crippling Shot (in the Mark's slot) | 473 | 2.8 at Lv 9.4 |
+  | Uzuki: Bouncing Shot (in the Mark's slot) | 362 to 385 | 2.9 at Lv 9.5 |
+  | Haiden: none | 380 | |
+  | Haiden: Challenge | 402 | 2.8 at Lv 9.4 |
+  | Haiden: Greater Heal (24%) | 496 | 2.8 at Lv 9.4 |
+  | Haiden: Searing Smite | 401 | 2.9 at Lv 9.4 |
+  | Kristela: none | 380 | |
+  | Kristela: Precise Thrusts | 405 | 2.9 at Lv 9.4 |
+  | Kristela: Long Lunge | 394 | 2.9 at Lv 9.4 |
+  | Kristela: Sharp Riposte | 380 | 2.8 at Lv 9.4 |
+
+  One boss decides the win rate, and at level 5 the packs are no threat (the party reaches the Troll at 99% HP
+  whatever it picked). So an option for several targets (Bouncing Shot: pack fights 6% shorter) or for a tank's
+  damage shows little, and healing shows a lot (every 1% of Heal is worth over two points). A new skill needs a
+  slot: Rolling Shot is worth about 8 points to the report's players (the archer's way out of a slam), Hunter's
+  Mark the least, so a build puts a new skill in the Mark's place. The Fencer's three are small and close; Sharp
+  Riposte shows nothing because the report's players take the stance about once in two runs.
+- **Balance with tier 5 and the default builds: on target, nothing re-tuned.** Fresh level-1 runs: 27 of 600
+  (4.5%), unchanged since before the session. First clear with levels kept (300 parties): attempt 3.0 at Lv 9.6
+  with the points unspent; 2.9 at Lv 9.5 with tiers 2 to 4's stat bumps; 2.9 at Lv 9.4 with tier 5 of all three
+  classes on the default paths (2.8 with some other paths). The Troll keeps its 30000 HP. `-spread` over 200
+  seeds: in fights the partners are 2.18 steps from the leader on average and at most 11, exploring 1.84 and at
+  most 10.
+- **Checks:** 392 Core tests (38 new); the checkpoint after each class (EditMode, PlayMode, the Windows build,
+  four autoplay runs: `C:\Users\peter\5Kingdoms\results\t5archer`, `t5paladin` and `t5fencer`); autoplay runs
+  with Uzuki leading as a Trickshot and as a Hunter used and showed both new shots without an error line.
+- **Left, for the next session** (the brief's steps, where each stands):
+  1. **Tier 5's last checks, for Peter:** screenshots of the tree with tier 5 open for each hero (phone
+     2340 x 1080 and the tablet's shape) and of each new skill and upgrade in play (`-fk-level 6 -fk-build ...`
+     with the hero leading), and a new APK onto the tablet. The autoplay's tree tour and tree demo still name
+     their third picture "locked_row"; with tier 5 written it shows an option, and the demo should pick one and
+     go on to the tier-10 row. Open with Peter: Greater Heal's 24% (he has only seen the draft's 30%).
+  2. **Tier 10**, class by class, then its balance pass. Barbed Snare needs a reading (snares come from Rolling
+     Shot; "5 per floor" is `DungeonRunConfig.MaxTrapsPerFloor` today, a dungeon setting, not the hero's). Shield
+     Wall can be `SkillEffect.Guard` with radius 1 as it stands; Healing Word needs a heal that reaches 3 tiles
+     (and will be strong: see the heal's weight above); Parry is a guard on herself with a boss's share; Feint a
+     mark that one strike uses up; Fleche a strike that passes through its target. With the first hero that
+     knows five skills the loadout's list needs touch scrolling.
+  3. Docs for tier 10 and the closing Drive entry.
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

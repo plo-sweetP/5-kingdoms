@@ -105,8 +105,11 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   level. A point buys the next tier of any class (`HeroProgress.Raise`); a milestone tier (5, 10, 15, 20, 25) also
   takes one of its three `ClassOption`s, from any path, and a milestone whose options aren't written can't be passed
   (`ClassDefinition.IsOpen`, `HighestOpenTier`). The catalog has Archer, Paladin, Fencer (Kristela's since
-  2026-10-05) and Monk, each with its "Every tier" bumps; their options are not written yet, so a class stops at
-  tier 4. Every tier adds the class's `StatBump`s (never SPD); the hero's
+  2026-10-05) and Monk, each with its "Every tier" bumps. Tier 5 is written for the Archer, the Paladin and the
+  Fencer, which stop at tier 9; the Monk stops at tier 4. A new option needs its `ClassOption` in `ClassCatalog`,
+  tests (`ArcherTiersTests`, `PaladinTiersTests`, `FencerTiersTests`), an AI rule where a sensible player would play
+  differently, its sentence in `SkillText.Describe`, for a new skill an icon and an effect, and where it teaches
+  a skill the one a default build gives up for it (`HeroBuilds`). Every tier adds the class's `StatBump`s (never SPD); the hero's
   highest class sets its speed modifier (`HeroKit.SpeedFor`, clamped to 85-100 before gear). An option teaches a
   skill, upgrades the hero's own copy of one (`SkillDefinition.Change`; an upgrade of a skill the hero doesn't know
   teaches the skill instead) or changes one weapon family's attack. Never change a catalog skill.

@@ -388,24 +388,34 @@ Every tier: +0.4% ATK and +0.2% Crit Rate (+10% and +5% at tier 25).
 
 | Tier | Marksman (single-target damage) | Hunter (traps and control) | Trickshot (several targets) |
 |---|---|---|---|
-| 5 | **Deadly Mark:** Hunter's Mark gives +40% (was +25%) | **Crippling Shot** (new skill): 180%, the target's next turn comes 30% later | **Bouncing Shot** (new skill): 160%, then it bounces to up to 2 more foes within 3 tiles, each bounce at 70% of the last hit |
+| 5 | **Deadly Mark:** Hunter's Mark gives +40% (was +25%) | **Crippling Shot** (new skill): 180%, the target's next turn comes 30% later | **Bouncing Shot** (new skill): 200% (built; the draft said 160%), then it bounces to up to 2 more foes within 3 tiles, each bounce at 70% of the last hit |
 | 10 | **Heavy Draw:** Power Shot hits for 360% (was 300%) and knocks back 2 tiles | **Barbed Snare:** a snare also deals 150% ATK when it springs; 5 per floor (was 3) | **Piercing Arrow:** Power Shot also hits every foe in a line behind the target for 60% |
 | 15 | **Steady Aim:** a shot after a turn without moving deals +25% | **Shared Mark:** allies also deal +15% to the marked foe | **Splitting Arrows:** Quick Shot bounces once to a second foe for 50% |
 | 20 | **Deadeye** (alternate ultimate): one arrow for 900% on a single foe | **Pinning Volley:** Volley also slows what it hits by 30% and leaves a snare at its center | **Storm of Arrows:** Volley hits 3 times (was 2) |
 | 25 | **Master Marksman:** Archer shots deal +15%, with no point-blank penalty | **Master Hunter:** marks, slows and snares last one turn longer, and Hunter's Mark takes no time | **Master Trickshot:** one more bounce, and bounces and pierces deal full damage |
+
+Tier 5 was built on 2026-10-10 ("Tier 5 as built" under "Building 1g"). Peter that day, on the two readings the
+build session settled: "yes both readings are fine": Bouncing Shot is one arrow, which the Hunter Bow does not
+double, and each bounce goes to the nearest foe not yet hit within 3 tiles of the last one and in its sight;
+Crippling Shot is doubled by the bow like his other shots, and its slow lands once per foe (a boss's 25%, inside
+the delay budget).
 
 ### Paladin (Haiden's class): approved by Peter as a starting point (2026-10-03)
 Every tier: +0.4% HP and +0.4% DEF (+10% each at tier 25).
 
 | Tier | Guardian (protection) | Devotion (healing) | Crusader (damage) |
 |---|---|---|---|
-| 5 | **Challenge:** Shoulder Bash also taunts every foe next to Haiden, for 2 turns | **Greater Heal:** Heal restores 30% (was 20%) | **Searing Smite:** Divine Strike hits for 320% (was 250%) |
+| 5 | **Challenge:** Shoulder Bash also taunts every other foe next to Haiden, and its taunt lasts 2 turns (was 1) | **Greater Heal:** Heal restores 24% (was 20%; built, the draft said 30%) | **Searing Smite:** Divine Strike hits for 320% (was 250%) |
 | 10 | **Shield Wall** (new skill): Haiden and the allies next to him take 40% less damage until his next turn | **Healing Word** (new Quick skill): heals an ally within 3 tiles for 12% of Haiden's max HP | **Sweeping Slash** (new skill): hits up to three foes in front of him for 150% each |
 | 15 | **Stand Firm:** Haiden takes 20% less damage from foes he has taunted | **Radiant Smite:** Divine Strike also heals the most hurt ally next to him for 10% of his max HP | **Judgment:** Divine Strike deals +50% to a taunted foe |
 | 20 | **Bastion:** Aura of Protection blocks 40% (was 30%) and lasts 4 turns (was 3) | **Sanctuary:** the aura heals 15% a turn (was 10%) and reaches 2 tiles | **Holy Wrath** (alternate ultimate): fire on every foe next to Haiden, 350% each, and they are taunted |
 | 25 | **Master Guardian:** his taunts last a turn longer, and allies next to him always take 10% less damage | **Master of Devotion:** his heals restore 25% more, and Heal reaches allies 2 tiles away | **Master Crusader:** Paladin strikes deal +15%, and a kill with one heals him for 10% |
 
-### Fencer (Kristela's class since 2026-10-05): the hub's draft from Peter's brief, not yet seen by him
+Tier 5 was built on 2026-10-10 ("Tier 5 as built" under "Building 1g"). Greater Heal is 24%: at the drafted 30%
+it was a must-pick by a wide margin (the numbers are there); Peter has not been asked about that number yet.
+
+### Fencer (Kristela's class since 2026-10-05): the hub's draft from Peter's brief
+Peter on its tier 5 and 10 options, 2026-10-10: "fencer options are fine as drafted".
 Peter: "Make the skill tree to somewhat follow that idea" (her three abilities, under "Starting kits" above).
 Every tier: +0.2% Crit Rate and +0.4% Crit DMG (+5% and +10% at tier 25). Class speed modifier +5, the same as the
 Monk's, so her speed stays 100.
@@ -573,8 +583,9 @@ where this spec left room:
 - **Speed** with two classes at the same tier: the hero's own class counts, then the one learned first.
 - The real classes give **no stat bump yet**: it comes with the content, so that this half changed nothing in play.
 
-**Left of part 1** (2026-10-10): tiers 5 and 10 of Archer, Paladin and Fencer with default builds for `-balance`
-and the re-tune (steps 7 and 8). Kristela's Fencer kit with the class stat bumps was built on 2026-10-05, the
+**Left of part 1** (2026-10-10, evening): tier 5's screenshots and APK for Peter, and tier 10 of the three
+classes (steps 7 and 8; GAME_PLAN.md, "Progress", lists them). Default builds for `-balance` and tier 5 of the
+three classes were built on 2026-10-10 ("Tier 5 as built" below). Kristela's Fencer kit with the class stat bumps was built on 2026-10-05, the
 skill-tree screen on 2026-10-10.
 
 **Step 6 as built (2026-10-10): the skill-tree screen** (`SkillTreeModel`, `TreeText`, `SkillTreeScreen`). What the
@@ -633,6 +644,38 @@ build session settled where the spec left room.
   plays tier 1 of the hero's own class only, and nothing was re-tuned (default builds come with tiers 5 and 10).
 - **Not built:** a layout for screens narrower than 16:10; scrolling a long list of skills by touch (it pages
   with "more" past four); the round, glowing look for the HUD's own skill buttons (ART.md, "Later").
+
+**Tier 5 as built (2026-10-10): default builds and the three classes.** What the build session settled where
+the drafts left room; GAME_PLAN.md ("Progress") has the table of numbers.
+- **Default builds** (`HeroBuilds`): the balance report's heroes put every point into their own class, as far as
+  it is written, on one path per milestone: by default the Guardian, the Duelist and the Marksman (the hub's
+  proposal by role). A level-1 hero has no point to spend, so the "fresh level-1" target is untouched by class
+  content; the campaign and runs started at a higher level show it.
+- **A new skill and the loadout.** A skill an option teaches goes into the loadout only while a slot is free, so a
+  build names the skill it gives up for it. Measured with the report's players, Hunter's Mark is the one to give
+  up for either new shot (Rolling Shot is the archer's way out of a slam and is worth far more than its few uses
+  suggest). With attached skills (above) the skill that leaves becomes a leftover.
+- **An option is measured** on a level-5 party over 1000 seeds, against the same party without that pick, the
+  other two heroes without a pick. One boss decides the result and at level 5 the packs are no threat, so damage
+  on several targets and a tank's damage show little there, and healing shows a lot.
+- **The Archer:** Deadly Mark and Crippling Shot as drafted. Bouncing Shot's first hit is 200% (the draft's 160%
+  was weaker than a Quick Shot on anything but a group, and the report's players used it twice a run): 200%, then
+  140%, then 98%. It gains nothing against the Troll and shortens pack fights by 6%; it was not made stronger to
+  chase the boss. The AI weighs a skill by what it would do where it is aimed (both arrows of the bow, the
+  bounces an arrow would make), and uses a slow like a stun: on a sturdy foe that can still be delayed.
+- **The Paladin:** Challenge taunts the bashed foe and every other foe next to Haiden for 2 turns (one number on
+  the skill: the draft could be read as 2 turns for the others only); it is a shout, so no corner stops it. The
+  AI challenges whenever a foe next to him is after an ally. Searing Smite as drafted. Greater Heal is 24%: at
+  30% a level-5 party won 62% of its runs (38% without a pick, 40% with either other option); 22% gave 43%, 24%
+  about 48%, 26% 53%.
+- **The Fencer:** all three as drafted (Peter, 2026-10-10: "fencer options are fine as drafted"). A skill can
+  carry its own Crit Rate bonus and a heavier last hit (Precise Thrusts). At 240% a Long Lunge is also her second
+  blow on a foe next to her while Triple Thrust rests. They are small and close in the report (no pick 38.0% of
+  level-5 runs won, Precise Thrusts 40.5%, Long Lunge 39.4%, Sharp Riposte 38.0%: the report's players take the
+  stance about once in two runs, so an upgrade to it shows nothing).
+- **Balance:** with tier 5 and the default builds the targets hold without a re-tune (27 of 600 fresh level-1
+  runs; first clear on attempt 2.9 at Lv 9.4); the Troll keeps its 30000 HP.
+- **The screen:** a class with tier 5 written goes to tier 9, and its tier-10 row says "Coming soon".
 
 **Part 1b: attached skills** ("Attached skills" above; Peter, 2026-10-10: "build it after tiers 5 and 10"). Its own
 build session, before part 2: the attached bonus on every skill of the three classes, attaching on the skill-tree

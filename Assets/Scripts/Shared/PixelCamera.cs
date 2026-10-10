@@ -78,6 +78,7 @@ namespace FiveKingdoms
         float shakeStrength;
         int screenHeight;
         int baseZoom = 1;
+        int appliedHeightLogged;
         int zoom = 1;
         float worldPerScreenPixel = 1f;
         ViewMode appliedMode;
@@ -200,7 +201,15 @@ namespace FiveKingdoms
         {
             screenHeight = Screen.height;
             appliedMode = Mode;
+            int before = baseZoom;
             baseZoom = BaseZoomFor(Mode, screenHeight, TilesHigh);
+            // In the player's log: what a device really plays at (a tablet's view is judged from this, HUD.md).
+            if (baseZoom != before || appliedHeightLogged != screenHeight)
+            {
+                appliedHeightLogged = screenHeight;
+                Debug.Log($"View: {Screen.width} x {screenHeight} at zoom {baseZoom}, " +
+                          $"{screenHeight / (float)(SpriteLibrary.PixelsPerUnit * baseZoom):0.0} tiles high.");
+            }
             SetZoom(framedWide && baseZoom > 1 ? baseZoom - 1 : baseZoom);
         }
 

@@ -142,7 +142,7 @@ namespace FiveKingdoms.Dungeon
             menu.Back();
 
             int actions = 0, shot = 0, attackShots = 0, chargeShots = 0, holdShots = 0, rotateShots = 0, restShots = 0;
-            var skillsShown = new System.Collections.Generic.HashSet<SkillEffect>();
+            var skillsShown = new System.Collections.Generic.HashSet<string>();
             var ultimatesShown = new System.Collections.Generic.HashSet<string>();
             var aimsShown = new System.Collections.Generic.HashSet<string>();
             float started = Time.realtimeSinceStartup;
@@ -187,10 +187,10 @@ namespace FiveKingdoms.Dungeon
                 actions++;
                 yield return null; // Let the controller resolve the turn.
                 var boss = controller.Run.Boss;
-                if (skill != null && (skill.IsUltimate ? ultimatesShown.Add(skill.Id) : skillsShown.Add(skill.Effect)))
+                if (skill != null && (skill.IsUltimate ? ultimatesShown.Add(skill.Id) : skillsShown.Add(skill.Id)))
                 {
-                    // The first of each kind of skill and each ultimate, at its showiest moment: the slash, the heal
-                    // sparkles, the afterimages, the arrow rain.
+                    // The first use of each skill and each ultimate, at its showiest moment: the slash, the holy light,
+                    // the heal sparkles, the afterimages, the arrow rain.
                     yield return new WaitForSeconds(skill.IsUltimate ? 0.55f : skill.Effect == SkillEffect.Strike ? 0.24f : skill.Effect == SkillEffect.Heal ? 0.2f : 0.08f);
                     yield return Capture($"{(skill.IsUltimate ? "ultimate" : "skill")}_{skill.Id}_action{actions}");
                 }

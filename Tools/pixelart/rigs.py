@@ -253,7 +253,9 @@ def piercer(image, origin, angle, along=1.22):
     and change the hilt to look rounder and more like a sabre"): the blade a little longer and half as wide, a gold
     shell where it begins, and a knuckle bow curving from the shell around the hand to the pommel. The guard is on
     the knuckle side only, the outer side; toward her body it is flush with the blade (Peter on the first one: "Only
-    one side of the sabre should have the hand(hilt guard) the side next to the hero should be flatter").
+    one side of the sabre should have the hand(hilt guard) the side next to the hero should be flatter"). The blade
+    itself is the pack's sword turned over, so its edge and curve face outward like the guard (Peter, 2026-10-10:
+    "have the blade face away from kristela instead of towards her").
     """
     ux, uy = math.cos(angle), math.sin(angle)
     ox, oy = origin
@@ -267,7 +269,10 @@ def piercer(image, origin, angle, along=1.22):
     pommel, shell = min(hilt) * along, min(blade) * along + 0.5
     middle, reach = (pommel + shell) / 2.0, max(3.0, (shell - pommel) / 2.0 + 0.5)
     light, dark = GUARD_GOLD
-    inner = min(across_of(i) for i, p in enumerate(image.px) if p in BLADE_COLORS) * PIERCER_WIDTH   # The thin blade's inner edge.
+    # The sword is mirrored across its own line (a negative width), so what was its outer edge is the inner one now.
+    # Its inner edge where the blade begins (further up it widens): the hilt is trimmed flush with that.
+    base = [across_of(i) for i, p in enumerate(image.px) if p in BLADE_COLORS and along_of(i) * along <= shell + 6.0]
+    inner = -max(base) * PIERCER_WIDTH
     blade_out = {SILVER[color] for color in BLADE_COLORS}
 
     def guard(out):
@@ -285,7 +290,7 @@ def piercer(image, origin, angle, along=1.22):
                     out.px[y * out.w + x] = light if s <= 1.5 else dark
                 elif s > 0.8 and 0.6 <= math.hypot((t - middle) / reach, s / 4.6) <= 1.0:   # The bow, on the knuckle side.
                     out.px[y * out.w + x] = dark
-    return reshape(image, origin, angle, along, PIERCER_WIDTH, SILVER, extra=guard)
+    return reshape(image, origin, angle, along, -PIERCER_WIDTH, SILVER, extra=guard)
 
 
 def _sword_axes(sword_frames):

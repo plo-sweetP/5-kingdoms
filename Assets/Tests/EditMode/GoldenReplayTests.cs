@@ -13,12 +13,14 @@ namespace FiveKingdoms.Tests
     /// became deliberate: the autopilot no longer attacks by walking into a foe but with a command naming its target's
     /// tile (now part of the fingerprint), and of several foes in reach it picks the lowest HP instead of the first in
     /// turn order; and at C1 (corridor tactics), when the lone hero started to hold a doorway against two or more foes
-    /// close beyond it, letting them come to it one at a time, instead of stepping out among them.
+    /// close beyond it, letting them come to it one at a time, instead of stepping out among them; and at playtest
+    /// pass 1 (footing in a boss fight), when the hero stopped walking into a slam that is winding up, and started
+    /// to move off a tile next to the boss that has no way out of the slam.
     /// </summary>
     public class GoldenReplayTests
     {
-        /// <summary>Recorded on 2026-10-04 at C1 (the hero holds a doorway against two or more foes close beyond it).</summary>
-        const ulong RecordedFingerprint = 11176097261485298183UL;
+        /// <summary>Recorded on 2026-10-10 at playtest pass 1 (the hero keeps out of a wind-up and minds its footing next to the boss).</summary>
+        const ulong RecordedFingerprint = 12582735607441105301UL;
 
         [Test]
         public void EqualSpeedsReplayTheOriginalTurnOrder()

@@ -305,6 +305,9 @@ namespace FiveKingdoms.Core
 
         /// <summary>The hurt hero that held a corridor or a doorway gave the front to the fresh one behind it ("rotate the front").</summary>
         Rotate,
+
+        /// <summary>A hero boxed in under a slam it wouldn't survive traded places with an ally that will ("Footing in a boss fight").</summary>
+        Shelter,
     }
 
     /// <summary>Two party members swapped places (their moves follow as MovedEvents).</summary>
@@ -314,7 +317,10 @@ namespace FiveKingdoms.Core
         public readonly int OtherId;
         public readonly SwapReason Reason;
 
-        /// <summary>The hurt hero that stepped back (<see cref="SwapReason.Safety"/>, <see cref="SwapReason.Rotate"/>), else -1.</summary>
+        /// <summary>
+        /// The hero that stepped back: the hurt one (<see cref="SwapReason.Safety"/>, <see cref="SwapReason.Rotate"/>),
+        /// or the one that got out from under a slam (<see cref="SwapReason.Shelter"/>); else -1.
+        /// </summary>
         public readonly int HurtId;
 
         public SwappedEvent(int actorId, int otherId, SwapReason reason = SwapReason.Passing, int hurtId = -1)
@@ -334,6 +340,9 @@ namespace FiveKingdoms.Core
 
         /// <summary>The autopilot's leader waits while the party heals up between fights ("Heroes heal between fights").</summary>
         Rests,
+
+        /// <summary>It stays out of the reach of a slam that is winding up, until it has come down ("Footing in a boss fight").</summary>
+        KeepsClear,
     }
 
     /// <summary>

@@ -4,7 +4,7 @@ namespace FiveKingdoms.Core
 {
     /// <summary>
     /// AI for the party members the player isn't controlling (GAME_PLAN.md, Party). Each turn a partner gets out of a
-    /// boss's wind-up, uses its ultimate when it's worth it, heals or guards when the party needs it, gets out of melee if
+    /// boss's wind-up and stays out until the slam has landed (PROGRESSION.md, "Footing in a boss fight"), uses its ultimate when it's worth it, heals or guards when the party needs it, gets out of melee if
     /// it's a ranged hero, swaps back behind a healthier ally if it's badly hurt, takes a counter stance when a foe is
     /// about to hit it, and attacks a foe in reach (the marked enemy first, then the lowest HP; <see cref="HeroTactics"/>).
     /// Otherwise it moves: in a fight, melee partners close in on a foe, with a Lunge where that gets there at once,
@@ -26,7 +26,9 @@ namespace FiveKingdoms.Core
 
         const int FarSearchLimit = 200;
 
-        public static HeroCommand Decide(DungeonRun run, Actor partner)
+        public static HeroCommand Decide(DungeonRun run, Actor partner) => HeroTactics.KeepClear(run, partner, Choose(run, partner));
+
+        static HeroCommand Choose(DungeonRun run, Actor partner)
         {
             if (HeroTactics.TryDodge(run, partner, out var command)) return command;
             bool holds = partner.Tactic == PartyTactic.Hold;
@@ -36,6 +38,7 @@ namespace FiveKingdoms.Core
             if (HeroTactics.TryGuard(run, partner, out command)) return command;
             if (HeroTactics.TryStepOutOfMelee(run, partner, out command)) return command;
             if (HeroTactics.TryRunToSafety(run, partner, out command)) return command;
+            if (!holds && HeroTactics.TryFindFooting(run, partner, out command)) return command;
             if (HeroTactics.TryMark(run, partner, out command)) return command;
             if (!holds && HeroTactics.TryMakeWay(run, partner, out command)) return command;
             if (HeroTactics.TryRiposte(run, partner, out command)) return command;

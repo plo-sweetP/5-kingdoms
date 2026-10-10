@@ -4,7 +4,8 @@ using System.Collections.Generic;
 namespace FiveKingdoms.Core
 {
     /// <summary>
-    /// Plays the leader automatically: step out of a boss's wind-up; where one hero holds the way (a corridor, a
+    /// Plays the leader automatically: step out of a boss's wind-up, stay out until the slam has landed, and stand
+    /// where there is a way out of it (PROGRESSION.md, "Footing in a boss fight"); where one hero holds the way (a corridor, a
     /// doorway), give the front to the fresh melee partner behind when hurt, or take it from a hurt one; use a charged
     /// ultimate when it's worth it; when low, heal with a skill or eat a berry; heal or guard the party; a ranged leader
     /// gets out of melee; a badly hurt one swaps back behind a healthier ally; make way for the melee partner stuck
@@ -28,7 +29,9 @@ namespace FiveKingdoms.Core
         const int BerryDetourRange = 6;
         const int FarSearchLimit = 200;
 
-        public static HeroCommand Decide(DungeonRun run)
+        public static HeroCommand Decide(DungeonRun run) => HeroTactics.KeepClear(run, run.Hero, Choose(run));
+
+        static HeroCommand Choose(DungeonRun run)
         {
             var hero = run.Hero;
             var map = run.Map;
@@ -55,6 +58,7 @@ namespace FiveKingdoms.Core
             if (HeroTactics.TryGuard(run, hero, out command)) return command;
             if (HeroTactics.TryStepOutOfMelee(run, hero, out command)) return command;
             if (HeroTactics.TryRunToSafety(run, hero, out command)) return command;
+            if (HeroTactics.TryFindFooting(run, hero, out command)) return command;
             if (HeroTactics.TryMark(run, hero, out command)) return command;
             if (HeroTactics.TryMakeWay(run, hero, out command)) return command;
             if (HeroTactics.TryRiposte(run, hero, out command)) return command;

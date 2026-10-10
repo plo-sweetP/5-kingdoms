@@ -86,6 +86,19 @@ namespace FiveKingdoms.Core
             return new DamageRoll((int)Math.Max(1, Math.Min(int.MaxValue, damage)), critical);
         }
 
+        /// <summary>
+        /// The most a hit of <paramref name="skillPercent"/> does without a critical hit: the formula at the top of
+        /// its spread. For the AI to weigh a blow that is coming (a boss's slam); never for dealing damage.
+        /// </summary>
+        public static int MaxDamage(Actor attacker, Actor defender, int skillPercent)
+        {
+            long damage = (long)attacker.Attack * skillPercent / 100;
+            damage = damage * SpreadMaxPercent / 100;
+            long k = DefenseConstant(attacker.Level);
+            damage = damage * k / (k + Math.Max(0, defender.Defense));
+            return (int)Math.Max(1, Math.Min(int.MaxValue, damage));
+        }
+
         /// <summary>A basic (weapon) attack: 200% ATK, physical, cut by <paramref name="reachPercent"/> when it's a shot.</summary>
         public static DamageRoll RollBasicAttack(Actor attacker, Actor defender, Rng rng, int reachPercent = 100) =>
             RollDamage(attacker, defender, rng, BasicAttackPercent, reachPercent: reachPercent);

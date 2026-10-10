@@ -11,7 +11,8 @@ namespace FiveKingdoms.Dungeon
     /// itself using the AutoPilot, saving screenshots along the way (some mid-animation) and quitting after
     /// a fixed number of actions. The first use of each targeted action goes through the player's two-step aiming
     /// (press, screenshot of the highlight, press again), so that path runs in the build too. It also captures the
-    /// first times the leader holds a doorway against a crowd and the first times the front rotates ("door_*.png").
+    /// first times the leader holds a doorway against a crowd and the first times the front rotates ("door_*.png"),
+    /// and the first times a hero waits out of a boss's wind-up ("keep_clear*.png").
     /// Does nothing in normal play.
     /// </summary>
     public sealed class AutoplayDriver : MonoBehaviour
@@ -141,7 +142,7 @@ namespace FiveKingdoms.Dungeon
             menu.Back();
             menu.Back();
 
-            int actions = 0, shot = 0, attackShots = 0, chargeShots = 0, holdShots = 0, rotateShots = 0, restShots = 0;
+            int actions = 0, shot = 0, attackShots = 0, chargeShots = 0, holdShots = 0, rotateShots = 0, restShots = 0, clearShots = 0;
             var skillsShown = new System.Collections.Generic.HashSet<string>();
             var ultimatesShown = new System.Collections.Generic.HashSet<string>();
             var aimsShown = new System.Collections.Generic.HashSet<string>();
@@ -204,6 +205,11 @@ namespace FiveKingdoms.Dungeon
                     yield return new WaitForSeconds(0.45f); // The reinforcements fading in.
                     yield return Capture($"boss_summon_action{actions}");
                 }
+                else if (clearShots < 2 && KeptClear(controller.Run))
+                {
+                    yield return new WaitForSeconds(0.2f); // A hero waits out of the slam's reach, with the word over its head.
+                    yield return Capture($"keep_clear{++clearShots}_action{actions}");
+                }
                 else if (command.Holding && holdShots < 3)
                 {
                     while (controller.IsAnimating) yield return null; // The leader in the doorway, the foes coming up to it.
@@ -247,6 +253,14 @@ namespace FiveKingdoms.Dungeon
         {
             foreach (var e in run.Events)
                 if (e is SwappedEvent swap && swap.Reason == SwapReason.Rotate) return true;
+            return false;
+        }
+
+        /// <summary>Whether a hero's AI waited out of a wound-up slam's reach in the last action ("Footing in a boss fight").</summary>
+        static bool KeptClear(DungeonRun run)
+        {
+            foreach (var e in run.Events)
+                if (e is HeroWaitedEvent waited && waited.Reason == WaitReason.KeepsClear) return true;
             return false;
         }
 

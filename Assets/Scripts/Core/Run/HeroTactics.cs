@@ -15,6 +15,8 @@ namespace FiveKingdoms.Core
     /// They use the corridors too ("Doorways and corridors"): the hero in front holds a doorway against a crowd rather
     /// than step out among it, the hurt hero that holds the way trades places with the fresh melee hero behind it, who
     /// fights while it heals, and a hero fighting in a corridor's mouth makes way for the one behind.
+    /// Around a boss they mind their footing ("Footing in a boss fight"): nobody walks into a slam that is winding
+    /// up, a melee hero stands where it has a way out of it, and one that has none when it comes uses what it has.
     /// Works from a hero's skills by their effects, so new kits need no new AI.
     /// </summary>
     public static class HeroTactics
@@ -148,8 +150,12 @@ namespace FiveKingdoms.Core
         // ---- Decisions, in the order the brains ask them ----
 
         /// <summary>
-        /// A boss is winding up a slam that would hit <paramref name="hero"/>: step out of reach, or, if there's nowhere
-        /// to go, raise a guard.
+        /// A boss is winding up a slam (PROGRESSION.md, "Footing in a boss fight"). A hero it would hit steps out of
+        /// reach, on its last turn before the slam: the Troll is slow, so a hero that gets two turns first uses the
+        /// first for a blow (false here: the brain goes on to its attack). With no way out it uses what it has
+        /// (<see cref="TryWeatherTheSlam"/>: a dash, a swap with an ally that can take the blow, a guard, a counter
+        /// stance, its aura). A hero out of reach that stands on an ally's only way out makes way for it
+        /// (<see cref="TryClearTheWayOut"/>).
         /// </summary>
         public static bool TryDodge(DungeonRun run, Actor hero, out HeroCommand command)
         {
@@ -157,18 +163,19 @@ namespace FiveKingdoms.Core
             foreach (var actor in run.Actors)
             {
                 if (actor.Team == hero.Team || !actor.Charging) continue;
-                if (GridPos.ChebyshevDistance(hero.Pos, actor.Pos) > EnemyBrain.SlamRadius) continue;
-                if (TryStepAway(run, hero, actor.Pos, out var away))
+                if (GridPos.ChebyshevDistance(hero.Pos, actor.Pos) > EnemyBrain.SlamRadius)
+                {
+                    if (TryClearTheWayOut(run, hero, actor, out command)) return true;
+                    continue;
+                }
+                // Time for one more blow: its next turn still comes before the slam, and it has a way out to take then.
+                if (!run.ActsBefore(actor, hero) && HasWayOut(run, hero, actor)) continue;
+                if (TryStepAway(run, hero, actor, out var away))
                 {
                     command = HeroCommand.Move(away);
                     return true;
                 }
-                int guard = SkillSlot(hero, SkillEffect.Guard);
-                if (guard >= 0 && run.CheckSkill(hero, guard, hero.Facing) == SkillCheck.Ready)
-                {
-                    command = HeroCommand.Skill(guard);
-                    return true;
-                }
+                if (TryWeatherTheSlam(run, hero, actor, out command)) return true;
             }
             return false;
         }
@@ -523,8 +530,8 @@ namespace FiveKingdoms.Core
         /// <summary>
         /// A counter stance (Riposte) when it would be answered: a foe next to the hero comes up before the hero's next
         /// turn and is going for the hero, not held by another hero's taunt or busy with one (<see cref="WouldStrike"/>).
-        /// Never inside a boss's slam that is winding up (the hero steps out, <see cref="TryDodge"/>, or fights on),
-        /// and not while a skill that hits harder than the weapon attack is ready for a foe in reach: Triple Thrust
+        /// Inside a boss's slam that is winding up that isn't its call: the hero steps out, or, with no way out, takes
+        /// the stance against the slam itself (<see cref="TryDodge"/>). And not while a skill that hits harder than the weapon attack is ready for a foe in reach: Triple Thrust
         /// comes first.
         /// </summary>
         public static bool TryRiposte(DungeonRun run, Actor hero, out HeroCommand command)
@@ -564,7 +571,8 @@ namespace FiveKingdoms.Core
         /// hero's dashing strike reaches from further off than the next tile, picked like any target (the marked one
         /// first, then the lowest HP). It passes the checks of a step toward the foes: the tile the hero lands on is
         /// near the leader (the leash), and a dash out of a corridor or a doorway is only made where a step out of it
-        /// would be (<see cref="HoldsTheDoor"/>), and only from its last tile, where that can be told.
+        /// would be (<see cref="HoldsTheDoor"/>), and only from its last tile, where that can be told. Next to a boss it
+        /// lands only on a tile with a way out of the slam (<see cref="HasFootingAt"/>).
         /// </summary>
         public static bool TryLunge(DungeonRun run, Actor hero, out HeroCommand command)
         {
@@ -580,7 +588,7 @@ namespace FiveKingdoms.Core
                 if (run.StrikeTargetAt(hero, foe.Pos, dash) == null) continue;
                 var dir = Directions.Toward(hero.Pos, foe.Pos);
                 var landing = foe.Pos - dir.ToOffset();
-                if (near(landing) && !DashLeavesTheDoor(run, hero, dir, landing)) foes.Add(foe);
+                if (near(landing) && !DashLeavesTheDoor(run, hero, dir, landing) && HasFootingAt(run, hero, landing)) foes.Add(foe);
             }
             var target = PickTarget(hero, foes);
             if (target == null || run.CheckSkillAt(hero, slot, target.Pos) != SkillCheck.Ready) return false;
@@ -840,17 +848,18 @@ namespace FiveKingdoms.Core
         /// </summary>
         public static bool TryEngage(DungeonRun run, Actor hero, out HeroCommand command)
         {
-            if (!TryFindWayIn(run, hero, out command)) return false;
+            // Next to a boss, a tile with a way out of its slam where there is one ("Footing in a boss fight").
+            if (!TryFindWayIn(run, hero, footing: true, out command) && !TryFindWayIn(run, hero, footing: false, out command)) return false;
             // In front, at a doorway, with a crowd beyond it: let them come. Otherwise a Lunge gets there sooner than a step.
             if (command.Kind == HeroCommandKind.Move) command = StepToward(run, hero, command.Direction);
             return true;
         }
 
-        static bool TryFindWayIn(DungeonRun run, Actor hero, out HeroCommand command)
+        static bool TryFindWayIn(DungeonRun run, Actor hero, bool footing, out HeroCommand command)
         {
             command = HeroCommand.Wait;
             var near = NearLeader(run, hero);
-            Func<GridPos, bool> isGoal = p => near(p) && IsAttackSpot(run, hero, p);
+            Func<GridPos, bool> isGoal = p => near(p) && IsAttackSpot(run, hero, p) && (!footing || HasFootingAt(run, hero, p));
 
             // The straight way to the fight, as if no ally stood in it.
             if (!Pathfinder.TryFindNearest(run.Map, hero.Pos, isGoal, p => IsFoeAt(run, hero, p), FightSearchSteps,
@@ -949,69 +958,241 @@ namespace FiveKingdoms.Core
             return reach;
         }
 
-        /// <summary>A step that takes <paramref name="hero"/> out of reach of an attack centered on <paramref name="threat"/>.</summary>
-        public static bool TryStepAway(DungeonRun run, Actor hero, GridPos threat, out Direction8 away)
+        // ---- Footing in a boss fight (PROGRESSION.md, "Footing in a boss fight") ----
+
+        /// <summary>
+        /// A hero standing out of a slam's reach may take the blow for a boxed-in ally only if it is left with at least
+        /// this share of its max HP afterwards (<see cref="DungeonRun.IsShelterSwap"/>): it trades a fallen hero for a
+        /// hurt one, never one fallen hero for another.
+        /// </summary>
+        public const int ShelterHpPercent = DungeonRun.BadlyHurtPercent;
+
+        /// <summary>Whether a slam that a foe of <paramref name="team"/> is winding up reaches <paramref name="tile"/>.</summary>
+        public static bool InAWindUp(DungeonRun run, Team team, GridPos tile)
         {
-            away = Direction8.S;
-            int best = -1;
-            foreach (var dir in Directions.All)
-            {
-                var next = hero.Pos + dir.ToOffset();
-                if (!run.Map.CanStep(hero.Pos, dir) || run.ActorAt(next) != null) continue;
-                int distance = GridPos.ChebyshevDistance(next, threat);
-                if (distance > EnemyBrain.SlamRadius && distance > best)
-                {
-                    best = distance;
-                    away = dir;
-                }
-            }
-            return best >= 0;
+            foreach (var actor in run.Actors)
+                if (actor.Team != team && actor.Charging && GridPos.ChebyshevDistance(actor.Pos, tile) <= EnemyBrain.SlamRadius) return true;
+            return false;
         }
 
         /// <summary>
-        /// Footing next to a boss (PROGRESSION.md, "Footing in a boss fight"): true when <paramref name="hero"/> has a
-        /// way out of the slam of <paramref name="boss"/>: a free tile beside it that the slam doesn't reach, and that
-        /// no other hero in the slam's reach needs as its only way out. A hero out of the slam's reach has one.
+        /// "Stay out of a wind-up": whatever the hero's AI chose, it doesn't walk, dash or lunge from a tile the coming
+        /// slam doesn't reach onto one it does. It waits where it stands until the slam has come down
+        /// (<see cref="HeroCommand.KeepClear"/>). Both brains pass their choice through here. Measured with -balance:
+        /// before this rule, every slam but 14 of the 561 that hit a melee hero (600 boss fights) hit one that had
+        /// stepped out of the wind-up, or had not been in it, and walked in on its next turn.
         /// </summary>
-        public static bool HasWayOut(DungeonRun run, Actor hero, Actor boss)
+        public static HeroCommand KeepClear(DungeonRun run, Actor hero, HeroCommand command)
         {
-            if (GridPos.ChebyshevDistance(hero.Pos, boss.Pos) > EnemyBrain.SlamRadius) return true;
-            foreach (var dir in Directions.All)
+            var to = Destination(run, hero, command);
+            if (to == hero.Pos || !InAWindUp(run, hero.Team, to) || InAWindUp(run, hero.Team, hero.Pos)) return command;
+            return HeroCommand.KeepClear;
+        }
+
+        /// <summary>The tile a command takes <paramref name="hero"/> to: a step (or a swap), a dash, a roll, a lunge; its own tile for anything else.</summary>
+        static GridPos Destination(DungeonRun run, Actor hero, HeroCommand command)
+        {
+            if (command.Kind == HeroCommandKind.Move)
             {
-                if (!IsWayOut(run, hero.Pos, dir, boss.Pos)) continue;
-                var exit = hero.Pos + dir.ToOffset();
-                bool needed = false;
-                foreach (var other in run.Actors)
-                {
-                    if (other == hero || other.Team != hero.Team) continue;
-                    if (GridPos.ChebyshevDistance(other.Pos, boss.Pos) > EnemyBrain.SlamRadius) continue;
-                    if (WaysOut(run, other.Pos, boss.Pos, out var only) == 1 && only == exit) needed = true;
-                }
-                if (!needed) return true;
+                var next = hero.Pos + command.Direction.ToOffset();
+                bool free = run.ActorAt(next) is Actor other ? other.Team == hero.Team : true;
+                return run.Map.CanStep(hero.Pos, command.Direction) && free ? next : hero.Pos;
+            }
+            if (command.Kind != HeroCommandKind.Skill || command.Slot < 0 || command.Slot >= hero.Skills.Count) return hero.Pos;
+            var skill = hero.Skills[command.Slot];
+            var dir = command.Targeted ? Directions.Approximate(hero.Pos, command.Target) : command.Aimed ? command.Direction : hero.Facing;
+            if (skill.RollTiles > 0) return run.DashDestination(hero, skill.RollTiles, dir);
+            if (skill.Effect == SkillEffect.Dash) return run.DashDestination(hero, skill.Power, dir);
+            if (skill.Effect == SkillEffect.Strike && skill.DashTiles > 0 && command.Targeted) return command.Target - dir.ToOffset();
+            return hero.Pos;
+        }
+
+        /// <summary>
+        /// True when <paramref name="hero"/> has a way out of the slam of <paramref name="boss"/>: a free tile beside it
+        /// that the slam doesn't reach, and that no other hero in the slam's reach needs as its only way out. A hero out
+        /// of the slam's reach has one.
+        /// </summary>
+        public static bool HasWayOut(DungeonRun run, Actor hero, Actor boss) => HasWayOut(run, hero, boss, hero.Pos);
+
+        /// <summary>The same, as if <paramref name="hero"/> stood on <paramref name="from"/> (the tile it stands on now is free then).</summary>
+        public static bool HasWayOut(DungeonRun run, Actor hero, Actor boss, GridPos from)
+        {
+            if (GridPos.ChebyshevDistance(from, boss.Pos) > EnemyBrain.SlamRadius) return true;
+            foreach (var dir in Directions.All)
+                if (IsWayOut(run, hero, from, dir, boss.Pos) && !NeededByAnother(run, hero, boss, from + dir.ToOffset())) return true;
+            return false;
+        }
+
+        /// <summary>Whether <paramref name="pos"/> is good footing for <paramref name="hero"/>: next to no boss, or with a way out of each one's slam.</summary>
+        public static bool HasFootingAt(DungeonRun run, Actor hero, GridPos pos)
+        {
+            foreach (var actor in run.Actors)
+                if (actor.Team != hero.Team && actor.Definition.IsBoss && !HasWayOut(run, hero, actor, pos)) return false;
+            return true;
+        }
+
+        /// <summary>Whether <paramref name="tile"/> is the only way out of another hero in the slam's reach, so <paramref name="hero"/> leaves it to that one.</summary>
+        static bool NeededByAnother(DungeonRun run, Actor hero, Actor boss, GridPos tile)
+        {
+            foreach (var other in run.Actors)
+            {
+                if (other == hero || other.Team != hero.Team) continue;
+                if (GridPos.ChebyshevDistance(other.Pos, boss.Pos) > EnemyBrain.SlamRadius) continue;
+                if (WaysOut(run, hero, other.Pos, boss.Pos, out var only) == 1 && only == tile) return true;
             }
             return false;
         }
 
-        /// <summary>How many free tiles beside <paramref name="from"/> are out of a slam's reach; <paramref name="last"/> is one of them.</summary>
-        static int WaysOut(DungeonRun run, GridPos from, GridPos threat, out GridPos last)
+        /// <summary>How many tiles beside <paramref name="from"/> are a way out (<see cref="IsWayOut"/>); <paramref name="last"/> is one of them.</summary>
+        static int WaysOut(DungeonRun run, Actor mover, GridPos from, GridPos threat, out GridPos last)
         {
             last = from;
             int ways = 0;
             foreach (var dir in Directions.All)
             {
-                if (!IsWayOut(run, from, dir, threat)) continue;
+                if (!IsWayOut(run, mover, from, dir, threat)) continue;
                 last = from + dir.ToOffset();
                 ways++;
             }
             return ways;
         }
 
-        /// <summary>A step from <paramref name="from"/> onto a free tile that a slam from <paramref name="threat"/> doesn't reach.</summary>
-        static bool IsWayOut(DungeonRun run, GridPos from, Direction8 dir, GridPos threat)
+        /// <summary>
+        /// A step from <paramref name="from"/> onto a tile that a slam from <paramref name="threat"/> doesn't reach and
+        /// that nobody stands on, except <paramref name="mover"/>, the hero whose footing is being weighed.
+        /// </summary>
+        static bool IsWayOut(DungeonRun run, Actor mover, GridPos from, Direction8 dir, GridPos threat)
         {
             var next = from + dir.ToOffset();
-            return run.Map.CanStep(from, dir) && run.ActorAt(next) == null &&
-                   GridPos.ChebyshevDistance(next, threat) > EnemyBrain.SlamRadius;
+            if (!run.Map.CanStep(from, dir) || GridPos.ChebyshevDistance(next, threat) <= EnemyBrain.SlamRadius) return false;
+            var occupant = run.ActorAt(next);
+            return occupant == null || occupant == mover;
+        }
+
+        /// <summary>
+        /// A step that takes <paramref name="hero"/> out of the slam of <paramref name="boss"/>: a tile that no other
+        /// hero needs as its only way out where there is one, else any.
+        /// </summary>
+        public static bool TryStepAway(DungeonRun run, Actor hero, Actor boss, out Direction8 away)
+        {
+            away = Direction8.S;
+            bool found = false, spare = false;
+            foreach (var dir in Directions.All)
+            {
+                if (!IsWayOut(run, hero, hero.Pos, dir, boss.Pos)) continue;
+                bool free = !NeededByAnother(run, hero, boss, hero.Pos + dir.ToOffset());
+                if (found && (spare || !free)) continue;
+                away = dir;
+                found = true;
+                spare = free;
+            }
+            return found;
+        }
+
+        /// <summary>
+        /// A melee hero next to a boss that isn't winding up, on a tile with no way out (its back to a wall, a pillar or
+        /// a corner, or boxed in by allies): it moves over to a tile next to the boss that has one, giving up this
+        /// turn's attack. (A Lunge can't make that move: it runs along a line to the foe, and from a tile with no way
+        /// out there is no stepping back onto another line. It picks its landing instead, <see cref="TryLunge"/>.)
+        /// </summary>
+        public static bool TryFindFooting(DungeonRun run, Actor hero, out HeroCommand command)
+        {
+            command = HeroCommand.Wait;
+            if (hero.Definition.IsRanged) return false;
+            foreach (var boss in run.Actors)
+            {
+                if (boss.Team == hero.Team || !boss.Definition.IsBoss || boss.Charging) continue;
+                if (GridPos.ChebyshevDistance(hero.Pos, boss.Pos) > EnemyBrain.SlamRadius || HasWayOut(run, hero, boss)) continue;
+                foreach (var dir in Directions.All)
+                {
+                    var next = hero.Pos + dir.ToOffset();
+                    if (!run.Map.CanStep(hero.Pos, dir) || run.ActorAt(next) != null) continue;
+                    if (GridPos.ChebyshevDistance(next, boss.Pos) != 1 || !run.Map.IsCornerClear(next, Directions.Toward(next, boss.Pos))) continue;
+                    if (!HasFootingAt(run, hero, next)) continue;
+                    command = HeroCommand.Move(dir);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// The slam is coming and <paramref name="hero"/> has no step out of it: it uses what it has. A dash or a roll
+        /// that ends out of reach; a swap with an ally out of reach that can take the blow when the hero can't
+        /// (<see cref="DungeonRun.IsShelterSwap"/>); else it braces: a guard, a counter stance (cut and answered), or
+        /// its aura. A stance is only taken when the slam lands before the hero's next turn.
+        /// </summary>
+        static bool TryWeatherTheSlam(DungeonRun run, Actor hero, Actor boss, out HeroCommand command)
+        {
+            command = HeroCommand.Wait;
+            var skills = hero.Skills;
+            for (int slot = 0; slot < skills.Count; slot++)
+            {
+                var skill = skills[slot];
+                int tiles = skill.RollTiles > 0 ? skill.RollTiles : skill.Effect == SkillEffect.Dash ? skill.Power : 0;
+                if (tiles == 0) continue;
+                foreach (var dir in Directions.All)
+                {
+                    if (run.CheckSkill(hero, slot, dir) != SkillCheck.Ready) continue;
+                    if (InAWindUp(run, hero.Team, run.DashDestination(hero, tiles, dir))) continue;
+                    command = HeroCommand.Skill(slot, dir);
+                    return true;
+                }
+            }
+
+            foreach (var dir in Directions.All)
+            {
+                var ally = run.ActorAt(hero.Pos + dir.ToOffset());
+                if (ally == null || ally.Team != hero.Team || !run.IsShelterSwap(hero, ally) || !run.CanSwap(hero, ally)) continue;
+                command = HeroCommand.Move(dir);
+                return true;
+            }
+
+            int guard = SkillSlot(hero, SkillEffect.Guard);
+            if (guard >= 0 && run.CheckSkill(hero, guard, hero.Facing) == SkillCheck.Ready)
+            {
+                command = HeroCommand.Skill(guard);
+                return true;
+            }
+            int stance = SkillSlot(hero, SkillEffect.Counter);
+            if (stance >= 0 && run.CheckSkill(hero, stance, hero.Facing) == SkillCheck.Ready && run.ActsBefore(boss, hero, skills[stance].CostPercent))
+            {
+                command = HeroCommand.Skill(stance);
+                return true;
+            }
+            if (hero.UltimateReady && hero.Ultimate.Effect == SkillEffect.Aura && hero.FindStatus(StatusKind.Aura) == null)
+            {
+                command = HeroCommand.Ultimate(hero.Facing);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// A hero out of the slam's reach that stands on the only tile an ally in it could step out to makes way: it
+        /// moves to another tile out of reach, if that ally still gets a turn before the slam lands.
+        /// </summary>
+        static bool TryClearTheWayOut(DungeonRun run, Actor hero, Actor boss, out HeroCommand command)
+        {
+            command = HeroCommand.Wait;
+            bool inTheWay = false;
+            foreach (var ally in run.Actors)
+            {
+                if (ally == hero || ally.Team != hero.Team || GridPos.ChebyshevDistance(ally.Pos, hero.Pos) != 1) continue;
+                if (GridPos.ChebyshevDistance(ally.Pos, boss.Pos) > EnemyBrain.SlamRadius) continue;
+                if (!run.Map.CanStep(ally.Pos, Directions.Toward(ally.Pos, hero.Pos))) continue;
+                if (WaysOut(run, ally, ally.Pos, boss.Pos, out _) > 0 || !run.TurnComesBefore(ally, boss)) continue;
+                inTheWay = true;
+            }
+            if (!inTheWay) return false;
+            foreach (var dir in Directions.All)
+            {
+                var next = hero.Pos + dir.ToOffset();
+                if (!run.Map.CanStep(hero.Pos, dir) || run.ActorAt(next) != null || InAWindUp(run, hero.Team, next)) continue;
+                command = HeroCommand.Move(dir);
+                return true;
+            }
+            return false;
         }
 
         /// <summary>Positions of every foe on the floor.</summary>

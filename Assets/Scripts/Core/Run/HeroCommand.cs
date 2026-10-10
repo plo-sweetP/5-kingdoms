@@ -35,8 +35,14 @@ namespace FiveKingdoms.Core
         /// </summary>
         public readonly bool Resting;
 
+        /// <summary>
+        /// A wait by the party's AI out of the reach of a slam that is winding up, instead of a step into it
+        /// (<see cref="KeepClear"/>; PROGRESSION.md, "Footing in a boss fight").
+        /// </summary>
+        public readonly bool KeepingClear;
+
         HeroCommand(HeroCommandKind kind, Direction8 direction, int slot = 0, bool aimed = false, bool targeted = false, GridPos target = default,
-            bool holding = false, bool resting = false)
+            bool holding = false, bool resting = false, bool keepingClear = false)
         {
             Kind = kind;
             Direction = direction;
@@ -46,6 +52,7 @@ namespace FiveKingdoms.Core
             Target = target;
             Holding = holding;
             Resting = resting;
+            KeepingClear = keepingClear;
         }
 
         public static HeroCommand Move(Direction8 direction) => new HeroCommand(HeroCommandKind.Move, direction);
@@ -75,6 +82,9 @@ namespace FiveKingdoms.Core
 
         /// <summary>The autopilot's wait between fights, while the party heals up (PROGRESSION.md, "Heroes heal between fights").</summary>
         public static readonly HeroCommand Rest = new HeroCommand(HeroCommandKind.Wait, Direction8.S, resting: true);
+
+        /// <summary>The party AI's wait out of a wound-up slam's reach, until it has come down (PROGRESSION.md, "Footing in a boss fight").</summary>
+        public static readonly HeroCommand KeepClear = new HeroCommand(HeroCommandKind.Wait, Direction8.S, keepingClear: true);
         public static readonly HeroCommand UseBerry = new HeroCommand(HeroCommandKind.UseBerry, Direction8.S);
         public static readonly HeroCommand Descend = new HeroCommand(HeroCommandKind.Descend, Direction8.S);
 
@@ -84,6 +94,7 @@ namespace FiveKingdoms.Core
             return Kind == HeroCommandKind.Move ? $"Move {Direction}"
                 : Holding ? "Hold the door"
                 : Resting ? "Rest"
+                : KeepingClear ? "Keep clear"
                 : Kind == HeroCommandKind.Skill ? $"Skill {Slot + 1}{aim}"
                 : Kind == HeroCommandKind.Attack || Kind == HeroCommandKind.Ultimate ? Kind + aim
                 : Kind == HeroCommandKind.SwitchLeader ? $"Lead {Slot + 1}"

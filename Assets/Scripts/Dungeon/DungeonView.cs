@@ -432,6 +432,13 @@ namespace FiveKingdoms.Dungeon
             "{0} is in no hurry: everyone catches their breath.",
         };
 
+        static readonly string[] KeepClearLines =
+        {
+            "{0} keeps out of reach until the slam has landed.",
+            "{0} hangs back: \"Not while it winds up!\"",
+            "{0} waits for the slam to come down.",
+        };
+
         // {0} takes the front, {1} is the hurt one who steps back.
         static readonly string[] RotateLines =
         {
@@ -443,6 +450,13 @@ namespace FiveKingdoms.Dungeon
         {
             "{1} ducks behind {0}!",
             "{1} is badly hurt and slips behind {0}.",
+        };
+
+        // {0} steps under the slam, {1} is the one who would not have lived through it.
+        static readonly string[] ShelterLines =
+        {
+            "{0} takes the blow for {1}!",
+            "{0} shoves {1} out from under the slam.",
         };
 
         readonly Dictionary<int, int> lastWaitNote = new Dictionary<int, int>();
@@ -457,22 +471,27 @@ namespace FiveKingdoms.Dungeon
         void ShowWait(DungeonRun run, HeroWaitedEvent waited)
         {
             if (!actors.TryGetValue(waited.ActorId, out var hero)) return;
-            bool holds = waited.Reason == WaitReason.HoldsTheDoor;
-            hud.ShowFloatingText(hero.TextAnchor, holds ? "Holding the door" : "Resting", holds ? GuardColor : HealColor, 0.7f);
+            bool rests = waited.Reason == WaitReason.Rests;
+            string word = waited.Reason == WaitReason.HoldsTheDoor ? "Holding the door" : rests ? "Resting" : "Keeping clear";
+            var lines = waited.Reason == WaitReason.HoldsTheDoor ? HoldLines : rests ? RestLines : KeepClearLines;
+            hud.ShowFloatingText(hero.TextAnchor, word, rests ? HealColor : GuardColor, 0.7f);
             if (lastWaitNote.TryGetValue(waited.ActorId, out int last) && run.Turn - last < WaitNoteEvery && run.Turn >= last) return;
             lastWaitNote[waited.ActorId] = run.Turn;
-            hud.AddMessage(NextLine(holds ? HoldLines : RestLines, hero.DisplayName), holds ? GuardColor : HealColor);
+            hud.AddMessage(NextLine(lines, hero.DisplayName), rests ? HealColor : GuardColor);
         }
 
-        /// <summary>Two heroes traded places for a reason worth saying: the front rotated, or a badly hurt one ran to safety.</summary>
+        /// <summary>
+        /// Two heroes traded places for a reason worth saying: the front rotated, a badly hurt one ran to safety, or
+        /// one took a slam for another.
+        /// </summary>
         void ShowSwap(SwappedEvent swapped)
         {
-            if (swapped.Reason != SwapReason.Rotate && swapped.Reason != SwapReason.Safety) return;
+            if (swapped.Reason != SwapReason.Rotate && swapped.Reason != SwapReason.Safety && swapped.Reason != SwapReason.Shelter) return;
             int freshId = swapped.HurtId == swapped.ActorId ? swapped.OtherId : swapped.ActorId;
             if (!actors.TryGetValue(freshId, out var fresh) || !actors.TryGetValue(swapped.HurtId, out var hurt)) return;
-            bool rotate = swapped.Reason == SwapReason.Rotate;
-            hud.ShowFloatingText(fresh.TextAnchor, rotate ? "My turn!" : "Get behind me!", GuardColor, 0.7f);
-            hud.AddMessage(NextLine(rotate ? RotateLines : SafetyLines, fresh.DisplayName, hurt.DisplayName), GuardColor);
+            bool rotate = swapped.Reason == SwapReason.Rotate, shelter = swapped.Reason == SwapReason.Shelter;
+            hud.ShowFloatingText(fresh.TextAnchor, rotate ? "My turn!" : shelter ? "I've got this!" : "Get behind me!", GuardColor, 0.7f);
+            hud.AddMessage(NextLine(rotate ? RotateLines : shelter ? ShelterLines : SafetyLines, fresh.DisplayName, hurt.DisplayName), GuardColor);
         }
 
         /// <summary>

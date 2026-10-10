@@ -432,17 +432,20 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
-        public void SheNeverTakesTheStanceInsideASlam()
+        public void InsideASlamSheTakesTheStanceOnlyWithNoWayOut()
         {
-            // Her back to the wall, a boss winding up in front of her: nowhere to step out to, so she fights on.
+            // Her back to the wall, a boss winding up in front of her: nowhere to step out to, so she meets the slam
+            // in her stance (PROGRESSION.md, "Footing in a boss fight"), Triple Thrust ready or not.
             var run = Run(Only(ActorCatalog.Kristela), Corridor);
             var kristela = run.Hero;
             var troll = run.SpawnEnemy(new GridPos(2, 1), ActorCatalog.Troll);
-            kristela.SkillCooldowns[Slot(kristela, SkillCatalog.TripleThrust)] = 1;
-            Assert.AreEqual(HeroCommand.Skill(Slot(kristela, SkillCatalog.Riposte)), AutoPilot.Decide(run), "against its bite, yes");
-
             troll.Charging = true;
-            Assert.AreEqual(HeroCommand.AttackAt(troll.Pos), AutoPilot.Decide(run));
+            Assert.AreEqual(HeroCommand.Skill(Slot(kristela, SkillCatalog.Riposte)), AutoPilot.Decide(run));
+
+            // With room behind her she steps out instead.
+            Place(kristela, 2, 1);
+            Place(troll, 3, 1);
+            Assert.AreEqual(HeroCommand.Move(Direction8.W), AutoPilot.Decide(run));
         }
 
         [Test]

@@ -210,7 +210,7 @@ namespace FiveKingdoms.Core
             {
                 case HeroCommandKind.Move: return Move(command.Direction);
                 case HeroCommandKind.Attack: return Attack(AimOf(command, Hero));
-                case HeroCommandKind.Wait: return Wait(command.Holding, command.Resting);
+                case HeroCommandKind.Wait: return Wait(command.Holding, command.Resting, command.KeepingClear);
                 case HeroCommandKind.UseBerry: return UseBerry();
                 case HeroCommandKind.Descend: return Descend();
                 case HeroCommandKind.Skill: return UseSkill(command.Slot, AimOf(command, Hero));
@@ -259,16 +259,18 @@ namespace FiveKingdoms.Core
         public Actor AttackTargetAt(Actor user, GridPos tile) =>
             user.Definition.IsRanged ? ShotTargetAt(user, tile, user.Definition.AttackRange) : StrikeTargetAt(user, tile);
 
-        public bool Wait() => Wait(holding: false, resting: false);
+        public bool Wait() => Wait(holding: false, resting: false, keepingClear: false);
 
         /// <summary>
         /// <paramref name="holding"/>: the AI waits at a doorway for the foes to come (<see cref="HeroCommand.HoldTheDoor"/>);
-        /// <paramref name="resting"/>: it waits while the party heals up between fights (<see cref="HeroCommand.Rest"/>).
+        /// <paramref name="resting"/>: it waits while the party heals up between fights (<see cref="HeroCommand.Rest"/>);
+        /// <paramref name="keepingClear"/>: it waits out of a wound-up slam's reach (<see cref="HeroCommand.KeepClear"/>).
         /// </summary>
-        bool Wait(bool holding, bool resting)
+        bool Wait(bool holding, bool resting, bool keepingClear)
         {
             if (!BeginAction()) return false;
             if (holding) Held(Hero);
+            if (keepingClear) KeptClear(Hero);
             if (resting) events.Add(new HeroWaitedEvent(Hero.Id, WaitReason.Rests, ++Hero.RestedTurns));
             FinishLeaderTurn(Config.Costs.PercentFor(ActionKind.Wait));
             return true;
@@ -276,6 +278,9 @@ namespace FiveKingdoms.Core
 
         /// <summary>A hero's AI holds a doorway this turn: counted, so it goes in after all if nobody comes, and said, so the view can show it.</summary>
         void Held(Actor hero) => events.Add(new HeroWaitedEvent(hero.Id, WaitReason.HoldsTheDoor, ++hero.HeldTurns));
+
+        /// <summary>A hero's AI waits out of a slam's reach this turn: said, so the view can show it.</summary>
+        void KeptClear(Actor hero) => events.Add(new HeroWaitedEvent(hero.Id, WaitReason.KeepsClear, 1));
 
         /// <summary>The leader eats a berry and heals. Refused (no turn used) when out of berries or already at full HP.</summary>
         public bool UseBerry()
@@ -552,9 +557,10 @@ namespace FiveKingdoms.Core
         /// (PROGRESSION.md, "Swaps, without loops"). Four kinds: a melee hero swaps past a ranged one to get next to a foe
         /// or strictly closer to one; a badly hurt hero swaps with a healthier ally standing farther from the foes
         /// ("run to safety", melee pairs included); a partner swaps past a partner that comes after it in line, away
-        /// from the foes ("regroup"); and where one hero holds the way (a corridor, a doorway), the hurt one in front
-        /// and the fresh melee hero behind it trade places ("rotate the front"). Never straight back with the one it
-        /// just swapped with. The player's own moves always swap.
+        /// from the foes ("regroup"); where one hero holds the way (a corridor, a doorway), the hurt one in front
+        /// and the fresh melee hero behind it trade places ("rotate the front"); and a hero boxed in under a slam it
+        /// wouldn't survive trades places with an ally out of reach that would ("take the blow"). Never straight back
+        /// with the one it just swapped with. The player's own moves always swap.
         /// </summary>
         public bool CanSwap(Actor mover, Actor other)
         {
@@ -562,7 +568,44 @@ namespace FiveKingdoms.Core
             if (mover.SwappedWithId == other.Id && mover.SwapBlockTurns > 0) return false;
             if (other.SwappedWithId == mover.Id && other.SwapBlockTurns > 0) return false;
             if (GridPos.ChebyshevDistance(mover.Pos, other.Pos) != 1 || !Map.IsCornerClear(mover.Pos, Directions.Toward(mover.Pos, other.Pos))) return false;
-            return IsEngageSwap(mover, other) || IsSaferSwap(mover, other) || IsRegroupSwap(mover, other) || IsRotateSwap(mover, other);
+            return IsEngageSwap(mover, other) || IsSaferSwap(mover, other) || IsRegroupSwap(mover, other) || IsRotateSwap(mover, other) ||
+                   IsShelterSwap(mover, other);
+        }
+
+        /// <summary>
+        /// "Take the blow" (PROGRESSION.md, "Footing in a boss fight"): a slam is winding up over <paramref name="mover"/>,
+        /// which has no way out and would fall to it, and <paramref name="other"/> stands out of its reach and would
+        /// come through it with at least <see cref="HeroTactics.ShelterHpPercent"/> of its HP. Never the leader: the
+        /// hero the player controls is not moved under a slam.
+        /// </summary>
+        public bool IsShelterSwap(Actor mover, Actor other)
+        {
+            if (other == Hero || mover.Team != other.Team) return false;
+            foreach (var boss in actors)
+            {
+                if (boss.Team == mover.Team || !boss.Charging) continue;
+                if (GridPos.ChebyshevDistance(mover.Pos, boss.Pos) > EnemyBrain.SlamRadius) continue;
+                if (GridPos.ChebyshevDistance(other.Pos, boss.Pos) <= EnemyBrain.SlamRadius) continue;
+                if (HeroTactics.HasWayOut(this, mover, boss) || SlamDamage(boss, mover) < mover.Hp) continue;
+                if ((long)(other.Hp - SlamDamage(boss, other)) * 100 >= (long)other.MaxHp * HeroTactics.ShelterHpPercent) return true;
+            }
+            return false;
+        }
+
+        /// <summary>The most a slam of <paramref name="boss"/> does to <paramref name="target"/> as it stands now (no critical hit).</summary>
+        public int SlamDamage(Actor boss, Actor target) =>
+            AdjustForStatuses(target, boss, CombatRules.MaxDamage(boss, target, EnemyBrain.SlamDamagePercent));
+
+        /// <summary>
+        /// Whether <paramref name="first"/>'s next turn comes before <paramref name="second"/>'s, as the timeline
+        /// stands (ties go to the leader, then the lower id). Outside a fight everyone moves once a round, so it does.
+        /// </summary>
+        public bool TurnComesBefore(Actor first, Actor second)
+        {
+            if (!InCombat || !timeline.Contains(first.Id) || !timeline.Contains(second.Id)) return true;
+            var firstNext = timeline.NextTurnOf(first.Id);
+            var secondNext = timeline.NextTurnOf(second.Id);
+            return firstNext < secondNext || firstNext == secondNext && (first == Hero || second != Hero && first.Id < second.Id);
         }
 
         /// <summary>A melee hero past a ranged one, to stand next to a foe or strictly closer to one.</summary>
@@ -978,6 +1021,7 @@ namespace FiveKingdoms.Core
             if (!started) StartTurn(partner);
             var command = PartnerBrain.Decide(this, partner);
             if (command.Holding) Held(partner);
+            if (command.KeepingClear) KeptClear(partner);
             int cost = Config.Costs.PercentFor(ActionKind.Wait);
             var aim = AimOf(command, partner);
             switch (command.Kind)
@@ -1110,6 +1154,7 @@ namespace FiveKingdoms.Core
         /// </summary>
         SwappedEvent SwapOf(Actor mover, Actor other)
         {
+            if (IsShelterSwap(mover, other)) return new SwappedEvent(mover.Id, other.Id, SwapReason.Shelter, mover.Id);
             if (IsFrontRotation(front: mover, back: other)) return new SwappedEvent(mover.Id, other.Id, SwapReason.Rotate, mover.Id);
             if (IsFrontRotation(front: other, back: mover)) return new SwappedEvent(mover.Id, other.Id, SwapReason.Rotate, other.Id);
             if (IsSaferSwap(mover, other)) return new SwappedEvent(mover.Id, other.Id, SwapReason.Safety, mover.Id);

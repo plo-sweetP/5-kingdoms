@@ -165,9 +165,11 @@ namespace FiveKingdoms.Core
         /// of Protection covered Haiden himself, 24000 since the party holds doorways and rotates its front (C1):
         /// nearly always all three heroes now reach it, where one in three used to fall on the way; and 25000 since
         /// Kristela fights as a Fencer (1g-1): Blade Dance puts all five strikes on a boss that stands alone, and
-        /// fresh level-1 wins had crept past 5% (32 of 600 seeds; 28 at 25000).
+        /// fresh level-1 wins had crept past 5% (32 of 600 seeds; 28 at 25000); and 30000 since the heroes keep out
+        /// of its wind-up instead of walking back into it (playtest pass 1, "Footing in a boss fight"): its slam hit
+        /// a melee hero 561 times in 600 fights before and once after, and fresh wins had gone to 46 of 600.
         /// </summary>
-        public static readonly ActorDefinition Troll = new ActorDefinition("troll", "Troll", maxHp: 25000, attack: 260, defense: 50,
+        public static readonly ActorDefinition Troll = new ActorDefinition("troll", "Troll", maxHp: 30000, attack: 260, defense: 50,
             expReward: 80, brain: ActorBrain.Troll, speed: 85);
 
         /// <summary>

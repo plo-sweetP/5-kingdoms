@@ -277,6 +277,12 @@ namespace FiveKingdoms.Core
         public IReadOnlyList<TreeChoice> Choices => choices;
 
         /// <summary>The icon of a skill of this hero: its id, or for the weapon attack the weapon's ("attack_hunter_bow").</summary>
+        /// <summary>
+        /// Whether the skill in a loadout slot is always on (<see cref="SkillDefinition.AlwaysOn"/>: a passive that
+        /// keeps a slot): the screen draws its sphere lit, and its info says "Always on".
+        /// </summary>
+        public bool IsAlwaysOn(int slot) => SkillIn(slot)?.AlwaysOn == true;
+
         public string IconOf(SkillDefinition skill) =>
             skill == null ? null : skill.Id == WeaponAttackId ? "attack_" + (Hero.Definition.Weapon?.Id ?? "none") : skill.Id;
 

@@ -295,7 +295,8 @@ namespace FiveKingdoms.UI
                 right.AppendLine("<size=8> </size>");
             }
             Entry(hero.Kit.WeaponAttack, "weapon attack");
-            for (int i = 0; i < hero.Skills.Count; i++) Entry(hero.Skills[i], $"skill {i + 1}");
+            for (int i = 0; i < hero.Skills.Count; i++)
+                Entry(hero.Skills[i], hero.Skills[i].AlwaysOn ? $"skill {i + 1}, {TreeText.AlwaysOn}" : $"skill {i + 1}");
             Entry(hero.Ultimate, "ultimate");
             statsRight.text = right.ToString();
 

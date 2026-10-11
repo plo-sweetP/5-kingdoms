@@ -49,16 +49,20 @@ namespace FiveKingdoms.Core
         /// <summary>"+5", "-5", "+0".</summary>
         public static string Signed(int value) => value < 0 ? value.ToString(CultureInfo.InvariantCulture) : "+" + value.ToString(CultureInfo.InvariantCulture);
 
-        /// <summary>A skill's tags for the line under its name: "Quick", "needs a bow", "ultimate".</summary>
+        /// <summary>A skill's tags for the line under its name: "Quick", "always on", "needs a bow", "ultimate".</summary>
         public static string Tags(SkillDefinition skill)
         {
             var parts = new List<string>();
             if (skill.IsUltimate) parts.Add("ultimate");
             if (skill.IsQuick) parts.Add("Quick");
+            if (skill.AlwaysOn) parts.Add(AlwaysOn);
             string weapon = WeaponName(skill.Weapon);
             if (weapon != null) parts.Add("needs " + weapon);
             return string.Join(", ", parts);
         }
+
+        /// <summary>What the screens call a passive that sits in a loadout slot (<see cref="SkillDefinition.AlwaysOn"/>).</summary>
+        public const string AlwaysOn = "always on";
 
         /// <summary>Why a skill can't go in a loadout slot, for the screen.</summary>
         public static string Why(EquipCheck check, SkillDefinition skill, HeroProgress hero)

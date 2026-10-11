@@ -13,7 +13,10 @@ namespace FiveKingdoms.Core
         /// <summary>Goes after the taunter instead of the nearest foe, while it can reach it (Shoulder Bash).</summary>
         Taunt,
 
-        /// <summary>Takes <see cref="StatusEffect.Power"/>% more damage from whoever marked it (Hunter's Mark).</summary>
+        /// <summary>
+        /// Takes <see cref="StatusEffect.Power"/>% more damage from whoever marked it (Hunter's Mark; with the Archer's
+        /// Deadly Mark the hunter's shots place it and build it up).
+        /// </summary>
         Mark,
 
         /// <summary>Can't move, though it can still attack what's next to it (a snare trap).</summary>
@@ -54,7 +57,8 @@ namespace FiveKingdoms.Core
         /// <summary>Who applied it.</summary>
         public int SourceId { get; }
 
-        public int Power { get; }
+        /// <summary>How strong it is, in percent. An always-on mark's grows with each shot of its hunter on the marked foe.</summary>
+        public int Power { get; set; }
 
         /// <summary>The owner's own turns left; unused when it ends on the source's turn instead.</summary>
         public int TurnsLeft { get; set; }

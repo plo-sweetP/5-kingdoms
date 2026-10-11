@@ -350,7 +350,7 @@ namespace FiveKingdoms.Dungeon
             SkillDefinition skill = null;
             if (command.Kind == HeroCommandKind.Skill)
             {
-                if (run.CheckSkill(command.Slot) is SkillCheck.NoSkill or SkillCheck.OnCooldown) return command;
+                if (run.CheckSkill(command.Slot) is SkillCheck.NoSkill or SkillCheck.OnCooldown or SkillCheck.AlwaysOn) return command;
                 skill = hero.Skills[command.Slot];
             }
             else if (command.Kind == HeroCommandKind.Ultimate)
@@ -751,6 +751,7 @@ namespace FiveKingdoms.Dungeon
                 : run.CheckSkill(slot);
             switch (check)
             {
+                case SkillCheck.AlwaysOn: return AlwaysOnMessage(run, run.Hero, skill);
                 case SkillCheck.OnCooldown:
                     int turns = run.Hero.SkillCooldowns[slot];
                     return turns == 1 ? $"{skill.Name} was just used: it's ready again next turn." : $"{skill.Name} is recharging: {turns} more turns.";
@@ -761,6 +762,18 @@ namespace FiveKingdoms.Dungeon
                 case SkillCheck.Blocked: return skill.RollTiles > 0 ? "No room to roll that way." : "No room to dash there.";
                 default: return $"{skill.Name} can't be used right now.";
             }
+        }
+
+        /// <summary>
+        /// What pressing an always-on skill's button says: there is nothing to press, and what the skill is doing right
+        /// now (a mark that the hero's shots build up: the bonus on the foe that carries it).
+        /// </summary>
+        public static string AlwaysOnMessage(DungeonRun run, Actor hero, SkillDefinition skill)
+        {
+            if (skill.Effect != SkillEffect.Mark) return $"{skill.Name} is always on: there is nothing to press.";
+            string what = $"{skill.Name} is always on: {hero.Name}'s shots mark the foe they are aimed at, and each further shot on it hits harder.";
+            var marked = run.MarkedBy(hero, out var mark);
+            return marked == null ? what : $"{what} The {marked.Name} takes {mark.Power}% more now.";
         }
 
         /// <summary>Why the ultimate can't be used right now, for the message log.</summary>

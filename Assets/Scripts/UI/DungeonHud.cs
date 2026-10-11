@@ -30,6 +30,7 @@ namespace FiveKingdoms.UI
         public static readonly Color HintColor = new Color(0.75f, 0.75f, 0.82f);
         static readonly Color PanelColor = new Color(0.3f, 0.33f, 0.42f, 0.92f);
         static readonly Color QuickTagColor = new Color(0.45f, 0.9f, 0.68f);
+        static readonly Color AlwaysOnTagColor = new Color(1f, 0.82f, 0.4f);
         static readonly Color BossBarColor = new Color(0.86f, 0.36f, 0.3f);
         static readonly Color HeroTurnColor = new Color(0.36f, 0.62f, 0.95f);
         static readonly Color EnemyTurnColor = new Color(0.8f, 0.36f, 0.36f);
@@ -40,6 +41,9 @@ namespace FiveKingdoms.UI
         // ones for the rest.
         const string AttackArt = "round_red";
         const string SkillArt = "tiny_blue";
+
+        /// <summary>An always-on skill's button (<see cref="SkillDefinition.AlwaysOn"/>): dark, a thing that isn't pressed.</summary>
+        const string AlwaysOnArt = "tiny_dark";
         const string UltimateArt = "tiny_dark";
         const string UltimateReadyArt = "tiny_gold";
         const string ActionArt = "button_dark";
@@ -116,7 +120,8 @@ namespace FiveKingdoms.UI
         readonly HoldButton[] skillButtons = new HoldButton[4]; // Three skills, then the ultimate.
         readonly bool[] skillUsable = new bool[4];              // What the rules say; Auto greys them all the same.
         readonly Text[] skillKeys = new Text[4];
-        readonly GameObject[] quickTags = new GameObject[3];
+        readonly Image[] skillTags = new Image[3];               // "Quick" or "Always on", under the button.
+        readonly Text[] skillTagTexts = new Text[3];
         bool autoPilotOn;
         bool hasBerries;
         float lastBlockedNotice = -10f;
@@ -242,6 +247,8 @@ namespace FiveKingdoms.UI
         /// shows its name, a small Quick tag if it takes half a turn, and "next turn" while it sits out its cooldown; the
         /// ultimate shows its charge, and its name once it's ready. A skill that can't be used right now is dimmed but
         /// still answers a press, so the log can say why. <see cref="ApplyAvailability"/> sets what can be pressed.
+        /// An always-on skill (a passive in a slot) has a dark button with an "Always on" tag that shows what it is
+        /// doing right now (<see cref="AlwaysOnLabel"/>); it is lit, since it is on, and a press only says what it is.
         /// </summary>
         void RefreshSkills(DungeonRun run)
         {
@@ -255,14 +262,23 @@ namespace FiveKingdoms.UI
                 if (i >= skills.Count)
                 {
                     button.SetLabel("-");
+                    button.SetArt(SkillArt);
                     skillUsable[i] = false;
-                    quickTags[i].SetActive(false);
+                    SetSkillTag(i, null, QuickTagColor);
                     continue;
                 }
                 var skill = skills[i];
+                button.SetArt(skill.AlwaysOn ? AlwaysOnArt : SkillArt);
+                if (skill.AlwaysOn)
+                {
+                    button.SetLabel(AlwaysOnLabel(run, hero, skill));
+                    SetSkillTag(i, "Always on", AlwaysOnTagColor);
+                    skillUsable[i] = playing;
+                    continue;
+                }
                 bool cooling = hero.SkillCooldowns[i] > 0;
                 button.SetLabel(cooling ? $"{skill.ShortName}\n<size=22>next turn</size>" : skill.ShortName);
-                quickTags[i].SetActive(skill.IsQuick);
+                SetSkillTag(i, skill.IsQuick ? "Quick" : null, QuickTagColor);
                 var check = run.CheckSkill(i);
                 // Blocked only means "not the way the hero faces": aiming can still find room.
                 skillUsable[i] = playing && (check == SkillCheck.Ready || check == SkillCheck.Blocked);
@@ -282,6 +298,29 @@ namespace FiveKingdoms.UI
                 ult.SetArt(ready ? UltimateReadyArt : UltimateArt);
                 skillUsable[3] = playing && ready;
             }
+        }
+
+        /// <summary>The small tag under a skill button, or none: "Quick" for half a turn, "Always on" for a passive.</summary>
+        void SetSkillTag(int slot, string text, Color color)
+        {
+            var tag = skillTags[slot];
+            tag.gameObject.SetActive(text != null);
+            if (text == null) return;
+            tag.color = color;
+            skillTagTexts[slot].text = text;
+            // Wide enough for its words.
+            tag.rectTransform.sizeDelta = new Vector2(text.Length > 5 ? 116f : 80f, 32f);
+        }
+
+        /// <summary>
+        /// What an always-on skill's button says: its name, and under it what it is doing right now. For a mark that
+        /// the hero's shots build up (the Archer's Deadly Mark) that is the bonus on the foe that carries it.
+        /// </summary>
+        public static string AlwaysOnLabel(DungeonRun run, Actor hero, SkillDefinition skill)
+        {
+            if (skill.Effect == SkillEffect.Mark && run.MarkedBy(hero, out var mark) != null)
+                return $"{skill.ShortName}\n<size=22>+{mark.Power}%</size>";
+            return skill.ShortName;
         }
 
         /// <summary>
@@ -623,13 +662,15 @@ namespace FiveKingdoms.UI
                 button.DisabledPressed += () => CommandRequested?.Invoke(command);
                 if (ultimate) continue;
 
-                // A small "Quick" tag for skills that take half a turn (never D&D terms like "bonus action").
-                var tag = UiFactory.CreatePanel("Quick", button.transform, "frame", QuickTagColor);
+                // A small "Quick" tag for skills that take half a turn (never D&D terms like "bonus action"); an
+                // always-on skill says "Always on" there.
+                var tag = UiFactory.CreatePanel("Tag", button.transform, "frame", QuickTagColor);
                 UiFactory.Place(tag.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, -6f), new Vector2(80f, 32f), new Vector2(0.5f, 0.5f));
                 var tagText = UiFactory.CreateText("Text", tag.transform, "Quick", 18, TextAnchor.MiddleCenter, new Color(0.05f, 0.12f, 0.08f));
                 UiFactory.Stretch(tagText.rectTransform);
                 tag.gameObject.SetActive(false);
-                quickTags[i] = tag.gameObject;
+                skillTags[i] = tag;
+                skillTagTexts[i] = tagText;
             }
 
             aimPrompt = UiFactory.CreateText("AimPrompt", safeArea, "", 30, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.6f));

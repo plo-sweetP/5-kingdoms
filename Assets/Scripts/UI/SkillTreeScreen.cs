@@ -30,6 +30,9 @@ namespace FiveKingdoms.UI
         static readonly Color Backdrop = new Color(0.063f, 0.075f, 0.11f, 1f);
         static readonly Color Dim = Hex(0x9aa3b5), Faint = Hex(0x5d667b), Gold = Hex(0xffd866);
         static readonly Color LockedTint = Hex(0x444a5e), PassedTint = Hex(0x666d82), SlotTint = Hex(0x8d98ad), UltimateTint = Hex(0xf0b93c);
+
+        /// <summary>The loadout sphere of an always-on skill (a passive that keeps a slot): warm, lit and ringed.</summary>
+        static readonly Color AlwaysOnTint = Hex(0xc9a56a);
         static readonly Color TrackAhead = Hex(0x4a5063), LineQuiet = Hex(0x3a4156), Unchosen = Hex(0xb9bfcc);
         const string DimHex = "9aa3b5";
         const int ChoiceRows = 4;
@@ -611,8 +614,10 @@ namespace FiveKingdoms.UI
             for (int i = 0; i < slots.Length; i++)
             {
                 var skill = model.SkillIn(i);
-                Show(slots[i], skill != null ? (i == SkillTreeModel.UltimateSlot ? UltimateTint : SlotTint) : LockedTint, model.IconOf(skill),
-                    glow: false, ring: false, shine: skill != null, glyph: Color.white);
+                // An always-on skill's sphere is lit and ringed: it works by itself.
+                bool alwaysOn = model.IsAlwaysOn(i);
+                Show(slots[i], skill == null ? LockedTint : i == SkillTreeModel.UltimateSlot ? UltimateTint : alwaysOn ? AlwaysOnTint : SlotTint,
+                    model.IconOf(skill), glow: alwaysOn, ring: alwaysOn, shine: skill != null, glyph: Color.white);
             }
             hint.text = HintFor(model);
             unlearnButton.SetLabel($"Unlearn {shown.Name}");

@@ -181,6 +181,9 @@ namespace FiveKingdoms.Dungeon
                     case StatusAppliedEvent status:
                         ShowStatus(run, status);
                         break;
+                    case MarkBuiltEvent built:
+                        ShowMarkBuilt(run, built);
+                        break;
                     case StatusEndedEvent ended:
                         if (actors.TryGetValue(ended.ActorId, out var cleared))
                         {
@@ -540,8 +543,17 @@ namespace FiveKingdoms.Dungeon
                     hud.AddMessage($"{Subject(view)} is taunted into attacking {sourceName}.", WarningColor);
                     break;
                 case StatusKind.Mark:
-                    hud.ShowFloatingText(view.TextAnchor, "Marked", MarkColor, 0.75f);
                     Destroy(Effects.Reticle(effectRoot, view.transform.position, MarkColor, pulse: true), 0.45f);
+                    // An always-on mark is placed by its hunter's shots and grows with them (the Archer's Deadly Mark).
+                    if (PartyMember(run, status.SourceId) is Actor hunter && DungeonRun.AlwaysOnMarkOf(hunter) != null)
+                    {
+                        hud.ShowFloatingText(view.TextAnchor, status.Power > 0 ? $"Mark +{status.Power}%" : "Marked", MarkColor, 0.75f);
+                        hud.AddMessage(status.Power > 0
+                            ? $"{sourceName}'s mark moves to {Subject(view).ToLowerInvariant()} with +{status.Power}%: each further shot of {sourceName}'s adds to it."
+                            : $"{Subject(view)} is marked: each further shot of {sourceName}'s on it hits harder.", MarkColor);
+                        break;
+                    }
+                    hud.ShowFloatingText(view.TextAnchor, "Marked", MarkColor, 0.75f);
                     hud.AddMessage($"{Subject(view)} is marked: it takes more damage.", MarkColor);
                     break;
                 case StatusKind.Rooted:
@@ -561,6 +573,20 @@ namespace FiveKingdoms.Dungeon
                     break;
             }
             ShowStatuses(view, run.FindActor(status.ActorId));
+        }
+
+        /// <summary>
+        /// An always-on mark grew with its hunter's shot: the new bonus over the marked foe, and a line in the log
+        /// when it has reached the most it can be.
+        /// </summary>
+        void ShowMarkBuilt(DungeonRun run, MarkBuiltEvent built)
+        {
+            if (!actors.TryGetValue(built.ActorId, out var view)) return;
+            hud.ShowFloatingText(view.TextAnchor, $"Mark +{built.Power}%", MarkColor, 0.75f);
+            var hunter = PartyMember(run, built.HunterId);
+            var skill = hunter != null ? DungeonRun.AlwaysOnMarkOf(hunter) : null;
+            if (skill != null && built.Power >= skill.MaxPower)
+                hud.AddMessage($"{hunter.Name}'s mark on {Subject(view).ToLowerInvariant()} is at its full +{built.Power}%.", MarkColor);
         }
 
         /// <summary>

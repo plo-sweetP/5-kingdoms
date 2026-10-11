@@ -194,9 +194,17 @@ namespace FiveKingdoms.Core
             milestones: new[]
             {
                 new ClassMilestone(5,
+                    // Peter, 2026-10-10: "mark on the foe he shoots. and yes, always on skill. basically similar to
+                    // passives". The first always-on skill in a loadout (SkillDefinition.AlwaysOn).
                     new ClassOption("archer_deadly_mark", "Deadly Mark", 0,
-                        "Hunter's Mark bites deeper: the marked foe takes 40% more damage from the hunter (was 25%).",
-                        upgrades: SkillCatalog.HuntersMark, change: skill => skill.Power = 40),
+                        "Hunter's Mark becomes always on: no button and no time. The hero's shots mark the foe they are aimed at, and each further shot on it adds 10% to the hero's damage on it, up to 40%. A shot at another foe moves the mark, and it starts over.",
+                        upgrades: SkillCatalog.HuntersMark, change: skill =>
+                        {
+                            skill.AlwaysOn = true;
+                            skill.Power = 0;
+                            skill.BuildPercent = 10;
+                            skill.MaxPower = 40;
+                        }),
                     new ClassOption("archer_crippling_shot", "Crippling Shot", 1,
                         "A new skill: a shot that slows what it hits, so its next turn comes later.",
                         teaches: SkillCatalog.CripplingShot),

@@ -7,7 +7,13 @@ namespace FiveKingdoms.Core
     public enum RunState { InProgress, Won, Lost, Left }
 
     /// <summary>Whether a skill can be used right now, and if not, why (for button states and messages).</summary>
-    public enum SkillCheck { Ready, NoSkill, OnCooldown, NotCharged, NoTarget, NotNeeded, Blocked }
+    public enum SkillCheck
+    {
+        Ready, NoSkill, OnCooldown, NotCharged, NoTarget, NotNeeded, Blocked,
+
+        /// <summary>A passive in a loadout slot (<see cref="SkillDefinition.AlwaysOn"/>): it works by itself and is never used.</summary>
+        AlwaysOn,
+    }
 
     /// <summary>Where an action is pointed: a direction, or the tile of the foe it's for (tapped, or picked by the AI).</summary>
     internal readonly struct AimAt
@@ -309,6 +315,7 @@ namespace FiveKingdoms.Core
         {
             var skills = user.Skills;
             if (slot < 0 || slot >= skills.Count) return SkillCheck.NoSkill;
+            if (skills[slot].AlwaysOn) return SkillCheck.AlwaysOn;
             if (user.SkillCooldowns[slot] > 0) return SkillCheck.OnCooldown;
             return CheckTarget(user, skills[slot], aim);
         }
@@ -1194,6 +1201,7 @@ namespace FiveKingdoms.Core
             attacker.Facing = dir;
             var offset = dir.ToOffset();
             var lands = target?.Pos ?? attacker.Pos + new GridPos(offset.X * distance, offset.Y * distance);
+            if (ranged && target != null) ShootAtMark(attacker, target, aimed: true);
             for (int hit = 0; hit < attack.Hits && State == RunState.InProgress && attacker.IsAlive; hit++)
             {
                 if (hit > 0 && (target == null || !target.IsAlive)) break;
@@ -1504,6 +1512,55 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>
+        /// The hero's always-on mark (the Archer's Deadly Mark) if it has one in its loadout, else null. Such a mark is
+        /// never used: the hero's shots place it and build it up (<see cref="ShootAtMark"/>).
+        /// </summary>
+        public static SkillDefinition AlwaysOnMarkOf(Actor hero)
+        {
+            foreach (var skill in hero.Skills)
+                if (skill.AlwaysOn && skill.Effect == SkillEffect.Mark) return skill;
+            return null;
+        }
+
+        /// <summary>The foe that carries <paramref name="hunter"/>'s mark, or null; <paramref name="mark"/> is the mark on it.</summary>
+        public Actor MarkedBy(Actor hunter, out StatusEffect mark)
+        {
+            foreach (var actor in actors)
+            {
+                mark = actor.FindStatus(StatusKind.Mark);
+                if (mark != null && mark.SourceId == hunter.Id) return actor;
+            }
+            mark = null;
+            return null;
+        }
+
+        /// <summary>
+        /// An always-on mark and a shot of its hunter at <paramref name="target"/>, before the shot's damage (PROGRESSION.md,
+        /// "Deadly Mark"). On the foe that carries the mark, the shot builds it up by the skill's BuildPercent, up to
+        /// its MaxPower, and the mark lasts its full time again: the shot itself already hits that much harder. On any
+        /// other foe an <paramref name="aimed"/> shot moves the mark there, where it starts over at the skill's Power;
+        /// a shot the player didn't aim (a roll's) leaves the mark where it is. A shot counts once, however many arrows
+        /// the bow looses, and only for the foe it was shot at.
+        /// </summary>
+        void ShootAtMark(Actor user, Actor target, bool aimed)
+        {
+            var skill = user.Team == Team.Hero ? AlwaysOnMarkOf(user) : null;
+            if (skill == null) return;
+            var mark = target.FindStatus(StatusKind.Mark);
+            if (mark != null && mark.SourceId == user.Id)
+            {
+                mark.TurnsLeft = skill.StatusTurns;
+                if (mark.Power >= skill.MaxPower) return;
+                mark.Power = Math.Min(skill.MaxPower, mark.Power + skill.BuildPercent);
+                events.Add(new MarkBuiltEvent(user.Id, target.Id, mark.Power));
+                return;
+            }
+            if (!aimed) return;
+            ClearMarksFrom(user);
+            AddStatus(target, StatusKind.Mark, user, skill.Power, skill.StatusTurns, endsOnSourceTurn: false);
+        }
+
+        /// <summary>
         /// A shot skill. With a Multishot weapon (the Hunter Bow), a ranged physical skill fires 2 arrows at reduced damage:
         /// the first at the aimed target, the second at another foe in sight within range if there is one, else the same
         /// target. Each arrow rolls damage and crit on its own; a slow or knockback (straight away from the shooter, to the
@@ -1521,6 +1578,8 @@ namespace FiveKingdoms.Core
             int arrows = multishot ? 2 : 1;
             int percent = multishot ? skill.Power * weapon.PassivePower / 100 : skill.Power;
             int reach = ReachPercent(user, skill.IsRanged);
+            // A roll's shot goes to the nearest foe, not to one the player chose: it never moves an always-on mark.
+            ShootAtMark(user, first, aimed: skill.RollTiles == 0);
 
             var hit = new List<Actor>();
             for (int arrow = 0; arrow < arrows && State == RunState.InProgress; arrow++)
@@ -1730,7 +1789,7 @@ namespace FiveKingdoms.Core
         {
             target.Statuses.RemoveAll(status => status.Kind == kind);
             target.Statuses.Add(new StatusEffect(kind, source.Id, power, turns, endsOnSourceTurn, healPercent, bossPower, counterPercent));
-            events.Add(new StatusAppliedEvent(target.Id, kind, source.Id));
+            events.Add(new StatusAppliedEvent(target.Id, kind, source.Id, power));
         }
 
         /// <summary><paramref name="source"/>'s turn is starting: whatever it gave "until its next turn" ends.</summary>
@@ -1907,7 +1966,10 @@ namespace FiveKingdoms.Core
             if (victim.Definition.IsBoss && IsBossFloor) EndRun(won: true);
         }
 
-        /// <summary>A marked foe fell: its hunter's mark jumps to the nearest other foe in range, for the turns it had left.</summary>
+        /// <summary>
+        /// A marked foe fell: its hunter's mark jumps to the nearest other foe in range, for the turns it had left. An
+        /// always-on mark takes half of what it had built up with it, and lasts its full time there.
+        /// </summary>
         void JumpMark(Actor victim)
         {
             var mark = victim.FindStatus(StatusKind.Mark);
@@ -1925,7 +1987,10 @@ namespace FiveKingdoms.Core
                     next = actor;
                 }
             }
-            if (next != null) AddStatus(next, StatusKind.Mark, hunter, mark.Power, Math.Max(1, mark.TurnsLeft), endsOnSourceTurn: false);
+            if (next == null) return;
+            var alwaysOn = hunter.Team == Team.Hero ? AlwaysOnMarkOf(hunter) : null;
+            if (alwaysOn != null) AddStatus(next, StatusKind.Mark, hunter, Math.Max(alwaysOn.Power, mark.Power / 2), alwaysOn.StatusTurns, endsOnSourceTurn: false);
+            else AddStatus(next, StatusKind.Mark, hunter, mark.Power, Math.Max(1, mark.TurnsLeft), endsOnSourceTurn: false);
         }
 
         const int MarkJumpRange = SkillCatalog.RangedReach;

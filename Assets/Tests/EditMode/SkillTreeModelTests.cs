@@ -345,6 +345,39 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
+        public void AnAlwaysOnSkillKeepsItsSlotAndTheScreenSaysSo()
+        {
+            // The Archer's Deadly Mark: Hunter's Mark becomes a passive that stays in the loadout.
+            var hero = TestHeroes.Built(ActorCatalog.Uzuki, 5, "archer_deadly_mark");
+            var model = new SkillTreeModel(new[] { hero });
+            Assert.IsTrue(model.IsAlwaysOn(0));
+            Assert.IsFalse(model.IsAlwaysOn(1));
+            Assert.IsFalse(model.IsAlwaysOn(SkillTreeModel.UltimateSlot));
+            model.Tap(TreeFocus.Slot(0));
+            var info = model.Info;
+            Assert.AreEqual("Hunter's Mark", info.Title);
+            Assert.AreEqual("Skill 1 of 3\nAlways on", info.Kind);
+            StringAssert.Contains("Always on: it works by itself while it is in the loadout", info.Body);
+            Assert.IsTrue(model.Choices.All(choice => choice.Check == EquipCheck.Ok), "it trades places like any skill");
+
+            // The option's own info: the mark as he has it, once picked.
+            model.Tap(TreeFocus.Option(0, 0));
+            info = model.Info;
+            Assert.AreEqual("Deadly Mark", info.Title);
+            Assert.AreEqual("Marksman, tier 5\nUpgrades Hunter's Mark", info.Kind);
+            StringAssert.Contains("Now: The hero's shots mark the foe they are aimed at.", info.Note);
+
+            // Before the pick: the Quick button it is, and what it would become.
+            var fresh = new HeroProgress(ActorCatalog.Uzuki, 5);
+            while (fresh.TierOf(ClassCatalog.Archer) < 4) Assert.IsTrue(fresh.Raise(ClassCatalog.Archer));
+            model = new SkillTreeModel(new[] { fresh });
+            Assert.IsFalse(model.IsAlwaysOn(0));
+            model.Tap(TreeFocus.Option(0, 0));
+            StringAssert.Contains("Now: Marks a foe in sight within 5 tiles", model.Info.Note);
+            StringAssert.Contains("With it: The hero's shots mark the foe they are aimed at.", model.Info.Note);
+        }
+
+        [Test]
         public void ALoadoutHoldsOneQuickSkillAndTheListSaysSo()
         {
             var screen = new Screen(ActorCatalog.Uzuki, 12);

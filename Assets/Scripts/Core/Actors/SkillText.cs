@@ -58,6 +58,14 @@ namespace FiveKingdoms.Core
                         ? $"Until the hero's next turn, the hero and the allies within {Tiles(skill.Radius)} take {skill.Power}% less damage."
                         : $"Until its next turn, the hero takes {skill.Power}% less damage.");
                     break;
+                case SkillEffect.Mark when skill.AlwaysOn:
+                    parts.Add("The hero's shots mark the foe they are aimed at. " +
+                              (skill.Power > 0 ? $"The marked foe takes {skill.Power}% more damage from the hero, and each further shot on it adds {skill.BuildPercent}%, "
+                                  : $"Each further shot on the marked foe adds {skill.BuildPercent}% to the hero's damage on it, ") +
+                              $"up to {skill.MaxPower}%. A shot aimed at another foe moves the mark, and it starts over.");
+                    parts.Add("When the marked foe falls, the mark moves to the nearest one with half of what it had built up. " +
+                              $"It fades when the hero hasn't shot the marked foe for {Turns(skill.StatusTurns)} of that foe.");
+                    break;
                 case SkillEffect.Mark:
                     parts.Add($"Marks a foe in sight within {Tiles(skill.Range)}: for {Turns(skill.StatusTurns)} it takes {skill.Power}% more damage " +
                               "from the hero. When the marked foe falls, the mark moves to the nearest one.");
@@ -84,6 +92,11 @@ namespace FiveKingdoms.Core
                 if (skill.Element != Element.None) parts.Add($"{skill.Element} damage.");
             }
 
+            if (skill.AlwaysOn)
+            {
+                parts.Add("Always on: it works by itself while it is in the loadout, with no button to press and no time spent.");
+                return string.Join(" ", parts);
+            }
             if (skill.IsUltimate) parts.Add("Ultimate: needs a full charge.");
             if (skill.IsQuick) parts.Add(skill.CostPercent == 50 ? "Quick: takes half a turn." : $"Quick: takes {skill.CostPercent}% of a turn.");
             else if (skill.CostPercent != 100) parts.Add($"Takes {skill.CostPercent}% of a turn.");

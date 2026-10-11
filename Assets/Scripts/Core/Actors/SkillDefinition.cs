@@ -32,7 +32,9 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// No damage: marks a foe in sight within Range, which then takes Power% more damage from the user for StatusTurns
-        /// of its turns. One mark per user; it jumps to the nearest foe when the marked one falls.
+        /// of its turns. One mark per user; it jumps to the nearest foe when the marked one falls. An always-on mark
+        /// (<see cref="SkillDefinition.AlwaysOn"/>: the Archer's Deadly Mark) is never used: the user's aimed shots
+        /// place it, and each further shot on the marked foe adds <see cref="SkillDefinition.BuildPercent"/> to it.
         /// </summary>
         Mark,
 
@@ -175,6 +177,20 @@ namespace FiveKingdoms.Core
         /// <summary>An ultimate: used with a full charge meter instead of a cooldown (<see cref="ActorDefinition.Ultimate"/>).</summary>
         public bool IsUltimate { get; }
 
+        /// <summary>
+        /// A passive that sits in a loadout slot (PROGRESSION.md, "Deadly Mark"): it works for as long as it is in the
+        /// loadout, with no button to press and no time spent. It can't be used (<see cref="SkillCheck.AlwaysOn"/>),
+        /// isn't Quick and has no cooldown. Only a class option sets it.
+        /// </summary>
+        public bool AlwaysOn { get; internal set; }
+
+        /// <summary>
+        /// An always-on mark: what each further shot of the user on the marked foe adds to the mark, in percent, up to
+        /// <see cref="MaxPower"/>. <see cref="Power"/> is what the mark starts at.
+        /// </summary>
+        public int BuildPercent { get; internal set; }
+        public int MaxPower { get; internal set; }
+
         /// <summary>Action-value cost in percent of a normal turn.</summary>
         public int CostPercent { get; internal set; }
 
@@ -299,13 +315,13 @@ namespace FiveKingdoms.Core
 
         /// <summary>Aimed at a foe or a direction (strikes, shots, marks, areas, rolls, dashes); heals, guards, auras and stances just happen.</summary>
         public bool NeedsAim =>
-            Effect != SkillEffect.Heal && Effect != SkillEffect.Guard && Effect != SkillEffect.Aura && Effect != SkillEffect.Counter;
+            !AlwaysOn && Effect != SkillEffect.Heal && Effect != SkillEffect.Guard && Effect != SkillEffect.Aura && Effect != SkillEffect.Counter;
 
         /// <summary>How far a strike reaches along a line: the next tile, or further for one that dashes there first.</summary>
         public int StrikeReach => 1 + DashTiles;
 
-        /// <summary>Half a turn or less: the HUD shows a small "Quick" tag.</summary>
-        public bool IsQuick => CostPercent <= QuickCostPercent;
+        /// <summary>Half a turn or less: the HUD shows a small "Quick" tag. An always-on skill takes no time at all and isn't one.</summary>
+        public bool IsQuick => !AlwaysOn && CostPercent <= QuickCostPercent;
     }
 
     /// <summary>

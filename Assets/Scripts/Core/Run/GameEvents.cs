@@ -417,11 +417,33 @@ namespace FiveKingdoms.Core
         public readonly StatusKind Kind;
         public readonly int SourceId;
 
-        public StatusAppliedEvent(int actorId, StatusKind kind, int sourceId)
+        /// <summary>How strong it is, in percent (a guard's cut, a mark's bonus as it starts); 0 for those without a number.</summary>
+        public readonly int Power;
+
+        public StatusAppliedEvent(int actorId, StatusKind kind, int sourceId, int power = 0)
         {
             ActorId = actorId;
             Kind = kind;
             SourceId = sourceId;
+            Power = power;
+        }
+    }
+
+    /// <summary>
+    /// An always-on mark grew (the Archer's Deadly Mark): <see cref="HunterId"/> shot the foe that carries its mark
+    /// again, and from this shot on the foe takes <see cref="Power"/>% more damage from that hunter.
+    /// </summary>
+    public sealed class MarkBuiltEvent : GameEvent
+    {
+        public readonly int HunterId;
+        public readonly int ActorId;
+        public readonly int Power;
+
+        public MarkBuiltEvent(int hunterId, int actorId, int power)
+        {
+            HunterId = hunterId;
+            ActorId = actorId;
+            Power = power;
         }
     }
 

@@ -414,6 +414,72 @@ namespace FiveKingdoms.Tests
         }
 
         [Test]
+        public void AgainstAHeavyBlowTheStanceComesBeforeHerThrusts()
+        {
+            var run = ApartFromHaiden(out var kristela, out var spider);
+            int thrusts = Slot(kristela, SkillCatalog.TripleThrust), stance = Slot(kristela, SkillCatalog.Riposte);
+            kristela.SkillCooldowns[thrusts] = 0;
+            Assert.AreEqual(HeroCommand.SkillAt(thrusts, spider.Pos), PartnerBrain.Decide(run, kristela), "a spider's bite: the thrusts are worth more");
+
+            spider.Attack = kristela.MaxHp; // Its bite now takes a good part of her HP.
+            Assert.GreaterOrEqual(run.BlowDamage(spider, kristela) * 100, kristela.MaxHp * HeroTactics.HeavyBlowPercent);
+            Assert.AreEqual(HeroCommand.Skill(stance), PartnerBrain.Decide(run, kristela), "a heavy blow is coming: she stands through it");
+        }
+
+        /// <summary>Kristela apart from Haiden with the Troll next to her, going for her; her Triple Thrust is ready.</summary>
+        static DungeonRun TrollOnKristela(out Actor kristela, out Actor troll)
+        {
+            var run = Run(new[] { ActorCatalog.Haiden, ActorCatalog.Kristela }, Room);
+            kristela = run.Party[1];
+            Place(kristela, 4, 3);
+            kristela.MaxHp = kristela.Hp = 100000;
+            troll = run.SpawnEnemy(new GridPos(5, 3), ActorCatalog.Troll);
+            troll.Alerted = true;
+            troll.SpecialCooldown = 3;
+            Assert.AreSame(kristela, EnemyBrain.TargetOf(run, troll));
+            return run;
+        }
+
+        [Test]
+        public void SheTakesTheStanceWhenABossIsGoingForHer()
+        {
+            var run = TrollOnKristela(out var kristela, out var troll);
+            Assert.IsFalse(EnemyBrain.NextTurnIsNoBlow(run, troll));
+            Assert.AreEqual(HeroCommand.Skill(Slot(kristela, SkillCatalog.Riposte)), PartnerBrain.Decide(run, kristela), "a boss's blow is always a heavy one");
+        }
+
+        [Test]
+        public void SheTakesNoStanceAgainstABossTurnThatBringsNoBlow()
+        {
+            var run = TrollOnKristela(out var kristela, out var troll);
+            var stance = HeroCommand.Skill(Slot(kristela, SkillCatalog.Riposte));
+
+            troll.SpecialCooldown = 1; // Its slam is ready by its next turn, and she is close: it winds up.
+            Assert.IsTrue(EnemyBrain.NextTurnIsNoBlow(run, troll));
+            Assert.AreNotEqual(stance, PartnerBrain.Decide(run, kristela));
+
+            troll.SpecialCooldown = 3;
+            troll.Hp = troll.MaxHp / 2; // At half its HP it calls for help first.
+            Assert.IsTrue(EnemyBrain.NextTurnIsNoBlow(run, troll));
+            Assert.AreNotEqual(stance, PartnerBrain.Decide(run, kristela));
+            troll.CalledForHelp = true;
+            Assert.IsFalse(EnemyBrain.NextTurnIsNoBlow(run, troll));
+            Assert.AreEqual(stance, PartnerBrain.Decide(run, kristela));
+        }
+
+        [Test]
+        public void TheBossDoesWhatTheAiExpectsOfItsNextTurn()
+        {
+            // The prediction and the Troll's own brain must agree: a wind-up when its slam is ready, else a blow.
+            var run = TrollOnKristela(out var kristela, out var troll);
+            troll.SpecialCooldown = 1;
+            Assert.IsTrue(EnemyBrain.NextTurnIsNoBlow(run, troll));
+            run.Wait();
+            Assert.IsTrue(troll.Charging, "it wound up");
+            Assert.IsEmpty(run.Events.OfType<DamageEvent>().Where(hit => hit.TargetId == kristela.Id));
+        }
+
+        [Test]
         public void SheDoesNotRiposteAFoeHeldByHaidensTaunt()
         {
             var run = ApartFromHaiden(out var kristela, out var spider);

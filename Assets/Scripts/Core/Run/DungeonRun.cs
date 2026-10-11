@@ -599,6 +599,13 @@ namespace FiveKingdoms.Core
             return false;
         }
 
+        /// <summary>
+        /// The most a blow of <paramref name="attacker"/>'s weapon attack does to <paramref name="target"/> as they
+        /// stand now (no critical hit), for the AI to weigh a blow that is coming.
+        /// </summary>
+        public int BlowDamage(Actor attacker, Actor target) =>
+            AdjustForStatuses(target, attacker, CombatRules.MaxDamage(attacker, target, attacker.Kit.WeaponAttack.Power));
+
         /// <summary>The most a slam of <paramref name="boss"/> does to <paramref name="target"/> as it stands now (no critical hit).</summary>
         public int SlamDamage(Actor boss, Actor target) =>
             AdjustForStatuses(target, boss, CombatRules.MaxDamage(boss, target, EnemyBrain.SlamDamagePercent));
@@ -1824,7 +1831,8 @@ namespace FiveKingdoms.Core
 
         /// <summary>
         /// How much of a hit from <paramref name="attacker"/> this actor takes, in percent: a guard cuts it, and so do a
-        /// counter stance (less of a boss's hit) and an aura covering it (its own, or an ally's next to it); a mark
+        /// counter stance (less of a boss's hit), an aura covering it (its own, or an ally's next to it) and a
+        /// challenge the attacker is under (a taunt with a power, for its hits on the one who taunted it); a mark
         /// raises it (only for the hunter who placed it; with no attacker given, any mark counts). The cuts add up.
         /// </summary>
         public int DamageTakenPercent(Actor target, Actor attacker = null)
@@ -1832,6 +1840,9 @@ namespace FiveKingdoms.Core
             int percent = 100;
             var mark = target.FindStatus(StatusKind.Mark);
             if (mark != null && (attacker == null || mark.SourceId == attacker.Id)) percent += mark.Power;
+            // A foe under a challenge hits the one who taunted it less hard (the Paladin's Challenge).
+            var taunt = attacker?.FindStatus(StatusKind.Taunt);
+            if (taunt != null && taunt.SourceId == target.Id) percent -= taunt.Power;
             var guard = target.FindStatus(StatusKind.Guard);
             if (guard != null) percent -= guard.Power;
             var stance = target.FindStatus(StatusKind.Riposte);

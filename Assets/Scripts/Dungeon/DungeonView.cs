@@ -540,7 +540,10 @@ namespace FiveKingdoms.Dungeon
                     break;
                 case StatusKind.Taunt:
                     hud.ShowFloatingText(view.TextAnchor, "Taunted", WarningColor, 0.75f);
-                    hud.AddMessage($"{Subject(view)} is taunted into attacking {sourceName}.", WarningColor);
+                    // A challenge (a taunt with a power) also takes that much off the foe's hits on its taunter.
+                    hud.AddMessage(status.Power > 0
+                        ? $"{Subject(view)} is taunted into attacking {sourceName}, and hits {sourceName} {status.Power}% less hard."
+                        : $"{Subject(view)} is taunted into attacking {sourceName}.", WarningColor);
                     break;
                 case StatusKind.Mark:
                     Destroy(Effects.Reticle(effectRoot, view.transform.position, MarkColor, pulse: true), 0.45f);

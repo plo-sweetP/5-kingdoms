@@ -73,6 +73,21 @@ namespace FiveKingdoms.Core
             return taunter != null && taunter.IsAlive ? taunter : NearestFoe(run, self);
         }
 
+        /// <summary>
+        /// Whether a boss will spend its next turn on something other than a blow, as <see cref="DecideTroll"/> will
+        /// decide it: it calls for help (once, at half its HP), or its slam is ready by then and its target is close,
+        /// so it winds up. The party's AI reads this like a player who has learned the boss's rhythm: nobody takes a
+        /// counter stance against a turn that brings no blow.
+        /// </summary>
+        public static bool NextTurnIsNoBlow(DungeonRun run, Actor self)
+        {
+            if (self.Definition.Brain != ActorBrain.Troll || self.Charging) return false;
+            if (!self.CalledForHelp && self.Hp * 2 <= self.MaxHp) return true;
+            var target = TargetOf(run, self);
+            return target != null && self.Alerted && self.SpecialCooldown <= 1 &&
+                   GridPos.ChebyshevDistance(self.Pos, target.Pos) <= SlamTriggerRange;
+        }
+
         static Intent DecideTroll(DungeonRun run, Actor self)
         {
             if (self.Charging) return Intent.Slam;

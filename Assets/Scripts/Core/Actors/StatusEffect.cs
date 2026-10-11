@@ -10,7 +10,11 @@ namespace FiveKingdoms.Core
         /// <summary>Takes <see cref="StatusEffect.Power"/>% less damage until the guard's caster takes its next turn.</summary>
         Guard,
 
-        /// <summary>Goes after the taunter instead of the nearest foe, while it can reach it (Shoulder Bash).</summary>
+        /// <summary>
+        /// Goes after the taunter instead of the nearest foe, while it can reach it (Shoulder Bash). With a
+        /// <see cref="StatusEffect.Power"/>, its hits on the taunter also do that many percent less (the Paladin's
+        /// Challenge).
+        /// </summary>
         Taunt,
 
         /// <summary>

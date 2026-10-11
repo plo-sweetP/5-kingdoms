@@ -30,6 +30,9 @@ namespace FiveKingdoms.Core
         /// <summary>A utility status (a mark, a stun, a taunt) is only worth it on a foe with more HP than this many times the hero's ATK.</summary>
         const int UtilityTargetHits = 4;
 
+        /// <summary>A blow that takes at least this share of a hero's max HP is a heavy one: a counter stance is taken against it before any attack.</summary>
+        public const int HeavyBlowPercent = 25;
+
 
         /// <summary>Allies under this share of max HP make an aura worth raising.</summary>
         const int AuraHurtPercent = 70;
@@ -406,6 +409,34 @@ namespace FiveKingdoms.Core
         }
 
         /// <summary>
+        /// The Paladin's Challenge (a taunt that also takes its power off the taunted foe's hits on the taunter): the
+        /// hero keeps it up on a strong foe next to it (a boss, or one that will take several hits) that isn't under
+        /// its taunt, and does so before it heals: the foe then stays on the hero even while the hero steps out of a
+        /// slam, and what its blows lose is worth a heal. Only when that foe's next blow could fell the hero does the
+        /// heal come first.
+        /// </summary>
+        public static bool TryChallenge(DungeonRun run, Actor hero, out HeroCommand command)
+        {
+            command = HeroCommand.Wait;
+            var skills = hero.Skills;
+            for (int slot = 0; slot < skills.Count; slot++)
+            {
+                var skill = skills[slot];
+                if (skill.Effect != SkillEffect.Strike || skill.Status != StatusKind.Taunt || skill.StatusTurns <= 1) continue;
+                foreach (var foe in FoesInStrikeReach(run, hero))
+                {
+                    var taunt = foe.FindStatus(StatusKind.Taunt);
+                    if (!WorthAStatus(hero, foe) || taunt != null && taunt.SourceId == hero.Id) continue;
+                    if (run.BlowDamage(foe, hero) >= hero.Hp) continue;
+                    if (run.CheckSkillAt(hero, slot, foe.Pos) != SkillCheck.Ready) continue;
+                    command = HeroCommand.SkillAt(slot, foe.Pos);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Hunter's Mark (a Quick action) on the foe the hero is about to attack, if it's worth it (a boss, or one that
         /// will take several hits) and the hero's mark isn't on anyone yet. Everyone then goes for the marked foe.
         /// </summary>
@@ -531,8 +562,10 @@ namespace FiveKingdoms.Core
         /// A counter stance (Riposte) when it would be answered: a foe next to the hero comes up before the hero's next
         /// turn and is going for the hero, not held by another hero's taunt or busy with one (<see cref="WouldStrike"/>).
         /// Inside a boss's slam that is winding up that isn't its call: the hero steps out, or, with no way out, takes
-        /// the stance against the slam itself (<see cref="TryDodge"/>). And not while a skill that hits harder than the weapon attack is ready for a foe in reach: Triple Thrust
-        /// comes first.
+        /// the stance against the slam itself (<see cref="TryDodge"/>). And not while a skill that hits harder than the
+        /// weapon attack is ready for a foe in reach: Triple Thrust comes first. Unless the blow it would turn is a
+        /// heavy one (a boss's, or one that takes <see cref="HeavyBlowPercent"/> of the hero's HP): then standing
+        /// through it is worth more than the thrusts.
         /// </summary>
         public static bool TryRiposte(DungeonRun run, Actor hero, out HeroCommand command)
         {
@@ -540,15 +573,17 @@ namespace FiveKingdoms.Core
             int stance = SkillSlot(hero, SkillEffect.Counter);
             if (stance < 0 || run.CheckSkill(hero, stance, hero.Facing) != SkillCheck.Ready) return false;
             int cost = hero.Skills[stance].CostPercent;
-            bool answered = false;
+            bool answered = false, heavy = false;
             foreach (var foe in run.Actors)
             {
                 if (foe.Team == hero.Team) continue;
                 if (foe.Charging && GridPos.ChebyshevDistance(hero.Pos, foe.Pos) <= EnemyBrain.SlamRadius) return false;
-                answered |= WouldStrike(run, foe, hero, cost);
+                if (!WouldStrike(run, foe, hero, cost)) continue;
+                answered = true;
+                heavy |= foe.Definition.IsBoss || (long)run.BlowDamage(foe, hero) * 100 >= (long)hero.MaxHp * HeavyBlowPercent;
             }
             if (!answered) return false;
-            if (TryAttack(run, hero, out var attack) && attack.Kind == HeroCommandKind.Skill) return false;
+            if (!heavy && TryAttack(run, hero, out var attack) && attack.Kind == HeroCommandKind.Skill) return false;
             command = HeroCommand.Skill(stance);
             return true;
         }
@@ -558,12 +593,13 @@ namespace FiveKingdoms.Core
         /// hero now spends <paramref name="costPercent"/> of a turn: it stands next to the hero (corner allowing), its
         /// turn comes first, and the hero is the one it goes for (<see cref="EnemyBrain.TargetOf"/>: its taunter, else
         /// the nearest hero). Measured with -balance: without that last check two stances in three went unanswered
-        /// (1.2 a run, 0.4 answered), with it one in five (0.5 a run, 0.4 answered).
+        /// (1.2 a run, 0.4 answered), with it one in five (0.5 a run, 0.4 answered). A boss whose next turn is a
+        /// wind-up or a call for help strikes nobody (<see cref="EnemyBrain.NextTurnIsNoBlow"/>).
         /// </summary>
         static bool WouldStrike(DungeonRun run, Actor foe, Actor hero, int costPercent)
         {
             if (run.StrikeTargetAt(hero, foe.Pos) == null || !run.ActsBefore(foe, hero, costPercent)) return false;
-            return EnemyBrain.TargetOf(run, foe) == hero;
+            return EnemyBrain.TargetOf(run, foe) == hero && !EnemyBrain.NextTurnIsNoBlow(run, foe);
         }
 
         /// <summary>

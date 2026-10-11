@@ -77,10 +77,14 @@ namespace FiveKingdoms.Tests
             var haiden = Paladin(5, "paladin_challenge");
             var bash = Own(haiden, SkillCatalog.ShoulderBash);
             Assert.IsTrue(bash.StatusAround);
-            Assert.AreEqual(2, bash.StatusTurns);
+            Assert.AreEqual(4, bash.StatusTurns);
+            Assert.AreEqual(15, bash.StatusPower);
             Assert.IsFalse(SkillCatalog.ShoulderBash.StatusAround, "the catalog's skill is never changed");
             Assert.AreEqual(1, SkillCatalog.ShoulderBash.StatusTurns);
-            StringAssert.Contains("Taunts the foe and every other foe next to the hero: for 2 turns they go for the hero.", SkillText.Describe(bash));
+            Assert.AreEqual(0, SkillCatalog.ShoulderBash.StatusPower);
+            StringAssert.Contains("Taunts the foe and every other foe next to the hero: for 4 turns they go for the hero.", SkillText.Describe(bash));
+            StringAssert.Contains("A taunted foe does 15% less damage to the hero.", SkillText.Describe(bash));
+            StringAssert.DoesNotContain("less damage", SkillText.Describe(SkillCatalog.ShoulderBash));
 
             var run = TestRuns.With(haiden, Room); // Haiden at (1, 3).
             var target = Slow(Dummy(run, 2, 3));
@@ -91,9 +95,36 @@ namespace FiveKingdoms.Tests
 
             var taunts = run.Events.OfType<StatusAppliedEvent>().Where(status => status.Kind == StatusKind.Taunt).Select(status => status.ActorId).ToList();
             CollectionAssert.AreEquivalent(new[] { target.Id, above.Id, beside.Id }, taunts, "the one he bashed and the two next to him");
-            Assert.IsTrue(Taunted(target) && Taunted(above) && Taunted(beside), "a turn of theirs later it still holds: it lasts two");
-            Assert.AreEqual(1, above.FindStatus(StatusKind.Taunt).TurnsLeft);
+            Assert.IsTrue(Taunted(target) && Taunted(above) && Taunted(beside), "a turn of theirs later it still holds: it lasts four");
+            Assert.AreEqual(3, above.FindStatus(StatusKind.Taunt).TurnsLeft);
             Assert.IsFalse(Taunted(apart));
+        }
+
+        [Test]
+        public void AChallengedFoeHitsHimLessHard()
+        {
+            var run = TwoOnKristela(Paladin(5, "paladin_challenge"), out var haiden, out var upper, out var lower);
+            var kristela = run.Party[0];
+            Assert.AreEqual(100, run.DamageTakenPercent(haiden, lower), "before the challenge: a hit like any other");
+            run.SwitchLeader(1);
+            Assert.IsTrue(run.UseSkillAt(Slot(haiden, SkillCatalog.ShoulderBash), lower.Pos));
+            Assert.AreEqual(85, run.DamageTakenPercent(haiden, lower), "the foe he bashed");
+            Assert.AreEqual(85, run.DamageTakenPercent(haiden, upper), "and the other one next to him");
+            Assert.AreEqual(100, run.DamageTakenPercent(kristela, lower), "only its hits on the one who challenged it");
+            Assert.AreEqual(100, run.DamageTakenPercent(haiden, Dummy(run, 8, 5)), "a foe that isn't under his taunt");
+            lower.Attack = 1000;
+            Assert.AreEqual(CombatRules.MaxDamage(lower, haiden, lower.Kit.WeaponAttack.Power) * 85 / 100, run.BlowDamage(lower, haiden),
+                "the AI weighs its blow with the cut");
+        }
+
+        [Test]
+        public void WithoutChallengeATauntedFoeHitsAsHardAsEver()
+        {
+            var run = TwoOnKristela(Paladin(5, "paladin_searing_smite"), out var haiden, out _, out var lower);
+            run.SwitchLeader(1);
+            Assert.IsTrue(run.UseSkillAt(Slot(haiden, SkillCatalog.ShoulderBash), lower.Pos));
+            lower.Statuses.Add(new StatusEffect(StatusKind.Taunt, haiden.Id, 0, 2, endsOnSourceTurn: false));
+            Assert.AreEqual(100, run.DamageTakenPercent(haiden, lower));
         }
 
         [Test]
@@ -172,6 +203,51 @@ namespace FiveKingdoms.Tests
             foreach (var foe in new[] { upper, lower }) foe.Statuses.Add(new StatusEffect(StatusKind.Taunt, haiden.Id, 0, 2, endsOnSourceTurn: false));
             command = PartnerBrain.Decide(run, haiden);
             Assert.IsFalse(command.Kind == HeroCommandKind.Skill && command.Slot == bash, "nobody left to turn");
+        }
+
+        /// <summary>Haiden alone and hurt at (1, 3), next to a sturdy foe at (2, 3) that isn't under his taunt.</summary>
+        static DungeonRun HurtNextToASturdyFoe(string pick, out Actor foe, int foeAttack = 1)
+        {
+            var run = TestRuns.With(Paladin(5, pick), Room);
+            foe = Slow(Dummy(run, 2, 3, attack: foeAttack));
+            run.Hero.Hp = run.Hero.MaxHp * 40 / 100;
+            return run;
+        }
+
+        [Test]
+        public void TheAiKeepsTheChallengeUpBeforeItHeals()
+        {
+            var run = HurtNextToASturdyFoe("paladin_challenge", out var foe);
+            var haiden = run.Hero;
+            int bash = Slot(haiden, SkillCatalog.ShoulderBash), heal = Slot(haiden, SkillCatalog.PaladinHeal);
+            Assert.AreEqual(HeroCommand.SkillAt(bash, foe.Pos), AutoPilot.Decide(run), "the foe isn't under his challenge: that first");
+            Assert.AreEqual(HeroCommand.SkillAt(bash, foe.Pos), PartnerBrain.Decide(run, haiden), "as a partner too");
+
+            Assert.IsTrue(run.Execute(AutoPilot.Decide(run)));
+            Assert.IsTrue(Taunted(foe));
+            haiden.Hp = haiden.MaxHp * 40 / 100;
+            Assert.AreEqual(HeroCommand.Skill(heal), AutoPilot.Decide(run), "while the challenge holds he heals");
+
+            // The challenge has run out and the bash is ready again: he renews it.
+            foe.Statuses.Clear();
+            haiden.SkillCooldowns[bash] = 0;
+            Assert.AreEqual(HeroCommand.SkillAt(bash, foe.Pos), AutoPilot.Decide(run));
+        }
+
+        [Test]
+        public void TheAiHealsFirstWhenTheNextBlowCouldFellHim()
+        {
+            var run = HurtNextToASturdyFoe("paladin_challenge", out var foe, foeAttack: 100000);
+            var haiden = run.Hero;
+            Assert.GreaterOrEqual(run.BlowDamage(foe, haiden), haiden.Hp);
+            Assert.AreEqual(HeroCommand.Skill(Slot(haiden, SkillCatalog.PaladinHeal)), AutoPilot.Decide(run));
+        }
+
+        [Test]
+        public void WithoutChallengeAHurtPaladinHealsBeforeHeBashes()
+        {
+            var run = HurtNextToASturdyFoe("paladin_searing_smite", out _);
+            Assert.AreEqual(HeroCommand.Skill(Slot(run.Hero, SkillCatalog.PaladinHeal)), AutoPilot.Decide(run), "a one-turn taunt isn't worth going without the heal");
         }
 
         [Test]

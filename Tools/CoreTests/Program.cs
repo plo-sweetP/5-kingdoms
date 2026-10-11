@@ -430,13 +430,20 @@ namespace FiveKingdoms.CoreTests
             var packFights = new FightStats(Party.Length);
             var bossFight = new FightStats(Party.Length);
             var footing = new SlamStats(Party.Length);
+            // The second yardstick (how fast the party fights): the boss fight's rounds in the runs that were won, and
+            // what the boss loses per round of its fight, won or lost.
+            long wonBossRounds = 0, bossDamage = 0;
+            int bossMaxHp = 0;
             for (int seed = 1; seed <= seeds; seed++)
             {
                 var run = new DungeonRun(seed, tuning(), NewParty(StartLevel));
                 footing.BeginRun();
+                long bossRoundsBefore = bossFight.Rounds;
+                Actor boss = null;
                 for (int i = 0; i < 5000 && run.State == RunState.InProgress; i++)
                 {
                     bool wasBossFloor = run.IsBossFloor;
+                    boss ??= run.Boss;
                     var round = (wasBossFloor ? bossFight : packFights).Begin(run);
                     bool fighting = run.InCombat;
                     var command = AutoPilot.Decide(run);
@@ -507,6 +514,12 @@ namespace FiveKingdoms.CoreTests
                         }
                     }
                 }
+                if (boss != null)
+                {
+                    bossDamage += boss.MaxHp - boss.Hp;
+                    bossMaxHp = boss.MaxHp;
+                }
+                if (run.State == RunState.Won) wonBossRounds += bossFight.Rounds - bossRoundsBefore;
                 if (run.State == RunState.Won) won++;
                 else if (run.State == RunState.Lost) lost++;
                 else
@@ -526,6 +539,9 @@ namespace FiveKingdoms.CoreTests
             Console.WriteLine($"Fresh level-{StartLevel} party ({names}; the first leads), autopilot over {seeds} seeds: won {won}, lost {lost}, stalled {stalled}");
             Console.WriteLine($"Average: floor {floorSum / (float)seeds:0.0}, level {levelSum / (float)seeds:0.0}, turns {turnSum / (float)seeds:0}, " +
                               $"heroes fallen {fallenSum / (float)seeds:0.0} of 3");
+            string tempo = $"How fast the party fights: pack fights of {packFights.Rounds / (float)Math.Max(1, fights):0.00} rounds of blows each; " +
+                           $"the boss fight in the {won} runs won: {wonBossRounds / (float)Math.Max(1, won):0.0} rounds; in all its fights the boss lost " +
+                           $"{bossDamage / (float)Math.Max(1, bossFight.Rounds):0} HP a round ({bossDamage * 100f / Math.Max(1, bossFight.Rounds) / Math.Max(1, bossMaxHp):0.00}% of its {bossMaxHp})";
             string skillsUsed = "Skills used a run: " +
                                 string.Join(", ", skillUses.OrderByDescending(pair => pair.Value).Select(pair => $"{pair.Key} {pair.Value / (float)seeds:0.0}")) +
                                 $"; a counter stance was answered {counters / (float)seeds:0.0} times a run";
@@ -537,10 +553,12 @@ namespace FiveKingdoms.CoreTests
                                   $"{packFights.HitsTaken / (float)seeds:0.0} enemy attackers-rounds on heroes a run; HP into the boss fight: " +
                                   string.Join(", ", Party.Select((definition, member) => $"{definition.Name} {hpAtBossStart[member] / Math.Max(1, bossFights)}%")) +
                                   $"; the boss fight: {bossFight.Rounds / (float)Math.Max(1, bossFights):0.0} rounds");
+                Console.WriteLine(tempo);
                 Console.WriteLine(skillsUsed);
                 CampaignReport(players: seeds / 2, maxAttempts: 10, tuning);
                 return 0;
             }
+            Console.WriteLine(tempo);
             for (int f = 1; f < floorsReached.Length; f++) Console.WriteLine($"  ended on B{f}F: {floorsReached[f]}");
             Console.WriteLine($"Reached the boss floor: {reachedBoss}; still standing on arrival: " +
                               string.Join(", ", Party.Select((definition, member) => $"{definition.Name} {standingAtBoss[member] * 100 / Math.Max(1, reachedBoss)}%")));

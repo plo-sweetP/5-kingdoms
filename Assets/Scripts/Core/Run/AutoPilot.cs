@@ -48,6 +48,8 @@ namespace FiveKingdoms.Core
             if (HeroTactics.TryTakeTheFront(run, hero, out command)) return command;
             if (HeroTactics.TryUltimate(run, hero, out command)) return command;
 
+            // A challenge comes before the heals: the foe it keeps on the hero hits less hard for it.
+            if (HeroTactics.TryChallenge(run, hero, out command)) return command;
             if (hero.Hp * 100 < hero.MaxHp * HeroTactics.SelfHealPercent)
             {
                 int heal = HeroTactics.SkillSlot(hero, SkillEffect.Heal);

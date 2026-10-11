@@ -223,12 +223,19 @@ namespace FiveKingdoms.Core
             milestones: new[]
             {
                 new ClassMilestone(5,
+                    // Peter, 2026-10-10: Challenge is to be worth about as much as Greater Heal. The draft (a 2-turn
+                    // taunt) was worth 2 points of a level-5 party's 38% and no number on the blow changed that:
+                    // the Troll goes for the tank anyway. A taunt of 4 turns covers the Troll's whole slam cycle,
+                    // so it stays on him while he steps out and back (nobody else is hit meanwhile), and the cut
+                    // on a challenged foe's hits is the Guardian's own protection: 43% of runs won without the cut,
+                    // 48% with 15%, 54% with 20%.
                     new ClassOption("paladin_challenge", "Challenge", 0,
-                        "Shoulder Bash becomes a challenge to everyone near: it also taunts every other foe next to the hero, and the taunt lasts 2 turns (was 1).",
+                        "Shoulder Bash becomes a challenge to everyone near: it also taunts every other foe next to the hero, the taunt lasts 4 turns (was 1), and a foe under it does 15% less damage to the hero.",
                         upgrades: SkillCatalog.ShoulderBash, change: skill =>
                         {
                             skill.StatusAround = true;
-                            skill.StatusTurns = 2;
+                            skill.StatusTurns = 4;
+                            skill.StatusPower = 15;
                         }),
                     // The draft's 30% was a must-pick: with the balance report's players a level-5 party won 62% of its
                     // runs with it, 38% without, 40% with either of the other two. Every 1% of heal is worth over two

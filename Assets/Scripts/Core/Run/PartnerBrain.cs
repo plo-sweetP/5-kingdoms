@@ -34,6 +34,7 @@ namespace FiveKingdoms.Core
             bool holds = partner.Tactic == PartyTactic.Hold;
             if (!holds && HeroTactics.TryTakeTheFront(run, partner, out command)) return command;
             if (HeroTactics.TryUltimate(run, partner, out command)) return command;
+            if (HeroTactics.TryChallenge(run, partner, out command)) return command;
             if (HeroTactics.TryHealParty(run, partner, out command)) return command;
             if (HeroTactics.TryGuard(run, partner, out command)) return command;
             if (HeroTactics.TryStepOutOfMelee(run, partner, out command)) return command;

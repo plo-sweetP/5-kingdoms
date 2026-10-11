@@ -388,7 +388,7 @@ Every tier: +0.4% ATK and +0.2% Crit Rate (+10% and +5% at tier 25).
 
 | Tier | Marksman (single-target damage) | Hunter (traps and control) | Trickshot (several targets) |
 |---|---|---|---|
-| 5 | **Deadly Mark:** Hunter's Mark gives +40% (was +25%) | **Crippling Shot** (new skill): 180%, the target's next turn comes 30% later | **Bouncing Shot** (new skill): 200% (built; the draft said 160%), then it bounces to up to 2 more foes within 3 tiles, each bounce at 70% of the last hit |
+| 5 | **Deadly Mark:** Hunter's Mark becomes always on: his shots mark the foe they hit, and each further shot on it adds +10%, up to +40% (decided 2026-10-10, see below; built that day as "+40% (was +25%)") | **Crippling Shot** (new skill): 180%, the target's next turn comes 30% later | **Bouncing Shot** (new skill): 200% (built; the draft said 160%), then it bounces to up to 2 more foes within 3 tiles, each bounce at 70% of the last hit |
 | 10 | **Heavy Draw:** Power Shot hits for 360% (was 300%) and knocks back 2 tiles | **Barbed Snare:** a snare also deals 150% ATK when it springs; 5 per floor (was 3) | **Piercing Arrow:** Power Shot also hits every foe in a line behind the target for 60% |
 | 15 | **Steady Aim:** a shot after a turn without moving deals +25% | **Shared Mark:** allies also deal +15% to the marked foe | **Splitting Arrows:** Quick Shot bounces once to a second foe for 50% |
 | 20 | **Deadeye** (alternate ultimate): one arrow for 900% on a single foe | **Pinning Volley:** Volley also slows what it hits by 30% and leaves a snare at its center | **Storm of Arrows:** Volley hits 3 times (was 2) |
@@ -398,10 +398,34 @@ Tier 5 was built on 2026-10-10 ("Tier 5 as built" under "Building 1g"). Peter th
 build session settled: "yes both readings are fine": Bouncing Shot is one arrow, which the Hunter Bow does not
 double, and each bounce goes to the nearest foe not yet hit within 3 tiles of the last one and in its sight;
 Crippling Shot is doubled by the bow like his other shots, and its slow lands once per foe (a boss's 25%, inside
-the delay budget). On Bouncing Shot's 200%: "bouncing shot is fine". **Deadly Mark's design is open as of
-2026-10-10:** Peter wants the mark to work like a passive ("mark on the foe he shoots. and yes, always on skill.
-basically similar to passives"). The hub writes that spec and it is built in the follow-up session; as built
-today it is the upgrade in the table.
+the delay budget). On Bouncing Shot's 200%: "bouncing shot is fine".
+
+**Deadly Mark, decided by Peter on 2026-10-10** (it replaces the upgrade above; to build in the follow-up
+session). His question: "thoughts on deadly mark being a passive that auto-targets the closest target? so
+attacking the same target does more damage instead of switching targets? basically, is 'mark' a decent enough of
+a skill to take instead of another damage skill?" The measurements said it isn't: Hunter's Mark is the skill the
+report's players give up first ("Tier 5 as built"). His answers to the hub's version: "mark on the foe he shoots.
+and yes, always on skill. basically similar to passives".
+- With Deadly Mark, Hunter's Mark is **always on**: no button to press and no time spent. Uzuki's first shot at a
+  foe marks it (the foe he shoots, not the closest one: targets stay the player's choice).
+- **It builds up:** each further shot of his on the marked foe adds +10% to his damage on it, up to +40%.
+- **Switching starts over:** a shot aimed at another foe moves the mark there and the bonus begins again.
+- **It keeps its slot** in the loadout, shown as always on, like a passive: the slot is never empty (a pure
+  Marksman learns no new skill at tier 5 or 10), and the button shows the mark's bonus instead of acting.
+- Without this pick Hunter's Mark stays the Quick button it is today.
+
+*Proposed details, to settle when it is built (the hub's):*
+- A shot counts once, however many arrows the bow looses. Aimed shots move the mark (the weapon attack, Power
+  Shot, a new shot); Rolling Shot and Volley use the bonus on a marked foe but never move the mark.
+- When the marked foe falls the mark jumps to the next foe as today, with half of its bonus.
+- The mark fades when he hasn't hit its foe for 3 of that foe's turns, as today's mark does.
+- Being always on, it no longer counts as the loadout's one Quick skill.
+- The AI stays on the marked foe while the bonus is worth more than a kill elsewhere (`HeroTactics.PickTarget`
+  already shoots marked foes first).
+- The numbers are tuned until Deadly Mark lands near Crippling Shot in the level-5 measurement.
+- It is the first always-on skill in a loadout: the skill-tree screen, the Hero stats page and the HUD's arc need
+  a look for one, and later passives use the same. Options further down that speak of the mark (Shared Mark at
+  15, Master Hunter's "takes no time" at 25) are read again in 1g-2.
 
 ### Paladin (Haiden's class): approved by Peter as a starting point (2026-10-03)
 Every tier: +0.4% HP and +0.4% DEF (+10% each at tier 25).

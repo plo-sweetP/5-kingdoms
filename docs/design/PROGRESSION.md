@@ -398,7 +398,10 @@ Tier 5 was built on 2026-10-10 ("Tier 5 as built" under "Building 1g"). Peter th
 build session settled: "yes both readings are fine": Bouncing Shot is one arrow, which the Hunter Bow does not
 double, and each bounce goes to the nearest foe not yet hit within 3 tiles of the last one and in its sight;
 Crippling Shot is doubled by the bow like his other shots, and its slow lands once per foe (a boss's 25%, inside
-the delay budget).
+the delay budget). On Bouncing Shot's 200%: "bouncing shot is fine". **Deadly Mark's design is open as of
+2026-10-10:** Peter wants the mark to work like a passive ("mark on the foe he shoots. and yes, always on skill.
+basically similar to passives"). The hub writes that spec and it is built in the follow-up session; as built
+today it is the upgrade in the table.
 
 ### Paladin (Haiden's class): approved by Peter as a starting point (2026-10-03)
 Every tier: +0.4% HP and +0.4% DEF (+10% each at tier 25).
@@ -412,7 +415,10 @@ Every tier: +0.4% HP and +0.4% DEF (+10% each at tier 25).
 | 25 | **Master Guardian:** his taunts last a turn longer, and allies next to him always take 10% less damage | **Master of Devotion:** his heals restore 25% more, and Heal reaches allies 2 tiles away | **Master Crusader:** Paladin strikes deal +15%, and a kill with one heals him for 10% |
 
 Tier 5 was built on 2026-10-10 ("Tier 5 as built" under "Building 1g"). Greater Heal is 24%: at the drafted 30%
-it was a must-pick by a wide margin (the numbers are there); Peter has not been asked about that number yet.
+it was a must-pick by a wide margin (the numbers are there). Peter, 2026-10-10: "greater heal is fine too with
+your suggestions": it stays at 24%, and the heal is not cut further. The suggestion is the hub's: in tier 5's
+balance pass Challenge and Searing Smite are made stronger instead, until the Paladin's three options land within
+about 5 points of each other (today 402, 496 and 401 wins of 1000 at level 5).
 
 ### Fencer (Kristela's class since 2026-10-05): the hub's draft from Peter's brief
 Peter on its tier 5 and 10 options, 2026-10-10: "fencer options are fine as drafted".

@@ -826,14 +826,18 @@ measured in that session.
      2340 x 1080 and the tablet's shape) and of each new skill and upgrade in play (`-fk-level 6 -fk-build ...`
      with the hero leading), and a new APK onto the tablet. The autoplay's tree tour and tree demo still name
      their third picture "locked_row"; with tier 5 written it shows an option, and the demo should pick one and
-     go on to the tier-10 row. Open with Peter: Greater Heal's 24% (he has only seen the draft's 30%).
-  2. **Tier 10**, class by class, then its balance pass. Barbed Snare needs a reading (snares come from Rolling
+     go on to the tier-10 row.
+  2. **Decided by Peter on 2026-10-10, to build:** Bouncing Shot is fine at 200%. Greater Heal stays at 24%, and
+     Challenge and Searing Smite are to be made stronger until the Paladin's three options land within about 5
+     points of each other (402, 496 and 401 wins of 1000 today). Deadly Mark becomes a mark that works like a
+     passive, on the foe Uzuki shoots (the hub writes its spec; PROGRESSION.md, under the Archer's table).
+  3. **Tier 10**, class by class, then its balance pass. Barbed Snare needs a reading (snares come from Rolling
      Shot; "5 per floor" is `DungeonRunConfig.MaxTrapsPerFloor` today, a dungeon setting, not the hero's). Shield
      Wall can be `SkillEffect.Guard` with radius 1 as it stands; Healing Word needs a heal that reaches 3 tiles
      (and will be strong: see the heal's weight above); Parry is a guard on herself with a boss's share; Feint a
      mark that one strike uses up; Fleche a strike that passes through its target. With the first hero that
      knows five skills the loadout's list needs touch scrolling.
-  3. Docs for tier 10 and the closing Drive entry.
+  4. Docs for tier 10 and the closing Drive entry.
 
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.

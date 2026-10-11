@@ -458,6 +458,14 @@ Monk's, so her speed stays 100.
 | 20 | **Coup de Grace** (alternate ultimate): one thrust for 800% on a single enemy | **Storm of Steel:** Blade Dance is 7 strikes (was 5) | **Perfect Guard** (alternate ultimate): for 2 of her turns she takes 50% less damage (25% from a boss) and strikes back at every enemy that hits her for 200% |
 | 25 | **Master Duelist:** Fencer strikes deal +15%, and her crits +20% Crit DMG | **Master of Footwork:** her first turn in a fight comes 30% sooner, and Lunge and Fleche take 25% less time | **Master of the Riposte:** her counters deal +25%, and a counter brings her next turn 20% closer (once per turn of hers) |
 
+Tier 5 was built on 2026-10-10 as drafted ("Tier 5 as built" under "Building 1g"). Measured at level 5 its three
+options are worth 0 to 2.5 points (wins of 1000: no pick 380, Precise Thrusts 405, Long Lunge 394, Sharp Riposte
+380), far less than the other classes' (5 to 11). **Peter, 2026-10-10**, to the hub's question whether to bring
+them up: "yes. Bring kristelas class up to the other classes." So the Fencer's tier 5 options are made worth about
+as much as the Archer's and the Paladin's (about 5 to 9 points each, within about 5 of each other), and tier 10
+takes the same aim; the build session says what it changed. Sharp Riposte needs a look at how often the report's
+players take the stance (about once in two runs today), not only a bigger number.
+
 Feint and Parry are both Quick skills, and a loadout holds one. Every advance stays inside the turn budget
 ("Classes": at most 30% of a turn per effect).
 

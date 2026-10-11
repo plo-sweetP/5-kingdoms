@@ -378,6 +378,33 @@ namespace FiveKingdoms.Tests
             StringAssert.Contains("is charging", DungeonController.UltimateRefusalMessage(run, HeroCommand.UltimateFacing));
         }
 
+        [Test]
+        public void AnAlwaysOnSkillsButtonShowsWhatItDoesAndAPressSaysWhatItIs()
+        {
+            // Uzuki with the Archer's Deadly Mark: Hunter's Mark keeps its slot, always on.
+            var uzuki = new HeroProgress(ActorCatalog.Uzuki, 5);
+            HeroBuilds.Spend(uzuki);
+            var run = new DungeonRun(3, new DungeonRunConfig { Populate = false, Boss = null }, uzuki);
+            var hero = run.Hero;
+            var mark = hero.Skills[0];
+            Assert.IsTrue(mark.AlwaysOn, "the default build takes the Marksman's pick");
+            Assert.AreEqual("Mark", DungeonHud.AlwaysOnLabel(run, hero, mark), "nothing marked: just its name");
+            string message = DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(0));
+            StringAssert.Contains("Hunter's Mark is always on", message);
+            StringAssert.DoesNotContain("more now", message);
+
+            // A foe in sight, and two shots at it: the button shows the mark's bonus.
+            GridPos? spot = null;
+            foreach (var dir in Directions.All)
+                if (run.Map.IsWalkable(hero.Pos + dir.ToOffset())) spot = hero.Pos + dir.ToOffset();
+            var foe = run.SpawnEnemy(spot.Value);
+            foe.MaxHp = foe.Hp = 100000;
+            Assert.IsTrue(run.AttackAt(foe.Pos));
+            Assert.IsTrue(run.AttackAt(foe.Pos));
+            Assert.AreEqual("Mark\n<size=22>+10%</size>", DungeonHud.AlwaysOnLabel(run, hero, mark));
+            StringAssert.Contains($"The {foe.Name} takes 10% more now.", DungeonController.SkillRefusalMessage(run, HeroCommand.Skill(0)));
+        }
+
         static IEnumerator LoadDungeon()
         {
             yield return SceneManager.LoadSceneAsync("Dungeon");

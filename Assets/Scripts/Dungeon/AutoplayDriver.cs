@@ -153,7 +153,7 @@ namespace FiveKingdoms.Dungeon
             yield return TreeTour("01_tree", change: false);
             menu.Back();
 
-            int actions = 0, shot = 0, attackShots = 0, chargeShots = 0, holdShots = 0, rotateShots = 0, restShots = 0, clearShots = 0;
+            int actions = 0, shot = 0, attackShots = 0, chargeShots = 0, holdShots = 0, rotateShots = 0, restShots = 0, clearShots = 0, markShots = 0;
             var skillsShown = new System.Collections.Generic.HashSet<string>();
             var ultimatesShown = new System.Collections.Generic.HashSet<string>();
             var aimsShown = new System.Collections.Generic.HashSet<string>();
@@ -217,6 +217,13 @@ namespace FiveKingdoms.Dungeon
                         }
                     }
                 }
+                else if (markShots < 4 && MarkGrew(controller.Run))
+                {
+                    yield return new WaitForSeconds(0.1f); // An always-on mark and its new bonus over the foe.
+                    yield return Capture($"mark{++markShots}_action{actions}");
+                    while (controller.IsAnimating) yield return null; // And the leader's button, once it shows that bonus.
+                    yield return Capture($"mark{markShots}_hud_action{actions}");
+                }
                 else if (boss != null && boss.Charging && chargeShots < 2)
                 {
                     while (controller.IsAnimating) yield return null; // Wind-up pose, warning tiles and the refreshed turn order.
@@ -278,6 +285,16 @@ namespace FiveKingdoms.Dungeon
             return false;
         }
 
+        /// <summary>Whether the leader's always-on mark was placed or grew in the last action (the Archer's Deadly Mark).</summary>
+        static bool MarkGrew(DungeonRun run)
+        {
+            if (DungeonRun.AlwaysOnMarkOf(run.Hero) == null) return false;
+            foreach (var e in run.Events)
+                if (e is MarkBuiltEvent built && built.HunterId == run.Hero.Id ||
+                    e is StatusAppliedEvent applied && applied.Kind == StatusKind.Mark && applied.SourceId == run.Hero.Id) return true;
+            return false;
+        }
+
         /// <summary>Whether a hero's AI waited out of a wound-up slam's reach in the last action ("Footing in a boss fight").</summary>
         static bool KeptClear(DungeonRun run)
         {
@@ -293,9 +310,10 @@ namespace FiveKingdoms.Dungeon
             : run.Hero.Skills[command.Slot].Id;
 
         /// <summary>
-        /// The skill tree's states, captured as "<paramref name="prefix"/>_*.png": a class, a row that isn't written
-        /// yet, the loadout with the skills that could go in a slot, the question before unlearning, another hero.
-        /// With <paramref name="change"/> a point goes into the hero's own class first, where it has one.
+        /// The skill tree's states, captured as "<paramref name="prefix"/>_*.png": a class, an option of its first
+        /// milestone, the first row that isn't written yet, the loadout with the skills that could go in a slot, the
+        /// question before unlearning, another hero. With <paramref name="change"/> a point goes into the hero's own
+        /// class first, where it has one.
         /// </summary>
         IEnumerator TreeTour(string prefix, bool change)
         {
@@ -307,8 +325,17 @@ namespace FiveKingdoms.Dungeon
                 tree.Activate();
                 yield return Capture(prefix + "_2_raised");
             }
-            tree.Tap(TreeFocus.Option(0, 1));
-            yield return Capture(prefix + "_3_locked_row");
+            int locked = FirstLockedRow(tree.Model);
+            if (locked > 0)
+            {
+                tree.Tap(TreeFocus.Option(0, 1));
+                yield return Capture(prefix + "_3_option");
+            }
+            if (locked < SkillTreeModel.Rows)
+            {
+                tree.Tap(TreeFocus.Option(locked, 1));
+                yield return Capture(prefix + "_3_locked_row");
+            }
             tree.Tap(TreeFocus.Slot(0));
             tree.Activate();
             yield return Capture(prefix + "_4_loadout");
@@ -324,11 +351,21 @@ namespace FiveKingdoms.Dungeon
             yield return null;
         }
 
+        /// <summary>The first milestone row of the class the tree shows whose options aren't written (the row count when all are).</summary>
+        static int FirstLockedRow(SkillTreeModel model)
+        {
+            int row = 0;
+            while (row < SkillTreeModel.Rows && model.OptionAt(row, 0) != null) row++;
+            return row;
+        }
+
         /// <summary>
         /// "-fk-demo tree": the skill tree for every hero in turn, as between runs, then quit: the screen's screenshots
-        /// without playing a run ("tree_<hero>_*.png"). Each hero's own class goes as far as it can, a second class is
-        /// added through the "+" and gets two tiers, and the row that isn't written, the loadout and the question before
-        /// unlearning are shown.
+        /// without playing a run ("tree_<hero>_*.png"). Each hero's own class goes as far as its points and its
+        /// content go: at every milestone that is written the three options are shown one by one
+        /// ("tree_<hero>_2_tier5_<path>.png"), then the one on the hero's default path is picked (the Marksman's
+        /// always-on mark shows in the loadout). Then the first row that isn't written, a second class added through
+        /// the "+" with two tiers, the loadout and the question before unlearning.
         /// </summary>
         IEnumerator TreeDemo()
         {
@@ -340,10 +377,30 @@ namespace FiveKingdoms.Dungeon
             {
                 string hero = tree.Model.Hero.Definition.Id;
                 yield return Capture($"tree_{hero}_1_class");
-                while (tree.Model.Focus.Zone == TreeZone.Classes && tree.Model.Info.Enabled) tree.Activate();
+                var model = tree.Model;
+                var own = model.Class;
+                for (int row = 0; row < SkillTreeModel.Rows; row++)
+                {
+                    while (model.Focus.Zone == TreeZone.Classes && model.Info.Enabled) tree.Activate();
+                    int tier = SkillTreeModel.TierOfRow(row);
+                    if (model.OptionAt(row, 0) == null || model.Hero.TierOf(own) != tier - 1 || model.Hero.PointsFree <= 0) break;
+                    for (int path = 0; path < ClassDefinition.PathCount; path++)
+                    {
+                        tree.Tap(TreeFocus.Option(row, path));
+                        yield return Capture($"tree_{hero}_2_tier{tier}_{own.Paths[path].Replace(' ', '_').ToLowerInvariant()}");
+                    }
+                    tree.Tap(TreeFocus.Option(row, HeroBuilds.DefaultPath));
+                    tree.Activate();
+                    yield return Capture($"tree_{hero}_2_tier{tier}_picked");
+                    tree.Tap(TreeFocus.Class(0)); // Back on the class (the hero's own is the first in its list), to go on raising it.
+                }
                 yield return Capture($"tree_{hero}_2_as_far_as_it_goes");
-                tree.Tap(TreeFocus.Option(0, 1));
-                yield return Capture($"tree_{hero}_3_locked_row");
+                int locked = FirstLockedRow(model);
+                if (locked < SkillTreeModel.Rows)
+                {
+                    tree.Tap(TreeFocus.Option(locked, 1));
+                    yield return Capture($"tree_{hero}_3_locked_row");
+                }
                 // The "+" under the hero's classes, the class it lists first, then two tiers of that class.
                 tree.Tap(TreeFocus.Class(tree.Model.AddIndex));
                 yield return Capture($"tree_{hero}_4a_plus");

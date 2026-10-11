@@ -388,7 +388,7 @@ Every tier: +0.4% ATK and +0.2% Crit Rate (+10% and +5% at tier 25).
 
 | Tier | Marksman (single-target damage) | Hunter (traps and control) | Trickshot (several targets) |
 |---|---|---|---|
-| 5 | **Deadly Mark:** Hunter's Mark becomes always on: his shots mark the foe they hit, and each further shot on it adds +10%, up to +40% (decided 2026-10-10, see below; built that day as "+40% (was +25%)") | **Crippling Shot** (new skill): 180%, the target's next turn comes 30% later | **Bouncing Shot** (new skill): 200% (built; the draft said 160%), then it bounces to up to 2 more foes within 3 tiles, each bounce at 70% of the last hit |
+| 5 | **Deadly Mark:** Hunter's Mark becomes always on: his shots mark the foe they are aimed at, and each further shot on it adds +10%, up to +40% (decided 2026-10-10 and built 2026-10-11, see below) | **Crippling Shot** (new skill): 180%, the target's next turn comes 30% later | **Bouncing Shot** (new skill): 200% (built; the draft said 160%), then it bounces to up to 2 more foes within 3 tiles, each bounce at 70% of the last hit |
 | 10 | **Heavy Draw:** Power Shot hits for 360% (was 300%) and knocks back 2 tiles | **Barbed Snare:** a snare also deals 150% ATK when it springs; 5 per floor (was 3) | **Piercing Arrow:** Power Shot also hits every foe in a line behind the target for 60% |
 | 15 | **Steady Aim:** a shot after a turn without moving deals +25% | **Shared Mark:** allies also deal +15% to the marked foe | **Splitting Arrows:** Quick Shot bounces once to a second foe for 50% |
 | 20 | **Deadeye** (alternate ultimate): one arrow for 900% on a single foe | **Pinning Volley:** Volley also slows what it hits by 30% and leaves a snare at its center | **Storm of Arrows:** Volley hits 3 times (was 2) |
@@ -427,12 +427,29 @@ and yes, always on skill. basically similar to passives".
   a look for one, and later passives use the same. Options further down that speak of the mark (Shared Mark at
   15, Master Hunter's "takes no time" at 25) are read again in 1g-2.
 
+*As built (2026-10-11):* every proposed detail above was kept, and the numbers are Peter's (+10% a shot, up to
++40%). What else was settled:
+- The shot that adds to the mark already hits that much harder (the second shot at a foe is at +10%).
+- Rolling Shot's shot goes to the nearest foe, which the player didn't pick: on the marked foe it builds the mark
+  like any shot, on another foe it changes nothing. The bow's second arrow never takes the mark along.
+- The mark jumps with half of its bonus and lasts its full time on the next foe.
+- A hero who doesn't know Hunter's Mark gets the plain Quick mark from this option ("Classes": an upgrade of a
+  skill the hero doesn't know teaches the skill), so no weapon tie was needed.
+- The AI needed no rule: it already shoots the marked foe first. Taking a one-shot kill elsewhere first measured
+  the same.
+- An always-on skill is `SkillDefinition.AlwaysOn`: it is never used (`SkillCheck.AlwaysOn`), is not Quick, has
+  no cooldown and needs no aim. The HUD's button is dark with an "Always on" tag and shows the bonus on the marked
+  foe ("+20%"); a press says what the skill is. The skill tree's loadout sphere is lit and ringed, and the info
+  panel and the Hero stats page say "always on". Nothing saved changes.
+- Measured at level 5 (wins of 1000, no pick 387): 521, against Crippling Shot's 480. As a +40% button it was 433
+  of a no-pick 380.
+
 ### Paladin (Haiden's class): approved by Peter as a starting point (2026-10-03)
 Every tier: +0.4% HP and +0.4% DEF (+10% each at tier 25).
 
 | Tier | Guardian (protection) | Devotion (healing) | Crusader (damage) |
 |---|---|---|---|
-| 5 | **Challenge:** Shoulder Bash also taunts every other foe next to Haiden, and its taunt lasts 2 turns (was 1) | **Greater Heal:** Heal restores 24% (was 20%; built, the draft said 30%) | **Searing Smite:** Divine Strike hits for 320% (was 250%) |
+| 5 | **Challenge:** Shoulder Bash also taunts every other foe next to Haiden, its taunt lasts 4 turns (was 1; the draft said 2), and a foe under it does 15% less damage to him (built 2026-10-11, see below) | **Greater Heal:** Heal restores 24% (was 20%; built, the draft said 30%) | **Searing Smite:** Divine Strike hits for 320% (was 250%) |
 | 10 | **Shield Wall** (new skill): Haiden and the allies next to him take 40% less damage until his next turn | **Healing Word** (new Quick skill): heals an ally within 3 tiles for 12% of Haiden's max HP | **Sweeping Slash** (new skill): hits up to three foes in front of him for 150% each |
 | 15 | **Stand Firm:** Haiden takes 20% less damage from foes he has taunted | **Radiant Smite:** Divine Strike also heals the most hurt ally next to him for 10% of his max HP | **Judgment:** Divine Strike deals +50% to a taunted foe |
 | 20 | **Bastion:** Aura of Protection blocks 40% (was 30%) and lasts 4 turns (was 3) | **Sanctuary:** the aura heals 15% a turn (was 10%) and reaches 2 tiles | **Holy Wrath** (alternate ultimate): fire on every foe next to Haiden, 350% each, and they are taunted |
@@ -442,7 +459,21 @@ Tier 5 was built on 2026-10-10 ("Tier 5 as built" under "Building 1g"). Greater 
 it was a must-pick by a wide margin (the numbers are there). Peter, 2026-10-10: "greater heal is fine too with
 your suggestions": it stays at 24%, and the heal is not cut further. The suggestion is the hub's: in tier 5's
 balance pass Challenge and Searing Smite are made stronger instead, until the Paladin's three options land within
-about 5 points of each other (today 402, 496 and 401 wins of 1000 at level 5).
+about 5 points of each other (402, 496 and 401 wins of 1000 at level 5 as first built).
+
+*Challenge as built (2026-10-11).* No number on the blow or the taunt's reach moved it (Bash at 220% with a 3-turn
+taunt: 403 wins of 1000): the Troll goes for the tank anyway. What counts is the taunt's length. The Troll's cycle
+is wind-up, slam, hit, hit; a taunt of 4 turns covers it, so the Troll stays on Haiden while he steps out of the
+slam and back and hits nobody else meanwhile. With a 4-turn taunt and the AI keeping it up: 425 wins without a
+cut, 443 with 10% off a challenged foe's hits on him, 479 with 15%, 543 with 20% (2 or 3 turns never passed
+439). Built: 4 turns and 15%, which lands at 481 next to Greater Heal's 521 (no pick 387; the last pass of the
+AI moved every number up a little). The AI keeps the challenge up before it heals, unless the foe's next blow
+could fell him (`HeroTactics.TryChallenge`). Tier 15's Stand Firm ("20% less damage from foes he has taunted")
+overlaps with this now and is read again in 1g-2.
+
+*Searing Smite* is as drafted (320%) and on hold: 403 wins at level 5, and no number moves it there (600%: 412),
+because in the Troll fight the report's Haiden heals and steps out of slams and seldom swings. A damage option is
+judged on the second yardstick instead ("Tier 5 as built").
 
 ### Fencer (Kristela's class since 2026-10-05): the hub's draft from Peter's brief
 Peter on its tier 5 and 10 options, 2026-10-10: "fencer options are fine as drafted".
@@ -465,6 +496,18 @@ them up: "yes. Bring kristelas class up to the other classes." So the Fencer's t
 as much as the Archer's and the Paladin's (about 5 to 9 points each, within about 5 of each other), and tier 10
 takes the same aim; the build session says what it changed. Sharp Riposte needs a look at how often the report's
 players take the stance (about once in two runs today), not only a bigger number.
+
+*What the build session found (2026-10-11); the three options are still as drafted.* Bigger numbers do not move
+them at level 5 (wins of 1000, no pick 380 then): Precise Thrusts doubled (+30% Crit Rate, a third hit of 200%)
+413; Long Lunge at 340% 388; Sharp Riposte with a 1000% counter and 90% (45%) off 378. Kristela falls to two of
+the Troll's hits (one takes about 78% of her HP), usually right after she steps back in from a slam, before the
+tank is there. The party's AI now takes the stance before her thrusts whenever a heavy blow is coming at her (a
+boss's, or one that takes a quarter of her HP), and never against a boss turn that brings no blow (a wind-up,
+the call for help: `EnemyBrain.NextTurnIsNoBlow`): 1.7 stances a run instead of 0.5, about one answered. Sharp
+Riposte is still worth only 1.4 points (with a 45% boss share 1.8, with 50% and a 400% counter 2.3), and nothing
+with Kristela leading either. To be worth 5 points En Garde would have to change how many hits she survives.
+Precise Thrusts and Long Lunge are damage options and are judged on the second yardstick; whether they get
+bigger numbers is Peter's call.
 
 Feint and Parry are both Quick skills, and a loadout holds one. Every advance stays inside the turn budget
 ("Classes": at most 30% of a turn per effect).
@@ -714,6 +757,37 @@ the drafts left room; GAME_PLAN.md ("Progress") has the table of numbers.
 - **Balance:** with tier 5 and the default builds the targets hold without a re-tune (27 of 600 fresh level-1
   runs; first clear on attempt 2.9 at Lv 9.4); the Troll keeps its 30000 HP.
 - **The screen:** a class with tier 5 written goes to tier 9, and its tier-10 row says "Coming soon".
+
+**Tier 5, second pass (2026-10-11).** Deadly Mark became the always-on mark, Challenge got its 4-turn taunt and
+its cut, and the AI learned to keep a challenge up and to take the counter stance against a heavy blow (all
+above, under each class's table). Two findings shape how options are judged from here on:
+- **The level-5 measurement is "who survives the Troll".** One hit of the Troll takes about 28% of Haiden's HP
+  and 78% of Kristela's, and Heal gives back 20%, so an option counts there when it keeps a hero standing or
+  lifts the archer's damage, and a melee hero's damage or a tank's utility hardly shows however big its number.
+- **A second yardstick for damage options** (`-balance` prints it as "How fast the party fights"): a level-9
+  party, which wins 97 to 99 runs in 100 whatever it picked, and how fast it fights: the HP the boss loses per
+  round of its fight, the rounds of a won boss fight, the rounds of a pack fight.
+
+  | Pick | Level 5: wins of 1000 | Level 9: boss HP lost a round | a won boss fight | a pack fight |
+  |---|---|---|---|---|
+  | none | 387 | 833 | 35.9 rounds | 3.55 rounds |
+  | Deadly Mark | 521 | 933 (+12%) | 32.0 | 3.49 |
+  | Crippling Shot | 480 | 824 | 36.3 | 3.51 |
+  | Bouncing Shot | 378 | 787 | 37.7 | 3.40 |
+  | Challenge | 481 | 883 (+6%) | 33.8 | 3.56 |
+  | Greater Heal | 521 | 847 | 35.1 | 3.58 |
+  | Searing Smite | 403 | 844 | 35.3 | 3.39 |
+  | Precise Thrusts | 399 | 864 (+3.7%) | 34.5 | 3.52 |
+  | Long Lunge | 386 | 844 | 35.3 | 3.52 |
+  | Sharp Riposte | 401 | 837 | 35.7 | 3.55 |
+
+  One hero has the pick, the other two none; at level 9 a pick also carries the stat bumps of tiers 5 to 9
+  (about 2%), which "none" lacks. Noise at level 5 is about 16 wins.
+- **Who leads matters more than any option:** the same level-5 party without a pick wins 516 of 1000 with
+  Kristela leading and 387 with Haiden leading (as a partner Haiden heals half again as often). Not acted on.
+- **Balance:** 20 of 600 fresh level-1 runs win (3.3%), first clear on attempt 2.6 at Lv 9.1: inside the
+  targets, the campaign 0.3 attempts earlier than before this pass. Not re-tuned yet (the Troll at 32000 HP
+  gives 3.0% and attempt 2.7 at Lv 9.2); that waits for tier 10's balance pass.
 
 **Part 1b: attached skills** ("Attached skills" above; Peter, 2026-10-10: "build it after tiers 5 and 10"). Its own
 build session, before part 2: the attached bonus on every skill of the three classes, attaching on the skill-tree

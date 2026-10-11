@@ -51,13 +51,14 @@ Mystery Dungeon-style turn-based dungeons. Design and roadmap: GAME_PLAN.md.
   grown to 92 MB over three builds.
 - Autoplay smoke test: `Builds/Windows/5Kingdoms.exe -screen-fullscreen 0 -fk-autoplay <screenshot folder>`
   (add `-fk-floors 1 -fk-level 10` to go straight to the boss; autoplay always uses its own throwaway save, and
-  aims each targeted action once the way a player does, saving `aim_*.png`; it saves `door_*.png` the first times
+  aims each targeted action once the way a player does, saving `aim_*.png`; it saves `mark*.png` when the leader's
+  always-on mark is placed or grows, `door_*.png` the first times
   the leader holds a doorway or the front rotates, `rest*.png` when it waits for the party to heal up, and
   `keep_clear*.png` when a hero waits out of a boss's wind-up; with
   `-fk-demo view` it stages foes five tiles up and down a
   corridor, then one three tiles away, and captures how the camera shows them instead; every run also tours the skill tree from the pause menu,
   saving `01_tree_*.png`, and with `-fk-demo tree -fk-tree -fk-level 10` it only captures the tree for every hero, as
-  between runs, and quits)
+  between runs (each written milestone's three options, then the default path's picked), and quits)
 
 Launch flags (`LaunchOptions`): `-fk-floors N`, `-fk-level N` (uses a throwaway save), `-fk-build default` with it
 (the heroes' points spent as the balance report spends them, `HeroBuilds`; or builds by hero, e.g.
@@ -93,7 +94,8 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
 - Unity's C# is 9.0: no file-scoped namespaces, global usings or records.
 - Balance numbers live in `DungeonRunConfig`, `ActorCatalog`, `SkillCatalog`, `CombatRules` (damage, the ranged cuts,
   the ultimate's charge rates) and `EnemyBrain` (boss moves); check `-balance` after changing them (it reports fresh
-  runs, ultimates per fight, the heroes that fall before the boss, the HP they bring into a fight, what each hero
+  runs, how fast the party fights (rounds per pack fight, the rounds of a won boss fight, the boss's HP lost per
+  round: the yardstick for a damage option, on a `level=9` party), ultimates per fight, the heroes that fall before the boss, the HP they bring into a fight, what each hero
   does with its turns in fights, the boss's slams that hit a hero and how that hero stood, and a campaign with
   levels kept between runs, the points spent between runs on each hero's default build). The targets: about 2-5%
   of fresh level-1 runs win, and with levels kept the first clear comes around the third attempt at Lv 9-10. A
@@ -113,6 +115,18 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   highest class sets its speed modifier (`HeroKit.SpeedFor`, clamped to 85-100 before gear). An option teaches a
   skill, upgrades the hero's own copy of one (`SkillDefinition.Change`; an upgrade of a skill the hero doesn't know
   teaches the skill instead) or changes one weapon family's attack. Never change a catalog skill.
+- An always-on skill (PROGRESSION.md, "Deadly Mark"; `SkillDefinition.AlwaysOn`) is a passive that keeps a loadout
+  slot: it is never used (`SkillCheck.AlwaysOn`), is not Quick, has no cooldown and needs no aim. The Archer's
+  Deadly Mark is the first: his aimed shots place and build the mark (`DungeonRun.ShootAtMark`, `MarkBuiltEvent`,
+  `DungeonRun.MarkedBy`). Its look is shared by later passives: the HUD's dark button with an "Always on" tag that
+  shows what it is doing (`DungeonHud.AlwaysOnLabel`), a press that only says what it is
+  (`DungeonController.AlwaysOnMessage`), the lit and ringed loadout sphere (`SkillTreeModel.IsAlwaysOn`),
+  `TreeText.AlwaysOn` in the tags.
+- The Paladin's Challenge is a taunt with a power (`StatusKind.Taunt`, `StatusEffect.Power`): a foe under it does
+  that much less damage to the one who taunted it (`DungeonRun.DamageTakenPercent`), and the AI keeps it up before
+  it heals (`HeroTactics.TryChallenge`). The AI weighs a blow that is coming with `DungeonRun.BlowDamage`, and reads
+  a boss's next turn with `EnemyBrain.NextTurnIsNoBlow` (a wind-up, the call for help), which must agree with
+  `EnemyBrain.DecideTroll`: a new boss move needs its case there.
 - A hero's kit is its own: read skills, the ultimate and the attack's name from the `Actor` (`Skills`, `Ultimate`,
   `AttackName`, `Kit`), never from `ActorDefinition`, whose `Skills` are only the kit a hero starts with. The run
   takes `HeroProgress.Kit` when it starts and keeps it: loadouts (three skills, at most one Quick, weapon-tied
@@ -126,7 +140,8 @@ desktop app keeps private to its own sessions (Explorer, Peter's editor and its 
   to it on its own turn. Blade Dance is `SkillEffect.SharedStrikes`. The weapon attack hits as its kit says
   (`Kit.WeaponAttack.Power`, `Hits`). The AI's step toward the foes is `HeroTactics.StepToward`: a Lunge when that
   reaches a foe, through `HoldsTheDoor` and the leash; it takes the stance only when a foe next to the hero acts
-  first and is going for it (`TryRiposte`, `EnemyBrain.TargetOf`). The Monk's kit is tested on `TestHeroes.Monk`.
+  first and is going for it (`TryRiposte`, `EnemyBrain.TargetOf`), after her thrusts unless the blow is a heavy one
+  (a boss's, or `HeroTactics.HeavyBlowPercent` of her HP). The Monk's kit is tested on `TestHeroes.Monk`.
 - The view plays an action's events after the rules are through, so the run's state is already the end state: a
   status that begins and ends within the events (a counter stance) is shown from its events
   (`ActorView.SetStance`), not read from the actor. A skill's effects belong to its user's own strikes only

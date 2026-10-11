@@ -839,6 +839,37 @@ measured in that session.
      knows five skills the loadout's list needs touch scrolling.
   4. Docs for tier 10 and the closing Drive entry.
 
+**Tier 5, second pass (2026-10-11, roadmap row 1g-1, steps 7 and 8 continued).** One build session. What Peter
+decided on 2026-10-10 for tier 5, built and measured (PROGRESSION.md, under each class's table and "Tier 5, second
+pass", has the rules and the table of all nine options). Every number here was measured in this session.
+- **Deadly Mark is an always-on mark** (Peter: "mark on the foe he shoots. and yes, always on skill. basically
+  similar to passives"). Hunter's Mark keeps its slot and is never pressed; Uzuki's aimed shots mark the foe they
+  are shot at, each further shot of his on it adds 10% up to 40%, a shot at another foe moves the mark and it
+  starts over. It is the first always-on skill in a loadout (`SkillDefinition.AlwaysOn`): the HUD's button is
+  dark, tagged "Always on" and shows the bonus; the skill tree's sphere is lit and ringed; later passives use the
+  same. No save change.
+- **Challenge** lasts 4 turns (the draft said 2), and a foe under it does 15% less damage to Haiden. A 4-turn
+  taunt covers the Troll's wind-up, slam and two hits, so it stays on him while he steps out and back. The AI
+  keeps the challenge up before it heals.
+- **The counter stance** is taken by the party's AI before her thrusts when a heavy blow is coming (a boss's, or
+  a quarter of her HP), and never against a boss turn that brings no blow. Sharp Riposte's numbers are as drafted.
+- **What numbers could not do:** Searing Smite, Precise Thrusts, Long Lunge and Sharp Riposte are worth 0 to 2
+  points at level 5 and stay there with far bigger numbers (Smite 600%: 412 wins of 1000; Lunge 340%: 388; a
+  1000% counter: 378). The level-5 measurement is "who survives the Troll". The hub's proposal, with Peter:
+  damage options are judged on a second yardstick, how fast a level-9 party fights, which `-balance` now prints
+  ("How fast the party fights").
+- **Level 5, wins of 1000 (no pick 387):** Deadly Mark 521, Crippling Shot 480, Bouncing Shot 378; Challenge 481,
+  Greater Heal 521, Searing Smite 403; Precise Thrusts 399, Long Lunge 386, Sharp Riposte 401.
+- **Balance with default builds:** 20 of 600 fresh level-1 runs win (3.3%); first clear on attempt 2.6 at Lv 9.1
+  (2.9 at Lv 9.4 before). Inside the targets and not re-tuned: the Troll at 32000 HP would give 3.0% and attempt
+  2.7 at Lv 9.2, at 34000 2.0% and 2.8 at Lv 9.3; to be settled in tier 10's balance pass. `-spread` over 200
+  seeds: in fights 2.18 steps from the leader on average and at most 10, exploring 1.84 and at most 9.
+- **Tools:** the autoplay's tree demo (`-fk-demo tree`) shows each written milestone's three options, picks the
+  default path's and goes on to the first row that isn't written; an autoplay run saves `mark*.png` when the
+  leader's always-on mark is placed or grows.
+- **Left:** Peter's word on the damage options (Searing Smite, Precise Thrusts, Long Lunge) and on En Garde;
+  tier 10 of the three classes with its balance pass and the re-tune; the docs and the closing Drive entry.
+
 ## Open questions (resolve as we go)
 1. Final names of the five kingdoms. Light element or not, and Wind's advanced form.
 2. ~~Pixel art spec.~~ Answered (2026-10-03): the Tiny Swords pack, 64 px tiles, 10 fps strips; see [docs/design/ART.md](docs/design/ART.md), which lists its own open questions.
